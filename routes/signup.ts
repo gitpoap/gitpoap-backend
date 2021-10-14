@@ -1,10 +1,12 @@
+import { PutItemCommand } from "@aws-sdk/client-dynamodb";
 import { Router } from "express";
 import jwt from "express-jwt";
+import { ddbClient } from "../libs/ddbClient";
 
 var router = Router();
 
 router.post('/', jwt({ secret: process.env.JWT_SECRET as string, algorithms: ['HS256'] }),
-  function(req, res) {
+  async function(req, res) {
     if (!req.user) {
       // Not authenticated
 
@@ -15,7 +17,17 @@ router.post('/', jwt({ secret: process.env.JWT_SECRET as string, algorithms: ['H
       // Authenticated
       console.log("Signing up user with email: " + req.body.email);
 
-      //do the stuff
+      const params = {
+        TableName: "contacts",
+        Item: {
+          email: { S: req.body.email },
+          timestamp: { S: new Date().toISOString() }
+        },
+      };
+
+      // do the stuff
+      const response = await ddbClient.send(new PutItemCommand(params));
+      console.log(response);
   
       res.sendStatus(200);
     }
