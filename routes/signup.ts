@@ -8,12 +8,14 @@ router.post('/', jwt({ secret: process.env.JWT_SECRET as string, algorithms: ['H
     if (!req.user) {
       // Not authenticated
 
+      console.log("Signup requested from unauthenticated user.");
+
       return res.sendStatus(401);
     } else {
       // Authenticated
+      console.log("Signing up user with email: " + req.body.email);
 
-      console.log(req.user);
-      console.log(req.body.email);
+      //do the stuff
   
       res.sendStatus(200);
     }

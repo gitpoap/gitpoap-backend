@@ -8,9 +8,11 @@ var router = Router();
 router.post('/', function (req, res) {
   const token = sign({}, process.env.JWT_SECRET as string, { expiresIn: JWT_EXP_TIME });
 
-  console.log(token);
+  console.log("Issuing a token: " + token);
 
-  res.send(token);
+  res.json({
+    access_token: token
+  });
 })
 
 export default router;
