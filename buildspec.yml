@@ -13,4 +13,5 @@ artifacts:
         - yarn.json
         - 'dist/**/*'
         - README.md
+        - Procfile
 
