@@ -1,7 +1,7 @@
 import { PutItemCommand } from "@aws-sdk/client-dynamodb";
 import { Router } from "express";
 import jwt from "express-jwt";
-import { ddbClient } from "../libs/ddbClient";
+import { ddbClient, CONTACTS_TABLE_NAME } from "../libs/ddbClient";
 
 var router = Router();
 
@@ -18,7 +18,7 @@ router.post('/', jwt({ secret: process.env.JWT_SECRET as string, algorithms: ['H
       console.log("Signing up user with email: " + req.body.email);
 
       const params = {
-        TableName: "contacts",
+        TableName: CONTACTS_TABLE_NAME,
         Item: {
           email: { S: req.body.email },
           timestamp: { S: new Date().toISOString() }
