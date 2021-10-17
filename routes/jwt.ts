@@ -5,7 +5,7 @@ const JWT_EXP_TIME = 60 * 10;
 
 var router = Router();
 
-router.post('/', function (req, res) {
+router.get('/', function (req, res) {
   const token = sign({}, process.env.JWT_SECRET as string, { expiresIn: JWT_EXP_TIME });
 
   console.log("Issuing a token: " + token);

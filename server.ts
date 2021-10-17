@@ -1,7 +1,7 @@
 require('dotenv').config();
 
 import express from 'express';
-import signupRouter from './routes/signup';
+import subscribeRouter from './routes/subscribe';
 import jwtRouter from './routes/jwt';
 import cors from 'cors';
 
@@ -15,7 +15,7 @@ app.get('/', (req, res) => {
 })
 
 app.use('/jwt', jwtRouter);
-app.use('/signup', signupRouter);
+app.use('/subscribe', subscribeRouter);
 
 app.listen(3000, () => {
     console.log('The application is listening on port 3000!');
