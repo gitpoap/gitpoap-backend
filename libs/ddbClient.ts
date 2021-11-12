@@ -3,8 +3,11 @@ import { fromIni } from "@aws-sdk/credential-provider-ini";
 
 const environment = process.env.NODE_ENV as string;
 
-const CONTACTS_TABLE_NAME = environment == "local" ? 
+export const CONTACTS_TABLE_NAME = environment == "local" ?
   "contacts-local" : "contacts";
+
+export const SUGGESTIONS_TABLE_NAME = environment === "local" ?
+  "suggestions-local" : "suggestions";
 
 const DYNAMO_DB_OPTIONS = environment == "local" ? {
   region: "us-east-2",
@@ -13,6 +16,4 @@ const DYNAMO_DB_OPTIONS = environment == "local" ? {
   region: "us-east-2"
 };
 
-const ddbClient =  new DynamoDBClient(DYNAMO_DB_OPTIONS);
-
-export { ddbClient, CONTACTS_TABLE_NAME };
+export const ddbClient =  new DynamoDBClient(DYNAMO_DB_OPTIONS);
