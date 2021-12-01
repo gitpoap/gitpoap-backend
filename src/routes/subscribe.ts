@@ -5,8 +5,10 @@ import { ddbClient, CONTACTS_TABLE_NAME } from "../libs/ddbClient";
 
 var router = Router();
 
-router.post('/', jwt({ secret: process.env.JWT_SECRET as string, algorithms: ['HS256'] }),
-  async function(req, res) {
+router.post(
+  "/",
+  jwt({ secret: process.env.JWT_SECRET as string, algorithms: ["HS256"] }),
+  async function (req, res) {
     if (!req.user) {
       // Not authenticated
 
@@ -21,16 +23,17 @@ router.post('/', jwt({ secret: process.env.JWT_SECRET as string, algorithms: ['H
         TableName: CONTACTS_TABLE_NAME,
         Item: {
           email: { S: req.body.email },
-          timestamp: { S: new Date().toISOString() }
+          timestamp: { S: new Date().toISOString() },
         },
       };
 
       // do the stuff
       const response = await ddbClient.send(new PutItemCommand(params));
       console.log(response);
-  
+
       res.sendStatus(200);
     }
-  });
+  }
+);
 
 export default router;
