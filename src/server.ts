@@ -5,6 +5,7 @@ import cors from "cors";
 import subscribeRouter from "./routes/subscribe";
 import { suggestRouter } from "./routes/suggest";
 import jwtRouter from "./routes/jwt";
+import { githubRouter } from "./routes/github";
 import { CONTACTS_TABLE_NAME } from "./libs/ddbClient";
 import { PORT } from "./constants";
 
@@ -23,6 +24,7 @@ app.get("/", (req, res) => {
 app.use("/jwt", jwtRouter);
 app.use("/subscribe", subscribeRouter);
 app.use("/suggest", suggestRouter);
+app.use("/github", githubRouter);
 
 app.listen(PORT, () => {
   console.log(`The application is listening on port ${PORT}!\n`);
