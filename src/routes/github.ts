@@ -1,6 +1,4 @@
 import { Router } from "express";
-import { sign } from "jsonwebtoken";
-import bodyParser from "body-parser";
 import {
   GH_APP_CLIENT_ID,
   GH_APP_CLIENT_SECRET,
@@ -44,9 +42,6 @@ githubRouter.post("/", async function (req, res) {
       throw JSON.stringify(tokenJson);
     }
 
-    // const tokenText = await tokenRes.text();
-    // console.log("Token Text: ", tokenText);
-    // let params = new URLSearchParams(tokenText);
     access_token = tokenJson.access_token;
     console.log("Access token: ", tokenJson.access_token);
   } catch (error) {
@@ -57,22 +52,5 @@ githubRouter.post("/", async function (req, res) {
     });
   }
 
-  try {
-    // Request to return data of a user that has been authenticated
-    const userRes = await fetch(`https://api.github.com/user`, {
-      headers: {
-        Authorization: `token ${access_token}`,
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-    });
-
-    const userData = await userRes.json();
-
-    return res.status(200).json(userData);
-    // return res.status(200).json({});
-  } catch (err) {
-    console.error("An error has occurred - github user data fetch", err);
-    return res.status(400).send({ message: "A server error has occurred" });
-  }
+  return res.status(200).json({ token: access_token });
 });
