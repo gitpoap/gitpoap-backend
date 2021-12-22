@@ -1,0 +1,55 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String   @id @default(uuid())
+  githubId   Int      @unique
+  oauthToken String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  claims     Claim[]
+}
+
+model Profile {
+  id        String   @id @default(uuid())
+  address   String   @unique @db.VarChar(255)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  bio       String
+}
+
+model Repo {
+  id           String   @id @default(uuid())
+  githubRepoId String   @unique @db.VarChar(255)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  Claim        Claim[]
+}
+
+model Claim {
+  id          String      @id @default(uuid())
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  status      ClaimStatus @default(UNCLAIMED)
+  poapEventId Int
+  poapTokenId String?     @unique @db.VarChar(255)
+  user        User        @relation(fields: [userId], references: [id])
+  userId      String
+  repo        Repo        @relation(fields: [repoId], references: [id])
+  repoId      String
+}
+
+enum ClaimStatus {
+  UNCLAIMED
+  PENDING
+  CLAIMED
+}
