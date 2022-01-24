@@ -6,7 +6,6 @@ import subscribeRouter from './routes/subscribe';
 import { suggestRouter } from './routes/suggest';
 import jwtRouter from './routes/jwt';
 import { githubRouter } from './routes/github';
-import { claimsRouter } from './routes/claims';
 import { CONTACTS_TABLE_NAME } from './libs/ddbClient';
 import { PORT } from './constants';
 
@@ -18,7 +17,7 @@ app.use(cors());
 app.use(express.json());
 
 app.get('/', (req, res) => {
-  res.send('Hello world.  -GitPOAP');
+  res.send('GitPOAP API Server');
 });
 
 /* Endpoints */
@@ -26,10 +25,9 @@ app.use('/jwt', jwtRouter);
 app.use('/subscribe', subscribeRouter);
 app.use('/suggest', suggestRouter);
 app.use('/github', githubRouter);
-app.use('/claims', claimsRouter);
 
 app.listen(PORT, () => {
-  console.log(`The application is listening on port ${PORT}!\n`);
+  console.log(`The application is listening on port ${PORT}\n`);
 
   const environment = process.env.NODE_ENV;
   const secret = process.env.JWT_SECRET;

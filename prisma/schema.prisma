@@ -1,8 +1,9 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
+}
+
+generator dbml {
+  provider = "prisma-dbml-generator"
 }
 
 datasource db {
@@ -11,45 +12,84 @@ datasource db {
 }
 
 model User {
-  id         String   @id @default(uuid())
-  githubId   Int      @unique
-  oauthToken String
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  claims     Claim[]
+  id           Int      @id @default(autoincrement())
+  githubId     Int      @unique
+  oauthToken   String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  githubHandle String   @db.VarChar(255)
+  claims       Claim[]
 }
 
 model Profile {
-  id        String   @id @default(uuid())
-  address   String   @unique @db.VarChar(255)
+  id              Int      @id @default(autoincrement())
+  address         String   @unique @db.VarChar(255)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  bio             String
+  bannerImageUrl  String?  @db.VarChar(255)
+  name            String?  @db.VarChar(255)
+  profileImageUrl String?  @db.VarChar(255)
+}
+
+model Organization {
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(50)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  bio       String
+  repos     Repo[]
 }
 
 model Repo {
-  id           String   @id @default(uuid())
-  githubRepoId String   @unique @db.VarChar(255)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  Claim        Claim[]
+  id             Int           @id @default(autoincrement())
+  githubRepoId   Int           @unique
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  organizationId Int?
+  Organization   Organization? @relation(fields: [organizationId], references: [id])
+  gitPOAPs       GitPOAP[]
+
+  @@index([organizationId], map: "Repo_organizationId_fkey")
 }
 
 model Claim {
-  id          String      @id @default(uuid())
+  id          Int         @id @default(autoincrement())
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   status      ClaimStatus @default(UNCLAIMED)
-  poapEventId Int
   poapTokenId String?     @unique @db.VarChar(255)
+  userId      Int
+  address     String?     @db.VarChar(255)
+  gitPOAPId   Int
+  gitPOAP     GitPOAP     @relation(fields: [gitPOAPId], references: [id])
   user        User        @relation(fields: [userId], references: [id])
-  userId      String
-  repo        Repo        @relation(fields: [repoId], references: [id])
-  repoId      String
+
+  @@index([gitPOAPId], map: "Claim_gitPOAPId_fkey")
+  @@index([userId], map: "Claim_userId_fkey")
+}
+
+model GitPOAP {
+  id          Int       @id @default(autoincrement())
+  type        ClaimType @default(ANNUAL)
+  year        Int
+  poapEventId Int       @unique
+  repoId      Int
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  Repo        Repo      @relation(fields: [repoId], references: [id])
+  claims      Claim[]
+
+  @@index([repoId], map: "GitPOAP_repoId_fkey")
 }
 
 enum ClaimStatus {
   UNCLAIMED
   PENDING
   CLAIMED
+}
+
+enum ClaimType {
+  ANNUAL
+  QUARTERLY
+  MANUAL
 }
