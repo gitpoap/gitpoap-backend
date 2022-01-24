@@ -1,17 +1,17 @@
 version: 0.2
 phases:
-    install:
-        commands:
-            - 'yarn install'
-    build:
-        commands:
-            - 'yarn run build'
+  install:
+    commands:
+      - 'yarn install'
+      - 'npx prisma migrate deploy'
+  build:
+    commands:
+      - 'yarn run build'
 artifacts:
-    type: zip
-    files:
-        - package.json
-        - yarn.json
-        - 'dist/**/*'
-        - README.md
-        - Procfile
-
+  type: zip
+  files:
+    - package.json
+    - yarn.json
+    - 'dist/**/*'
+    - README.md
+    - Procfile
