@@ -1,6 +1,8 @@
-import { makeSchema } from 'nexus';
-import * as types from './types';
+import { buildSchema } from 'type-graphql';
+import { resolvers } from '@generated/type-graphql';
 
-export const schema = makeSchema({
-  types,
+export const getSchema = buildSchema({
+  resolvers,
+  emitSchemaFile: true,
+  validate: false,
 });
