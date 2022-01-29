@@ -6,10 +6,11 @@ import subscribeRouter from './routes/subscribe';
 import { suggestRouter } from './routes/suggest';
 import jwtRouter from './routes/jwt';
 import { githubRouter } from './routes/github';
-import { CONTACTS_TABLE_NAME } from './libs/ddbClient';
+import { CONTACTS_TABLE_NAME } from './dynamo';
 import { PORT } from './constants';
-
-const aws_profile = process.env.AWS_PROFILE as string;
+import { schema } from './graphql/schema';
+import { context } from './context';
+import { graphqlHTTP } from 'express-graphql';
 
 const app = express();
 
@@ -25,12 +26,14 @@ app.use('/jwt', jwtRouter);
 app.use('/subscribe', subscribeRouter);
 app.use('/suggest', suggestRouter);
 app.use('/github', githubRouter);
+app.use('/graphql', graphqlHTTP({ schema, context, graphiql: true }));
 
 app.listen(PORT, () => {
   console.log(`The application is listening on port ${PORT}\n`);
 
   const environment = process.env.NODE_ENV;
   const secret = process.env.JWT_SECRET;
+  const aws_profile = process.env.AWS_PROFILE;
 
   console.log('Environment: ', environment);
   console.log('Secret: ', secret);
