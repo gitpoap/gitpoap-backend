@@ -3,7 +3,7 @@ import { Router } from 'express';
 import jwt from 'express-jwt';
 import { dynamoDB, CONTACTS_TABLE_NAME } from '../dynamo';
 
-var router = Router();
+const router = Router();
 
 router.post(
   '/',
