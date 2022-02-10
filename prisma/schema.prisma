@@ -21,4 +21,71 @@ model User {
   githubHandle String   @db.VarChar(255)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  Claim        Claim[]
+}
+
+model Profile {
+  id              Int      @id @default(autoincrement())
+  address         String   @unique @db.VarChar(255)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  bio             String
+  bannerImageUrl  String?  @db.VarChar(255)
+  name            String?  @db.VarChar(255)
+  profileImageUrl String?  @db.VarChar(255)
+}
+
+model Organization {
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(50)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  repos     Repo[]
+}
+
+model Repo {
+  id             Int           @id @default(autoincrement())
+  githubRepoId   Int           @unique
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  organizationId Int?
+  Organization   Organization? @relation(fields: [organizationId], references: [id])
+  gitPOAPs       GitPOAP[]
+}
+
+model Claim {
+  id          Int         @id @default(autoincrement())
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  status      ClaimStatus @default(UNCLAIMED)
+  poapTokenId String?     @unique @db.VarChar(255)
+  address     String?     @db.VarChar(255)
+  gitPOAPId   Int
+  gitPOAP     GitPOAP     @relation(fields: [gitPOAPId], references: [id])
+  userId      Int
+  user        User        @relation(fields: [userId], references: [id])
+}
+
+model GitPOAP {
+  id          Int       @id @default(autoincrement())
+  type        ClaimType @default(ANNUAL)
+  year        Int
+  poapEventId Int       @unique
+  repoId      Int
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  repo        Repo      @relation(fields: [repoId], references: [id])
+  claims      Claim[]
+}
+
+enum ClaimStatus {
+  UNCLAIMED
+  PENDING
+  CLAIMED
+}
+
+enum ClaimType {
+  ANNUAL
+  QUARTERLY
+  MANUAL
 }
