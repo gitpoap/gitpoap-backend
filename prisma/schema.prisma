@@ -1,5 +1,12 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
 generator client {
   provider = "prisma-client-js"
+}
+
+generator typegraphql {
+  provider = "typegraphql-prisma"
 }
 
 generator dbml {
@@ -7,7 +14,7 @@ generator dbml {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -15,9 +22,9 @@ model User {
   id           Int      @id @default(autoincrement())
   githubId     Int      @unique
   oauthToken   String
+  githubHandle String   @db.VarChar(255)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-  githubHandle String   @db.VarChar(255)
   claims       Claim[]
 }
 
@@ -48,8 +55,6 @@ model Repo {
   organizationId Int?
   Organization   Organization? @relation(fields: [organizationId], references: [id])
   gitPOAPs       GitPOAP[]
-
-  @@index([organizationId], map: "Repo_organizationId_fkey")
 }
 
 model Claim {
@@ -58,14 +63,11 @@ model Claim {
   updatedAt   DateTime    @updatedAt
   status      ClaimStatus @default(UNCLAIMED)
   poapTokenId String?     @unique @db.VarChar(255)
-  userId      Int
   address     String?     @db.VarChar(255)
   gitPOAPId   Int
   gitPOAP     GitPOAP     @relation(fields: [gitPOAPId], references: [id])
+  userId      Int
   user        User        @relation(fields: [userId], references: [id])
-
-  @@index([gitPOAPId], map: "Claim_gitPOAPId_fkey")
-  @@index([userId], map: "Claim_userId_fkey")
 }
 
 model GitPOAP {
@@ -76,10 +78,8 @@ model GitPOAP {
   repoId      Int
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
-  Repo        Repo      @relation(fields: [repoId], references: [id])
+  repo        Repo      @relation(fields: [repoId], references: [id])
   claims      Claim[]
-
-  @@index([repoId], map: "GitPOAP_repoId_fkey")
 }
 
 enum ClaimStatus {

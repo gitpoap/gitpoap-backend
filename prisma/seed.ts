@@ -4,9 +4,29 @@ const prisma = new PrismaClient();
 
 const userData: Prisma.UserCreateInput[] = [
   {
-    githubId: 123,
-    githubHandle: 'vdersar1',
-    oauthToken: 'tokentoken',
+    githubId: 1,
+    githubHandle: 'vitalikb',
+    oauthToken: 'test.test.1',
+  },
+  {
+    githubId: 2,
+    githubHandle: 'colfaxs',
+    oauthToken: 'test.test.2',
+  },
+  {
+    githubId: 3,
+    githubHandle: 'jaypb',
+    oauthToken: 'test.test.3',
+  },
+  {
+    githubId: 4,
+    githubHandle: 'anthonyb',
+    oauthToken: 'test.test.4',
+  },
+  {
+    githubId: 5,
+    githubHandle: 'johnz',
+    oauthToken: 'test.test.5',
   },
 ];
 

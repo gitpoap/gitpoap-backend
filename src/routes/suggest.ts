@@ -1,7 +1,7 @@
-import { PutItemCommand } from "@aws-sdk/client-dynamodb";
-import { Router } from "express";
-import jwt from "express-jwt";
-import { ddbClient, SUGGESTIONS_TABLE_NAME } from "../libs/ddbClient";
+import { PutItemCommand } from '@aws-sdk/client-dynamodb';
+import { Router } from 'express';
+import jwt from 'express-jwt';
+import { dynamoDB, SUGGESTIONS_TABLE_NAME } from '../dynamo';
 
 type SuggestionFormData = {
   email: string;
@@ -10,28 +10,20 @@ type SuggestionFormData = {
 };
 
 enum UserType {
-  Contributor = "Contributor",
-  Owner = "Owner",
+  Contributor = 'Contributor',
+  Owner = 'Owner',
 }
 
 export const suggestRouter = Router();
 
 suggestRouter.post(
-  "/",
-  jwt({ secret: process.env.JWT_SECRET as string, algorithms: ["HS256"] }),
+  '/',
+  jwt({ secret: process.env.JWT_SECRET as string, algorithms: ['HS256'] }),
   async function (req, res) {
     if (!req.user) {
-      // Not authenticated
-
-      console.log("Repo suggested by unauthenticated user.");
-
       return res.sendStatus(401);
     } else {
       const body = req.body as SuggestionFormData;
-
-      // Authenticated
-      console.log("Suggestions repo with url: " + body.repoUrl);
-
       const params = {
         TableName: SUGGESTIONS_TABLE_NAME,
         Item: {
@@ -41,12 +33,9 @@ suggestRouter.post(
           timestamp: { S: new Date().toISOString() },
         },
       };
-
-      // do the stuff
-      const response = await ddbClient.send(new PutItemCommand(params));
-      console.log(response);
+      await dynamoDB.send(new PutItemCommand(params));
 
       res.sendStatus(200);
     }
-  }
+  },
 );

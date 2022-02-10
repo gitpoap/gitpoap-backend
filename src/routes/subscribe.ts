@@ -1,24 +1,17 @@
-import { PutItemCommand } from "@aws-sdk/client-dynamodb";
-import { Router } from "express";
-import jwt from "express-jwt";
-import { ddbClient, CONTACTS_TABLE_NAME } from "../libs/ddbClient";
+import { PutItemCommand } from '@aws-sdk/client-dynamodb';
+import { Router } from 'express';
+import jwt from 'express-jwt';
+import { dynamoDB, CONTACTS_TABLE_NAME } from '../dynamo';
 
-var router = Router();
+const router = Router();
 
 router.post(
-  "/",
-  jwt({ secret: process.env.JWT_SECRET as string, algorithms: ["HS256"] }),
+  '/',
+  jwt({ secret: process.env.JWT_SECRET as string, algorithms: ['HS256'] }),
   async function (req, res) {
     if (!req.user) {
-      // Not authenticated
-
-      console.log("Signup requested from unauthenticated user.");
-
       return res.sendStatus(401);
     } else {
-      // Authenticated
-      console.log("Signing up user with email: " + req.body.email);
-
       const params = {
         TableName: CONTACTS_TABLE_NAME,
         Item: {
@@ -26,14 +19,11 @@ router.post(
           timestamp: { S: new Date().toISOString() },
         },
       };
-
-      // do the stuff
-      const response = await ddbClient.send(new PutItemCommand(params));
-      console.log(response);
+      await dynamoDB.send(new PutItemCommand(params));
 
       res.sendStatus(200);
     }
-  }
+  },
 );
 
 export default router;
