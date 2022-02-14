@@ -8,3 +8,5 @@
 * https://stackoverflow.com/questions/42406913/nodejs-import-require-conversion
 * https://javascript.plainenglish.io/how-to-get-typescript-type-completion-by-defining-process-env-types-6a5869174f57
 * https://stackoverflow.com/questions/66328425/jwt-argument-of-type-string-undefined-is-not-assignable-to-parameter-of-typ
+* [prisma migrations](https://www.prisma.io/docs/concepts/components/prisma-migrate)
+* [relational queries (creation)](https://www.prisma.io/docs/concepts/components/prisma-client/relation-queries#create-a-related-record)
