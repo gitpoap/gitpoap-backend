@@ -111,32 +111,59 @@ const claimData: Prisma.ClaimCreateInput[] = [
   },
 ];
 
+const profileData: Prisma.ProfileCreateInput[] = [
+  {
+    address: "0x56d389C4E07A48d429035532402301310B8143A0",
+    bio: "I like brisket."
+  },
+  {
+    address: "0x89DAB21047e6De0e77Deee5F4F286D72Be50B942",
+    bio: "I like bbq."
+  },
+  {
+    address: "0x304Cf9A8b0856F47cCf9cFd5A5BAD1D67b0576a7",
+    bio: "I like factorio."
+  }
+];
+
 async function main() {
   console.log('Starting DB seeding...');
+
   for (const u of userData) {
     const user = await prisma.user.create({
       data: u,
     });
     console.log(`Creating user with id: ${user.id}`);
   }
+
   for (const r of repoData) {
     const repo = await prisma.repo.create({
       data: r,
     });
     console.log(`Creating repo with id: ${repo.id}`);
   }
+
   for (const p of poapData) {
     const poap = await prisma.gitPOAP.create({
       data: p,
     });
     console.log(`Creating GitPOAP with id: ${poap.id}`);
   }
+
   for (const c of claimData) {
     const claim = await prisma.claim.create({
       data: c,
     });
     console.log(`Creating Claim with id: ${claim.id}`);
   }
+
+  for (const p of profileData) {
+    const profile = await prisma.profile.create({
+      data: p,
+    });
+    console.log(`Creating profile with id: ${profile.id}`);
+  }
+
   console.log('DB Seeding complete. ');
 }
 
