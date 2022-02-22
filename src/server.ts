@@ -7,6 +7,7 @@ import subscribeRouter from './routes/subscribe';
 import { suggestRouter } from './routes/suggest';
 import jwtRouter from './routes/jwt';
 import { githubRouter } from './routes/github';
+import { flowsRouter } from './routes/flows';
 import { CONTACTS_TABLE_NAME } from './dynamo';
 import { PORT } from './constants';
 import { getSchema } from './graphql/schema';
@@ -27,6 +28,7 @@ const main = async () => {
   app.use('/jwt', jwtRouter);
   app.use('/subscribe', subscribeRouter);
   app.use('/suggest', suggestRouter);
+  app.use('/flows', flowsRouter);
   app.use('/github', githubRouter);
   app.use('/graphql', graphqlHTTP({ schema: await getSchema, context, graphiql: true }));
 
