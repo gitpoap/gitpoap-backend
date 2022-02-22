@@ -10,3 +10,10 @@
 * https://stackoverflow.com/questions/66328425/jwt-argument-of-type-string-undefined-is-not-assignable-to-parameter-of-typ
 * [prisma migrations](https://www.prisma.io/docs/concepts/components/prisma-migrate)
 * [relational queries (creation)](https://www.prisma.io/docs/concepts/components/prisma-client/relation-queries#create-a-related-record)
+
+### Running locally with docker-compose
+
+To run a local (seeded) version of the DB as well as the app, run:
+```sh
+docker-compose up --build --force-recreate --renew-anon-volumes
+```
