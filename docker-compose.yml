@@ -9,6 +9,13 @@ services:
     environment:
       POSTGRES_PASSWORD: foobar88
 
+  fake-poap-api:
+    build:
+      context: .dockerfiles/fake-poap-api
+      dockerfile: api.Dockerfile
+    ports:
+      - "4004:4004"
+
   server:
     build:
       context: .
@@ -17,3 +24,4 @@ services:
       - "3001:3001"
     depends_on:
       - db
+      - fake-poap-api

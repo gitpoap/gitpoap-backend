@@ -1,0 +1,9 @@
+{
+  "name": "fake-poap-api",
+  "version": "1.0.0",
+  "description": "Fake endpoint for POAP API",
+  "main": "index.js",
+  "dependencies": {
+    "express": "^4.17.3"
+  }
+}
