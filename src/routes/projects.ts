@@ -2,10 +2,9 @@ import { Router } from "express";
 import fetch from "cross-fetch";
 import { context } from "../context";
 
-export const flowsRouter = Router();
+export const projectsRouter = Router();
 
-flowsRouter.post("/add-project", async function (req, res) {
-
+projectsRouter.post("/", async function (req, res) {
   if (!req.body?.organization) {
     return res.status(400).send({
       message:
@@ -37,6 +36,7 @@ flowsRouter.post("/add-project", async function (req, res) {
 
     console.log(`Adding Org with githubId: ${repoInfo.owner.id} and name: ${repoInfo.owner.login}`);
 
+    // Add the org if it doesn't already exist
     const org = await context.prisma.organization.upsert({
       where: {
         githubOrgId: repoInfo.owner.id
@@ -48,6 +48,7 @@ flowsRouter.post("/add-project", async function (req, res) {
       }
     });
 
+    // Check to see if we've already created the repo
     const repo = await context.prisma.repo.findUnique({
       where: {
         githubRepoId: repoInfo.id
@@ -55,6 +56,8 @@ flowsRouter.post("/add-project", async function (req, res) {
     });
 
     if (repo) {
+      console.log(`Repo with githubId: ${repoInfo.id} and name: ${repoInfo.name} already exists`);
+
       return res.status(200).send('ALREADY EXISTS');
     }
 

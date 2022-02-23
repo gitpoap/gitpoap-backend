@@ -2,7 +2,7 @@
 
 ## Add project
 
-POST `/flows/add-project`
+POST `/projects`
 
 Data:
 ```json
