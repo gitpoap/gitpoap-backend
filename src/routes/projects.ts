@@ -1,34 +1,32 @@
-import { Router } from "express";
-import fetch from "cross-fetch";
-import { context } from "../context";
+import { Router } from 'express';
+import fetch from 'cross-fetch';
+import { context } from '../context';
 
 export const projectsRouter = Router();
 
-projectsRouter.post("/", async function (req, res) {
+projectsRouter.post('/', async function (req, res) {
   if (!req.body?.organization) {
     return res.status(400).send({
-      message:
-        "The request must specify a GitHub organization" +
-        " within the 'organization' key"
+      message: 'The request must specify a GitHub organization' + " within the 'organization' key",
     });
   }
   if (!req.body?.repository) {
     return res.status(400).send({
-      message:
-        "The request must specify a GitHub repository" +
-        " within the 'repository' key"
+      message: 'The request must specify a GitHub repository' + " within the 'repository' key",
     });
   }
 
   console.log(`Received request to add ${req.body.organization}/${req.body.repository}`);
 
   try {
-    const gitRes = await fetch(`https://api.github.com/repos/${req.body.organization}/${req.body.repository}`)
+    const gitRes = await fetch(
+      `https://api.github.com/repos/${req.body.organization}/${req.body.repository}`,
+    );
 
     if (gitRes.status >= 400) {
       return res.status(gitRes.status).send({
-        message: "Failed to lookup repository on GitHub",
-        error: gitRes.body
+        message: 'Failed to lookup repository on GitHub',
+        error: gitRes.body,
       });
     }
 
@@ -39,20 +37,20 @@ projectsRouter.post("/", async function (req, res) {
     // Add the org if it doesn't already exist
     const org = await context.prisma.organization.upsert({
       where: {
-        githubOrgId: repoInfo.owner.id
+        githubOrgId: repoInfo.owner.id,
       },
       update: {},
       create: {
         githubOrgId: repoInfo.owner.id,
-        name: repoInfo.owner.login
-      }
+        name: repoInfo.owner.login,
+      },
     });
 
     // Check to see if we've already created the repo
     const repo = await context.prisma.repo.findUnique({
       where: {
-        githubRepoId: repoInfo.id
-      }
+        githubRepoId: repoInfo.id,
+      },
     });
 
     if (repo) {
@@ -67,8 +65,8 @@ projectsRouter.post("/", async function (req, res) {
       data: {
         githubRepoId: repoInfo.id,
         name: repoInfo.name,
-        organizationId: org.id
-      }
+        organizationId: org.id,
+      },
     });
 
     return res.status(201).send('CREATED');
@@ -76,8 +74,8 @@ projectsRouter.post("/", async function (req, res) {
     console.log(err);
 
     return res.status(500).send({
-      message: "Something went wrong!",
-      error: err
+      message: 'Something went wrong!',
+      error: err,
     });
   }
 });
