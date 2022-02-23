@@ -40,15 +40,17 @@ model Profile {
 }
 
 model Organization {
-  id        Int      @id @default(autoincrement())
-  name      String   @db.VarChar(50)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  repos     Repo[]
+  id          Int      @id @default(autoincrement())
+  githubOrgId Int      @unique
+  name        String   @db.VarChar(50)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  repos       Repo[]
 }
 
 model Repo {
   id             Int           @id @default(autoincrement())
+  name           String        @db.VarChar(50)
   githubRepoId   Int           @unique
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt

@@ -1235,6 +1235,7 @@ input NullableStringFieldUpdateOperationsInput {
 type Organization {
   _count: OrganizationCount
   createdAt: DateTime!
+  githubOrgId: Int!
   id: Int!
   name: String!
   repos(cursor: RepoWhereUniqueInput, distinct: [RepoScalarFieldEnum!], orderBy: [RepoOrderByWithRelationInput!], skip: Int, take: Int, where: RepoWhereInput): [Repo!]!
@@ -1242,10 +1243,12 @@ type Organization {
 }
 
 type OrganizationAvgAggregate {
+  githubOrgId: Float
   id: Float
 }
 
 input OrganizationAvgOrderByAggregateInput {
+  githubOrgId: SortOrder
   id: SortOrder
 }
 
@@ -1256,6 +1259,7 @@ type OrganizationCount {
 type OrganizationCountAggregate {
   _all: Int!
   createdAt: Int!
+  githubOrgId: Int!
   id: Int!
   name: Int!
   updatedAt: Int!
@@ -1263,6 +1267,7 @@ type OrganizationCountAggregate {
 
 input OrganizationCountOrderByAggregateInput {
   createdAt: SortOrder
+  githubOrgId: SortOrder
   id: SortOrder
   name: SortOrder
   updatedAt: SortOrder
@@ -1270,6 +1275,7 @@ input OrganizationCountOrderByAggregateInput {
 
 input OrganizationCreateInput {
   createdAt: DateTime
+  githubOrgId: Int!
   name: String!
   repos: RepoCreateNestedManyWithoutOrganizationInput
   updatedAt: DateTime
@@ -1277,6 +1283,7 @@ input OrganizationCreateInput {
 
 input OrganizationCreateManyInput {
   createdAt: DateTime
+  githubOrgId: Int!
   id: Int
   name: String!
   updatedAt: DateTime
@@ -1295,6 +1302,7 @@ input OrganizationCreateOrConnectWithoutReposInput {
 
 input OrganizationCreateWithoutReposInput {
   createdAt: DateTime
+  githubOrgId: Int!
   name: String!
   updatedAt: DateTime
 }
@@ -1306,6 +1314,7 @@ type OrganizationGroupBy {
   _min: OrganizationMinAggregate
   _sum: OrganizationSumAggregate
   createdAt: DateTime!
+  githubOrgId: Int!
   id: Int!
   name: String!
   updatedAt: DateTime!
@@ -1313,6 +1322,7 @@ type OrganizationGroupBy {
 
 type OrganizationMaxAggregate {
   createdAt: DateTime
+  githubOrgId: Int
   id: Int
   name: String
   updatedAt: DateTime
@@ -1320,6 +1330,7 @@ type OrganizationMaxAggregate {
 
 input OrganizationMaxOrderByAggregateInput {
   createdAt: SortOrder
+  githubOrgId: SortOrder
   id: SortOrder
   name: SortOrder
   updatedAt: SortOrder
@@ -1327,6 +1338,7 @@ input OrganizationMaxOrderByAggregateInput {
 
 type OrganizationMinAggregate {
   createdAt: DateTime
+  githubOrgId: Int
   id: Int
   name: String
   updatedAt: DateTime
@@ -1334,6 +1346,7 @@ type OrganizationMinAggregate {
 
 input OrganizationMinOrderByAggregateInput {
   createdAt: SortOrder
+  githubOrgId: SortOrder
   id: SortOrder
   name: SortOrder
   updatedAt: SortOrder
@@ -1346,6 +1359,7 @@ input OrganizationOrderByWithAggregationInput {
   _min: OrganizationMinOrderByAggregateInput
   _sum: OrganizationSumOrderByAggregateInput
   createdAt: SortOrder
+  githubOrgId: SortOrder
   id: SortOrder
   name: SortOrder
   updatedAt: SortOrder
@@ -1353,6 +1367,7 @@ input OrganizationOrderByWithAggregationInput {
 
 input OrganizationOrderByWithRelationInput {
   createdAt: SortOrder
+  githubOrgId: SortOrder
   id: SortOrder
   name: SortOrder
   repos: RepoOrderByRelationAggregateInput
@@ -1366,6 +1381,7 @@ input OrganizationRelationFilter {
 
 enum OrganizationScalarFieldEnum {
   createdAt
+  githubOrgId
   id
   name
   updatedAt
@@ -1376,21 +1392,25 @@ input OrganizationScalarWhereWithAggregatesInput {
   NOT: [OrganizationScalarWhereWithAggregatesInput!]
   OR: [OrganizationScalarWhereWithAggregatesInput!]
   createdAt: DateTimeWithAggregatesFilter
+  githubOrgId: IntWithAggregatesFilter
   id: IntWithAggregatesFilter
   name: StringWithAggregatesFilter
   updatedAt: DateTimeWithAggregatesFilter
 }
 
 type OrganizationSumAggregate {
+  githubOrgId: Int
   id: Int
 }
 
 input OrganizationSumOrderByAggregateInput {
+  githubOrgId: SortOrder
   id: SortOrder
 }
 
 input OrganizationUpdateInput {
   createdAt: DateTimeFieldUpdateOperationsInput
+  githubOrgId: IntFieldUpdateOperationsInput
   name: StringFieldUpdateOperationsInput
   repos: RepoUpdateManyWithoutOrganizationInput
   updatedAt: DateTimeFieldUpdateOperationsInput
@@ -1398,6 +1418,7 @@ input OrganizationUpdateInput {
 
 input OrganizationUpdateManyMutationInput {
   createdAt: DateTimeFieldUpdateOperationsInput
+  githubOrgId: IntFieldUpdateOperationsInput
   name: StringFieldUpdateOperationsInput
   updatedAt: DateTimeFieldUpdateOperationsInput
 }
@@ -1414,6 +1435,7 @@ input OrganizationUpdateOneWithoutReposInput {
 
 input OrganizationUpdateWithoutReposInput {
   createdAt: DateTimeFieldUpdateOperationsInput
+  githubOrgId: IntFieldUpdateOperationsInput
   name: StringFieldUpdateOperationsInput
   updatedAt: DateTimeFieldUpdateOperationsInput
 }
@@ -1428,6 +1450,7 @@ input OrganizationWhereInput {
   NOT: [OrganizationWhereInput!]
   OR: [OrganizationWhereInput!]
   createdAt: DateTimeFilter
+  githubOrgId: IntFilter
   id: IntFilter
   name: StringFilter
   repos: RepoListRelationFilter
@@ -1435,6 +1458,7 @@ input OrganizationWhereInput {
 }
 
 input OrganizationWhereUniqueInput {
+  githubOrgId: Int
   id: Int
 }
 
@@ -1705,6 +1729,7 @@ type Repo {
   gitPOAPs(cursor: GitPOAPWhereUniqueInput, distinct: [GitPOAPScalarFieldEnum!], orderBy: [GitPOAPOrderByWithRelationInput!], skip: Int, take: Int, where: GitPOAPWhereInput): [GitPOAP!]!
   githubRepoId: Int!
   id: Int!
+  name: String!
   organizationId: Int
   updatedAt: DateTime!
 }
@@ -1730,6 +1755,7 @@ type RepoCountAggregate {
   createdAt: Int!
   githubRepoId: Int!
   id: Int!
+  name: Int!
   organizationId: Int!
   updatedAt: Int!
 }
@@ -1738,6 +1764,7 @@ input RepoCountOrderByAggregateInput {
   createdAt: SortOrder
   githubRepoId: SortOrder
   id: SortOrder
+  name: SortOrder
   organizationId: SortOrder
   updatedAt: SortOrder
 }
@@ -1747,6 +1774,7 @@ input RepoCreateInput {
   createdAt: DateTime
   gitPOAPs: GitPOAPCreateNestedManyWithoutRepoInput
   githubRepoId: Int!
+  name: String!
   updatedAt: DateTime
 }
 
@@ -1754,6 +1782,7 @@ input RepoCreateManyInput {
   createdAt: DateTime
   githubRepoId: Int!
   id: Int
+  name: String!
   organizationId: Int
   updatedAt: DateTime
 }
@@ -1762,6 +1791,7 @@ input RepoCreateManyOrganizationInput {
   createdAt: DateTime
   githubRepoId: Int!
   id: Int
+  name: String!
   updatedAt: DateTime
 }
 
@@ -1797,6 +1827,7 @@ input RepoCreateWithoutGitPOAPsInput {
   Organization: OrganizationCreateNestedOneWithoutReposInput
   createdAt: DateTime
   githubRepoId: Int!
+  name: String!
   updatedAt: DateTime
 }
 
@@ -1804,6 +1835,7 @@ input RepoCreateWithoutOrganizationInput {
   createdAt: DateTime
   gitPOAPs: GitPOAPCreateNestedManyWithoutRepoInput
   githubRepoId: Int!
+  name: String!
   updatedAt: DateTime
 }
 
@@ -1816,6 +1848,7 @@ type RepoGroupBy {
   createdAt: DateTime!
   githubRepoId: Int!
   id: Int!
+  name: String!
   organizationId: Int
   updatedAt: DateTime!
 }
@@ -1830,6 +1863,7 @@ type RepoMaxAggregate {
   createdAt: DateTime
   githubRepoId: Int
   id: Int
+  name: String
   organizationId: Int
   updatedAt: DateTime
 }
@@ -1838,6 +1872,7 @@ input RepoMaxOrderByAggregateInput {
   createdAt: SortOrder
   githubRepoId: SortOrder
   id: SortOrder
+  name: SortOrder
   organizationId: SortOrder
   updatedAt: SortOrder
 }
@@ -1846,6 +1881,7 @@ type RepoMinAggregate {
   createdAt: DateTime
   githubRepoId: Int
   id: Int
+  name: String
   organizationId: Int
   updatedAt: DateTime
 }
@@ -1854,6 +1890,7 @@ input RepoMinOrderByAggregateInput {
   createdAt: SortOrder
   githubRepoId: SortOrder
   id: SortOrder
+  name: SortOrder
   organizationId: SortOrder
   updatedAt: SortOrder
 }
@@ -1871,6 +1908,7 @@ input RepoOrderByWithAggregationInput {
   createdAt: SortOrder
   githubRepoId: SortOrder
   id: SortOrder
+  name: SortOrder
   organizationId: SortOrder
   updatedAt: SortOrder
 }
@@ -1881,6 +1919,7 @@ input RepoOrderByWithRelationInput {
   gitPOAPs: GitPOAPOrderByRelationAggregateInput
   githubRepoId: SortOrder
   id: SortOrder
+  name: SortOrder
   organizationId: SortOrder
   updatedAt: SortOrder
 }
@@ -1894,6 +1933,7 @@ enum RepoScalarFieldEnum {
   createdAt
   githubRepoId
   id
+  name
   organizationId
   updatedAt
 }
@@ -1905,6 +1945,7 @@ input RepoScalarWhereInput {
   createdAt: DateTimeFilter
   githubRepoId: IntFilter
   id: IntFilter
+  name: StringFilter
   organizationId: IntNullableFilter
   updatedAt: DateTimeFilter
 }
@@ -1916,6 +1957,7 @@ input RepoScalarWhereWithAggregatesInput {
   createdAt: DateTimeWithAggregatesFilter
   githubRepoId: IntWithAggregatesFilter
   id: IntWithAggregatesFilter
+  name: StringWithAggregatesFilter
   organizationId: IntNullableWithAggregatesFilter
   updatedAt: DateTimeWithAggregatesFilter
 }
@@ -1937,12 +1979,14 @@ input RepoUpdateInput {
   createdAt: DateTimeFieldUpdateOperationsInput
   gitPOAPs: GitPOAPUpdateManyWithoutRepoInput
   githubRepoId: IntFieldUpdateOperationsInput
+  name: StringFieldUpdateOperationsInput
   updatedAt: DateTimeFieldUpdateOperationsInput
 }
 
 input RepoUpdateManyMutationInput {
   createdAt: DateTimeFieldUpdateOperationsInput
   githubRepoId: IntFieldUpdateOperationsInput
+  name: StringFieldUpdateOperationsInput
   updatedAt: DateTimeFieldUpdateOperationsInput
 }
 
@@ -1982,6 +2026,7 @@ input RepoUpdateWithoutGitPOAPsInput {
   Organization: OrganizationUpdateOneWithoutReposInput
   createdAt: DateTimeFieldUpdateOperationsInput
   githubRepoId: IntFieldUpdateOperationsInput
+  name: StringFieldUpdateOperationsInput
   updatedAt: DateTimeFieldUpdateOperationsInput
 }
 
@@ -1989,6 +2034,7 @@ input RepoUpdateWithoutOrganizationInput {
   createdAt: DateTimeFieldUpdateOperationsInput
   gitPOAPs: GitPOAPUpdateManyWithoutRepoInput
   githubRepoId: IntFieldUpdateOperationsInput
+  name: StringFieldUpdateOperationsInput
   updatedAt: DateTimeFieldUpdateOperationsInput
 }
 
@@ -2012,6 +2058,7 @@ input RepoWhereInput {
   gitPOAPs: GitPOAPListRelationFilter
   githubRepoId: IntFilter
   id: IntFilter
+  name: StringFilter
   organizationId: IntNullableFilter
   updatedAt: DateTimeFilter
 }

@@ -32,12 +32,15 @@ const userData: Prisma.UserCreateInput[] = [
 
 const repoData: Prisma.RepoCreateInput[] = [
   {
+    name: 'repo34',
     githubRepoId: 34
   },
   {
+    name: 'repo7',
     githubRepoId: 7
   },
   {
+    name: 'repo568',
     githubRepoId: 568
   },
 ];
