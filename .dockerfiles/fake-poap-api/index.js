@@ -62,26 +62,28 @@ app.post('/events', (req, res) => {
     res.status(400).send('Missing "private_event" field');
   } else {
     res.setHeader('Content-Type', 'application/json');
-    res.end(JSON.stringify({
-      "id": 0,
-      "fancy_id": "string",
-      "name": req.body.name,
-      "event_url": req.body.event_url,
-      "image_url": "string",
-      "country": req.body.country,
-      "city": req.body.city,
-      "description": req.body.description,
-      "year": req.body.year,
-      "start_date": req.body.start_date,
-      "end_date": req.body.end_date,
-      "expiry_date": req.body.expiry_date,
-      "created_date": "string",
-      "from_admin": true,
-      "virtual_event": req.body.virtual_date,
-      "event_template_id": req.body.event_template_id,
-      "event_host_id": 0,
-      "private_event": req.body.private_event
-    }));
+    res.end(
+      JSON.stringify({
+        id: 0,
+        fancy_id: 'string',
+        name: req.body.name,
+        event_url: req.body.event_url,
+        image_url: 'string',
+        country: req.body.country,
+        city: req.body.city,
+        description: req.body.description,
+        year: req.body.year,
+        start_date: req.body.start_date,
+        end_date: req.body.end_date,
+        expiry_date: req.body.expiry_date,
+        created_date: 'string',
+        from_admin: true,
+        virtual_event: req.body.virtual_date,
+        event_template_id: req.body.event_template_id,
+        event_host_id: 0,
+        private_event: req.body.private_event,
+      }),
+    );
   }
 });
 
