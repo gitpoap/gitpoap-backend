@@ -943,33 +943,6 @@ input IntFilter {
   notIn: [Int!]
 }
 
-input IntNullableFilter {
-  equals: Int
-  gt: Int
-  gte: Int
-  in: [Int!]
-  lt: Int
-  lte: Int
-  not: NestedIntNullableFilter
-  notIn: [Int!]
-}
-
-input IntNullableWithAggregatesFilter {
-  _avg: NestedFloatNullableFilter
-  _count: NestedIntNullableFilter
-  _max: NestedIntNullableFilter
-  _min: NestedIntNullableFilter
-  _sum: NestedIntNullableFilter
-  equals: Int
-  gt: Int
-  gte: Int
-  in: [Int!]
-  lt: Int
-  lte: Int
-  not: NestedIntNullableWithAggregatesFilter
-  notIn: [Int!]
-}
-
 input IntWithAggregatesFilter {
   _avg: NestedFloatFilter
   _count: NestedIntFilter
@@ -1101,17 +1074,6 @@ input NestedFloatFilter {
   notIn: [Float!]
 }
 
-input NestedFloatNullableFilter {
-  equals: Float
-  gt: Float
-  gte: Float
-  in: [Float!]
-  lt: Float
-  lte: Float
-  not: NestedFloatNullableFilter
-  notIn: [Float!]
-}
-
 input NestedIntFilter {
   equals: Int
   gt: Int
@@ -1131,22 +1093,6 @@ input NestedIntNullableFilter {
   lt: Int
   lte: Int
   not: NestedIntNullableFilter
-  notIn: [Int!]
-}
-
-input NestedIntNullableWithAggregatesFilter {
-  _avg: NestedFloatNullableFilter
-  _count: NestedIntNullableFilter
-  _max: NestedIntNullableFilter
-  _min: NestedIntNullableFilter
-  _sum: NestedIntNullableFilter
-  equals: Int
-  gt: Int
-  gte: Int
-  in: [Int!]
-  lt: Int
-  lte: Int
-  not: NestedIntNullableWithAggregatesFilter
   notIn: [Int!]
 }
 
@@ -1730,7 +1676,7 @@ type Repo {
   githubRepoId: Int!
   id: Int!
   name: String!
-  organizationId: Int
+  organizationId: Int!
   updatedAt: DateTime!
 }
 
@@ -1783,7 +1729,7 @@ input RepoCreateManyInput {
   githubRepoId: Int!
   id: Int
   name: String!
-  organizationId: Int
+  organizationId: Int!
   updatedAt: DateTime
 }
 
@@ -1849,7 +1795,7 @@ type RepoGroupBy {
   githubRepoId: Int!
   id: Int!
   name: String!
-  organizationId: Int
+  organizationId: Int!
   updatedAt: DateTime!
 }
 
@@ -1946,7 +1892,7 @@ input RepoScalarWhereInput {
   githubRepoId: IntFilter
   id: IntFilter
   name: StringFilter
-  organizationId: IntNullableFilter
+  organizationId: IntFilter
   updatedAt: DateTimeFilter
 }
 
@@ -1958,7 +1904,7 @@ input RepoScalarWhereWithAggregatesInput {
   githubRepoId: IntWithAggregatesFilter
   id: IntWithAggregatesFilter
   name: StringWithAggregatesFilter
-  organizationId: IntNullableWithAggregatesFilter
+  organizationId: IntWithAggregatesFilter
   updatedAt: DateTimeWithAggregatesFilter
 }
 
@@ -2059,7 +2005,7 @@ input RepoWhereInput {
   githubRepoId: IntFilter
   id: IntFilter
   name: StringFilter
-  organizationId: IntNullableFilter
+  organizationId: IntFilter
   updatedAt: DateTimeFilter
 }
 

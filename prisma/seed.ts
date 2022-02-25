@@ -30,18 +30,48 @@ const userData: Prisma.UserCreateInput[] = [
   },
 ];
 
+const orgData: Prisma.OrganizationCreateInput[] = [
+  {
+    githubOrgId: 43,
+    name: 'org43',
+  },
+  {
+    githubOrgId: 7,
+    name: 'seven-heaven',
+  },
+  {
+    githubOrgId: 34343,
+    name: 'some-other-org',
+  },
+];
+
 const repoData: Prisma.RepoCreateInput[] = [
   {
     name: 'repo34',
-    githubRepoId: 34
+    githubRepoId: 34,
+    Organization: {
+      connect: {
+        id: 1,
+      },
+    },
   },
   {
     name: 'repo7',
-    githubRepoId: 7
+    githubRepoId: 7,
+    Organization: {
+      connect: {
+        id: 2,
+      },
+    },
   },
   {
     name: 'repo568',
-    githubRepoId: 568
+    githubRepoId: 568,
+    Organization: {
+      connect: {
+        id: 3,
+      },
+    },
   },
 ];
 
@@ -51,7 +81,7 @@ const poapData: Prisma.GitPOAPCreateInput[] = [
     poapEventId: 80,
     repo: {
       connect: {
-        id: 1
+        id: 1,
       },
     },
   },
@@ -60,7 +90,7 @@ const poapData: Prisma.GitPOAPCreateInput[] = [
     poapEventId: 345,
     repo: {
       connect: {
-        id: 2
+        id: 2,
       },
     },
   },
@@ -69,7 +99,7 @@ const poapData: Prisma.GitPOAPCreateInput[] = [
     poapEventId: 4,
     repo: {
       connect: {
-        id: 3
+        id: 3,
       },
     },
   },
@@ -79,54 +109,54 @@ const claimData: Prisma.ClaimCreateInput[] = [
   {
     gitPOAP: {
       connect: {
-        id: 1
-      }
+        id: 1,
+      },
     },
     user: {
       connect: {
-        id: 1
-      }
-    }
+        id: 1,
+      },
+    },
   },
   {
     gitPOAP: {
       connect: {
-        id: 2
-      }
+        id: 2,
+      },
     },
     user: {
       connect: {
-        id: 2
-      }
-    }
+        id: 2,
+      },
+    },
   },
   {
     gitPOAP: {
       connect: {
-        id: 3
-      }
+        id: 3,
+      },
     },
     user: {
       connect: {
-        id: 3
-      }
-    }
+        id: 3,
+      },
+    },
   },
 ];
 
 const profileData: Prisma.ProfileCreateInput[] = [
   {
-    address: "0x56d389C4E07A48d429035532402301310B8143A0",
-    bio: "I like brisket."
+    address: '0x56d389C4E07A48d429035532402301310B8143A0',
+    bio: 'I like brisket.',
   },
   {
-    address: "0x89DAB21047e6De0e77Deee5F4F286D72Be50B942",
-    bio: "I like bbq."
+    address: '0x89DAB21047e6De0e77Deee5F4F286D72Be50B942',
+    bio: 'I like bbq.',
   },
   {
-    address: "0x304Cf9A8b0856F47cCf9cFd5A5BAD1D67b0576a7",
-    bio: "I like factorio."
-  }
+    address: '0x304Cf9A8b0856F47cCf9cFd5A5BAD1D67b0576a7',
+    bio: 'I like factorio.',
+  },
 ];
 
 async function main() {
@@ -137,6 +167,13 @@ async function main() {
       data: u,
     });
     console.log(`Creating user with id: ${user.id}`);
+  }
+
+  for (const r of orgData) {
+    const org = await prisma.organization.create({
+      data: r,
+    });
+    console.log(`Creating organization with id: ${org.id}`);
   }
 
   for (const r of repoData) {
@@ -157,7 +194,7 @@ async function main() {
     const claim = await prisma.claim.create({
       data: c,
     });
-    console.log(`Creating Claim with id: ${claim.id}`);
+    console.log(`Creating claim with id: ${claim.id}`);
   }
 
   for (const p of profileData) {
