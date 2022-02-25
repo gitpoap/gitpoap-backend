@@ -1,3 +1,4 @@
+import { AddProjectSchema } from '../schemas/projects';
 import { Router } from 'express';
 import fetch from 'cross-fetch';
 import { context } from '../context';
@@ -5,15 +6,10 @@ import { context } from '../context';
 export const projectsRouter = Router();
 
 projectsRouter.post('/', async function (req, res) {
-  if (!req.body?.organization) {
-    return res.status(400).send({
-      message: 'The request must specify a GitHub organization' + " within the 'organization' key",
-    });
-  }
-  if (!req.body?.repository) {
-    return res.status(400).send({
-      message: 'The request must specify a GitHub repository' + " within the 'repository' key",
-    });
+  const schemaResult = AddProjectSchema.safeParse(req.body);
+
+  if (!schemaResult.success) {
+    return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
   console.log(`Received request to add ${req.body.organization}/${req.body.repository}`);

@@ -44,7 +44,8 @@
     "prisma": "^3.8.1",
     "reflect-metadata": "^0.1.13",
     "type-graphql": "^1.1.1",
-    "typegraphql-prisma": "^0.18.4"
+    "typegraphql-prisma": "^0.18.4",
+    "zod": "^3.12.0"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
