@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -ex
+
 # Wait for db to finish starting up
 sleep 3
 

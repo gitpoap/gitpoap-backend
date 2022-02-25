@@ -54,7 +54,7 @@ model Repo {
   githubRepoId   Int           @unique
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
-  organizationId Int?
+  organizationId Int
   Organization   Organization? @relation(fields: [organizationId], references: [id])
   gitPOAPs       GitPOAP[]
 }
