@@ -6,6 +6,7 @@ import cors from 'cors';
 import subscribeRouter from './routes/subscribe';
 import { suggestRouter } from './routes/suggest';
 import jwtRouter from './routes/jwt';
+import { claimsRouter } from './routes/claims';
 import { githubRouter } from './routes/github';
 import { profilesRouter } from './routes/profiles';
 import { projectsRouter } from './routes/projects';
@@ -33,6 +34,7 @@ const main = async () => {
   app.use('/graphql', graphqlHTTP({ schema: await getSchema, context, graphiql: true }));
 
   /* API endpoints for the frontend */
+  app.use('/claims', claimsRouter);
   app.use('/profiles', profilesRouter);
   app.use('/projects', projectsRouter);
 
