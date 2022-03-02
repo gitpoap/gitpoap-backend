@@ -22,7 +22,7 @@ projectsRouter.post('/', async function (req, res) {
     if (gitRes.status >= 400) {
       return res.status(gitRes.status).send({
         message: 'Failed to lookup repository on GitHub',
-        error: gitRes.body,
+        error: await gitRes.text(),
       });
     }
 
