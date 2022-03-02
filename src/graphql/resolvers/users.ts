@@ -9,7 +9,7 @@ class UserWithClaimsCount {
   user: User;
 
   @Field()
-  claims_count: Number;
+  claimsCount: Number;
 }
 
 @Resolver(of => User)
@@ -41,25 +41,25 @@ export class CustomUserResolver {
     const lastWeek = getLastWeekStartDatetime();
 
     type ResultType = User & {
-      claims_count: Number;
+      claimsCount: Number;
     };
 
     const results: ResultType[] = await prisma.$queryRaw`
-      SELECT u.*, COUNT(c.id) AS claims_count
+      SELECT u.*, COUNT(c.id) AS "claimsCount"
       FROM "User" AS u
       JOIN "Claim" AS c ON c."userId" = u.id
       WHERE c."updatedAt" > ${lastWeek} AND c.status = ${ClaimStatus.CLAIMED}
       GROUP BY u.id
-      ORDER BY claims_count DESC
+      ORDER BY "claimsCount" DESC
       LIMIT ${count}
     `;
 
     let finalResults = [];
 
     for (let result of results) {
-      const { claims_count, ...user } = result;
+      const { claimsCount, ...user } = result;
 
-      finalResults.push({ user, claims_count });
+      finalResults.push({ user, claimsCount });
     }
 
     return finalResults;
