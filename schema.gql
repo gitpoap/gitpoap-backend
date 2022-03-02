@@ -1677,13 +1677,18 @@ type Query {
   groupByProfile(by: [ProfileScalarFieldEnum!]!, having: ProfileScalarWhereWithAggregatesInput, orderBy: [ProfileOrderByWithAggregationInput!], skip: Int, take: Int, where: ProfileWhereInput): [ProfileGroupBy!]!
   groupByRepo(by: [RepoScalarFieldEnum!]!, having: RepoScalarWhereWithAggregatesInput, orderBy: [RepoOrderByWithAggregationInput!], skip: Int, take: Int, where: RepoWhereInput): [RepoGroupBy!]!
   groupByUser(by: [UserScalarFieldEnum!]!, having: UserScalarWhereWithAggregatesInput, orderBy: [UserOrderByWithAggregationInput!], skip: Int, take: Int, where: UserWhereInput): [UserGroupBy!]!
+  lastWeekContributors: Float!
+  lastWeekGitPOAPs: Float!
+  lastWeekRepos: Float!
   organization(where: OrganizationWhereUniqueInput!): Organization
   organizations(cursor: OrganizationWhereUniqueInput, distinct: [OrganizationScalarFieldEnum!], orderBy: [OrganizationOrderByWithRelationInput!], skip: Int, take: Int, where: OrganizationWhereInput): [Organization!]!
   profile(where: ProfileWhereUniqueInput!): Profile
   profiles(cursor: ProfileWhereUniqueInput, distinct: [ProfileScalarFieldEnum!], orderBy: [ProfileOrderByWithRelationInput!], skip: Int, take: Int, where: ProfileWhereInput): [Profile!]!
   repo(where: RepoWhereUniqueInput!): Repo
   repos(cursor: RepoWhereUniqueInput, distinct: [RepoScalarFieldEnum!], orderBy: [RepoOrderByWithRelationInput!], skip: Int, take: Int, where: RepoWhereInput): [Repo!]!
-  topContributors(count: Float = 10): [User!]!
+  totalContributors: Float!
+  totalGitPOAPs: Float!
+  totalRepos: Float!
   user(where: UserWhereUniqueInput!): User
   users(cursor: UserWhereUniqueInput, distinct: [UserScalarFieldEnum!], orderBy: [UserOrderByWithRelationInput!], skip: Int, take: Int, where: UserWhereInput): [User!]!
 }
