@@ -56,7 +56,6 @@ type AggregateUser {
 }
 
 type Claim {
-  POAPSecret: String!
   address: String
   createdAt: DateTime!
   gitPOAP: GitPOAP!
@@ -82,7 +81,6 @@ input ClaimAvgOrderByAggregateInput {
 }
 
 type ClaimCountAggregate {
-  POAPSecret: Int!
   _all: Int!
   address: Int!
   createdAt: Int!
@@ -95,7 +93,6 @@ type ClaimCountAggregate {
 }
 
 input ClaimCountOrderByAggregateInput {
-  POAPSecret: SortOrder
   address: SortOrder
   createdAt: SortOrder
   gitPOAPId: SortOrder
@@ -107,7 +104,6 @@ input ClaimCountOrderByAggregateInput {
 }
 
 input ClaimCreateInput {
-  POAPSecret: String!
   address: String
   createdAt: DateTime
   gitPOAP: GitPOAPCreateNestedOneWithoutClaimsInput!
@@ -118,7 +114,6 @@ input ClaimCreateInput {
 }
 
 input ClaimCreateManyGitPOAPInput {
-  POAPSecret: String!
   address: String
   createdAt: DateTime
   id: Int
@@ -134,7 +129,6 @@ input ClaimCreateManyGitPOAPInputEnvelope {
 }
 
 input ClaimCreateManyInput {
-  POAPSecret: String!
   address: String
   createdAt: DateTime
   gitPOAPId: Int!
@@ -146,7 +140,6 @@ input ClaimCreateManyInput {
 }
 
 input ClaimCreateManyUserInput {
-  POAPSecret: String!
   address: String
   createdAt: DateTime
   gitPOAPId: Int!
@@ -186,7 +179,6 @@ input ClaimCreateOrConnectWithoutUserInput {
 }
 
 input ClaimCreateWithoutGitPOAPInput {
-  POAPSecret: String!
   address: String
   createdAt: DateTime
   poapTokenId: String
@@ -196,7 +188,6 @@ input ClaimCreateWithoutGitPOAPInput {
 }
 
 input ClaimCreateWithoutUserInput {
-  POAPSecret: String!
   address: String
   createdAt: DateTime
   gitPOAP: GitPOAPCreateNestedOneWithoutClaimsInput!
@@ -206,7 +197,6 @@ input ClaimCreateWithoutUserInput {
 }
 
 type ClaimGroupBy {
-  POAPSecret: String!
   _avg: ClaimAvgAggregate
   _count: ClaimCountAggregate
   _max: ClaimMaxAggregate
@@ -229,7 +219,6 @@ input ClaimListRelationFilter {
 }
 
 type ClaimMaxAggregate {
-  POAPSecret: String
   address: String
   createdAt: DateTime
   gitPOAPId: Int
@@ -241,7 +230,6 @@ type ClaimMaxAggregate {
 }
 
 input ClaimMaxOrderByAggregateInput {
-  POAPSecret: SortOrder
   address: SortOrder
   createdAt: SortOrder
   gitPOAPId: SortOrder
@@ -253,7 +241,6 @@ input ClaimMaxOrderByAggregateInput {
 }
 
 type ClaimMinAggregate {
-  POAPSecret: String
   address: String
   createdAt: DateTime
   gitPOAPId: Int
@@ -265,7 +252,6 @@ type ClaimMinAggregate {
 }
 
 input ClaimMinOrderByAggregateInput {
-  POAPSecret: SortOrder
   address: SortOrder
   createdAt: SortOrder
   gitPOAPId: SortOrder
@@ -281,7 +267,6 @@ input ClaimOrderByRelationAggregateInput {
 }
 
 input ClaimOrderByWithAggregationInput {
-  POAPSecret: SortOrder
   _avg: ClaimAvgOrderByAggregateInput
   _count: ClaimCountOrderByAggregateInput
   _max: ClaimMaxOrderByAggregateInput
@@ -298,7 +283,6 @@ input ClaimOrderByWithAggregationInput {
 }
 
 input ClaimOrderByWithRelationInput {
-  POAPSecret: SortOrder
   address: SortOrder
   createdAt: SortOrder
   gitPOAP: GitPOAPOrderByWithRelationInput
@@ -312,7 +296,6 @@ input ClaimOrderByWithRelationInput {
 }
 
 enum ClaimScalarFieldEnum {
-  POAPSecret
   address
   createdAt
   gitPOAPId
@@ -327,7 +310,6 @@ input ClaimScalarWhereInput {
   AND: [ClaimScalarWhereInput!]
   NOT: [ClaimScalarWhereInput!]
   OR: [ClaimScalarWhereInput!]
-  POAPSecret: StringFilter
   address: StringNullableFilter
   createdAt: DateTimeFilter
   gitPOAPId: IntFilter
@@ -342,7 +324,6 @@ input ClaimScalarWhereWithAggregatesInput {
   AND: [ClaimScalarWhereWithAggregatesInput!]
   NOT: [ClaimScalarWhereWithAggregatesInput!]
   OR: [ClaimScalarWhereWithAggregatesInput!]
-  POAPSecret: StringWithAggregatesFilter
   address: StringNullableWithAggregatesFilter
   createdAt: DateTimeWithAggregatesFilter
   gitPOAPId: IntWithAggregatesFilter
@@ -378,7 +359,6 @@ enum ClaimType {
 }
 
 input ClaimUpdateInput {
-  POAPSecret: StringFieldUpdateOperationsInput
   address: NullableStringFieldUpdateOperationsInput
   createdAt: DateTimeFieldUpdateOperationsInput
   gitPOAP: GitPOAPUpdateOneRequiredWithoutClaimsInput
@@ -389,7 +369,6 @@ input ClaimUpdateInput {
 }
 
 input ClaimUpdateManyMutationInput {
-  POAPSecret: StringFieldUpdateOperationsInput
   address: NullableStringFieldUpdateOperationsInput
   createdAt: DateTimeFieldUpdateOperationsInput
   poapTokenId: NullableStringFieldUpdateOperationsInput
@@ -446,7 +425,6 @@ input ClaimUpdateWithWhereUniqueWithoutUserInput {
 }
 
 input ClaimUpdateWithoutGitPOAPInput {
-  POAPSecret: StringFieldUpdateOperationsInput
   address: NullableStringFieldUpdateOperationsInput
   createdAt: DateTimeFieldUpdateOperationsInput
   poapTokenId: NullableStringFieldUpdateOperationsInput
@@ -456,7 +434,6 @@ input ClaimUpdateWithoutGitPOAPInput {
 }
 
 input ClaimUpdateWithoutUserInput {
-  POAPSecret: StringFieldUpdateOperationsInput
   address: NullableStringFieldUpdateOperationsInput
   createdAt: DateTimeFieldUpdateOperationsInput
   gitPOAP: GitPOAPUpdateOneRequiredWithoutClaimsInput
@@ -481,7 +458,6 @@ input ClaimWhereInput {
   AND: [ClaimWhereInput!]
   NOT: [ClaimWhereInput!]
   OR: [ClaimWhereInput!]
-  POAPSecret: StringFilter
   address: StringNullableFilter
   createdAt: DateTimeFilter
   gitPOAP: GitPOAPRelationFilter

@@ -1,5 +1,7 @@
+import { DateTime } from 'luxon';
+
 export function getLastWeekStartDay(): Date {
-  const lastWeek = new Date(new Date().getTime() - 7 * 24 * 60 * 60 * 1000);
-  const lastWeekStartDay = lastWeek.toISOString().slice(0, 10);
+  const lastWeek = DateTime.now().minus({ days: 7 });
+  const lastWeekStartDay = lastWeek.toFormat('yyyy-MM-dd');
   return new Date(lastWeekStartDay);
 }
