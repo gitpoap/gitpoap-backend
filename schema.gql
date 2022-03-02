@@ -1655,6 +1655,7 @@ type Query {
   groupByUser(by: [UserScalarFieldEnum!]!, having: UserScalarWhereWithAggregatesInput, orderBy: [UserOrderByWithAggregationInput!], skip: Int, take: Int, where: UserWhereInput): [UserGroupBy!]!
   lastWeekContributors: Float!
   lastWeekGitPOAPs: Float!
+  lastWeekMostHonoredContributors(count: Float = 10): [UserWithClaimsCount!]!
   lastWeekRepos: Float!
   organization(where: OrganizationWhereUniqueInput!): Organization
   organizations(cursor: OrganizationWhereUniqueInput, distinct: [OrganizationScalarFieldEnum!], orderBy: [OrganizationOrderByWithRelationInput!], skip: Int, take: Int, where: OrganizationWhereInput): [Organization!]!
@@ -2340,4 +2341,9 @@ input UserWhereInput {
 input UserWhereUniqueInput {
   githubId: Int
   id: Int
+}
+
+type UserWithClaimsCount {
+  claims_count: Float!
+  user: User!
 }
