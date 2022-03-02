@@ -15,7 +15,8 @@
     "experimentalDecorators": true,
     "module": "commonjs" /* Specify what module code is generated. */,
     "rootDir": "./" /* Specify the root folder within your source files. */,
-    "outDir": "dist/" /* Specify an output folder for all emitted files. */
+    "outDir": "dist/" /* Specify an output folder for all emitted files. */,
+    "strictPropertyInitialization": false
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
   "exclude": ["node_modules"]
