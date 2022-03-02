@@ -1,23 +1,13 @@
-import { Arg, buildSchema, Ctx, Resolver, Query } from 'type-graphql';
-import { resolvers, User } from '@generated/type-graphql';
+import { buildSchema } from 'type-graphql';
+import { resolvers } from '@generated/type-graphql';
+import { CustomUserResolver } from './resolvers/users';
+import { CustomGitPOAPResolver } from './resolvers/gitpoaps';
+import { CustomRepoResolver } from './resolvers/repos';
 
-console.log(resolvers)
-
-@Resolver(of => User)
-class CustomResolver {
-  @Query(returns => [User])
-  async topContributors(
-    @Ctx() { prisma }: Context,
-    @Arg("count", { defaultValue: 10 }) count: number,
-  ): Promise<User[]> {
-    let users = await prisma.users.findMany();
-    return users;
-  }
-};
-console.log([...resolvers, CustomResolver])
+const allResolvers = [...resolvers, CustomUserResolver, CustomGitPOAPResolver, CustomRepoResolver];
 
 export const getSchema = buildSchema({
-  resolvers: [...resolvers, CustomResolver],
+  resolvers: allResolvers,
   emitSchemaFile: true,
   validate: false,
 });
