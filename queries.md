@@ -6,6 +6,7 @@ queries via the GraphQL endpoint.
 ## Banner Stats
 
 The query to get the banner stats is as follows:
+
 ```graphql
 {
   totalContributors
@@ -16,7 +17,9 @@ The query to get the banner stats is as follows:
   lastWeekRepos
 }
 ```
+
 and returns data in the form:
+
 ```json
 {
   "data": {
@@ -33,18 +36,21 @@ and returns data in the form:
 ### Last Week's Most Honored Contributors
 
 The query to get the most honored contributors from the last week is as follows:
+
 ```graphql
 {
-  lastWeekMostHonoredContributors(count:10) {
+  lastWeekMostHonoredContributors(count: 10) {
     user {
       id
       githubHandle
     }
-    claims_count
+    claimsCount
   }
 }
 ```
+
 and returns data in the form:
+
 ```json
 {
   "data": {
@@ -54,7 +60,7 @@ and returns data in the form:
           "id": 2,
           "githubHandle": "colfaxs"
         },
-        "claims_count": 1
+        "claimsCount": 1
       }
     ]
   }
