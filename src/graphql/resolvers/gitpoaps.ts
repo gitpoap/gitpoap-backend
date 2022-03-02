@@ -1,6 +1,7 @@
 import { Arg, Ctx, Resolver, Query } from 'type-graphql';
 import { GitPOAP } from '@generated/type-graphql';
 import { getLastWeekStartDay } from './util';
+import { Context } from '../../context';
 
 @Resolver(of => GitPOAP)
 export class CustomGitPOAPResolver {

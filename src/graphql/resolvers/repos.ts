@@ -1,6 +1,7 @@
 import { Arg, Ctx, Resolver, Query } from 'type-graphql';
 import { Repo } from '@generated/type-graphql';
 import { getLastWeekStartDay } from './util';
+import { Context } from '../../context';
 
 @Resolver(of => Repo)
 export class CustomRepoResolver {
