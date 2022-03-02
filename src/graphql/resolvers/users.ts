@@ -40,7 +40,11 @@ export class CustomUserResolver {
   ): Promise<UserWithClaimsCount[]> {
     const lastWeek = getLastWeekStartDatetime();
 
-    const results = await prisma.$queryRaw`
+    type ResultType = User & {
+      claims_count: Number;
+    };
+
+    const results: ResultType[] = await prisma.$queryRaw`
       SELECT u.*, COUNT(c.id) AS claims_count
       FROM "User" AS u
       JOIN "Claim" AS c ON c."userId" = u.id
