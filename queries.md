@@ -138,3 +138,42 @@ and returns data in the form:
   }
 }
 ```
+
+# User's Open Claims
+
+To retrieve a user's available Claims (i.e. in the state `UNCLAIMED`), we can run
+a query like:
+
+```graphql
+{
+  userClaims(githubId: 2) {
+    claim {
+      id
+    }
+    event {
+      name
+      image_url
+    }
+  }
+}
+```
+
+that returns data like:
+
+```json
+{
+  "data": {
+    "userClaims": [
+      {
+        "claim": {
+          "id": 2
+        },
+        "event": {
+          "name": "ethdenver",
+          "image_url": "https://avatars.githubusercontent.com/u/1455326?v=4"
+        }
+      }
+    ]
+  }
+}
+```
