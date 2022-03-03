@@ -11,7 +11,7 @@ class FullGitPOAPData {
   gitPOAP: GitPOAP;
 
   @Field(() => POAPToken)
-  POAP: POAPToken;
+  poap: POAPToken;
 }
 
 @ObjectType()
@@ -20,7 +20,7 @@ class UserPOAPs {
   gitPOAPs: FullGitPOAPData[];
 
   @Field(() => [POAPToken])
-  POAPs: POAPToken[];
+  poaps: POAPToken[];
 }
 
 @Resolver(of => GitPOAP)
@@ -46,12 +46,17 @@ export class CustomGitPOAPResolver {
 
   @Query(returns => UserPOAPs, { nullable: true })
   async userPOAPs(
-    @Ctx() { prisma }: Context,
+    @Ctx() { prisma, provider }: Context,
     @Arg('address') address: string,
   ): Promise<UserPOAPs | null> {
-    // TODO: accept ENS + handle errors gracefully
+    // Resolve ENS if provided
+    const resolvedAddress = await provider.resolveName(address);
+    if (resolvedAddress !== address) {
+      console.log(`Resolved ${address} to ${resolvedAddress}`);
+    }
+
     try {
-      const poapResponse = await fetch(`${process.env.POAP_URL}/actions/scan/${address}`);
+      const poapResponse = await fetch(`${process.env.POAP_URL}/actions/scan/${resolvedAddress}`);
 
       if (poapResponse.status >= 400) {
         console.log(await poapResponse.text());
@@ -65,7 +70,7 @@ export class CustomGitPOAPResolver {
 
       const gitPOAPs = await prisma.claim.findMany({
         where: {
-          address: address,
+          address: resolvedAddress,
           status: ClaimStatus.CLAIMED,
         },
       });
@@ -81,7 +86,7 @@ export class CustomGitPOAPResolver {
         if (foundGitPOAPIds.hasOwnProperty(poap.tokenId)) {
           gitPOAPsOnly.push({
             gitPOAP: foundGitPOAPIds[poap.tokenId],
-            POAP: poap,
+            poap: poap,
           });
         } else {
           poapsOnly.push(poap);
@@ -90,7 +95,7 @@ export class CustomGitPOAPResolver {
 
       return {
         gitPOAPs: gitPOAPsOnly,
-        POAPs: poapsOnly,
+        poaps: poapsOnly,
       };
     } catch (err) {
       console.log(err);

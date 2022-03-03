@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import { PrismaClient, Prisma } from '@prisma/client';
 import { ClaimStatus } from '@generated/type-graphql';
 
