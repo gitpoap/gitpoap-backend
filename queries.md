@@ -66,3 +66,63 @@ and returns data in the form:
   }
 }
 ```
+
+### Address's POAPs and GitPOAPs
+
+The query to get an address's (or an ENS's) POAPs and GitPOAPs is as follows:
+
+```graphql
+{
+  userPOAPs(address: "burz.eth") {
+    gitPOAPs {
+      gitPOAP {
+        repo {
+          name
+        }
+      }
+      poap {
+        event {
+          name
+          image_url
+        }
+        tokenId
+      }
+    }
+    poaps {
+      event {
+        name
+        image_url
+      }
+      tokenId
+    }
+  }
+}
+```
+
+and returns data in the form:
+
+```json
+{
+  "data": {
+    "userPOAPs": {
+      "gitPOAPs": [],
+      "poaps": [
+        {
+          "event": {
+            "name": "Welcome to the Thunderdome",
+            "image_url": "https://avatars.githubusercontent.com/u/1555326?v=4"
+          },
+          "tokenId": "thunderdome"
+        },
+        {
+          "event": {
+            "name": "ethdenver",
+            "image_url": "https://avatars.githubusercontent.com/u/1455326?v=4"
+          },
+          "tokenId": "ethdenver"
+        }
+      ]
+    }
+  }
+}
+```
