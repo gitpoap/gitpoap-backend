@@ -1,14 +1,14 @@
 import { Arg, Ctx, Field, ObjectType, Resolver, Query } from 'type-graphql';
 import fetch from 'cross-fetch';
-import { ClaimStatus, GitPOAP } from '@generated/type-graphql';
+import { Claim, ClaimStatus, GitPOAP } from '@generated/type-graphql';
 import { getLastWeekStartDatetime } from './util';
 import { Context } from '../../context';
 import { POAPToken } from '../types/poap';
 
 @ObjectType()
 class FullGitPOAPData {
-  @Field(() => GitPOAP)
-  gitPOAP: GitPOAP;
+  @Field(() => Claim)
+  claim: Claim;
 
   @Field(() => POAPToken)
   poap: POAPToken;
@@ -53,6 +53,9 @@ export class CustomGitPOAPResolver {
     const resolvedAddress = await provider.resolveName(address);
     if (resolvedAddress !== address) {
       console.log(`Resolved ${address} to ${resolvedAddress}`);
+      if (resolvedAddress === null) {
+        return null;
+      }
     }
 
     try {
@@ -66,26 +69,30 @@ export class CustomGitPOAPResolver {
 
       const poaps = await poapResponse.json();
 
-      console.log(poaps);
-
-      const gitPOAPs = await prisma.claim.findMany({
+      const claims = await prisma.claim.findMany({
         where: {
-          address: resolvedAddress,
+          address: resolvedAddress.toLowerCase(),
           status: ClaimStatus.CLAIMED,
         },
       });
 
-      let foundGitPOAPIds = {};
-      for (let gitPOAP of gitPOAPs) {
-        foundGitPOAPIds[gitPOAP.poapTokenId] = gitPOAP;
+      let foundPOAPIds: Record<string, Claim> = {};
+      for (let claim of claims) {
+        if (claim.poapTokenId === null) {
+          console.log(
+            `Found a null poapTokenId, but the Claim has status CLAIMED. id: ${claim.id}`,
+          );
+          continue;
+        }
+        foundPOAPIds[claim.poapTokenId] = claim;
       }
 
       let gitPOAPsOnly = [];
       let poapsOnly = [];
       for (let poap of poaps) {
-        if (foundGitPOAPIds.hasOwnProperty(poap.tokenId)) {
+        if (foundPOAPIds.hasOwnProperty(poap.tokenId)) {
           gitPOAPsOnly.push({
-            gitPOAP: foundGitPOAPIds[poap.tokenId],
+            claim: foundPOAPIds[poap.tokenId],
             poap: poap,
           });
         } else {

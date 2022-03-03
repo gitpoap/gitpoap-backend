@@ -75,9 +75,11 @@ The query to get an address's (or an ENS's) POAPs and GitPOAPs is as follows:
 {
   userPOAPs(address: "burz.eth") {
     gitPOAPs {
-      gitPOAP {
-        repo {
-          name
+      claim {
+        gitPOAP {
+          repo {
+            name
+          }
         }
       }
       poap {
@@ -105,15 +107,25 @@ and returns data in the form:
 {
   "data": {
     "userPOAPs": {
-      "gitPOAPs": [],
-      "poaps": [
+      "gitPOAPs": [
         {
-          "event": {
-            "name": "Welcome to the Thunderdome",
-            "image_url": "https://avatars.githubusercontent.com/u/1555326?v=4"
+          "claim": {
+            "gitPOAP": {
+              "repo": {
+                "name": "repo34"
+              }
+            }
           },
-          "tokenId": "thunderdome"
-        },
+          "poap": {
+            "event": {
+              "name": "Welcome to the Thunderdome",
+              "image_url": "https://avatars.githubusercontent.com/u/1555326?v=4"
+            },
+            "tokenId": "thunderdome"
+          }
+        }
+      ],
+      "poaps": [
         {
           "event": {
             "name": "ethdenver",
