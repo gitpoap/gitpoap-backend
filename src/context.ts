@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
-import { getDefaultProvider, Provider } from 'ethers';
+import { getDefaultProvider } from 'ethers';
+import { Provider } from '@ethersproject/providers';
 
 export interface Context {
   prisma: PrismaClient;
