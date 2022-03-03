@@ -63,7 +63,6 @@ export class CustomGitPOAPResolver {
 
       if (poapResponse.status >= 400) {
         console.log(await poapResponse.text());
-
         return null;
       }
 

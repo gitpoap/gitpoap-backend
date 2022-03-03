@@ -1,14 +1,16 @@
 import { buildSchema, NonEmptyArray } from 'type-graphql';
 import { resolvers } from '@generated/type-graphql';
-import { CustomUserResolver } from './resolvers/users';
+import { CustomClaimResolver } from './resolvers/claims';
 import { CustomGitPOAPResolver } from './resolvers/gitpoaps';
 import { CustomRepoResolver } from './resolvers/repos';
+import { CustomUserResolver } from './resolvers/users';
 
 const allResolvers: NonEmptyArray<Function> = [
   ...resolvers,
-  CustomUserResolver,
+  CustomClaimResolver,
   CustomGitPOAPResolver,
   CustomRepoResolver,
+  CustomUserResolver,
 ];
 
 export const getSchema = buildSchema({

@@ -2,6 +2,7 @@ const express = require('express');
 const app = express();
 const port = 4004;
 const z = require('zod');
+const data = require('./data');
 
 app.use(express.json());
 
@@ -65,42 +66,14 @@ app.get('/actions/scan/:address', (req, res) => {
   res.end(
     JSON.stringify([
       {
-        event: {
-          id: 1,
-          fancy_id: 'welcome-to-the-thunderdome',
-          name: 'Welcome to the Thunderdome',
-          event_url: 'https://thunderdome.xyz',
-          image_url: 'https://avatars.githubusercontent.com/u/1555326?v=4',
-          country: '',
-          city: '',
-          description: 'Wow, you survived.\nGreat',
-          year: 2022,
-          start_date: '2022-02-02',
-          end_date: '2026-02-02',
-          expiry_date: '2092-12-11',
-          supply: '10',
-        },
+        event: data.event1,
         tokenId: 'thunderdome',
         owner: req.params.address,
         chain: 'xdai',
         created: '2022-02-02',
       },
       {
-        event: {
-          id: 2,
-          fancy_id: 'ethdenver',
-          name: 'ethdenver',
-          event_url: 'https://eth.denver',
-          image_url: 'https://avatars.githubusercontent.com/u/1455326?v=4',
-          country: '',
-          city: '',
-          description: '#eth #denver #2022',
-          year: 2022,
-          start_date: '2022-02-11',
-          end_date: '2022-02-23',
-          expiry_date: '2022-03-28',
-          supply: '20',
-        },
+        event: data.event2,
         tokenId: 'ethdenver',
         owner: req.params.address,
         chain: 'xdai',
@@ -108,6 +81,22 @@ app.get('/actions/scan/:address', (req, res) => {
       },
     ]),
   );
+});
+
+app.get('/events/id/:id', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+
+  switch (req.params.id) {
+    case '1':
+      res.end(JSON.stringify(data.event1));
+      break;
+    case '2':
+      res.end(JSON.stringify(data.event2));
+      break;
+    default:
+      res.status(404).send(`ID ${req.params.id} NOT FOUND`);
+      break;
+  }
 });
 
 app.listen(port, () => {
