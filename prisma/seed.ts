@@ -1,4 +1,5 @@
 import { PrismaClient, Prisma } from '@prisma/client';
+import { ClaimStatus } from '@generated/type-graphql';
 
 const prisma = new PrismaClient();
 
@@ -117,6 +118,9 @@ const claimData: Prisma.ClaimCreateInput[] = [
         id: 1,
       },
     },
+    status: ClaimStatus.CLAIMED,
+    address: '0xae95f7e7fb2fcf86148ef832faed2752ae5a358a',
+    poapTokenId: 'thunderdome',
   },
   {
     gitPOAP: {
