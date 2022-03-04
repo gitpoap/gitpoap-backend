@@ -2,10 +2,11 @@ FROM node:17.4.0
 
 WORKDIR /usr/src/fake-poap-api
 
-COPY package.json yarn.lock .
+COPY .dockerfiles/fake-poap-api/package.json .dockerfiles/fake-poap-api/yarn.lock .
 
 RUN yarn install
 
-COPY data.js index.js .
+COPY .dockerfiles/fake-poap-api/ .
+COPY src/graphql/types/poap.ts tsconfig.json .
 
-CMD ["node", "index.js"]
+CMD ["yarn", "run", "dev"]

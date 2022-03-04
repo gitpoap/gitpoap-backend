@@ -1,0 +1,1 @@
+../../src/graphql/types/poap.ts
