@@ -1,4 +1,6 @@
-const event1 = {
+import { POAPEvent } from './poap';
+
+export const event1: POAPEvent = {
   id: 1,
   fancy_id: 'welcome-to-the-thunderdome',
   name: 'Welcome to the Thunderdome',
@@ -11,10 +13,10 @@ const event1 = {
   start_date: '2022-02-02',
   end_date: '2026-02-02',
   expiry_date: '2092-12-11',
-  supply: '10',
+  supply: 10,
 };
 
-const event2 = {
+export const event2: POAPEvent = {
   id: 2,
   fancy_id: 'ethdenver',
   name: 'ethdenver',
@@ -27,7 +29,5 @@ const event2 = {
   start_date: '2022-02-11',
   end_date: '2022-02-23',
   expiry_date: '2022-03-28',
-  supply: '20',
+  supply: 20,
 };
-
-module.exports = { event1, event2 };

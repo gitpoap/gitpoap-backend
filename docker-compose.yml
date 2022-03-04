@@ -5,23 +5,23 @@ services:
     image: postgres
     restart: always
     ports:
-      - "5432:5432"
+      - '5432:5432'
     environment:
       POSTGRES_PASSWORD: foobar88
 
   fake-poap-api:
     build:
-      context: .dockerfiles/fake-poap-api
-      dockerfile: api.Dockerfile
+      context: .
+      dockerfile: .dockerfiles/fake-poap-api/api.Dockerfile
     ports:
-      - "4004:4004"
+      - '4004:4004'
 
   server:
     build:
       context: .
       dockerfile: .dockerfiles/server.Dockerfile
     ports:
-      - "3001:3001"
+      - '3001:3001'
     depends_on:
       - db
       - fake-poap-api

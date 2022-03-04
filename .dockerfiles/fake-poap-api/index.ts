@@ -1,8 +1,9 @@
-const express = require('express');
+import express from 'express';
+import { z } from 'zod';
+import { event1, event2 } from './data';
+
 const app = express();
 const port = 4004;
-const z = require('zod');
-const data = require('./data');
 
 app.use(express.json());
 
@@ -66,14 +67,14 @@ app.get('/actions/scan/:address', (req, res) => {
   res.end(
     JSON.stringify([
       {
-        event: data.event1,
+        event: event1,
         tokenId: 'thunderdome',
         owner: req.params.address,
         chain: 'xdai',
         created: '2022-02-02',
       },
       {
-        event: data.event2,
+        event: event2,
         tokenId: 'ethdenver',
         owner: req.params.address,
         chain: 'xdai',
@@ -88,10 +89,10 @@ app.get('/events/id/:id', (req, res) => {
 
   switch (req.params.id) {
     case '1':
-      res.end(JSON.stringify(data.event1));
+      res.end(JSON.stringify(event1));
       break;
     case '2':
-      res.end(JSON.stringify(data.event2));
+      res.end(JSON.stringify(event2));
       break;
     default:
       res.status(404).send(`ID ${req.params.id} NOT FOUND`);
