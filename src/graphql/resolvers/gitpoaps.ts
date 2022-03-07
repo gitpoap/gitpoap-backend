@@ -3,7 +3,7 @@ import fetch from 'cross-fetch';
 import { Claim, ClaimStatus, GitPOAP } from '@generated/type-graphql';
 import { getLastWeekStartDatetime } from './util';
 import { Context } from '../../context';
-import { POAPToken } from '../types/poap';
+import { POAPEvent, POAPToken } from '../types/poap';
 
 @ObjectType()
 class FullGitPOAPData {
@@ -27,6 +27,18 @@ class UserPOAPs {
 
   @Field(() => [POAPToken])
   poaps: POAPToken[];
+}
+
+@ObjectType()
+class GitPOAPWithClaimsCount {
+  @Field(() => GitPOAP)
+  gitPOAP: GitPOAP;
+
+  @Field(() => POAPEvent)
+  event: POAPEvent;
+
+  @Field()
+  claimsCount: Number;
 }
 
 @Resolver(of => GitPOAP)
@@ -180,5 +192,51 @@ export class CustomGitPOAPResolver {
 
       return null;
     }
+  }
+
+  @Query(returns => [GitPOAPWithClaimsCount])
+  async mostClaimedGitPOAPs(
+    @Ctx() { prisma }: Context,
+    @Arg('count', { defaultValue: 10 }) count: Number,
+  ): Promise<GitPOAPWithClaimsCount[] | null> {
+    type ResultType = GitPOAP & {
+      claimsCount: Number;
+    };
+
+    const results: ResultType[] = await prisma.$queryRaw`
+      SELECT g.*, COUNT(c.id) AS "claimsCount"
+      FROM "GitPOAP" AS g
+      JOIN "Claim" AS c ON c."gitPOAPId" = g.id
+      GROUP BY g.id
+      ORDER BY "claimsCount" DESC
+      LIMIT ${count}
+    `;
+
+    let finalResults = [];
+
+    try {
+      for (let result of results) {
+        const { claimsCount, ...gitPOAP } = result;
+
+        const poapResponse = await fetch(
+          `${process.env.POAP_URL}/events/id/${gitPOAP.poapEventId}`,
+        );
+
+        if (poapResponse.status >= 400) {
+          console.log(await poapResponse.text());
+          return null;
+        }
+
+        const event = await poapResponse.json();
+
+        finalResults.push({ gitPOAP, event, claimsCount });
+      }
+    } catch (err) {
+      console.log(err);
+
+      return null;
+    }
+
+    return finalResults;
   }
 }

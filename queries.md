@@ -286,3 +286,50 @@ that returns data like:
   }
 }
 ```
+
+# Most Claimed GitPOAPs
+
+To retrieve a list of the most claimed GitPOAPs, we can run a query like:
+
+```graphql
+{
+  mostClaimedGitPOAPs(count: 2) {
+    claimsCount
+    gitPOAP {
+      id
+    }
+    event {
+      name
+    }
+  }
+}
+```
+
+that returns data like:
+
+```json
+{
+  "data": {
+    "mostClaimedGitPOAPs": [
+      {
+        "claimsCount": 2,
+        "gitPOAP": {
+          "id": 2
+        },
+        "event": {
+          "name": "ethdenver"
+        }
+      },
+      {
+        "claimsCount": 1,
+        "gitPOAP": {
+          "id": 3
+        },
+        "event": {
+          "name": "you ate some pizza pie"
+        }
+      }
+    ]
+  }
+}
+```

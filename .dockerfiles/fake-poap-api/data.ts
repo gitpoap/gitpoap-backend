@@ -33,6 +33,22 @@ export const event2: POAPEvent = {
 };
 
 export const event3: POAPEvent = {
+  id: 3,
+  fancy_id: 'big-ol-pizza',
+  name: 'you ate some pizza pie',
+  event_url: 'https://pizza.party',
+  image_url: 'https://avatars.githubusercontent.com/u/1355326?v=4',
+  country: '',
+  city: '',
+  description: 'that was some darn tootin good pizza yo',
+  year: 2022,
+  start_date: '2022-02-10',
+  end_date: '2022-03-23',
+  expiry_date: '2024-03-28',
+  supply: 8,
+};
+
+export const event27309: POAPEvent = {
   id: 27309,
   fancy_id: 'youve-met-burz-2022',
   name: "You've met Burz!",
@@ -49,7 +65,7 @@ export const event3: POAPEvent = {
   supply: 44,
 };
 
-export const event4: POAPEvent = {
+export const event27307: POAPEvent = {
   id: 27307,
   fancy_id: 'youve-met-jay-2022',
   name: "You've met Jay!",
@@ -66,7 +82,7 @@ export const event4: POAPEvent = {
   supply: 21,
 };
 
-export const event5: POAPEvent = {
+export const event27305: POAPEvent = {
   id: 27305,
   fancy_id: 'youve-met-colfax-2022',
   name: "You've met Colfax!",
@@ -83,7 +99,7 @@ export const event5: POAPEvent = {
   supply: 162,
 };
 
-export const event6: POAPEvent = {
+export const event25149: POAPEvent = {
   id: 25149,
   fancy_id: 'you-have-met-patricio-in-february-2022-2022',
   name: 'You have met Patricio in February 2022',
