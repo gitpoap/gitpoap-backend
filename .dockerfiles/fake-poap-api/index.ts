@@ -123,16 +123,16 @@ app.get('/events/id/:id', (req, res) => {
       res.end(JSON.stringify(events.event2));
       break;
     case '27309':
-      res.end(JSON.stringify(events.event2));
+      res.end(JSON.stringify(events.event3));
       break;
     case '27307':
-      res.end(JSON.stringify(events.event2));
+      res.end(JSON.stringify(events.event4));
       break;
     case '27305':
-      res.end(JSON.stringify(events.event2));
+      res.end(JSON.stringify(events.event5));
       break;
     case '25149':
-      res.end(JSON.stringify(events.event2));
+      res.end(JSON.stringify(events.event6));
       break;
     default:
       res.status(404).send(`ID ${req.params.id} NOT FOUND`);
