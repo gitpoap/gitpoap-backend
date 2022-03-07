@@ -82,27 +82,34 @@ app.get('/actions/scan/:address', (req, res) => {
       },
       {
         event: events.event3,
+        tokenId: 'pizza-pie',
+        owner: req.params.address,
+        chain: 'xdai',
+        created: '2022-03-01',
+      },
+      {
+        event: events.event27309,
         tokenId: '4082459',
         owner: req.params.address,
         chain: 'xdai',
         created: '2022-02-01',
       },
       {
-        event: events.event4,
+        event: events.event27307,
         tokenId: '4068504',
         owner: req.params.address,
         chain: 'xdai',
         created: '2022-02-01',
       },
       {
-        event: events.event5,
+        event: events.event27305,
         tokenId: '4068606',
         owner: req.params.address,
         chain: 'xdai',
         created: '2022-02-03',
       },
       {
-        event: events.event6,
+        event: events.event25149,
         tokenId: '4078452',
         owner: req.params.address,
         chain: 'xdai',
@@ -122,17 +129,20 @@ app.get('/events/id/:id', (req, res) => {
     case '2':
       res.end(JSON.stringify(events.event2));
       break;
-    case '27309':
+    case '3':
       res.end(JSON.stringify(events.event3));
       break;
+    case '27309':
+      res.end(JSON.stringify(events.event27309));
+      break;
     case '27307':
-      res.end(JSON.stringify(events.event4));
+      res.end(JSON.stringify(events.event27307));
       break;
     case '27305':
-      res.end(JSON.stringify(events.event5));
+      res.end(JSON.stringify(events.event27305));
       break;
     case '25149':
-      res.end(JSON.stringify(events.event6));
+      res.end(JSON.stringify(events.event25149));
       break;
     default:
       res.status(404).send(`ID ${req.params.id} NOT FOUND`);

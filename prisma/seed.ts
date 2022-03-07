@@ -80,7 +80,7 @@ const repoData: Prisma.RepoCreateInput[] = [
 const poapData: Prisma.GitPOAPCreateInput[] = [
   {
     year: 2022,
-    poapEventId: 80,
+    poapEventId: 1,
     repo: {
       connect: {
         id: 1,
@@ -98,7 +98,7 @@ const poapData: Prisma.GitPOAPCreateInput[] = [
   },
   {
     year: 2015,
-    poapEventId: 4,
+    poapEventId: 3,
     repo: {
       connect: {
         id: 3,
