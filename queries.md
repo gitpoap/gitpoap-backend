@@ -74,6 +74,8 @@ The query to get an address's (or an ENS's) POAPs and GitPOAPs is as follows:
 ```graphql
 {
   userPOAPs(address: "burz.eth") {
+    totalGitPOAPs
+    totalPOAPs
     gitPOAPs {
       claim {
         gitPOAP {
@@ -107,6 +109,8 @@ and returns data in the form:
 {
   "data": {
     "userPOAPs": {
+      "totalGitPOAPs": 1,
+      "totalPOAPs": 1,
       "gitPOAPs": [
         {
           "claim": {
@@ -132,6 +136,83 @@ and returns data in the form:
             "image_url": "https://avatars.githubusercontent.com/u/1455326?v=4"
           },
           "tokenId": "ethdenver"
+        }
+      ]
+    }
+  }
+}
+```
+
+Additionally, a sort can be specified of either (default) `sort: "date"` (descending) or `sort: "alphabetical"` (ascending),
+and the data can be paged by specifying `page: 1` and `perPage: 2` for example:
+
+```graphql
+{
+  userPOAPs(address: "burz.eth", sort: "alphabetical", page: 1, perPage: 2) {
+    totalGitPOAPs
+    totalPOAPs
+    gitPOAPs {
+      claim {
+        createdAt
+      }
+      poap {
+        event {
+          name
+        }
+      }
+    }
+    poaps {
+      event {
+        name
+      }
+      created
+    }
+  }
+}
+```
+
+returns something like:
+
+```json
+{
+  "data": {
+    "userPOAPs": {
+      "totalGitPOAPs": 2,
+      "totalPOAPs": 4,
+      "gitPOAPs": [
+        {
+          "claim": {
+            "createdAt": "2022-03-07T22:17:46.876Z"
+          },
+          "poap": {
+            "event": {
+              "name": "ethdenver"
+            }
+          }
+        },
+        {
+          "claim": {
+            "createdAt": "2022-03-07T22:17:46.865Z"
+          },
+          "poap": {
+            "event": {
+              "name": "Welcome to the Thunderdome"
+            }
+          }
+        }
+      ],
+      "poaps": [
+        {
+          "event": {
+            "name": "You have met Patricio in February 2022"
+          },
+          "created": "2022-02-02"
+        },
+        {
+          "event": {
+            "name": "You've met Burz!"
+          },
+          "created": "2022-02-01"
         }
       ]
     }
