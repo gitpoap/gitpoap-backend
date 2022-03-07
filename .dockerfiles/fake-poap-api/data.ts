@@ -31,3 +31,71 @@ export const event2: POAPEvent = {
   expiry_date: '2022-03-28',
   supply: 20,
 };
+
+export const event3: POAPEvent = {
+  id: 27309,
+  fancy_id: 'youve-met-burz-2022',
+  name: "You've met Burz!",
+  event_url: '',
+  image_url: 'https://assets.poap.xyz/youve-met-burz-2022-logo-1644520958088.png',
+  country: '',
+  city: '',
+  description:
+    "You've met Burz in person during 2022.  May you look back on this memory fondly, forever.\r\n",
+  year: 2022,
+  start_date: '01-Jan-2022',
+  end_date: '31-Dec-2022',
+  expiry_date: '31-Jan-2023',
+  supply: 44,
+};
+
+export const event4: POAPEvent = {
+  id: 27307,
+  fancy_id: 'youve-met-jay-2022',
+  name: "You've met Jay!",
+  event_url: 'https://twitter.com/0xpeebeejay',
+  image_url: 'https://assets.poap.xyz/youve-met-jay-2022-logo-1644520664323.png',
+  country: '',
+  city: '',
+  description:
+    "You've met Jay in person during 2022.  May you look back on this memory fondly, forever.",
+  year: 2022,
+  start_date: '01-Jan-2022',
+  end_date: '31-Dec-2022',
+  expiry_date: '31-Jan-2023',
+  supply: 21,
+};
+
+export const event5: POAPEvent = {
+  id: 27305,
+  fancy_id: 'youve-met-colfax-2022',
+  name: "You've met Colfax!",
+  event_url: 'https://twitter.com/colfaxselby',
+  image_url: 'https://assets.poap.xyz/youve-met-colfax-2022-logo-1644520442055.png',
+  country: '',
+  city: '',
+  description:
+    "You've met Colfax in person during 2022.  May you look back on this memory fondly, forever.",
+  year: 2022,
+  start_date: '01-Jan-2022',
+  end_date: '31-Dec-2022',
+  expiry_date: '31-Jan-2023',
+  supply: 162,
+};
+
+export const event6: POAPEvent = {
+  id: 25149,
+  fancy_id: 'you-have-met-patricio-in-february-2022-2022',
+  name: 'You have met Patricio in February 2022',
+  event_url: 'http://poap.xyz',
+  image_url:
+    'https://assets.poap.xyz/you-have-met-patricio-in-february-2022-2022-logo-1643415969967.png',
+  country: '',
+  city: '',
+  description: 'You got this POAP because you have met Patricio Worthalter in February 2022',
+  year: 2022,
+  start_date: '01-Feb-2022',
+  expiry_date: '01-Mar-2022',
+  end_date: '28-Feb-2022',
+  supply: 438,
+};
