@@ -151,16 +151,21 @@ const claimData: Prisma.ClaimCreateInput[] = [
 
 const profileData: Prisma.ProfileCreateInput[] = [
   {
-    address: '0x56d389C4E07A48d429035532402301310B8143A0',
+    address: '0x56d389c4e07a48d429035532402301310b8143a0',
     bio: 'I like brisket.',
   },
   {
-    address: '0x89DAB21047e6De0e77Deee5F4F286D72Be50B942',
+    address: '0x89dab21047e6de0e77deee5f4f286d72be50b942',
     bio: 'I like bbq.',
   },
   {
-    address: '0x304Cf9A8b0856F47cCf9cFd5A5BAD1D67b0576a7',
+    address: '0x304cf9a8b0856f47ccf9cfd5a5bad1d67b0576a7',
     bio: 'I like factorio.',
+  },
+  {
+    address: '0xae95f7e7fb2fcf86148ef832faed2752ae5a358a',
+    bio: 'I am addicted to POAPs',
+    name: 'Anthony Burzillo',
   },
 ];
 
