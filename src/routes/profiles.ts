@@ -24,7 +24,6 @@ profilesRouter.post('/', async function (req, res) {
 
   // Validate the signature for the updates
   const recoveredAddress = utils.verifyMessage(JSON.stringify(req.body.data), req.body.signature);
-  console.log(recoveredAddress);
   if (recoveredAddress !== resolvedAddress) {
     return res.status(401).send({ msg: 'The signature is not valid for this address and data' });
   }
