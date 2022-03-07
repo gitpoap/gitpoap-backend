@@ -131,6 +131,21 @@ const claimData: Prisma.ClaimCreateInput[] = [
     },
     user: {
       connect: {
+        id: 1,
+      },
+    },
+    status: ClaimStatus.CLAIMED,
+    address: '0xae95f7e7fb2fcf86148ef832faed2752ae5a358a',
+    poapTokenId: 'ethdenver',
+  },
+  {
+    gitPOAP: {
+      connect: {
+        id: 2,
+      },
+    },
+    user: {
+      connect: {
         id: 2,
       },
     },

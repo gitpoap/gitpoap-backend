@@ -99,14 +99,14 @@ app.get('/actions/scan/:address', (req, res) => {
         tokenId: '4068606',
         owner: req.params.address,
         chain: 'xdai',
-        created: '2022-02-01',
+        created: '2022-02-03',
       },
       {
         event: events.event6,
         tokenId: '4078452',
         owner: req.params.address,
         chain: 'xdai',
-        created: '2022-02-01',
+        created: '2022-02-02',
       },
     ]),
   );
