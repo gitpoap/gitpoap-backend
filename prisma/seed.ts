@@ -167,6 +167,10 @@ const profileData: Prisma.ProfileCreateInput[] = [
     bio: 'I am addicted to POAPs',
     name: 'Anthony Burzillo',
   },
+  {
+    address: '0x206e554084beec98e08043397be63c5132cc01a1',
+    bio: 'I am not real',
+  },
 ];
 
 async function main() {

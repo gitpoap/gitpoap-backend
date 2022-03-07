@@ -22,12 +22,9 @@ profilesRouter.post('/', async function (req, res) {
     }
   }
 
-  // Reconstruct the message as prepared by ethers on the frontend
-  // See: https://docs.ethers.io/v5/api/signer/#Signer-signMessage
-  const message = utils.hashMessage(JSON.stringify(req.body.data));
-
   // Validate the signature for the updates
-  const recoveredAddress = utils.verifyMessage(message, req.body.signature);
+  const recoveredAddress = utils.verifyMessage(JSON.stringify(req.body.data), req.body.signature);
+  console.log(recoveredAddress);
   if (recoveredAddress !== resolvedAddress) {
     return res.status(401).send({ msg: 'The signature is not valid for this address and data' });
   }

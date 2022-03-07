@@ -15,7 +15,7 @@ Data:
 
 ## Update Profile
 
-POST `/profile`
+POST `/profiles`
 
 Data:
 
