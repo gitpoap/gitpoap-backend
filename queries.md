@@ -177,3 +177,31 @@ that returns data like:
   }
 }
 ```
+
+# Profile Data
+
+To retrieve the profile data for an address, we can run a query like:
+
+```graphql
+{
+  profileData(address: "burz.eth") {
+    id
+    bio
+    name
+  }
+}
+```
+
+that returns data like:
+
+```json
+{
+  "data": {
+    "profileData": {
+      "id": 4,
+      "bio": "I am addicted to POAPs",
+      "name": "Anthony Burzillo"
+    }
+  }
+}
+```
