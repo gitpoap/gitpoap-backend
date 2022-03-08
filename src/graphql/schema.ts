@@ -4,6 +4,7 @@ import { CustomClaimResolver } from './resolvers/claims';
 import { CustomGitPOAPResolver } from './resolvers/gitpoaps';
 import { CustomProfileResolver } from './resolvers/profiles';
 import { CustomRepoResolver } from './resolvers/repos';
+import { CustomSearchResolver } from './resolvers/search';
 import { CustomUserResolver } from './resolvers/users';
 
 const allResolvers: NonEmptyArray<Function> = [
@@ -12,6 +13,7 @@ const allResolvers: NonEmptyArray<Function> = [
   CustomGitPOAPResolver,
   CustomProfileResolver,
   CustomRepoResolver,
+  CustomSearchResolver,
   CustomUserResolver,
 ];
 
