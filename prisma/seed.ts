@@ -1,8 +1,14 @@
 import 'reflect-metadata';
 import { PrismaClient, Prisma } from '@prisma/client';
 import { ClaimStatus } from '@generated/type-graphql';
+import { ClaimFactory } from './factories';
 
 const prisma = new PrismaClient();
+
+const addresses = {
+  test1: '0xae95f7e7fb2fcf86148ef832faed2752ae5a358a' as const,
+  jay: '0xaE32D159BB3ABFcAdFaBE7aBB461C2AB4805596D'.toLowerCase(),
+};
 
 const userData: Prisma.UserCreateInput[] = [
   {
@@ -17,7 +23,7 @@ const userData: Prisma.UserCreateInput[] = [
   },
   {
     githubId: 3,
-    githubHandle: 'jaypb',
+    githubHandle: 'jaypb1',
     oauthToken: 'test.test.3',
   },
   {
@@ -77,7 +83,7 @@ const repoData: Prisma.RepoCreateInput[] = [
   },
 ];
 
-const poapData: Prisma.GitPOAPCreateInput[] = [
+const gitPOAPData: Prisma.GitPOAPCreateInput[] = [
   {
     year: 2022,
     poapEventId: 1,
@@ -108,60 +114,16 @@ const poapData: Prisma.GitPOAPCreateInput[] = [
 ];
 
 const claimData: Prisma.ClaimCreateInput[] = [
-  {
-    gitPOAP: {
-      connect: {
-        id: 1,
-      },
-    },
-    user: {
-      connect: {
-        id: 1,
-      },
-    },
-    status: ClaimStatus.CLAIMED,
-    address: '0xae95f7e7fb2fcf86148ef832faed2752ae5a358a',
-    poapTokenId: 'thunderdome',
-  },
-  {
-    gitPOAP: {
-      connect: {
-        id: 2,
-      },
-    },
-    user: {
-      connect: {
-        id: 1,
-      },
-    },
-    status: ClaimStatus.CLAIMED,
-    address: '0xae95f7e7fb2fcf86148ef832faed2752ae5a358a',
-    poapTokenId: 'ethdenver',
-  },
-  {
-    gitPOAP: {
-      connect: {
-        id: 2,
-      },
-    },
-    user: {
-      connect: {
-        id: 2,
-      },
-    },
-  },
-  {
-    gitPOAP: {
-      connect: {
-        id: 3,
-      },
-    },
-    user: {
-      connect: {
-        id: 3,
-      },
-    },
-  },
+  /* GitPOAP 1 */
+  ClaimFactory.createClaim(1, 1, ClaimStatus.CLAIMED, addresses.test1, 'thunderdome'),
+  ClaimFactory.createClaim(1, 3, ClaimStatus.CLAIMED, addresses.jay, '4068606'),
+  /* GitPOAP 2 */
+  ClaimFactory.createClaim(2, 1, ClaimStatus.CLAIMED, addresses.test1, 'ethdenver'),
+  ClaimFactory.createClaim(2, 3, ClaimStatus.CLAIMED, addresses.jay, '4078452'),
+  ClaimFactory.createClaim(2, 1),
+  /* GitPOAP 3 */
+  ClaimFactory.createClaim(3, 3),
+  ClaimFactory.createClaim(3, 3, ClaimStatus.CLAIMED, addresses.jay, '4082459'),
 ];
 
 const profileData: Prisma.ProfileCreateInput[] = [
@@ -174,8 +136,9 @@ const profileData: Prisma.ProfileCreateInput[] = [
     bio: 'I like bbq.',
   },
   {
-    address: '0x304cf9a8b0856f47ccf9cfd5a5bad1d67b0576a7',
+    address: addresses.jay,
     bio: 'I like factorio.',
+    name: 'Jay PB',
   },
   {
     address: '0xae95f7e7fb2fcf86148ef832faed2752ae5a358a',
@@ -212,11 +175,11 @@ async function main() {
     console.log(`Creating repo with id: ${repo.id}`);
   }
 
-  for (const p of poapData) {
-    const poap = await prisma.gitPOAP.create({
-      data: p,
+  for (const gp of gitPOAPData) {
+    const gitPOAP = await prisma.gitPOAP.create({
+      data: gp,
     });
-    console.log(`Creating GitPOAP with id: ${poap.id}`);
+    console.log(`Creating GitPOAP with id: ${gitPOAP.id}`);
   }
 
   for (const c of claimData) {
