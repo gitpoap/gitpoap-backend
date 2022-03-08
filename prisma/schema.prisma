@@ -70,7 +70,6 @@ model Claim {
   gitPOAP     GitPOAP     @relation(fields: [gitPOAPId], references: [id])
   userId      Int
   user        User        @relation(fields: [userId], references: [id])
-  poapSecret  String
 }
 
 model GitPOAP {
@@ -83,6 +82,8 @@ model GitPOAP {
   updatedAt   DateTime  @updatedAt
   repo        Repo      @relation(fields: [repoId], references: [id])
   claims      Claim[]
+  poapSecret  String
+  poapQRHash  String
 }
 
 enum ClaimStatus {

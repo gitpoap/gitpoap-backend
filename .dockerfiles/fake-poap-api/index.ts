@@ -162,7 +162,7 @@ let tokenId = 1;
 app.post('/actions/claim-qr', (req, res) => {
   console.log(`Received claim-qr request: ${JSON.stringify(req.body)}`);
 
-  const schemaResult = AddEventSchema.safeParse(req.body);
+  const schemaResult = ClaimQRSchema.safeParse(req.body);
 
   if (!schemaResult.success) {
     return res.status(400).send({ issues: schemaResult.error.issues });
@@ -174,7 +174,7 @@ app.post('/actions/claim-qr', (req, res) => {
 
   res.end(
     JSON.stringify({
-      id: tokenId++,
+      id: (tokenId++).toString(),
       qr_hash: req.body.qr_hash,
       queue_uid: 'string',
       event_id: 1,
