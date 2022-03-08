@@ -1,3 +1,4 @@
+import { DateTime } from 'luxon';
 import express from 'express';
 import { z } from 'zod';
 import * as events from './data';
@@ -148,6 +149,47 @@ app.get('/events/id/:id', (req, res) => {
       res.status(404).send(`ID ${req.params.id} NOT FOUND`);
       break;
   }
+});
+
+const ClaimQRSchema = z.object({
+  address: z.string(),
+  qr_hash: z.string(),
+  secret: z.string(),
+});
+
+let tokenId = 1;
+
+app.post('/actions/claim-qr', (req, res) => {
+  console.log(`Received claim-qr request: ${JSON.stringify(req.body)}`);
+
+  const schemaResult = AddEventSchema.safeParse(req.body);
+
+  if (!schemaResult.success) {
+    return res.status(400).send({ issues: schemaResult.error.issues });
+  }
+
+  res.setHeader('Content-Type', 'application/json');
+
+  const today = DateTime.now().toFormat('yyyy-MM-dd');
+
+  res.end(
+    JSON.stringify({
+      id: tokenId++,
+      qr_hash: req.body.qr_hash,
+      queue_uid: 'string',
+      event_id: 1,
+      beneficiary: req.body.address,
+      user_input: 'string',
+      signer: 'burz.eth',
+      claimed: true,
+      claimed_date: today,
+      created_date: today,
+      is_active: true,
+      event: events.event1,
+      delegated_mint: true,
+      delegated_signed_message: 'string',
+    }),
+  );
 });
 
 app.listen(port, () => {
