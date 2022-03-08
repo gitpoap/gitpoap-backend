@@ -23,4 +23,20 @@ export class CustomRepoResolver {
     });
     return result._count.id;
   }
+
+  @Query(returns => [Repo])
+  async recentlyAddedProjects(
+    @Ctx() { prisma }: Context,
+    @Arg('count', { defaultValue: 10 }) count: number,
+  ): Promise<Repo[]> {
+    return await prisma.repo.findMany({
+      orderBy: {
+        createdAt: 'desc',
+      },
+      take: count,
+      include: {
+        Organization: true,
+      },
+    });
+  }
 }
