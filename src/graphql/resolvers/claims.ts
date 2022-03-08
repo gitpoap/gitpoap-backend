@@ -39,7 +39,7 @@ export class CustomClaimResolver {
     let results: FullClaimData[] = [];
 
     try {
-      for (let claim of claims) {
+      for (const claim of claims) {
         const { gitPOAP, ...claimData } = claim;
 
         const poapResponse = await fetch(
