@@ -3,6 +3,7 @@ import { Router } from 'express';
 import fetch from 'cross-fetch';
 import { context } from '../context';
 import { ClaimStatus } from '@prisma/client';
+import { utils } from 'ethers';
 
 export const claimsRouter = Router();
 
@@ -14,22 +15,33 @@ claimsRouter.post('/', async function (req, res) {
   }
 
   console.log(
-    `Received request to claim GitPOAPs with ids: ${req.body.claim_ids} at address ${req.body.address}`,
+    `Received request to claim GitPOAPs with ids: ${req.body.claimIds} at address ${req.body.address}`,
   );
 
   // Resolve ENS if provided
-  const address = await context.provider.resolveName(req.body.address);
-  if (req.body.address !== address) {
-    console.log(`Resolved ${req.body.address} to ${address}`);
+  const resolvedAddress = await context.provider.resolveName(req.body.address);
+  if (req.body.address !== resolvedAddress) {
+    console.log(`Resolved ${req.body.address} to ${resolvedAddress}`);
+    if (resolvedAddress === null) {
+      return res.status(400).send({ msg: `${req.body.address} is not a valid address` });
+    }
+  }
+
+  const recoveredAddress = utils.verifyMessage(
+    JSON.stringify(req.body.claimIds),
+    req.body.signature,
+  );
+  if (recoveredAddress !== resolvedAddress) {
+    return res.status(401).send({ msg: 'The signature is not valid for this address and data' });
   }
 
   let foundClaims = [];
   let invalidClaims = [];
 
-  for (var claimId of req.body.claim_ids) {
+  for (var claimId of req.body.claimIds) {
     const claim = await context.prisma.claim.findUnique({
       where: {
-        id: claimId
+        id: claimId,
       },
       include: {
         user: true,
@@ -48,14 +60,14 @@ claimsRouter.post('/', async function (req, res) {
     if (claim.status !== ClaimStatus.UNCLAIMED) {
       invalidClaims.push({
         claim_id: claimId,
-        reason: `Claim has status '${claim.status}'`
+        reason: `Claim has status '${claim.status}'`,
       });
       continue;
     }
 
     // Ensure the user is the owner of the claim
     // TODO: how to do validation?
-    if (claim.user.githubId !== req.body.github_user_id) {
+    if (claim.user.githubId !== req.body.githubUserId) {
       invalidClaims.push({
         claim_id: claimId,
         reason: 'User does not own claim',
@@ -70,7 +82,7 @@ claimsRouter.post('/', async function (req, res) {
       },
       data: {
         status: ClaimStatus.PENDING,
-        address: address,
+        address: resolvedAddress.toLowerCase(),
       },
     });
     foundClaims.push(claimId);
