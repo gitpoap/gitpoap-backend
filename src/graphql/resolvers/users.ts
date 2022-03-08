@@ -56,7 +56,7 @@ export class CustomUserResolver {
 
     let finalResults = [];
 
-    for (let result of results) {
+    for (const result of results) {
       const { claimsCount, ...user } = result;
 
       finalResults.push({ user, claimsCount });

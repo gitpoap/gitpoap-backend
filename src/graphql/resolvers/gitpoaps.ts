@@ -4,6 +4,7 @@ import { Claim, ClaimStatus, GitPOAP } from '@generated/type-graphql';
 import { getLastWeekStartDatetime } from './util';
 import { Context } from '../../context';
 import { POAPEvent, POAPToken } from '../types/poap';
+import { resolveENS } from '../../util';
 
 @ObjectType()
 class FullGitPOAPData {
@@ -85,12 +86,9 @@ export class CustomGitPOAPResolver {
     }
 
     // Resolve ENS if provided
-    const resolvedAddress = await provider.resolveName(address);
-    if (resolvedAddress !== address) {
-      console.log(`Resolved ${address} to ${resolvedAddress}`);
-      if (resolvedAddress === null) {
-        return null;
-      }
+    const resolvedAddress = await resolveENS(provider, address);
+    if (resolvedAddress === null) {
+      return null;
     }
 
     try {
@@ -111,7 +109,7 @@ export class CustomGitPOAPResolver {
       });
 
       let foundPOAPIds: Record<string, Claim> = {};
-      for (let claim of claims) {
+      for (const claim of claims) {
         if (claim.poapTokenId === null) {
           console.log(
             `Found a null poapTokenId, but the Claim has status CLAIMED. id: ${claim.id}`,
@@ -123,7 +121,7 @@ export class CustomGitPOAPResolver {
 
       let gitPOAPsOnly = [];
       let poapsOnly = [];
-      for (let poap of poaps) {
+      for (const poap of poaps) {
         if (foundPOAPIds.hasOwnProperty(poap.tokenId)) {
           gitPOAPsOnly.push({
             claim: foundPOAPIds[poap.tokenId],
@@ -215,7 +213,7 @@ export class CustomGitPOAPResolver {
     let finalResults = [];
 
     try {
-      for (let result of results) {
+      for (const result of results) {
         const { claimsCount, ...gitPOAP } = result;
 
         const poapResponse = await fetch(

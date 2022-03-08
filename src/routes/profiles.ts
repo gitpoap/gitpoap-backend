@@ -1,6 +1,7 @@
 import { UpdateProfileSchema } from '../schemas/profiles';
 import { Router } from 'express';
 import { context } from '../context';
+import { resolveENS } from '../util';
 import { utils } from 'ethers';
 
 export const profilesRouter = Router();
@@ -14,12 +15,9 @@ profilesRouter.post('/', async function (req, res) {
 
   console.log(`Received request to update profile for address: ${req.body.address}`);
 
-  const resolvedAddress = await context.provider.resolveName(req.body.address);
-  if (resolvedAddress !== req.body.address) {
-    console.log(`Resolved ${req.body.address} to ${resolvedAddress}`);
-    if (resolvedAddress === null) {
-      return res.status(400).send({ msg: `${req.body.address} is not a valid address` });
-    }
+  const resolvedAddress = await resolveENS(context.provider, req.body.address);
+  if (resolvedAddress === null) {
+    return res.status(400).send({ msg: `${req.body.address} is not a valid address` });
   }
 
   // Validate the signature for the updates

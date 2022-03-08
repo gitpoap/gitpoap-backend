@@ -3,6 +3,7 @@ import { Router } from 'express';
 import fetch from 'cross-fetch';
 import { context } from '../context';
 import { ClaimStatus } from '@prisma/client';
+import { resolveENS } from '../util';
 import { utils } from 'ethers';
 
 export const claimsRouter = Router();
@@ -19,12 +20,9 @@ claimsRouter.post('/', async function (req, res) {
   );
 
   // Resolve ENS if provided
-  const resolvedAddress = await context.provider.resolveName(req.body.address);
-  if (req.body.address !== resolvedAddress) {
-    console.log(`Resolved ${req.body.address} to ${resolvedAddress}`);
-    if (resolvedAddress === null) {
-      return res.status(400).send({ msg: `${req.body.address} is not a valid address` });
-    }
+  const resolvedAddress = await resolveENS(context.provider, req.body.address);
+  if (resolvedAddress === null) {
+    return res.status(400).send({ msg: `${req.body.address} is not a valid address` });
   }
 
   const recoveredAddress = utils.verifyMessage(
@@ -38,7 +36,7 @@ claimsRouter.post('/', async function (req, res) {
   let foundClaims: number[] = [];
   let invalidClaims = [];
 
-  for (var claimId of req.body.claimIds) {
+  for (const claimId of req.body.claimIds) {
     const claim = await context.prisma.claim.findUnique({
       where: {
         id: claimId,
