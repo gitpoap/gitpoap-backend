@@ -304,7 +304,9 @@ To retrieve a list of the most claimed GitPOAPs, we can run a query like:
   }
 }
 ```
+
 that returns data like:
+
 ```json
 {
   "data": {
@@ -348,7 +350,9 @@ To retrieve a list of the most recently added projects, we can run a query like:
   }
 }
 ```
+
 that returns data like:
+
 ```
 {
   "data": {
@@ -370,6 +374,134 @@ that returns data like:
         }
       }
     ]
+  }
+}
+```
+
+# String Searching
+
+To search by a string (could be a name, address, or ENS name), we can run a query like:
+
+```graphql
+{
+  search(text: "b") {
+    usersByGithubHandle {
+      id
+      githubHandle
+    }
+    profilesByName {
+      id
+      name
+    }
+    profilesByAddress {
+      id
+      address
+    }
+    profileByENS {
+      id
+      address
+    }
+  }
+}
+```
+
+that returns data like:
+
+```javascript
+{
+  "data": {
+    "search": {
+      "usersByGithubHandle": [
+        {
+          "id": 1,
+          "githubHandle": "vitalikb"
+        },
+        {
+          "id": 3,
+          "githubHandle": "jaypb1"
+        },
+        {
+          "id": 4,
+          "githubHandle": "anthonyb"
+        }
+      ],
+      "profilesByName": [
+        {
+          "id": 3,
+          "name": "Jay PB"
+        },
+        {
+          "id": 4,
+          "name": "Anthony Burzillo"
+        }
+      ],
+      "profilesByAddress": [
+        {
+          "id": 1,
+          "address": "0x56d389c4e07a48d429035532402301310b8143a0"
+        },
+        {
+          "id": 2,
+          "address": "0x89dab21047e6de0e77deee5f4f286d72be50b942"
+        },
+        {
+          "id": 3,
+          "address": "0xae32d159bb3abfcadfabe7abb461c2ab4805596d"
+        },
+        {
+          "id": 4,
+          "address": "0xae95f7e7fb2fcf86148ef832faed2752ae5a358a"
+        },
+        {
+          "id": 5,
+          "address": "0x206e554084beec98e08043397be63c5132cc01a1"
+        }
+      ],
+      "profileByENS": null
+    }
+  }
+}
+```
+
+As an example for ENS:
+
+```graphql
+{
+  search(text: "burz.eth") {
+    usersByGithubHandle {
+      id
+      githubHandle
+    }
+    profilesByName {
+      id
+      name
+    }
+    profilesByAddress {
+      id
+      address
+    }
+    profileByENS {
+      id
+      address
+    }
+  }
+}
+```
+
+returns:
+
+```javascript
+{
+  "data": {
+    "search": {
+      "usersByGithubHandle": [],
+      "profilesByName": [],
+      "profilesByAddress": [],
+      "profileByENS": {
+        "id": 4,
+        "address": "0xae95f7e7fb2fcf86148ef832faed2752ae5a358a"
+      }
+    }
   }
 }
 ```
