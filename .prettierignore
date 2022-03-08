@@ -7,3 +7,6 @@ coverage
 
 # Ignore markdown:
 README.md
+
+# Ignore itself lol
+.prettierrc
