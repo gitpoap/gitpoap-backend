@@ -70,7 +70,7 @@ model Claim {
   gitPOAP     GitPOAP     @relation(fields: [gitPOAPId], references: [id])
   userId      Int
   user        User        @relation(fields: [userId], references: [id])
-  POAPSecret  String
+  poapSecret  String
 }
 
 model GitPOAP {
