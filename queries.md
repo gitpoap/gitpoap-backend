@@ -304,9 +304,7 @@ To retrieve a list of the most claimed GitPOAPs, we can run a query like:
   }
 }
 ```
-
 that returns data like:
-
 ```json
 {
   "data": {
@@ -327,6 +325,48 @@ that returns data like:
         },
         "event": {
           "name": "you ate some pizza pie"
+        }
+      }
+    ]
+  }
+}
+```
+
+# Recently Added Projects
+
+To retrieve a list of the most recently added projects, we can run a query like:
+
+```graphql
+{
+  recentlyAddedProjects(count: 2) {
+    id
+    name
+    createdAt
+    Organization {
+      name
+    }
+  }
+}
+```
+that returns data like:
+```
+{
+  "data": {
+    "recentlyAddedProjects": [
+      {
+        "id": 3,
+        "name": "repo568",
+        "createdAt": "2022-03-07T23:53:35.865Z",
+        "Organization": {
+          "name": "some-other-org"
+        }
+      },
+      {
+        "id": 2,
+        "name": "repo7",
+        "createdAt": "2022-03-07T23:53:35.859Z",
+        "Organization": {
+          "name": "seven-heaven"
         }
       }
     ]
