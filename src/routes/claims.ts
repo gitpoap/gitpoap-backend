@@ -35,7 +35,7 @@ claimsRouter.post('/', async function (req, res) {
     return res.status(401).send({ msg: 'The signature is not valid for this address and data' });
   }
 
-  let foundClaims = [];
+  let foundClaims: number[] = [];
   let invalidClaims = [];
 
   for (var claimId of req.body.claimIds) {
@@ -45,12 +45,13 @@ claimsRouter.post('/', async function (req, res) {
       },
       include: {
         user: true,
+        gitPOAP: true,
       },
     });
 
     if (!claim) {
       invalidClaims.push({
-        claim_id: claimId,
+        claimId: claimId,
         reason: "Claim ID doesn't exist",
       });
       continue;
@@ -59,7 +60,7 @@ claimsRouter.post('/', async function (req, res) {
     // Check to ensure the claim has not already been processed
     if (claim.status !== ClaimStatus.UNCLAIMED) {
       invalidClaims.push({
-        claim_id: claimId,
+        claimId: claimId,
         reason: `Claim has status '${claim.status}'`,
       });
       continue;
@@ -69,7 +70,7 @@ claimsRouter.post('/', async function (req, res) {
     // TODO: how to do validation?
     if (claim.user.githubId !== req.body.githubUserId) {
       invalidClaims.push({
-        claim_id: claimId,
+        claimId: claimId,
         reason: 'User does not own claim',
       });
       continue;
@@ -87,7 +88,49 @@ claimsRouter.post('/', async function (req, res) {
     });
     foundClaims.push(claimId);
 
-    // TODO: call POAP API
+    // Helper for two exit paths from bad POAP responses
+    const revertClaim = async () => {
+      foundClaims.pop();
+      invalidClaims.push({
+        claimId: claimId,
+        reason: 'Failed to claim via POAP API',
+      });
+      await context.prisma.claim.update({
+        where: {
+          id: claimId,
+        },
+        data: {
+          status: ClaimStatus.UNCLAIMED,
+        },
+      });
+    };
+
+    let poapData;
+    try {
+      const poapResponse = await fetch(`${process.env.POAP_URL}/actions/claim-qr`, {
+        method: 'POST',
+        body: JSON.stringify({
+          address: req.body.address,
+          qr_hash: claim.gitPOAP.poapQRHash,
+          secret: claim.gitPOAP.poapSecret,
+        }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (poapResponse.status >= 400) {
+        console.log(await poapResponse.text());
+        await revertClaim();
+        continue;
+      }
+
+      poapData = await poapResponse.json();
+    } catch (err) {
+      console.log(err);
+      await revertClaim();
+      continue;
+    }
 
     // Mark that the POAP has been claimed
     await context.prisma.claim.update({
@@ -96,6 +139,7 @@ claimsRouter.post('/', async function (req, res) {
       },
       data: {
         status: ClaimStatus.CLAIMED,
+        poapTokenId: poapData.id,
       },
     });
   }

@@ -92,6 +92,8 @@ const gitPOAPData: Prisma.GitPOAPCreateInput[] = [
         id: 1,
       },
     },
+    poapSecret: 'secret1',
+    poapQRHash: 'hash-browns-1',
   },
   {
     year: 2024,
@@ -101,6 +103,8 @@ const gitPOAPData: Prisma.GitPOAPCreateInput[] = [
         id: 2,
       },
     },
+    poapSecret: 'secret2',
+    poapQRHash: 'hash-browns-2',
   },
   {
     year: 2015,
@@ -110,6 +114,8 @@ const gitPOAPData: Prisma.GitPOAPCreateInput[] = [
         id: 3,
       },
     },
+    poapSecret: 'secret3',
+    poapQRHash: 'hash-browns-3',
   },
 ];
 
