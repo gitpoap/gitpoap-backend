@@ -24,11 +24,11 @@ async function main() {
   console.log('Starting DB seeding...');
 
   /* Create Users */
-  const vitalik = await UserFactory.createUser(1, GH_HANDLES.vitalik, 'test.oauth.1');
-  const colfax = await UserFactory.createUser(2, GH_HANDLES.colfax, 'test.oauth.2');
-  const jay = await UserFactory.createUser(3, GH_HANDLES.jay, 'test.oauth.3');
-  const anthony = await UserFactory.createUser(4, GH_HANDLES.anthony, 'test.oauth.4');
-  const johnz = await UserFactory.createUser(5, 'johnz', 'test.oauth.5');
+  const vitalik = await UserFactory.createUser(1, GH_HANDLES.vitalik);
+  const colfax = await UserFactory.createUser(2, GH_HANDLES.colfax);
+  const jay = await UserFactory.createUser(3, GH_HANDLES.jay);
+  const anthony = await UserFactory.createUser(4, GH_HANDLES.anthony);
+  const johnz = await UserFactory.createUser(5, 'johnz');
 
   /* Create Organizations */
   const org1 = await OrganizationFactory.createOrganization(43, 'org43');

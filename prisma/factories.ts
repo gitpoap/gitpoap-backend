@@ -34,15 +34,10 @@ export class ClaimFactory {
 }
 
 export class UserFactory {
-  static createUser = async (
-    githubId: number,
-    githubHandle: string,
-    oauthToken: string,
-  ): Promise<User> => {
+  static createUser = async (githubId: number, githubHandle: string): Promise<User> => {
     const data: Prisma.UserCreateInput = {
       githubId,
       githubHandle,
-      oauthToken,
     };
 
     const user = await prisma.user.create({ data });
