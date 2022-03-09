@@ -1,206 +1,59 @@
 import 'reflect-metadata';
-import { PrismaClient, Prisma } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import { ClaimStatus } from '@generated/type-graphql';
-import { ClaimFactory } from './factories';
+import { ClaimFactory, UserFactory, OrganizationFactory, RepoFactory, GitPOAPFactory, ProfileFactory } from './factories';
 
-const prisma = new PrismaClient();
+export const prisma = new PrismaClient();
 
-const addresses = {
+const ADDRESSES = {
   test1: '0xae95f7e7fb2fcf86148ef832faed2752ae5a358a' as const,
   jay: '0xaE32D159BB3ABFcAdFaBE7aBB461C2AB4805596D'.toLowerCase(),
 };
 
-const userData: Prisma.UserCreateInput[] = [
-  {
-    githubId: 1,
-    githubHandle: 'vitalikb',
-    oauthToken: 'test.test.1',
-  },
-  {
-    githubId: 2,
-    githubHandle: 'colfaxs',
-    oauthToken: 'test.test.2',
-  },
-  {
-    githubId: 3,
-    githubHandle: 'jaypb1',
-    oauthToken: 'test.test.3',
-  },
-  {
-    githubId: 4,
-    githubHandle: 'anthonyb',
-    oauthToken: 'test.test.4',
-  },
-  {
-    githubId: 5,
-    githubHandle: 'johnz',
-    oauthToken: 'test.test.5',
-  },
-];
-
-const orgData: Prisma.OrganizationCreateInput[] = [
-  {
-    githubOrgId: 43,
-    name: 'org43',
-  },
-  {
-    githubOrgId: 7,
-    name: 'seven-heaven',
-  },
-  {
-    githubOrgId: 34343,
-    name: 'some-other-org',
-  },
-];
-
-const repoData: Prisma.RepoCreateInput[] = [
-  {
-    name: 'repo34',
-    githubRepoId: 34,
-    Organization: {
-      connect: {
-        id: 1,
-      },
-    },
-  },
-  {
-    name: 'repo7',
-    githubRepoId: 7,
-    Organization: {
-      connect: {
-        id: 2,
-      },
-    },
-  },
-  {
-    name: 'repo568',
-    githubRepoId: 568,
-    Organization: {
-      connect: {
-        id: 3,
-      },
-    },
-  },
-];
-
-const gitPOAPData: Prisma.GitPOAPCreateInput[] = [
-  {
-    year: 2022,
-    poapEventId: 1,
-    repo: {
-      connect: {
-        id: 1,
-      },
-    },
-    poapSecret: 'secret1',
-    poapQRHash: 'hash-browns-1',
-  },
-  {
-    year: 2024,
-    poapEventId: 2,
-    repo: {
-      connect: {
-        id: 2,
-      },
-    },
-    poapSecret: 'secret2',
-    poapQRHash: 'hash-browns-2',
-  },
-  {
-    year: 2015,
-    poapEventId: 3,
-    repo: {
-      connect: {
-        id: 3,
-      },
-    },
-    poapSecret: 'secret3',
-    poapQRHash: 'hash-browns-3',
-  },
-];
-
-const claimData: Prisma.ClaimCreateInput[] = [
-  /* GitPOAP 1 */
-  ClaimFactory.createClaim(1, 1, ClaimStatus.CLAIMED, addresses.test1, 'thunderdome'),
-  ClaimFactory.createClaim(1, 3, ClaimStatus.CLAIMED, addresses.jay, '4068606'),
-  /* GitPOAP 2 */
-  ClaimFactory.createClaim(2, 1, ClaimStatus.CLAIMED, addresses.test1, 'ethdenver'),
-  ClaimFactory.createClaim(2, 3, ClaimStatus.CLAIMED, addresses.jay, '4078452'),
-  ClaimFactory.createClaim(2, 1),
-  /* GitPOAP 3 */
-  ClaimFactory.createClaim(3, 3),
-  ClaimFactory.createClaim(3, 3, ClaimStatus.CLAIMED, addresses.jay, '4082459'),
-];
-
-const profileData: Prisma.ProfileCreateInput[] = [
-  {
-    address: '0x56d389c4e07a48d429035532402301310b8143a0',
-    bio: 'I like brisket.',
-  },
-  {
-    address: '0x89dab21047e6de0e77deee5f4f286d72be50b942',
-    bio: 'I like bbq.',
-  },
-  {
-    address: addresses.jay,
-    bio: 'I like factorio.',
-    name: 'Jay PB',
-  },
-  {
-    address: '0xae95f7e7fb2fcf86148ef832faed2752ae5a358a',
-    bio: 'I am addicted to POAPs',
-    name: 'Anthony Burzillo',
-  },
-  {
-    address: '0x206e554084beec98e08043397be63c5132cc01a1',
-    bio: 'I am not real',
-  },
-];
-
 async function main() {
   console.log('Starting DB seeding...');
 
-  for (const u of userData) {
-    const user = await prisma.user.create({
-      data: u,
-    });
-    console.log(`Creating user with id: ${user.id}`);
-  }
+  /* Create Users */
+  const user1 = await UserFactory.createUser(1, 'vitalikb', 'test.oauth.1');
+  const user2 = await UserFactory.createUser(2, 'colfaxs', 'test.oauth.2');
+  const user3 = await UserFactory.createUser(3, 'jaypb1', 'test.oauth.3');
+  const user4 = await UserFactory.createUser(4, 'anthonyb', 'test.oauth.4');
+  const user5 = await UserFactory.createUser(5, 'johnz', 'test.oauth.5');
 
-  for (const r of orgData) {
-    const org = await prisma.organization.create({
-      data: r,
-    });
-    console.log(`Creating organization with id: ${org.id}`);
-  }
+  /* Create Organizations */
+  const org1 = await OrganizationFactory.createOrganization(43, 'org43');
+  const org2 = await OrganizationFactory.createOrganization(7, 'seven-heaven');
+  const org3 = await OrganizationFactory.createOrganization(34343, 'some-other-org');
 
-  for (const r of repoData) {
-    const repo = await prisma.repo.create({
-      data: r,
-    });
-    console.log(`Creating repo with id: ${repo.id}`);
-  }
+  /* Create Repos */
+  const repo34 = await RepoFactory.createRepo('repo34', 34, org1.id);
+  const repo7 = await RepoFactory.createRepo('repo7', 7, org2.id);
+  const repo568 = await RepoFactory.createRepo('repo568', 568, org3.id);
 
-  for (const gp of gitPOAPData) {
-    const gitPOAP = await prisma.gitPOAP.create({
-      data: gp,
-    });
-    console.log(`Creating GitPOAP with id: ${gitPOAP.id}`);
-  }
+  /* Create GitPOAPs */
+  const gitpoap1 = await GitPOAPFactory.createGitPOAP(2022, 1, repo34.id, 'secret1', 'hash-browns-1');
+  const gitpoap2 = await GitPOAPFactory.createGitPOAP(2024, 2, repo7.id, 'secret2', 'hash-browns-2');
+  const gitpoap3 = await GitPOAPFactory.createGitPOAP(2015, 3, repo568.id, 'secret3', 'hash-browns-3');
 
-  for (const c of claimData) {
-    const claim = await prisma.claim.create({
-      data: c,
-    });
-    console.log(`Creating claim with id: ${claim.id}`);
-  }
+  /* Create Claims */
+  // GitPOAP 1
+  const claim1 = await ClaimFactory.createClaim(gitpoap1.id, user1.id, ClaimStatus.CLAIMED, ADDRESSES.test1, 'thunderdome');
+  const claim2 = await ClaimFactory.createClaim(gitpoap1.id, user3.id, ClaimStatus.CLAIMED, ADDRESSES.jay, '4068606');
 
-  for (const p of profileData) {
-    const profile = await prisma.profile.create({
-      data: p,
-    });
-    console.log(`Creating profile with id: ${profile.id}`);
-  }
+  // GitPOAP 2
+  const claim3 = await ClaimFactory.createClaim(gitpoap2.id, user1.id, ClaimStatus.CLAIMED, ADDRESSES.test1, 'ethdenver');
+  const claim4 = await ClaimFactory.createClaim(gitpoap2.id, user3.id, ClaimStatus.CLAIMED, ADDRESSES.jay, '4078452');
+  const claim5 = await ClaimFactory.createClaim(gitpoap2.id, user1.id);
+  // GitPOAP 3
+  const claim6 = await ClaimFactory.createClaim(gitpoap3.id, user3.id);
+  const claim7 = await ClaimFactory.createClaim(gitpoap3.id, user3.id, ClaimStatus.CLAIMED, ADDRESSES.jay, '4082459');
+
+  /* Create Profiles */
+  const profile1 = ProfileFactory.createProfile('0x56d389c4e07a48d429035532402301310b8143a0', 'I like brisket.');
+  const profile2 = ProfileFactory.createProfile('0x89dab21047e6de0e77deee5f4f286d72be50b942', 'I like bbq.');
+  const profile3 = ProfileFactory.createProfile(ADDRESSES.jay, 'I like factorio.', 'Jay PB');
+  const profile4 = ProfileFactory.createProfile('0xae95f7e7fb2fcf86148ef832faed2752ae5a358a', 'I am addicted to POAPs', 'Anthony Burzillo');
+  const profile5 = ProfileFactory.createProfile('0x206e554084beec98e08043397be63c5132cc01a1', 'I am not real');
 
   console.log('DB Seeding complete. ');
 }
