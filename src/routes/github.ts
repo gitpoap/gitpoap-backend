@@ -6,10 +6,10 @@ import {
   JWT_EXP_TIME,
 } from '../constants';
 import fetch from 'cross-fetch';
-import { sign } from 'jsonwebtoken';
-import { v4 } from 'uuid';
+import { sign, verify } from 'jsonwebtoken';
 import { context } from '../context';
 import { User } from '@generated/type-graphql';
+import { RequestAccessTokenSchema, RefreshAccessTokenSchema } from '../schemas/github';
 
 export const githubRouter = Router();
 
@@ -58,22 +58,23 @@ async function retrieveGithubUserInfo(githubToken: string) {
   return await userResponse.json();
 }
 
-function generateAccessToken(user: User, githubToken: string): string {
-  return sign({ githubId: user.githubId, githubToken }, process.env.JWT_SECRET as string, {
+function generateAccessToken(authTokenId: number, githubId: number): string {
+  return sign({ authTokenId, githubId }, process.env.JWT_SECRET as string, {
     expiresIn: JWT_EXP_TIME,
   });
 }
 
-function generateRefreshToken(user: User) {
-  // Generate a random key
-  const secret = v4();
-
-  const token = sign({ githubId: user.githubId, secret }, process.env.JWT_SECRET as string);
-
-  return { token, secret };
+function generateRefreshToken(authTokenId: number, githubId: number, generation: number) {
+  return sign({ authTokenId, githubId, generation }, process.env.JWT_SECRET as string);
 }
 
 githubRouter.post('/', async function (req, res) {
+  const schemaResult = RequestAccessTokenSchema.safeParse(req.body);
+
+  if (!schemaResult.success) {
+    return res.status(400).send({ issues: schemaResult.error.issues });
+  }
+
   let { code } = req.body;
 
   // Remove state string if it exists
@@ -116,13 +117,9 @@ githubRouter.post('/', async function (req, res) {
     },
   });
 
-  const refreshData = generateRefreshToken(user);
-
-  await context.prisma.authToken.create({
+  const authToken = await context.prisma.authToken.create({
     data: {
-      generation: user.nextGeneration,
       oauthToken: githubToken,
-      refreshSecret: refreshData.secret,
       user: {
         connect: {
           githubId: user.githubId,
@@ -131,17 +128,69 @@ githubRouter.post('/', async function (req, res) {
     },
   });
 
-  await context.prisma.user.update({
+  return res.status(200).json({
+    accessToken: generateAccessToken(authToken.id, user.githubId),
+    refreshToken: generateRefreshToken(authToken.id, user.githubId, authToken.generation),
+  });
+});
+
+githubRouter.post('/refresh', async function (req, res) {
+  const schemaResult = RefreshAccessTokenSchema.safeParse(req.body);
+
+  if (!schemaResult.success) {
+    return res.status(400).send({ issues: schemaResult.error.issues });
+  }
+
+  const { token } = req.body;
+
+  type Payload = {
+    authTokenId: number;
+    githubId: number;
+    generation: number;
+  };
+  let payload: Payload;
+  try {
+    payload = <Payload>verify(token, process.env.JWT_SECRET);
+  } catch (err) {
+    return res.status(401).send({ message: 'The refresh token is invalid' });
+  }
+
+  const authToken = await context.prisma.authToken.findUnique({
     where: {
-      githubId: user.githubId,
+      id: payload.authTokenId,
+    },
+  });
+
+  if (authToken === null) {
+    return res.status(401).send({ message: 'The refresh token is invalid' });
+  }
+
+  // If someone is trying to use an old generation of the refresh token, we must
+  // consider the lineage to be tainted, and therefore purge it completely
+  // (user will need to log back in via GitHub).
+  if (payload.generation !== authToken.generation) {
+    console.log(`GitHub user ${authToken.githubId} had a refresh token reused.`);
+    await context.prisma.authToken.delete({
+      where: {
+        id: authToken.id,
+      },
+    });
+
+    return res.status(401).send({ message: 'The refresh token has already been used' });
+  }
+
+  const nextGeneration = authToken.generation + 1;
+  await context.prisma.authToken.update({
+    where: {
+      id: authToken.id,
     },
     data: {
-      nextGeneration: user.nextGeneration + 1,
+      generation: nextGeneration,
     },
   });
 
   return res.status(200).json({
-    accessToken: generateAccessToken(user, githubToken),
-    refreshToken: refreshData.token,
+    accessToken: generateAccessToken(authToken.id, payload.githubId),
+    refreshToken: generateRefreshToken(authToken.id, payload.githubId, nextGeneration),
   });
 });
