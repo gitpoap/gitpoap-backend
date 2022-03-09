@@ -115,3 +115,37 @@ export const event25149: POAPEvent = {
   end_date: '28-Feb-2022',
   supply: 438,
 };
+
+export const event19375: POAPEvent = {
+  id: 19375,
+  fancy_id: 'gitpoap1-2021',
+  name: 'GitPOAP1',
+  event_url: 'https://gitpoap.io',
+  image_url: 'https://assets.poap.xyz/gitpoap1-2021-logo-1640113981980.png',
+  country: 'USA',
+  city: 'New York, NY',
+  description: 'Testing',
+  year: 2021,
+  start_date: '21-Dec-2021',
+  end_date: '21-Dec-2021',
+  expiry_date: '22-Jan-2022',
+  supply: 1,
+};
+
+export const event29009: POAPEvent = {
+  id: 29009,
+  fancy_id: 'gitpoap-strategy-meeting-ethdenver-2022-2022',
+  name: 'GitPOAP Strategy Meeting - EthDenver 2022',
+  event_url: 'https://gitpoap.io/',
+  image_url:
+    'https://assets.poap.xyz/gitpoap-strategy-meeting-ethdenver-2022-2022-logo-1645132648036.png',
+  country: '',
+  city: 'Denver, CO',
+  description:
+    'This commemorates a meeting of wonderful folks discussing the future of decentralized reputation and how GitPOAP can contribute to it.',
+  year: 2022,
+  start_date: '18-Feb-2022',
+  end_date: '18-Feb-2022',
+  expiry_date: '18-Mar-2022',
+  supply: 6,
+};
