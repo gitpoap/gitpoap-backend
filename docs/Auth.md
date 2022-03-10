@@ -9,12 +9,13 @@ users to have to:
 - Hold never-expiring authentication tokens that could be leaked and used
   maliciously
 
-With the Access+Refresh Token system, the user is given a both at the same time but
+With the Access+Refresh Token system, the user is given both at the same time but
 the user will only use the Access Token when making requests (note that we need to
 assume that the distribution of these tokens initially to the user is secure) until
 the user (i.e. the frontend) realizes that the token has expired. At this point
-they can retreive a new Access+Refresh Token pair by calling the authentication refresh
-endpoint and providing their Refresh Token.
+they can exchange their Refresh Token, which they stored on the frontend until
+they needed it, at the backend's refresh token endpoint for a new
+Access+Refresh Token.
 
 ## Access Token Format
 
@@ -30,14 +31,16 @@ fields:
 
 Note that:
 
-- The `"authTokenId"` field is the ID of the record for the Access+Refresh Token pair
-  in the database.
+- The `"authTokenId"` field is the ID of the record in the `AuthToken` table for the
+  Access+Refresh Token pair in the database.
 - The `"githubId"` field is GitHub's ID for the user that will not change even if their
   login handle changes.
 
 The inclusion of these fields allows the REST server to skip having to look up the user
 or to validate that the token is still valid (there are scenarios where we may invalidate
 a token before it has expired that we will describe in another section).
+
+Access Tokens have short expiration times by design. We are currently using 10 minutes.
 
 ## Refresh Token Format
 
@@ -54,8 +57,8 @@ fields:
 
 Note that:
 
-- The `"authTokenId"` field is the ID of the record for the Access+Refresh Token pair
-  in the database.
+- The `"authTokenId"` field is the ID of the record in the `AuthToken` table for the
+  Access+Refresh Token pair in the database.
 - The `"githubId"` field is GitHub's ID for the user that will not change even if their
   login handle changes.
 - The `"generation"` field is a versioning of the Access+Refresh Tokens for a single login.
@@ -65,18 +68,20 @@ Note that:
 The user (i.e. the frontend) should store this token in either local storage or a cookie until they
 need to use it.
 
+Refresh Tokens never expire, but they may be invalidated.
+
 ## Invalidation Scenarios
 
 There are a few scenarios in which a token pair will be invalidated:
 
-- When the user tries to use the refresh token, we will ensure that the OAuth token we received from
-  GitHub that is associated with this login in particular is still valid. In the case that it is
-  not, it means that the user has disconnected the App in their GitHub settings.
 - If someone attempts to use a Refresh Token from a previous generation (e.g. the current generation
   is `4` but someone attempts to refresh with a Refresh Token from generation `2`) then we must assume
   that the tokens have been leaked and we invalidate the Access+Refresh Token pair and the user will
   have to login via GitHub again.
-  To invalidate, we simply delete the record for the token pair in the DB.
+- If a user has disconnected the App in their GitHub settings we will invalidate their tokens after
+  [receiving an event on the webhook](https://docs.github.com/en/developers/apps/building-github-apps/identifying-and-authorizing-users-for-github-apps#handling-a-revoked-github-app-authorization).
+
+To invalidate, we simply delete the record for the token pair in the DB.
 
 ## Client Usage
 
@@ -104,7 +109,7 @@ with their secret code and at that point the client should send a
 }
 ```
 
-and the server will return two tokens like:
+and the backend server will return two tokens like:
 
 ```
 {
@@ -127,7 +132,7 @@ If the client (i.e. the frontend) has a Refresh Token and their Access Token has
 }
 ```
 
-and the server will return two tokens like:
+and the backend server will return two tokens like:
 
 ```
 {
