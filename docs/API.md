@@ -2,7 +2,7 @@
 
 ## Add Project
 
-POST `/projects`
+`POST /projects`
 
 Data:
 
@@ -15,7 +15,7 @@ Data:
 
 ## Update Profile
 
-POST `/profiles`
+`POST /profiles`
 
 Data:
 
@@ -39,7 +39,7 @@ for further information.
 
 ## Claim GitPOAPs
 
-POST `/claims`
+`POST /claims`
 
 Data:
 
