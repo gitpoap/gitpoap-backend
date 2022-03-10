@@ -101,7 +101,9 @@ export class CustomGitPOAPResolver {
     }
 
     try {
-      const poapResponse = await fetch(`${process.env.POAP_URL}/actions/scan/${resolvedAddress}`);
+      const poapResponse = await fetch(
+        `${process.env.POAP_API_URL}/actions/scan/${resolvedAddress}`,
+      );
 
       if (poapResponse.status >= 400) {
         console.log(await poapResponse.text());
@@ -226,7 +228,7 @@ export class CustomGitPOAPResolver {
         const { claimsCount, ...gitPOAP } = result;
 
         const poapResponse = await fetch(
-          `${process.env.POAP_URL}/events/id/${gitPOAP.poapEventId}`,
+          `${process.env.POAP_API_URL}/events/id/${gitPOAP.poapEventId}`,
         );
 
         if (poapResponse.status >= 400) {

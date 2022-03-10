@@ -114,10 +114,10 @@ model FeaturedPOAP {
   @@unique([poapTokenId, profileId])
 }
 
-model Key {
+model Secret {
   id        Int      @id @default(autoincrement())
   name      String   @unique
-  key       String   @db.VarChar(255)
+  key       String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
