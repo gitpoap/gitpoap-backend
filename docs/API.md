@@ -45,7 +45,6 @@ Data:
 
 ```json
 {
-  "githubUserId": 3,
   "claimIds": [4, 5],
   "address": "colfax.eth",
   "signature": "it is I"
