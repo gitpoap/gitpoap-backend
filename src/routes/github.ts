@@ -10,6 +10,7 @@ import { sign, verify } from 'jsonwebtoken';
 import { context } from '../context';
 import { User } from '@generated/type-graphql';
 import { RequestAccessTokenSchema, RefreshAccessTokenSchema } from '../schemas/github';
+import { RefreshTokenPayload } from '../types';
 
 export const githubRouter = Router();
 
@@ -142,15 +143,9 @@ githubRouter.post('/refresh', async function (req, res) {
   }
 
   const { token } = req.body;
-
-  type Payload = {
-    authTokenId: number;
-    githubId: number;
-    generation: number;
-  };
-  let payload: Payload;
+  let payload: RefreshTokenPayload;
   try {
-    payload = <Payload>verify(token, process.env.JWT_SECRET);
+    payload = <RefreshTokenPayload>verify(token, process.env.JWT_SECRET);
   } catch (err) {
     return res.status(401).send({ message: 'The refresh token is invalid' });
   }
