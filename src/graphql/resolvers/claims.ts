@@ -43,7 +43,7 @@ export class CustomClaimResolver {
         const { gitPOAP, ...claimData } = claim;
 
         const poapResponse = await fetch(
-          `${process.env.POAP_URL}/events/id/${gitPOAP.poapEventId}`,
+          `${process.env.POAP_API_URL}/events/id/${gitPOAP.poapEventId}`,
         );
 
         if (poapResponse.status >= 400) {
