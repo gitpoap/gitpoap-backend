@@ -11,7 +11,7 @@ ALTER TABLE "User" DROP COLUMN "oauthToken";
 CREATE TABLE "AuthToken" (
     "id" SERIAL NOT NULL,
     "generation" INTEGER NOT NULL DEFAULT 0,
-    "oauthToken" TEXT NOT NULL,
+    "githubOAuthToken" TEXT NOT NULL,
     "githubId" INTEGER NOT NULL,
 
     CONSTRAINT "AuthToken_pkey" PRIMARY KEY ("id")

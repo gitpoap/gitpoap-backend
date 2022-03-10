@@ -19,13 +19,13 @@ datasource db {
 }
 
 model User {
-  id             Int         @id @default(autoincrement())
-  githubId       Int         @unique
-  githubHandle   String      @db.VarChar(255)
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
-  claims         Claim[]
-  AuthToken      AuthToken[]
+  id           Int         @id @default(autoincrement())
+  githubId     Int         @unique
+  githubHandle String      @db.VarChar(255)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  claims       Claim[]
+  authTokens   AuthToken[]
 }
 
 model Profile {
@@ -87,11 +87,11 @@ model GitPOAP {
 }
 
 model AuthToken {
-  id            Int    @id @default(autoincrement())
-  generation    Int    @default(0)
-  oauthToken    String
-  githubId      Int
-  user          User   @relation(fields: [githubId], references: [githubId])
+  id               Int    @id @default(autoincrement())
+  generation       Int    @default(0)
+  githubOAuthToken String
+  githubId         Int
+  user             User   @relation(fields: [githubId], references: [githubId])
 }
 
 enum ClaimStatus {

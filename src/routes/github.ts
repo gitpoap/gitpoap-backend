@@ -120,10 +120,10 @@ githubRouter.post('/', async function (req, res) {
 
   const authToken = await context.prisma.authToken.create({
     data: {
-      oauthToken: githubToken,
+      githubOAuthToken: githubToken,
       user: {
         connect: {
-          githubId: user.githubId,
+          id: user.id,
         },
       },
     },
@@ -172,14 +172,6 @@ githubRouter.post('/refresh', async function (req, res) {
     });
 
     return res.status(401).send({ message: 'The refresh token has already been used' });
-  }
-
-  // Ensure that the user hasn't disconnected the App from GitHub, thereby invalidating
-  // their OAuth token. In this case we want to force them to relogin
-  if ((await retrieveGithubUserInfo(authToken.oauthToken)) === null) {
-    return res.status(401).send({
-      message: 'The refresh token is invalid as the user has disconnected the App on GitHub',
-    });
   }
 
   const nextGeneration = authToken.generation + 1;
