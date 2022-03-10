@@ -37,6 +37,8 @@ model Profile {
   bannerImageUrl  String?  @db.VarChar(255)
   name            String?  @db.VarChar(255)
   profileImageUrl String?  @db.VarChar(255)
+  twitterHandle   String?  @db.VarChar(255)
+  personalSiteUrl String?  @db.VarChar(255)
 }
 
 model Organization {

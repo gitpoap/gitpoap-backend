@@ -79,7 +79,7 @@ async function main() {
   /* Create Profiles */
   const profile1 = ProfileFactory.createProfile(ADDRESSES.colfax, 'I like brisket.');
   const profile2 = ProfileFactory.createProfile('0x89dab21047e6de0e77deee5f4f286d72be50b942', 'I like bbq.');
-  const profile3 = ProfileFactory.createProfile(ADDRESSES.jay, 'I like factorio.', 'Jay PB');
+  const profile3 = ProfileFactory.createProfile(ADDRESSES.jay, 'I like factorio.', 'Jay PB', '0xpeebeejay', 'https://s.jay.gg');
   const profile4 = ProfileFactory.createProfile(ADDRESSES.anthony, 'I am addicted to POAPs', 'Anthony Burzillo');
   const profile5 = ProfileFactory.createProfile('0x206e554084beec98e08043397be63c5132cc01a1', 'I am not real');
   const profile6 = ProfileFactory.createProfile(ADDRESSES.vitalik, 'I like unicorns');

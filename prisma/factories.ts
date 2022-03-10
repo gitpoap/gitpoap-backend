@@ -117,11 +117,19 @@ export class GitPOAPFactory {
 }
 
 export class ProfileFactory {
-  static createProfile = async (address: string, bio: string, name?: string): Promise<Profile> => {
+  static createProfile = async (
+    address: string,
+    bio: string,
+    name?: string,
+    twitterHandle?: string,
+    personalSiteUrl?: string,
+  ): Promise<Profile> => {
     const data: Prisma.ProfileCreateInput = {
       address,
       bio,
       name,
+      twitterHandle,
+      personalSiteUrl,
     };
 
     const profile = await prisma.profile.create({ data });
