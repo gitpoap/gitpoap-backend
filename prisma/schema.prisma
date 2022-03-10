@@ -114,6 +114,14 @@ model FeaturedPOAP {
   @@unique([poapTokenId, profileId])
 }
 
+model Key {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  key       String   @db.VarChar(255)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 enum ClaimStatus {
   UNCLAIMED
   PENDING
