@@ -1,10 +1,10 @@
 import { Arg, Ctx, Field, ObjectType, Resolver, Query } from 'type-graphql';
-import fetch from 'cross-fetch';
 import { Claim, ClaimStatus, GitPOAP } from '@generated/type-graphql';
 import { getLastWeekStartDatetime } from './util';
 import { Context } from '../../context';
 import { POAPEvent, POAPToken } from '../types/poap';
 import { resolveENS } from '../../util';
+import { retrievePOAPEventInfo, retrieveUsersPOAPs, retrievePOAPInfo } from '../../poap';
 
 @ObjectType()
 class FullGitPOAPData {
@@ -100,106 +100,92 @@ export class CustomGitPOAPResolver {
       return null;
     }
 
-    try {
-      const poapResponse = await fetch(
-        `${process.env.POAP_API_URL}/actions/scan/${resolvedAddress}`,
-      );
-
-      if (poapResponse.status >= 400) {
-        console.log(await poapResponse.text());
-        return null;
-      }
-
-      const poaps = await poapResponse.json();
-
-      const claims = await prisma.claim.findMany({
-        where: {
-          address: resolvedAddress.toLowerCase(),
-          status: ClaimStatus.CLAIMED,
-        },
-      });
-
-      let foundPOAPIds: Record<string, Claim> = {};
-      for (const claim of claims) {
-        if (claim.poapTokenId === null) {
-          console.log(
-            `Found a null poapTokenId, but the Claim has status CLAIMED. id: ${claim.id}`,
-          );
-          continue;
-        }
-        foundPOAPIds[claim.poapTokenId] = claim;
-      }
-
-      let gitPOAPsOnly = [];
-      let poapsOnly = [];
-      for (const poap of poaps) {
-        if (foundPOAPIds.hasOwnProperty(poap.tokenId)) {
-          gitPOAPsOnly.push({
-            claim: foundPOAPIds[poap.tokenId],
-            poap: poap,
-          });
-        } else {
-          poapsOnly.push(poap);
-        }
-      }
-
-      if (sort === 'date') {
-        // Sort so that most recently claimed comes first
-        gitPOAPsOnly.sort((left, right) => {
-          // Note that we create claim placeholders before they are
-          // actually initiated by the user so the claim time is
-          // the updatedAt time
-          const leftDate = new Date(left.claim.updatedAt);
-          const rightDate = new Date(right.claim.updatedAt);
-          if (leftDate < rightDate) {
-            return 1;
-          }
-          if (leftDate > rightDate) {
-            return -1;
-          }
-          return 0;
-        });
-        poapsOnly.sort((left, right) => {
-          const leftDate = new Date(left.created);
-          const rightDate = new Date(right.created);
-          if (leftDate < rightDate) {
-            return 1;
-          }
-          if (leftDate > rightDate) {
-            return -1;
-          }
-          return 0;
-        });
-      } else {
-        // === 'alphabetical'
-        gitPOAPsOnly.sort((left, right) => {
-          return left.poap.event.name.localeCompare(right.poap.event.name);
-        });
-        poapsOnly.sort((left, right) => {
-          return left.event.name.localeCompare(right.event.name);
-        });
-      }
-
-      if (page) {
-        const index = (page - 1) * <number>perPage;
-        return {
-          totalGitPOAPs: gitPOAPsOnly.length,
-          totalPOAPs: poapsOnly.length,
-          gitPOAPs: gitPOAPsOnly.slice(index, index + <number>perPage),
-          poaps: poapsOnly.slice(index, index + <number>perPage),
-        };
-      } else {
-        return {
-          totalGitPOAPs: gitPOAPsOnly.length,
-          totalPOAPs: poapsOnly.length,
-          gitPOAPs: gitPOAPsOnly,
-          poaps: poapsOnly,
-        };
-      }
-    } catch (err) {
-      console.log(err);
-
+    const poaps = await retrieveUsersPOAPs(resolvedAddress);
+    if (poaps === null) {
       return null;
+    }
+
+    const claims = await prisma.claim.findMany({
+      where: {
+        address: resolvedAddress.toLowerCase(),
+        status: ClaimStatus.CLAIMED,
+      },
+    });
+
+    let foundPOAPIds: Record<string, Claim> = {};
+    for (const claim of claims) {
+      if (claim.poapTokenId === null) {
+        console.log(`Found a null poapTokenId, but the Claim has status CLAIMED. id: ${claim.id}`);
+        continue;
+      }
+      foundPOAPIds[claim.poapTokenId] = claim;
+    }
+
+    let gitPOAPsOnly = [];
+    let poapsOnly = [];
+    for (const poap of poaps) {
+      if (foundPOAPIds.hasOwnProperty(poap.tokenId)) {
+        gitPOAPsOnly.push({
+          claim: foundPOAPIds[poap.tokenId],
+          poap: poap,
+        });
+      } else {
+        poapsOnly.push(poap);
+      }
+    }
+
+    if (sort === 'date') {
+      // Sort so that most recently claimed comes first
+      gitPOAPsOnly.sort((left, right) => {
+        // Note that we create claim placeholders before they are
+        // actually initiated by the user so the claim time is
+        // the updatedAt time
+        const leftDate = new Date(left.claim.updatedAt);
+        const rightDate = new Date(right.claim.updatedAt);
+        if (leftDate < rightDate) {
+          return 1;
+        }
+        if (leftDate > rightDate) {
+          return -1;
+        }
+        return 0;
+      });
+      poapsOnly.sort((left, right) => {
+        const leftDate = new Date(left.created);
+        const rightDate = new Date(right.created);
+        if (leftDate < rightDate) {
+          return 1;
+        }
+        if (leftDate > rightDate) {
+          return -1;
+        }
+        return 0;
+      });
+    } else {
+      // === 'alphabetical'
+      gitPOAPsOnly.sort((left, right) => {
+        return left.poap.event.name.localeCompare(right.poap.event.name);
+      });
+      poapsOnly.sort((left, right) => {
+        return left.event.name.localeCompare(right.event.name);
+      });
+    }
+
+    if (page) {
+      const index = (page - 1) * <number>perPage;
+      return {
+        totalGitPOAPs: gitPOAPsOnly.length,
+        totalPOAPs: poapsOnly.length,
+        gitPOAPs: gitPOAPsOnly.slice(index, index + <number>perPage),
+        poaps: poapsOnly.slice(index, index + <number>perPage),
+      };
+    } else {
+      return {
+        totalGitPOAPs: gitPOAPsOnly.length,
+        totalPOAPs: poapsOnly.length,
+        gitPOAPs: gitPOAPsOnly,
+        poaps: poapsOnly,
+      };
     }
   }
 
@@ -223,27 +209,16 @@ export class CustomGitPOAPResolver {
 
     let finalResults = [];
 
-    try {
-      for (const result of results) {
-        const { claimsCount, ...gitPOAP } = result;
+    for (const result of results) {
+      const { claimsCount, ...gitPOAP } = result;
 
-        const poapResponse = await fetch(
-          `${process.env.POAP_API_URL}/events/id/${gitPOAP.poapEventId}`,
-        );
+      const event = await retrievePOAPEventInfo(gitPOAP.poapEventId);
 
-        if (poapResponse.status >= 400) {
-          console.log(await poapResponse.text());
-          return null;
-        }
-
-        const event = await poapResponse.json();
-
-        finalResults.push({ gitPOAP, event, claimsCount });
+      if (event === null) {
+        return null;
       }
-    } catch (err) {
-      console.log(err);
 
-      return null;
+      finalResults.push({ gitPOAP, event, claimsCount });
     }
 
     return finalResults;
@@ -277,18 +252,8 @@ export class CustomGitPOAPResolver {
     };
 
     for (const poap of poaps) {
-      let poapData;
-      try {
-        const poapResponse = await fetch(`${process.env.POAP_URL}/token/${poap.poapTokenId}`);
-
-        if (poapResponse.status >= 400) {
-          console.log(await poapResponse.text());
-          return null;
-        }
-
-        poapData = await poapResponse.json();
-      } catch (err) {
-        console.log(err);
+      const poapData = await retrievePOAPInfo(poap.poapTokenId);
+      if (poapData === null) {
         return null;
       }
 
