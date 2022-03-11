@@ -7,7 +7,7 @@ import { resolveENS } from '../util';
 import { utils } from 'ethers';
 import jwt from 'express-jwt';
 import { AccessTokenPayload } from '../types';
-import { claimPOAPQR } from '../poap';
+import { claimPOAP } from '../poap';
 
 export const claimsRouter = Router();
 
@@ -98,9 +98,9 @@ claimsRouter.post(
       // Helper for two exit paths from bad POAP responses
       const revertClaim = async () => {};
 
-      const poapData = await claimPOAPQR(
+      const poapData = await claimPOAP(
+        claim.gitPOAP.poapEventId,
         req.body.address,
-        claim.gitPOAP.poapQRHash,
         claim.gitPOAP.poapSecret,
       );
 

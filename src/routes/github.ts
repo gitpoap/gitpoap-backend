@@ -23,7 +23,7 @@ async function retrieveGithubToken(code: string): Promise<string> {
     redirect_uri: GH_APP_REDIRECT_URL,
   };
 
-  const tokenResponse = await fetch(`https://github.com/login/oauth/access_token`, {
+  const tokenResponse = await fetch('https://github.com/login/oauth/access_token', {
     method: 'POST',
     headers: {
       Accept: 'application/json',
@@ -43,7 +43,7 @@ async function retrieveGithubToken(code: string): Promise<string> {
 }
 
 async function retrieveGithubUserInfo(githubToken: string) {
-  const userResponse = await fetch(`https://api.github.com/user`, {
+  const userResponse = await fetch('https://api.github.com/user', {
     headers: {
       Authorization: `token ${githubToken}`,
       Accept: 'application/json',

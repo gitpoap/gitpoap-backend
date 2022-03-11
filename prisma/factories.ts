@@ -90,13 +90,11 @@ export class GitPOAPFactory {
     poapEventId: number,
     repoId: number,
     poapSecret: string,
-    poapQRHash: string,
   ): Promise<GitPOAP> => {
     const data: Prisma.GitPOAPCreateInput = {
       year,
       poapEventId,
       poapSecret,
-      poapQRHash,
       repo: {
         connect: {
           id: repoId,
