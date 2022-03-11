@@ -1,8 +1,8 @@
 import { Arg, Ctx, Field, ObjectType, Resolver, Query } from 'type-graphql';
 import { Claim, ClaimStatus } from '@generated/type-graphql';
 import { Context } from '../../context';
-import fetch from 'cross-fetch';
 import { POAPEvent } from '../types/poap';
+import { retrievePOAPEventInfo } from '../../poap';
 
 @ObjectType()
 class FullClaimData {
@@ -38,30 +38,19 @@ export class CustomClaimResolver {
 
     let results: FullClaimData[] = [];
 
-    try {
-      for (const claim of claims) {
-        const { gitPOAP, ...claimData } = claim;
+    for (const claim of claims) {
+      const { gitPOAP, ...claimData } = claim;
 
-        const poapResponse = await fetch(
-          `${process.env.POAP_API_URL}/events/id/${gitPOAP.poapEventId}`,
-        );
+      const eventData = await retrievePOAPEventInfo(gitPOAP.poapEventId);
 
-        if (poapResponse.status >= 400) {
-          console.log(await poapResponse.text());
-          return null;
-        }
-
-        const event = await poapResponse.json();
-
-        results.push({
-          claim: claimData,
-          event: event,
-        });
+      if (eventData === null) {
+        return null;
       }
-    } catch (err) {
-      console.log(err);
 
-      return null;
+      results.push({
+        claim: claimData,
+        event: eventData,
+      });
     }
 
     return results;

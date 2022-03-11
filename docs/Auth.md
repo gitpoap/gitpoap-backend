@@ -116,8 +116,8 @@ and the backend server will return two tokens like:
 
 ```json
 {
-  accessToken: "the access token string"
-  refreshToken: "the refresh token string"
+  "accessToken": "the access token string",
+  "refreshToken": "the refresh token string"
 }
 ```
 
@@ -139,8 +139,8 @@ and the backend server will return two tokens like:
 
 ```json
 {
-  accessToken: "the access token string"
-  refreshToken: "the refresh token string"
+  "accessToken": "the access token string",
+  "refreshToken": "the refresh token string"
 }
 ```
 

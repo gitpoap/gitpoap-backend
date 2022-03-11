@@ -1,9 +1,9 @@
 import { Router } from 'express';
 import { AddFeaturedSchema, RemoveFeaturedSchema } from '../schemas/featured';
-import fetch from 'cross-fetch';
 import { context } from '../context';
 import { resolveENS } from '../util';
 import { utils } from 'ethers';
+import { retrievePOAPInfo } from '../poap';
 
 export const featuredRouter = Router();
 
@@ -41,20 +41,8 @@ featuredRouter.put('/', async function (req, res) {
     return res.status(404).send({ msg: `There is no profile for the address ${req.body.address}` });
   }
 
-  let poapData;
-  try {
-    const poapResponse = await fetch(`${process.env.POAP_URL}/token/${req.body.poapTokenId}`);
-
-    if (poapResponse.status >= 400) {
-      console.log(await poapResponse.text());
-      return res
-        .status(400)
-        .send({ msg: "Couldn't retrieve info about the POAP from the POAP API" });
-    }
-
-    poapData = await poapResponse.json();
-  } catch (err) {
-    console.log(err);
+  const poapData = await retrievePOAPInfo(req.body.poapTokenId);
+  if (poapData === null) {
     return res.status(400).send({ msg: "Couldn't retrieve info about the POAP from the POAP API" });
   }
 

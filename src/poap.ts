@@ -57,3 +57,107 @@ export async function retrievePOAPKey(): Promise<string | null> {
 
   return data.access_token;
 }
+
+export async function generatePOAPHeaders() {
+  // Remove the https:// from the url for the host header
+  const lastIndex = process.env.POAP_API_URL.lastIndexOf('/');
+  const host = process.env.POAP_API_URL.substr(lastIndex + 1);
+  console.log(host);
+
+  return {
+    Authorization: `Bearer ${retrievePOAPKey()}`,
+    'Content-Type': 'application/json',
+    Accept: 'application/json',
+    Host: host,
+  };
+}
+
+export async function claimPOAPQR(address: string, qrHash: string, secret: string) {
+  let poapData;
+  try {
+    const poapResponse = await fetch(`${process.env.POAP_API_URL}/actions/claim-qr`, {
+      method: 'POST',
+      body: JSON.stringify({
+        address: address,
+        qr_hash: qrHash,
+        secret: secret,
+      }),
+      headers: await generatePOAPHeaders(),
+    });
+
+    if (poapResponse.status >= 400) {
+      console.log(await poapResponse.text());
+      return null;
+    }
+
+    poapData = await poapResponse.json();
+  } catch (err) {
+    console.log(err);
+    return null;
+  }
+
+  return poapData;
+}
+
+export async function retrievePOAPEventInfo(eventId: number) {
+  let eventData;
+  try {
+    const poapResponse = await fetch(`${process.env.POAP_API_URL}/events/id/${eventId}`, {
+      method: 'GET',
+      headers: await generatePOAPHeaders(),
+    });
+
+    if (poapResponse.status >= 400) {
+      console.log(await poapResponse.text());
+      return null;
+    }
+
+    eventData = await poapResponse.json();
+  } catch (err) {
+    console.log(err);
+    return null;
+  }
+
+  return eventData;
+}
+
+export async function retrieveUsersPOAPs(address: string) {
+  let poaps;
+  try {
+    const poapResponse = await fetch(`${process.env.POAP_API_URL}/actions/scan/${address}`, {
+      method: 'GET',
+      headers: await generatePOAPHeaders(),
+    });
+
+    if (poapResponse.status >= 400) {
+      console.log(await poapResponse.text());
+      return null;
+    }
+
+    poaps = await poapResponse.json();
+  } catch (err) {
+    console.log(err);
+    return null;
+  }
+
+  return poaps;
+}
+
+export async function retrievePOAPInfo(poapTokenId: string) {
+  try {
+    const poapResponse = await fetch(`${process.env.POAP_API_URL}/token/${poapTokenId}`, {
+      method: 'GET',
+      headers: await generatePOAPHeaders(),
+    });
+
+    if (poapResponse.status >= 400) {
+      console.log(await poapResponse.text());
+      return null;
+    }
+
+    return await poapResponse.json();
+  } catch (err) {
+    console.log(err);
+    return null;
+  }
+}

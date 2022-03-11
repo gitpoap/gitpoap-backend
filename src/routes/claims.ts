@@ -7,6 +7,7 @@ import { resolveENS } from '../util';
 import { utils } from 'ethers';
 import jwt from 'express-jwt';
 import { AccessTokenPayload } from '../types';
+import { claimPOAPQR } from '../poap';
 
 export const claimsRouter = Router();
 
@@ -95,12 +96,23 @@ claimsRouter.post(
       foundClaims.push(claimId);
 
       // Helper for two exit paths from bad POAP responses
-      const revertClaim = async () => {
+      const revertClaim = async () => {};
+
+      const poapData = await claimPOAPQR(
+        req.body.address,
+        claim.gitPOAP.poapQRHash,
+        claim.gitPOAP.poapSecret,
+      );
+
+      // If minting the POAP failed we need to revert
+      if (poapData === null) {
         foundClaims.pop();
+
         invalidClaims.push({
           claimId: claimId,
           reason: 'Failed to claim via POAP API',
         });
+
         await context.prisma.claim.update({
           where: {
             id: claimId,
@@ -109,32 +121,7 @@ claimsRouter.post(
             status: ClaimStatus.UNCLAIMED,
           },
         });
-      };
 
-      let poapData;
-      try {
-        const poapResponse = await fetch(`${process.env.POAP_URL}/actions/claim-qr`, {
-          method: 'POST',
-          body: JSON.stringify({
-            address: req.body.address,
-            qr_hash: claim.gitPOAP.poapQRHash,
-            secret: claim.gitPOAP.poapSecret,
-          }),
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (poapResponse.status >= 400) {
-          console.log(await poapResponse.text());
-          await revertClaim();
-          continue;
-        }
-
-        poapData = await poapResponse.json();
-      } catch (err) {
-        console.log(err);
-        await revertClaim();
         continue;
       }
 
