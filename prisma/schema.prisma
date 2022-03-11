@@ -87,7 +87,6 @@ model GitPOAP {
   repo        Repo      @relation(fields: [repoId], references: [id])
   claims      Claim[]
   poapSecret  String
-  poapQRHash  String
 }
 
 model AuthToken {

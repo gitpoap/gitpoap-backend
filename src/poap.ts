@@ -4,7 +4,7 @@ import { DateTime } from 'luxon';
 
 const POAP_KEY_NAME = 'poap';
 
-export async function retrievePOAPKey(): Promise<string | null> {
+async function retrievePOAPKey(): Promise<string | null> {
   const secret = await context.prisma.secret.findUnique({
     where: {
       name: POAP_KEY_NAME,
@@ -58,97 +58,42 @@ export async function retrievePOAPKey(): Promise<string | null> {
   return data.access_token;
 }
 
-export async function generatePOAPHeaders() {
+async function generatePOAPHeaders(hasBody: boolean) {
   // Remove the https:// from the url for the host header
   const lastIndex = process.env.POAP_API_URL.lastIndexOf('/');
   const host = process.env.POAP_API_URL.substr(lastIndex + 1);
   console.log(host);
 
-  return {
+  let base = {
     Authorization: `Bearer ${retrievePOAPKey()}`,
-    'Content-Type': 'application/json',
     Accept: 'application/json',
     Host: host,
   };
-}
 
-export async function claimPOAPQR(address: string, qrHash: string, secret: string) {
-  let poapData;
-  try {
-    const poapResponse = await fetch(`${process.env.POAP_API_URL}/actions/claim-qr`, {
-      method: 'POST',
-      body: JSON.stringify({
-        address: address,
-        qr_hash: qrHash,
-        secret: secret,
-      }),
-      headers: await generatePOAPHeaders(),
-    });
-
-    if (poapResponse.status >= 400) {
-      console.log(await poapResponse.text());
-      return null;
-    }
-
-    poapData = await poapResponse.json();
-  } catch (err) {
-    console.log(err);
-    return null;
+  if (hasBody) {
+    return { ...base, 'Content-Type': 'application/json' };
   }
 
-  return poapData;
+  return base;
 }
 
-export async function retrievePOAPEventInfo(eventId: number) {
-  let eventData;
-  try {
-    const poapResponse = await fetch(`${process.env.POAP_API_URL}/events/id/${eventId}`, {
-      method: 'GET',
-      headers: await generatePOAPHeaders(),
-    });
-
-    if (poapResponse.status >= 400) {
-      console.log(await poapResponse.text());
-      return null;
-    }
-
-    eventData = await poapResponse.json();
-  } catch (err) {
-    console.log(err);
-    return null;
+async function makePOAPRequest(url: string, method: string, body: string | null) {
+  let requestOptions;
+  if (body === null) {
+    requestOptions = {
+      method,
+      body: body,
+      headers: await generatePOAPHeaders(true),
+    };
+  } else {
+    requestOptions = {
+      method,
+      headers: await generatePOAPHeaders(false),
+    };
   }
 
-  return eventData;
-}
-
-export async function retrieveUsersPOAPs(address: string) {
-  let poaps;
   try {
-    const poapResponse = await fetch(`${process.env.POAP_API_URL}/actions/scan/${address}`, {
-      method: 'GET',
-      headers: await generatePOAPHeaders(),
-    });
-
-    if (poapResponse.status >= 400) {
-      console.log(await poapResponse.text());
-      return null;
-    }
-
-    poaps = await poapResponse.json();
-  } catch (err) {
-    console.log(err);
-    return null;
-  }
-
-  return poaps;
-}
-
-export async function retrievePOAPInfo(poapTokenId: string) {
-  try {
-    const poapResponse = await fetch(`${process.env.POAP_API_URL}/token/${poapTokenId}`, {
-      method: 'GET',
-      headers: await generatePOAPHeaders(),
-    });
+    const poapResponse = await fetch(url, requestOptions);
 
     if (poapResponse.status >= 400) {
       console.log(await poapResponse.text());
@@ -160,4 +105,51 @@ export async function retrievePOAPInfo(poapTokenId: string) {
     console.log(err);
     return null;
   }
+}
+
+async function createPOAPQR(eventId: number, secret: string) {
+  return await makePOAPRequest(
+    `${process.env.POAP_API_URL}/redeem-requests`,
+    'POST',
+    JSON.stringify({
+      event_id: eventId,
+      requested_codes: 1,
+      secret_code: secret,
+      redeem_type: 'qr_code',
+    }),
+  );
+}
+
+async function claimPOAPQR(address: string, qrHash: string, secret: string) {
+  return await makePOAPRequest(
+    `${process.env.POAP_API_URL}/claim-qr`,
+    'POST',
+    JSON.stringify({
+      address,
+      qr_hash: qrHash,
+      secret,
+    }),
+  );
+}
+
+export async function claimPOAP(eventId: number, address: string, secret: string) {
+  const qrHash = await createPOAPQR(eventId, secret);
+
+  if (qrHash === null) {
+    return null;
+  }
+
+  return await claimPOAPQR(address, qrHash, secret);
+}
+
+export async function retrievePOAPEventInfo(eventId: number) {
+  return await makePOAPRequest(`${process.env.POAP_API_URL}/events/id/${eventId}`, 'GET', null);
+}
+
+export async function retrieveUsersPOAPs(address: string) {
+  return await makePOAPRequest(`${process.env.POAP_API_URL}/actions/scan/${address}`, 'GET', null);
+}
+
+export async function retrievePOAPInfo(poapTokenId: string) {
+  return await makePOAPRequest(`${process.env.POAP_API_URL}/token/${poapTokenId}`, 'GET', null);
 }
