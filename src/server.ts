@@ -7,6 +7,7 @@ import subscribeRouter from './routes/subscribe';
 import { suggestRouter } from './routes/suggest';
 import jwtRouter from './routes/jwt';
 import { claimsRouter } from './routes/claims';
+import { featuredRouter } from './routes/featured';
 import { githubRouter } from './routes/github';
 import { profilesRouter } from './routes/profiles';
 import { projectsRouter } from './routes/projects';
@@ -35,6 +36,7 @@ const main = async () => {
 
   /* API endpoints for the frontend */
   app.use('/claims', claimsRouter);
+  app.use('/featured', featuredRouter);
   app.use('/profiles', profilesRouter);
   app.use('/projects', projectsRouter);
 

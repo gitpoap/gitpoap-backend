@@ -29,16 +29,17 @@ model User {
 }
 
 model Profile {
-  id              Int      @id @default(autoincrement())
-  address         String   @unique @db.VarChar(255)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id              Int            @id @default(autoincrement())
+  address         String         @unique @db.VarChar(255)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
   bio             String
-  bannerImageUrl  String?  @db.VarChar(255)
-  name            String?  @db.VarChar(255)
-  profileImageUrl String?  @db.VarChar(255)
-  twitterHandle   String?  @db.VarChar(255)
-  personalSiteUrl String?  @db.VarChar(255)
+  bannerImageUrl  String?        @db.VarChar(255)
+  name            String?        @db.VarChar(255)
+  profileImageUrl String?        @db.VarChar(255)
+  twitterHandle   String?        @db.VarChar(255)
+  personalSiteUrl String?        @db.VarChar(255)
+  featuredPOAPs   FeaturedPOAP[]
 }
 
 model Organization {
@@ -94,6 +95,13 @@ model AuthToken {
   githubOAuthToken String
   githubId         Int
   user             User   @relation(fields: [githubId], references: [githubId])
+}
+
+model FeaturedPOAP {
+  id          Int     @id @default(autoincrement())
+  poapTokenId Int
+  profileId   Int
+  profile     Profile @relation(fields: [profileId], references: [id])
 }
 
 enum ClaimStatus {
