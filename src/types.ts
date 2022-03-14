@@ -1,6 +1,7 @@
 export type AccessTokenPayload = {
   authTokenId: number;
   githubId: number;
+  githubHandle: string;
 };
 
 export type RefreshTokenPayload = {
