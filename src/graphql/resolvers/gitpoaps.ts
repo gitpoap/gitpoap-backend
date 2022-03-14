@@ -42,6 +42,15 @@ class GitPOAPWithClaimsCount {
   claimsCount: Number;
 }
 
+@ObjectType()
+class UserFeaturedPOAPs {
+  @Field(() => [FullGitPOAPData])
+  gitPOAPs: FullGitPOAPData[];
+
+  @Field(() => [POAPToken])
+  poaps: POAPToken[];
+}
+
 @Resolver(of => GitPOAP)
 export class CustomGitPOAPResolver {
   @Query(returns => Number)
@@ -192,7 +201,7 @@ export class CustomGitPOAPResolver {
     }
   }
 
-  @Query(returns => [GitPOAPWithClaimsCount])
+  @Query(returns => [GitPOAPWithClaimsCount], { nullable: true })
   async mostClaimedGitPOAPs(
     @Ctx() { prisma }: Context,
     @Arg('count', { defaultValue: 10 }) count: Number,
@@ -236,5 +245,61 @@ export class CustomGitPOAPResolver {
     }
 
     return finalResults;
+  }
+
+  @Query(returns => UserFeaturedPOAPs, { nullable: true })
+  async profileFeaturedPOAPs(
+    @Ctx() { prisma, provider }: Context,
+    @Arg('address') address: string,
+  ): Promise<UserFeaturedPOAPs | null> {
+    // Resolve ENS if provided
+    const resolvedAddress = await resolveENS(provider, address);
+    if (resolvedAddress === null) {
+      return null;
+    }
+
+    const poaps = await prisma.featuredPOAP.findMany({
+      where: {
+        profile: {
+          address: resolvedAddress.toLowerCase(),
+        },
+      },
+      include: {
+        claim: true,
+      },
+    });
+
+    let results: UserFeaturedPOAPs = {
+      gitPOAPs: [],
+      poaps: [],
+    };
+
+    for (const poap of poaps) {
+      let poapData;
+      try {
+        const poapResponse = await fetch(`${process.env.POAP_URL}/token/${poap.poapTokenId}`);
+
+        if (poapResponse.status >= 400) {
+          console.log(await poapResponse.text());
+          return null;
+        }
+
+        poapData = await poapResponse.json();
+      } catch (err) {
+        console.log(err);
+        return null;
+      }
+
+      if (poap.claim) {
+        results.gitPOAPs.push({
+          claim: poap.claim,
+          poap: poapData,
+        });
+      } else {
+        results.poaps.push(poapData);
+      }
+    }
+
+    return results;
   }
 }

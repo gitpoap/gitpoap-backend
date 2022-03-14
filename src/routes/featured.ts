@@ -41,14 +41,23 @@ featuredRouter.put('/', async function (req, res) {
     return res.status(404).send({ msg: `There is no profile for the address ${req.body.address}` });
   }
 
-  const poapResponse = await fetch(`${process.env.POAP_URL}/token/${req.body.poapTokenId}`);
+  let poapData;
+  try {
+    const poapResponse = await fetch(`${process.env.POAP_URL}/token/${req.body.poapTokenId}`);
 
-  if (poapResponse.status >= 400) {
-    console.log(await poapResponse.text());
+    if (poapResponse.status >= 400) {
+      console.log(await poapResponse.text());
+      return res
+        .status(400)
+        .send({ msg: "Couldn't retrieve info about the POAP from the POAP API" });
+    }
+
+    poapData = await poapResponse.json();
+  } catch (err) {
+    console.log(err);
     return res.status(400).send({ msg: "Couldn't retrieve info about the POAP from the POAP API" });
   }
 
-  const poapData = await poapResponse.json();
   if (poapData.owner.toLowerCase() !== resolvedAddress.toLowerCase()) {
     return res.status(401).send({ msg: 'Users cannot feature POAPs they do not own' });
   }

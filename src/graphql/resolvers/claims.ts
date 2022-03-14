@@ -15,7 +15,7 @@ class FullClaimData {
 
 @Resolver(of => Claim)
 export class CustomClaimResolver {
-  @Query(returns => [FullClaimData])
+  @Query(returns => [FullClaimData], { nullable: true })
   async userClaims(
     @Ctx() { prisma }: Context,
     @Arg('githubId') githubId: number,
