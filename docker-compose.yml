@@ -9,12 +9,24 @@ services:
     environment:
       POSTGRES_PASSWORD: foobar88
 
+  fake-poap-auth:
+    build:
+      context: .
+      dockerfile: .dockerfiles/fake-poap-auth/auth.Dockerfile
+    ports:
+      - '4005:4005'
+    environment:
+      - POAP_CLIENT_ID=a good client id
+      - POAP_CLIENT_SECRET=super secret!
+
   fake-poap-api:
     build:
       context: .
       dockerfile: .dockerfiles/fake-poap-api/api.Dockerfile
     ports:
       - '4004:4004'
+    depends_on:
+      - fake-poap-auth
 
   server:
     build:
@@ -25,3 +37,7 @@ services:
     depends_on:
       - db
       - fake-poap-api
+      - fake-poap-auth
+    environment:
+      - POAP_CLIENT_ID=a good client id
+      - POAP_CLIENT_SECRET=super secret!
