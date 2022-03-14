@@ -33,7 +33,7 @@ and returns data in the form:
 }
 ```
 
-### Last Week's Most Honored Contributors
+## Last Week's Most Honored Contributors
 
 The query to get the most honored contributors from the last week is as follows:
 
@@ -67,7 +67,7 @@ and returns data in the form:
 }
 ```
 
-### Address's POAPs and GitPOAPs
+## Address's POAPs and GitPOAPs
 
 The query to get an address's (or an ENS's) POAPs and GitPOAPs is as follows:
 
@@ -220,7 +220,7 @@ returns something like:
 }
 ```
 
-# User's Open Claims
+## User's Open Claims
 
 To retrieve a user's available Claims (i.e. in the state `UNCLAIMED`), we can run
 a query like:
@@ -259,7 +259,7 @@ that returns data like:
 }
 ```
 
-# Profile Data
+## Profile Data
 
 To retrieve the profile data for an address, we can run a query like:
 
@@ -287,7 +287,7 @@ that returns data like:
 }
 ```
 
-# Most Claimed GitPOAPs
+## Most Claimed GitPOAPs
 
 To retrieve a list of the most claimed GitPOAPs, we can run a query like:
 
@@ -334,7 +334,7 @@ that returns data like:
 }
 ```
 
-# Recently Added Projects
+## Recently Added Projects
 
 To retrieve a list of the most recently added projects, we can run a query like:
 
@@ -378,7 +378,7 @@ that returns data like:
 }
 ```
 
-# String Searching
+## String Searching
 
 To search by a string (could be a name, address, or ENS name), we can run a query like:
 
@@ -501,6 +501,57 @@ returns:
         "id": 4,
         "address": "0xae95f7e7fb2fcf86148ef832faed2752ae5a358a"
       }
+    }
+  }
+}
+```
+
+## Profile's Featured POAPs
+
+To view a profile's featured POAPs, one can run a query like the following with an
+address or ENS:
+
+```graphql
+{
+  profileFeaturedPOAPs(address: "0x206e554084beec98e08043397be63c5132cc01a1") {
+    gitPOAPs {
+      claim {
+        id
+      }
+      poap {
+        event {
+          name
+        }
+      }
+    }
+    poaps {
+      event {
+        name
+      }
+    }
+  }
+}
+```
+
+That returns data like:
+
+```json
+{
+  "data": {
+    "profileFeaturedPOAPs": {
+      "gitPOAPs": [
+        {
+          "claim": {
+            "id": 17
+          },
+          "poap": {
+            "event": {
+              "name": "You've met Burz!"
+            }
+          }
+        }
+      ],
+      "poaps": []
     }
   }
 }
