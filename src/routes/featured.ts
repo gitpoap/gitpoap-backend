@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { AddFeaturedSchema, RemoveFeaturedSchema } from '../schemas/featured';
+import fetch from 'cross-fetch';
 import { context } from '../context';
 import { resolveENS } from '../util';
 import { utils } from 'ethers';
@@ -38,6 +39,18 @@ featuredRouter.put('/', async function (req, res) {
   });
   if (profile === null) {
     return res.status(404).send({ msg: `There is no profile for the address ${req.body.address}` });
+  }
+
+  const poapResponse = await fetch(`${process.env.POAP_URL}/token/${req.body.poapTokenId}`);
+
+  if (poapResponse.status >= 400) {
+    console.log(await poapResponse.text());
+    return res.status(400).send({ msg: "Couldn't retrieve info about the POAP from the POAP API" });
+  }
+
+  const poapData = await poapResponse.json();
+  if (poapData.owner.toLowerCase() !== resolvedAddress.toLowerCase()) {
+    return res.status(401).send({ msg: 'Users cannot feature POAPs they do not own' });
   }
 
   await context.prisma.featuredPOAP.upsert({
