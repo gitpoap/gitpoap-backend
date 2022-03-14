@@ -100,7 +100,11 @@ model AuthToken {
 
 model FeaturedPOAP {
   id          Int     @id @default(autoincrement())
+  // This key is chosen to allow both GitPOAPs and POAPs to be featured
   poapTokenId String  @unique @db.VarChar(255)
+  // This relation exists to make the resolver that splits the featured GitPOAPs
+  // vs POAPs simpler by fetching the corresponding claim (if it exists) when
+  // grabbing all of a user's Features
   claim       Claim?  @relation(fields: [poapTokenId], references: [poapTokenId])
   profileId   Int
   profile     Profile @relation(fields: [profileId], references: [id])
