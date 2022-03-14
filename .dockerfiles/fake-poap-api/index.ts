@@ -63,6 +63,8 @@ app.post('/events', (req, res) => {
 });
 
 app.get('/actions/scan/:address', (req, res) => {
+  console.log(`Got request to view all POAPs for address: ${req.params.address}`);
+
   res.setHeader('Content-Type', 'application/json');
 
   res.end(
@@ -121,6 +123,8 @@ app.get('/actions/scan/:address', (req, res) => {
 });
 
 app.get('/events/id/:id', (req, res) => {
+  console.log(`Got request for information about event ID: ${req.params.id}`);
+
   res.setHeader('Content-Type', 'application/json');
 
   switch (req.params.id) {
@@ -194,6 +198,22 @@ app.post('/actions/claim-qr', (req, res) => {
       event: events.event1,
       delegated_mint: true,
       delegated_signed_message: 'string',
+    }),
+  );
+});
+
+app.get('/token/:id', (req, res) => {
+  console.log(`Received request for POAP info about ID: ${req.params.id}`);
+
+  res.setHeader('Content-Type', 'application/json');
+
+  res.end(
+    JSON.stringify({
+      event: events.event27309,
+      tokenId: req.params.id,
+      owner: '0x206e554084BEeC98e08043397be63C5132Cc01A1',
+      chain: 'xdai',
+      created: '2022-03-14',
     }),
   );
 });
