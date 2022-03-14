@@ -99,9 +99,11 @@ model AuthToken {
 
 model FeaturedPOAP {
   id          Int     @id @default(autoincrement())
-  poapTokenId Int
+  poapTokenId String  @db.VarChar(255)
   profileId   Int
   profile     Profile @relation(fields: [profileId], references: [id])
+
+  @@unique([poapTokenId, profileId])
 }
 
 enum ClaimStatus {

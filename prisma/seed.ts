@@ -9,6 +9,7 @@ const ADDRESSES = {
   test1: '0xae95f7e7fb2fcf86148ef832faed2752ae5a358a' as const,
   jay: '0xaE32D159BB3ABFcAdFaBE7aBB461C2AB4805596D'.toLowerCase(),
   anthony: '0xAe95f7e7fb2FCF86148ef832FAeD2752Ae5A358a'.toLowerCase(),
+  anthony2: '0x206e554084BEeC98e08043397be63C5132Cc01A1'.toLowerCase(),
   colfax: '0x56d389C4E07A48d429035532402301310B8143A0'.toLowerCase(),
   vitalik: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'.toLowerCase(),
 };
@@ -29,6 +30,7 @@ async function main() {
   const jay = await UserFactory.createUser(3, GH_HANDLES.jay);
   const anthony = await UserFactory.createUser(4, GH_HANDLES.anthony);
   const johnz = await UserFactory.createUser(5, 'johnz');
+  const anthony2 = await UserFactory.createUser(6, 'burzzzzz');
 
   /* Create Organizations */
   const org1 = await OrganizationFactory.createOrganization(43, 'org43');
@@ -75,13 +77,14 @@ async function main() {
   const claim11 = await ClaimFactory.createClaim(gitpoap5.id, jay.id, ClaimStatus.CLAIMED, ADDRESSES.jay, '4126441');
   const claim12 = await ClaimFactory.createClaim(gitpoap5.id, johnz.id);
   const claim13 = await ClaimFactory.createClaim(gitpoap5.id, vitalik.id);
+  const claim14 = await ClaimFactory.createClaim(gitpoap5.id, anthony2.id, ClaimStatus.CLAIMED, ADDRESSES.anthony2, '123456789');
 
   /* Create Profiles */
   const profile1 = ProfileFactory.createProfile(ADDRESSES.colfax, 'I like brisket.');
   const profile2 = ProfileFactory.createProfile('0x89dab21047e6de0e77deee5f4f286d72be50b942', 'I like bbq.');
   const profile3 = ProfileFactory.createProfile(ADDRESSES.jay, 'I like factorio.', 'Jay PB', '0xpeebeejay', 'https://s.jay.gg');
   const profile4 = ProfileFactory.createProfile(ADDRESSES.anthony, 'I am addicted to POAPs', 'Anthony Burzillo');
-  const profile5 = ProfileFactory.createProfile('0x206e554084beec98e08043397be63c5132cc01a1', 'I am not real');
+  const profile5 = ProfileFactory.createProfile(ADDRESSES.anthony2, 'I am not real');
   const profile6 = ProfileFactory.createProfile(ADDRESSES.vitalik, 'I like unicorns');
 
   console.log('DB Seeding complete. ');
