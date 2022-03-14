@@ -114,7 +114,7 @@ with their secret code and at that point the client should send a
 
 and the backend server will return two tokens like:
 
-```
+```json
 {
   accessToken: "the access token string"
   refreshToken: "the refresh token string"
@@ -137,7 +137,7 @@ If the client (i.e. the frontend) has a Refresh Token and their Access Token has
 
 and the backend server will return two tokens like:
 
-```
+```json
 {
   accessToken: "the access token string"
   refreshToken: "the refresh token string"
