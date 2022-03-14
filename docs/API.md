@@ -56,9 +56,54 @@ in the `"claimIds"` field.
 See [the appendix](https://github.com/gitpoap/gitpoap-backend/blob/main/API.md#generating-signatures)
 for further information.
 
-# Appendix
+## Feature a POAP
 
-## Generating Signatures
+`PUT /featured`
+
+Data:
+
+```json
+{
+  "address": "0x206e554084BEeC98e08043397be63C5132Cc01A1",
+  "poapTokenId": "123456789",
+  "signature": "siggy wiggy"
+}
+```
+
+The "signature" should contain the signature that the `"address"` generated for the following data:
+
+```json
+{ "action": "add", "poapTokenId": "123456789" }
+```
+
+See [the appendix](https://github.com/gitpoap/gitpoap-backend/blob/main/API.md#generating-signatures)
+for further information.
+
+## Remove a Featured POAP
+
+`DELETE /featured/:id` - where `:id` is the ID of the POAP (A.K.A. it's `poapTokenId`)
+
+Data:
+
+```json
+{
+  "address": "0x206e554084BEeC98e08043397be63C5132Cc01A1",
+  "signature": "siggy wiggy"
+}
+```
+
+The "signature" should contain the signature that the `"address"` generated for the following data:
+
+```json
+{ "action": "remove", "poapTokenId": "123456789" }
+```
+
+See [the appendix](https://github.com/gitpoap/gitpoap-backend/blob/main/API.md#generating-signatures)
+for further information.
+
+## Appendix
+
+### Generating Signatures
 
 To generate signatures for arbitrary data in the request, just use
 [`signMessage`](https://docs.ethers.io/v5/api/signer/#Signer-signMessage) from `ethers`
