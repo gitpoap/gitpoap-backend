@@ -1,5 +1,6 @@
 import { DateTime } from 'luxon';
 import express from 'express';
+import fetch from 'cross-fetch';
 import { z } from 'zod';
 import * as events from './data';
 
@@ -27,13 +28,44 @@ const AddEventSchema = z.object({
   private_event: z.boolean(),
 });
 
-app.post('/events', (req, res) => {
+async function validateAuth(req: express.Request) {
+  const authorization = req.get('Authorization');
+  if (!authorization) {
+    return false;
+  }
+
+  if (authorization.substr(0, 7) !== 'Bearer ') {
+    return false;
+  }
+
+  const token = authorization.substr(7);
+
+  try {
+    const authResponse = await fetch(`http://fake-poap-auth:4005/validate/${token}`);
+
+    if (authResponse.status >= 400) {
+      console.log(await authResponse.text());
+      return false;
+    }
+
+    return true;
+  } catch (err) {
+    console.log(err);
+    return false;
+  }
+}
+
+app.post('/events', async (req, res) => {
   console.log(`Received POST /events request: ${JSON.stringify(req.body)}`);
 
   const schemaResult = AddEventSchema.safeParse(req.body);
 
   if (!schemaResult.success) {
     return res.status(400).send({ issues: schemaResult.error.issues });
+  }
+
+  if (!(await validateAuth(req))) {
+    return res.status(401).send({ msg: 'The token is invalid' });
   }
 
   res.setHeader('Content-Type', 'application/json');
@@ -62,8 +94,12 @@ app.post('/events', (req, res) => {
   );
 });
 
-app.get('/actions/scan/:address', (req, res) => {
+app.get('/actions/scan/:address', async (req, res) => {
   console.log(`Got request to view all POAPs for address: ${req.params.address}`);
+
+  if (!(await validateAuth(req))) {
+    return res.status(401).send({ msg: 'The token is invalid' });
+  }
 
   res.setHeader('Content-Type', 'application/json');
 
@@ -122,8 +158,12 @@ app.get('/actions/scan/:address', (req, res) => {
   );
 });
 
-app.get('/events/id/:id', (req, res) => {
+app.get('/events/id/:id', async (req, res) => {
   console.log(`Got request for information about event ID: ${req.params.id}`);
+
+  if (!(await validateAuth(req))) {
+    return res.status(401).send({ msg: 'The token is invalid' });
+  }
 
   res.setHeader('Content-Type', 'application/json');
 
@@ -169,13 +209,17 @@ const ClaimQRSchema = z.object({
 
 let tokenId = 1;
 
-app.post('/actions/claim-qr', (req, res) => {
+app.post('/actions/claim-qr', async (req, res) => {
   console.log(`Received claim-qr request: ${JSON.stringify(req.body)}`);
 
   const schemaResult = ClaimQRSchema.safeParse(req.body);
 
   if (!schemaResult.success) {
     return res.status(400).send({ issues: schemaResult.error.issues });
+  }
+
+  if (!(await validateAuth(req))) {
+    return res.status(401).send({ msg: 'The token is invalid' });
   }
 
   res.setHeader('Content-Type', 'application/json');
@@ -202,8 +246,12 @@ app.post('/actions/claim-qr', (req, res) => {
   );
 });
 
-app.get('/token/:id', (req, res) => {
+app.get('/token/:id', async (req, res) => {
   console.log(`Received request for POAP info about ID: ${req.params.id}`);
+
+  if (!(await validateAuth(req))) {
+    return res.status(401).send({ msg: 'The token is invalid' });
+  }
 
   res.setHeader('Content-Type', 'application/json');
 
