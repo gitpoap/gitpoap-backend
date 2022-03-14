@@ -9,25 +9,6 @@ const port = 4004;
 
 app.use(express.json());
 
-const AddEventSchema = z.object({
-  name: z.string(),
-  description: z.string(),
-  city: z.string(),
-  country: z.string(),
-  start_date: z.string(),
-  end_date: z.string(),
-  expiry_date: z.string(),
-  year: z.number(),
-  event_url: z.string(),
-  virtual_event: z.boolean(),
-  image: z.string(),
-  secret_code: z.string(),
-  event_template_id: z.number(),
-  email: z.string(),
-  requested_codes: z.number(),
-  private_event: z.boolean(),
-});
-
 async function validateAuth(req: express.Request) {
   const authorization = req.get('Authorization');
   if (!authorization) {
@@ -55,10 +36,29 @@ async function validateAuth(req: express.Request) {
   }
 }
 
+const CreateEventSchema = z.object({
+  name: z.string(),
+  description: z.string(),
+  city: z.string(),
+  country: z.string(),
+  start_date: z.string(),
+  end_date: z.string(),
+  expiry_date: z.string(),
+  year: z.number(),
+  event_url: z.string(),
+  virtual_event: z.boolean(),
+  image: z.string(),
+  secret_code: z.string(),
+  event_template_id: z.number(),
+  email: z.string(),
+  requested_codes: z.number(),
+  private_event: z.boolean(),
+});
+
 app.post('/events', async (req, res) => {
   console.log(`Received POST /events request: ${JSON.stringify(req.body)}`);
 
-  const schemaResult = AddEventSchema.safeParse(req.body);
+  const schemaResult = CreateEventSchema.safeParse(req.body);
 
   if (!schemaResult.success) {
     return res.status(400).send({ issues: schemaResult.error.issues });

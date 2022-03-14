@@ -344,7 +344,7 @@ To retrieve a list of the most recently added projects, we can run a query like:
     id
     name
     createdAt
-    Organization {
+    organization {
       name
     }
   }
@@ -361,7 +361,7 @@ that returns data like:
         "id": 3,
         "name": "repo568",
         "createdAt": "2022-03-07T23:53:35.865Z",
-        "Organization": {
+        "organization": {
           "name": "some-other-org"
         }
       },
@@ -369,7 +369,7 @@ that returns data like:
         "id": 2,
         "name": "repo7",
         "createdAt": "2022-03-07T23:53:35.859Z",
-        "Organization": {
+        "organization": {
           "name": "seven-heaven"
         }
       }

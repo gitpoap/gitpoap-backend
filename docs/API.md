@@ -101,6 +101,28 @@ The "signature" should contain the signature that the `"address"` generated for 
 See [the appendix](https://github.com/gitpoap/gitpoap-backend/blob/main/API.md#generating-signatures)
 for further information.
 
+## Create a GitPOAP
+
+`POST /gitpoaps`
+
+Data:
+
+```json
+{
+  "githubRepoId": 9001,
+  "name": "GitPOAP Contributor 2022",
+  "description": "You contributed to GitPOAP in 2022!\nCongrats, you are a super cool person!",
+  "startDate": "01-Jan-2022",
+  "endDate": "31-Dec-2022",
+  "expiryDate": "31-Jan-2023",
+  "year": 2022,
+  "eventUrl": "https://github.com/gitpoap/gitpoap-backend",
+  "image": "https://gitpoap.io/favicon.png",
+  "email": "burz@gitpoap.io",
+  "requestedCodes": 10
+}
+```
+
 ## Appendix
 
 ### Generating Signatures
