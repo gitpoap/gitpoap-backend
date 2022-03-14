@@ -58,7 +58,7 @@ model Repo {
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
   organizationId Int
-  Organization   Organization? @relation(fields: [organizationId], references: [id])
+  organization   Organization? @relation(fields: [organizationId], references: [id])
   gitPOAPs       GitPOAP[]
 }
 

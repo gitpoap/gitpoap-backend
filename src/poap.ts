@@ -62,10 +62,9 @@ async function generatePOAPHeaders(hasBody: boolean) {
   // Remove the https:// from the url for the host header
   const lastIndex = process.env.POAP_API_URL.lastIndexOf('/');
   const host = process.env.POAP_API_URL.substr(lastIndex + 1);
-  console.log(host);
 
   let base = {
-    Authorization: `Bearer ${retrievePOAPKey()}`,
+    Authorization: `Bearer ${await retrievePOAPKey()}`,
     Accept: 'application/json',
     Host: host,
   };
@@ -79,7 +78,7 @@ async function generatePOAPHeaders(hasBody: boolean) {
 
 async function makePOAPRequest(url: string, method: string, body: string | null) {
   let requestOptions;
-  if (body === null) {
+  if (body !== null) {
     requestOptions = {
       method,
       body: body,
@@ -152,4 +151,41 @@ export async function retrieveUsersPOAPs(address: string) {
 
 export async function retrievePOAPInfo(poapTokenId: string) {
   return await makePOAPRequest(`${process.env.POAP_API_URL}/token/${poapTokenId}`, 'GET', null);
+}
+
+export async function createPOAPEvent(
+  name: string,
+  description: string,
+  start_date: string,
+  end_date: string,
+  expiry_date: string,
+  year: number,
+  event_url: string,
+  image: string,
+  secret_code: string,
+  email: string,
+  requested_codes: number,
+) {
+  return await makePOAPRequest(
+    `${process.env.POAP_API_URL}/events`,
+    'POST',
+    JSON.stringify({
+      name,
+      description,
+      city: '',
+      country: '',
+      start_date,
+      end_date,
+      expiry_date,
+      year,
+      event_url,
+      virtual_event: true,
+      image,
+      secret_code,
+      event_template_id: 0,
+      email,
+      requested_codes,
+      private_event: false,
+    }),
+  );
 }

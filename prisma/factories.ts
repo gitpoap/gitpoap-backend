@@ -70,7 +70,7 @@ export class RepoFactory {
     const data: Prisma.RepoCreateInput = {
       name,
       githubRepoId,
-      Organization: {
+      organization: {
         connect: {
           id: organizationId,
         },

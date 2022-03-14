@@ -35,7 +35,7 @@ export class CustomRepoResolver {
       },
       take: count,
       include: {
-        Organization: true,
+        organization: true,
       },
     });
   }
