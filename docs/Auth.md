@@ -25,7 +25,8 @@ fields:
 ```json
 {
   "authTokenId": 4,
-  "githubId": 324234
+  "githubId": 324234,
+  "githubHandle": "handel"
 }
 ```
 
@@ -35,6 +36,8 @@ Note that:
   Access+Refresh Token pair in the database.
 - The `"githubId"` field is GitHub's ID for the user that will not change even if their
   login handle changes.
+- The `"githubHandle"` field is GitHub's current login handle for the user. This will not
+  update if they change it unless they log back in.
 
 The inclusion of these fields allows the REST server to skip having to look up the user
 or to validate that the token is still valid (there are scenarios where we may invalidate

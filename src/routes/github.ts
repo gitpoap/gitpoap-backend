@@ -59,8 +59,8 @@ async function retrieveGithubUserInfo(githubToken: string) {
   return await userResponse.json();
 }
 
-function generateAccessToken(authTokenId: number, githubId: number): string {
-  return sign({ authTokenId, githubId }, process.env.JWT_SECRET as string, {
+function generateAccessToken(authTokenId: number, githubId: number, githubHandle: string): string {
+  return sign({ authTokenId, githubId, githubHandle }, process.env.JWT_SECRET as string, {
     expiresIn: JWT_EXP_TIME,
   });
 }
@@ -130,7 +130,7 @@ githubRouter.post('/', async function (req, res) {
   });
 
   return res.status(200).json({
-    accessToken: generateAccessToken(authToken.id, user.githubId),
+    accessToken: generateAccessToken(authToken.id, user.githubId, user.githubHandle),
     refreshToken: generateRefreshToken(authToken.id, user.githubId, authToken.generation),
   });
 });
@@ -153,6 +153,13 @@ githubRouter.post('/refresh', async function (req, res) {
   const authToken = await context.prisma.authToken.findUnique({
     where: {
       id: payload.authTokenId,
+    },
+    include: {
+      user: {
+        select: {
+          githubHandle: true,
+        },
+      },
     },
   });
 
@@ -185,7 +192,7 @@ githubRouter.post('/refresh', async function (req, res) {
   });
 
   return res.status(200).json({
-    accessToken: generateAccessToken(authToken.id, payload.githubId),
+    accessToken: generateAccessToken(authToken.id, payload.githubId, authToken.user.githubHandle),
     refreshToken: generateRefreshToken(authToken.id, payload.githubId, nextGeneration),
   });
 });
