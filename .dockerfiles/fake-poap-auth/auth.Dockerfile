@@ -7,6 +7,6 @@ COPY .dockerfiles/fake-poap-auth/package.json .dockerfiles/fake-poap-auth/yarn.l
 RUN yarn install
 
 COPY .dockerfiles/fake-poap-auth/ .
-COPY src/graphql/types/poap.ts tsconfig.json .
+COPY tsconfig.json .
 
 CMD ["yarn", "run", "dev"]

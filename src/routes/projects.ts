@@ -2,8 +2,8 @@ import { AddProjectSchema } from '../schemas/projects';
 import { Router } from 'express';
 import fetch from 'cross-fetch';
 import { context } from '../context';
-import { getGithubRepository } from '../github';
-import { AccessTokenPayloadWithOAuth } from '../types';
+import { getGithubRepository } from '../external/github';
+import { AccessTokenPayloadWithOAuth } from '../types/tokens';
 import { jwtWithOAuth } from '../middleware';
 
 export const projectsRouter = Router();

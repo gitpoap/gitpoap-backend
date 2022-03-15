@@ -2,7 +2,7 @@ import { CreateGitPOAPSchema } from '../schemas/gitpoaps';
 import { Router } from 'express';
 import { context } from '../context';
 import { v4 } from 'uuid';
-import { createPOAPEvent } from '../poap';
+import { createPOAPEvent } from '../external/poap';
 
 export const gitpoapsRouter = Router();
 

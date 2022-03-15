@@ -2,9 +2,9 @@ import { Arg, Ctx, Field, ObjectType, Resolver, Query } from 'type-graphql';
 import { Claim, ClaimStatus, GitPOAP, Profile } from '@generated/type-graphql';
 import { getLastMonthStartDatetime } from './util';
 import { Context } from '../../context';
-import { POAPEvent, POAPToken } from '../types/poap';
+import { POAPEvent, POAPToken } from '../../types/poap';
 import { resolveENS } from '../../util';
-import { retrievePOAPEventInfo, retrieveUsersPOAPs, retrievePOAPInfo } from '../../poap';
+import { retrievePOAPEventInfo, retrieveUsersPOAPs, retrievePOAPInfo } from '../../external/poap';
 
 @ObjectType()
 class FullGitPOAPData {

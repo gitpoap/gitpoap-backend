@@ -7,9 +7,9 @@ import { resolveENS } from '../util';
 import { utils } from 'ethers';
 import jwt from 'express-jwt';
 import { jwtWithOAuth } from '../middleware';
-import { AccessTokenPayload, AccessTokenPayloadWithOAuth } from '../types';
-import { claimPOAP, retrievePOAPEventInfo } from '../poap';
-import { getGithubUserById } from '../github';
+import { AccessTokenPayload, AccessTokenPayloadWithOAuth } from '../types/tokens';
+import { claimPOAP, retrievePOAPEventInfo } from '../external/poap';
+import { getGithubUserById } from '../external/github';
 import { JWT_SECRET } from '../environment';
 
 export const claimsRouter = Router();

@@ -7,6 +7,6 @@ COPY .dockerfiles/fake-poap-api/package.json .dockerfiles/fake-poap-api/yarn.loc
 RUN yarn install
 
 COPY .dockerfiles/fake-poap-api/ .
-COPY src/graphql/types/poap.ts tsconfig.json .
+COPY src/types/poap.ts tsconfig.json .
 
 CMD ["yarn", "run", "dev"]

@@ -1,7 +1,8 @@
 import fetch from 'cross-fetch';
-import { context } from './context';
+import { context } from '../context';
 import { DateTime } from 'luxon';
 import { POAP_AUTH_URL, POAP_API_URL, POAP_CLIENT_ID, POAP_CLIENT_SECRET } from './environment';
+import { logger } from '../logging';
 
 const POAP_KEY_NAME = 'poap';
 

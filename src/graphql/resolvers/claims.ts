@@ -1,8 +1,8 @@
 import { Arg, Ctx, Field, ObjectType, Resolver, Query } from 'type-graphql';
 import { Claim, ClaimStatus } from '@generated/type-graphql';
 import { Context } from '../../context';
-import { POAPEvent } from '../types/poap';
-import { retrievePOAPEventInfo } from '../../poap';
+import { POAPEvent } from '../../types/poap';
+import { retrievePOAPEventInfo } from '../../external/poap';
 
 @ObjectType()
 class FullClaimData {

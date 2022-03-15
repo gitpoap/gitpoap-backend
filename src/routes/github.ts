@@ -5,8 +5,8 @@ import { sign, verify } from 'jsonwebtoken';
 import { context } from '../context';
 import { User } from '@generated/type-graphql';
 import { RequestAccessTokenSchema, RefreshAccessTokenSchema } from '../schemas/github';
-import { RefreshTokenPayload } from '../types';
-import { requestGithubOAuthToken, getGithubCurrentUserInfo } from '../github';
+import { RefreshTokenPayload } from '../types/tokens';
+import { requestGithubOAuthToken, getGithubCurrentUserInfo } from '../external/github';
 import { JWT_SECRET } from '../environment';
 
 export const githubRouter = Router();
