@@ -3,7 +3,7 @@ import { AddFeaturedSchema, RemoveFeaturedSchema } from '../schemas/featured';
 import { context } from '../context';
 import { resolveENS } from '../util';
 import { utils } from 'ethers';
-import { retrievePOAPInfo } from '../poap';
+import { retrievePOAPInfo } from '../external/poap';
 
 export const featuredRouter = Router();
 
