@@ -121,7 +121,7 @@ async function createPOAPQR(eventId: number, secret: string) {
 
 async function claimPOAPQR(address: string, qrHash: string, secret: string) {
   return await makePOAPRequest(
-    `${process.env.POAP_API_URL}/claim-qr`,
+    `${process.env.POAP_API_URL}/actions/claim-qr`,
     'POST',
     JSON.stringify({
       address,
@@ -138,7 +138,7 @@ export async function claimPOAP(eventId: number, address: string, secret: string
     return null;
   }
 
-  return await claimPOAPQR(address, qrHash, secret);
+  return await claimPOAPQR(address, qrHash.toString(), secret);
 }
 
 export async function retrievePOAPEventInfo(eventId: number) {

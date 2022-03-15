@@ -96,9 +96,6 @@ claimsRouter.post(
       });
       foundClaims.push(claimId);
 
-      // Helper for two exit paths from bad POAP responses
-      const revertClaim = async () => {};
-
       const poapData = await claimPOAP(
         claim.gitPOAP.poapEventId,
         req.body.address,
@@ -153,6 +150,7 @@ claimsRouter.post(
   },
 );
 
+// TODO: decide how we should be doing auth for this
 claimsRouter.post(
   '/create',
   jwt({ secret: process.env.JWT_SECRET as string, algorithms: ['HS256'] }),
