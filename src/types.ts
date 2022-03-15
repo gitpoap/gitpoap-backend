@@ -4,6 +4,10 @@ export type AccessTokenPayload = {
   githubHandle: string;
 };
 
+export type AccessTokenPayloadWithOAuth = AccessTokenPayload & {
+  githubOAuthToken: string;
+};
+
 export type RefreshTokenPayload = {
   authTokenId: number;
   githubId: number;
