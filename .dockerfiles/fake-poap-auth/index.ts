@@ -1,6 +1,20 @@
 import express from 'express';
 import { z } from 'zod';
 import { v4 } from 'uuid';
+import winston from 'winston';
+
+const logger = winston.createLogger({
+  level: 'info',
+  format: winston.format.combine(
+    winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+    winston.format.errors({ stack: true }),
+    winston.format.colorize(),
+    winston.format.printf(({ level, message, timestamp }) => {
+      return `${timestamp} [fake-poap-auth] ${level}: ${message}`;
+    }),
+  ),
+  transports: [new winston.transports.Console()],
+});
 
 const app = express();
 const port = 4005;
@@ -17,6 +31,8 @@ const TokenRequestSchema = z.object({
 const access_token = v4();
 
 app.post('/oauth/token', (req, res) => {
+  logger.info('Received a request for an OAuth Token');
+
   const schemaResult = TokenRequestSchema.safeParse(req.body);
 
   if (!schemaResult.success) {
@@ -48,6 +64,8 @@ app.post('/oauth/token', (req, res) => {
 });
 
 app.get('/validate/:token', (req, res) => {
+  logger.info('Received a request to validate an OAuth Token');
+
   if (req.params.token === access_token) {
     return res.status(200).send('OK');
   } else {
@@ -56,5 +74,5 @@ app.get('/validate/:token', (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`Fake POAP Auth Server listening on port ${port}`);
+  logger.info(`fake-poap-auth server listening on port ${port}`);
 });
