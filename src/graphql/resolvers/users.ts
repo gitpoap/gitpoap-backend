@@ -1,6 +1,6 @@
 import { Arg, Ctx, Field, ObjectType, Resolver, Query } from 'type-graphql';
 import { ClaimStatus, User } from '@generated/type-graphql';
-import { getLastWeekStartDatetime } from './util';
+import { getLastMonthStartDatetime } from './util';
 import { Context } from '../../context';
 
 @ObjectType()
@@ -21,13 +21,13 @@ export class CustomUserResolver {
   }
 
   @Query(returns => Number)
-  async lastWeekContributors(@Ctx() { prisma }: Context): Promise<Number> {
+  async lastMonthContributors(@Ctx() { prisma }: Context): Promise<Number> {
     const result = await prisma.user.aggregate({
       _count: {
         id: true,
       },
       where: {
-        createdAt: { gt: getLastWeekStartDatetime() },
+        createdAt: { gt: getLastMonthStartDatetime() },
       },
     });
     return result._count.id;

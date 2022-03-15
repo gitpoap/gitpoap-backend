@@ -1,6 +1,6 @@
 import { Arg, Ctx, Field, ObjectType, Resolver, Query } from 'type-graphql';
 import { Claim, ClaimStatus, GitPOAP } from '@generated/type-graphql';
-import { getLastWeekStartDatetime } from './util';
+import { getLastMonthStartDatetime } from './util';
 import { Context } from '../../context';
 import { POAPEvent, POAPToken } from '../types/poap';
 import { resolveENS } from '../../util';
@@ -60,13 +60,13 @@ export class CustomGitPOAPResolver {
   }
 
   @Query(returns => Number)
-  async lastWeekGitPOAPs(@Ctx() { prisma }: Context): Promise<Number> {
+  async lastMonthGitPOAPs(@Ctx() { prisma }: Context): Promise<Number> {
     const result = await prisma.gitPOAP.aggregate({
       _count: {
         id: true,
       },
       where: {
-        createdAt: { gt: getLastWeekStartDatetime() },
+        createdAt: { gt: getLastMonthStartDatetime() },
       },
     });
     return result._count.id;

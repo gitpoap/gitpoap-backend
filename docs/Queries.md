@@ -10,11 +10,11 @@ The query to get the banner stats is as follows:
 ```graphql
 {
   totalContributors
-  lastWeekContributors
+  lastMonthContributors
   totalGitPOAPs
-  lastWeekGitPOAPs
+  lastMonthGitPOAPs
   totalRepos
-  lastWeekRepos
+  lastMonthRepos
 }
 ```
 
@@ -24,11 +24,11 @@ and returns data in the form:
 {
   "data": {
     "totalContributors": 5,
-    "lastWeekContributors": 4,
+    "lastMonthContributors": 4,
     "totalGitPOAPs": 3,
-    "lastWeekGitPOAPs": 2,
+    "lastMonthGitPOAPs": 2,
     "totalRepos": 3,
-    "lastWeekRepos": 2
+    "lastMonthRepos": 2
   }
 }
 ```
