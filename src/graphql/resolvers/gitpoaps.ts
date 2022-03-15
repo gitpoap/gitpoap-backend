@@ -1,5 +1,5 @@
 import { Arg, Ctx, Field, ObjectType, Resolver, Query } from 'type-graphql';
-import { Claim, ClaimStatus, GitPOAP } from '@generated/type-graphql';
+import { Claim, ClaimStatus, GitPOAP, Profile } from '@generated/type-graphql';
 import { getLastMonthStartDatetime } from './util';
 import { Context } from '../../context';
 import { POAPEvent, POAPToken } from '../types/poap';
@@ -18,10 +18,10 @@ class FullGitPOAPData {
 @ObjectType()
 class UserPOAPs {
   @Field()
-  totalGitPOAPs: Number;
+  totalGitPOAPs: number;
 
   @Field()
-  totalPOAPs: Number;
+  totalPOAPs: number;
 
   @Field(() => [FullGitPOAPData])
   gitPOAPs: FullGitPOAPData[];
@@ -39,7 +39,7 @@ class GitPOAPWithClaimsCount {
   event: POAPEvent;
 
   @Field()
-  claimsCount: Number;
+  claimsCount: number;
 }
 
 @ObjectType()
@@ -49,6 +49,42 @@ class UserFeaturedPOAPs {
 
   @Field(() => [POAPToken])
   poaps: POAPToken[];
+}
+
+@ObjectType()
+class Holder {
+  @Field()
+  profileId: number;
+
+  @Field()
+  address: string;
+
+  @Field(() => String, { nullable: true })
+  bio: string | null;
+
+  @Field(() => String, { nullable: true })
+  profileImageUrl: string | null;
+
+  @Field(() => String, { nullable: true })
+  twitterHandle: string | null;
+
+  @Field(() => String, { nullable: true })
+  personalSiteUrl: string | null;
+
+  @Field()
+  githubHandle: string;
+
+  @Field()
+  gitPOAPCount: number;
+}
+
+@ObjectType()
+class Holders {
+  @Field()
+  totalHolders: number;
+
+  @Field(() => [Holder])
+  holders: Holder[];
 }
 
 @Resolver(of => GitPOAP)
@@ -192,10 +228,10 @@ export class CustomGitPOAPResolver {
   @Query(returns => [GitPOAPWithClaimsCount], { nullable: true })
   async mostClaimedGitPOAPs(
     @Ctx() { prisma }: Context,
-    @Arg('count', { defaultValue: 10 }) count: Number,
+    @Arg('count', { defaultValue: 10 }) count: number,
   ): Promise<GitPOAPWithClaimsCount[] | null> {
     type ResultType = GitPOAP & {
-      claimsCount: Number;
+      claimsCount: number;
     };
 
     const results: ResultType[] = await prisma.$queryRaw`
@@ -271,5 +307,43 @@ export class CustomGitPOAPResolver {
     }
 
     return results;
+  }
+
+  @Query(returns => Holders, { nullable: true })
+  async gitPOAPHolders(
+    @Ctx() { prisma, provider }: Context,
+    @Arg('gitPOAPId') gitPOAPId: number,
+  ): Promise<Holders | null> {
+    type ResultType = Profile & {
+      githubHandle: string;
+      claimsCount: number;
+    };
+
+    const results: ResultType[] = await prisma.$queryRaw`
+      SELECT p.*, u."githubHandle",
+             (SELECT COUNT(c2.id) FROM "Claim" AS c2 WHERE p.address = c2.address) AS "claimsCount"
+      FROM "Claim" AS c
+      JOIN "Profile" AS p ON c.address = p.address
+      JOIN "User" AS u ON u.id = c."userId"
+      WHERE c."gitPOAPId" = ${gitPOAPId}
+    `;
+
+    const holders = {
+      totalHolders: results.length,
+      holders: results.map(r => {
+        return <Holder>{
+          profileId: r.id,
+          address: r.address,
+          bio: r.bio,
+          profileImageUrl: r.profileImageUrl,
+          twitterHandle: r.twitterHandle,
+          personalSiteUrl: r.personalSiteUrl,
+          githubHandle: r.githubHandle,
+          gitPOAPCount: r.claimsCount,
+        };
+      }),
+    };
+
+    return holders;
   }
 }
