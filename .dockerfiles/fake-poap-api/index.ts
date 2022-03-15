@@ -3,6 +3,22 @@ import express from 'express';
 import fetch from 'cross-fetch';
 import { z } from 'zod';
 import * as events from './data';
+import winston from 'winston';
+
+const logger = winston.createLogger({
+  level: 'info',
+  format: winston.format.combine(
+    winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+    winston.format.errors({ stack: true }),
+    winston.format.colorize(),
+    winston.format.printf(({ level, message, timestamp }) => {
+      return `${timestamp} [fake-poap-api] ${level}: ${message}`;
+    }),
+  ),
+  transports: [new winston.transports.Console()],
+  exceptionHandlers: [new winston.transports.Console()],
+  rejectionHandlers: [new winston.transports.Console()],
+});
 
 const app = express();
 const port = 4004;
@@ -25,13 +41,13 @@ async function validateAuth(req: express.Request) {
     const authResponse = await fetch(`http://fake-poap-auth:4005/validate/${token}`);
 
     if (authResponse.status >= 400) {
-      console.log(await authResponse.text());
+      logger.error(`Failed to validate auth token: ${await authResponse.text()}`);
       return false;
     }
 
     return true;
   } catch (err) {
-    console.log(err);
+    logger.error(`Failed to validate auth token: ${err}`);
     return false;
   }
 }
@@ -56,7 +72,7 @@ const CreateEventSchema = z.object({
 });
 
 app.post('/events', async (req, res) => {
-  console.log(`Received POST /events request: ${JSON.stringify(req.body)}`);
+  logger.info('Received POST /events request');
 
   const schemaResult = CreateEventSchema.safeParse(req.body);
 
@@ -95,7 +111,7 @@ app.post('/events', async (req, res) => {
 });
 
 app.get('/actions/scan/:address', async (req, res) => {
-  console.log(`Got request to view all POAPs for address: ${req.params.address}`);
+  logger.info(`Received GET /actions/scan/${req.params.address} request`);
 
   if (!(await validateAuth(req))) {
     return res.status(401).send({ msg: 'The token is invalid' });
@@ -159,7 +175,7 @@ app.get('/actions/scan/:address', async (req, res) => {
 });
 
 app.get('/events/id/:id', async (req, res) => {
-  console.log(`Got request for information about event ID: ${req.params.id}`);
+  logger.info(`Received a GET /events/id/${req.params.id} request`);
 
   if (!(await validateAuth(req))) {
     return res.status(401).send({ msg: 'The token is invalid' });
@@ -210,7 +226,7 @@ const ClaimQRSchema = z.object({
 let tokenId = 1;
 
 app.post('/actions/claim-qr', async (req, res) => {
-  console.log(`Received POST /actions/claim-qr request: ${JSON.stringify(req.body)}`);
+  logger.info('Received POST /actions/claim-qr request');
 
   const schemaResult = ClaimQRSchema.safeParse(req.body);
 
@@ -247,7 +263,7 @@ app.post('/actions/claim-qr', async (req, res) => {
 });
 
 app.get('/token/:id', async (req, res) => {
-  console.log(`Received request for POAP info about ID: ${req.params.id}`);
+  logger.info(`Received a GET /token/${req.params.id} request`);
 
   if (!(await validateAuth(req))) {
     return res.status(401).send({ msg: 'The token is invalid' });
@@ -274,7 +290,7 @@ const RedeemRequestsSchema = z.object({
 });
 
 app.post('/redeem-requests', async (req, res) => {
-  console.log(`Received POST /redeem-requests request: ${JSON.stringify(req.body)}`);
+  logger.info('Received POST /redeem-requests request');
 
   const schemaResult = RedeemRequestsSchema.safeParse(req.body);
 
@@ -290,5 +306,5 @@ app.post('/redeem-requests', async (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`Fake POAP API listening on port ${port}`);
+  logger.info(`fake-poap-api listening on port ${port}`);
 });
