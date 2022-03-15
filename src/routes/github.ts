@@ -1,63 +1,14 @@
 import { Router } from 'express';
-import {
-  GH_APP_CLIENT_ID,
-  GH_APP_CLIENT_SECRET,
-  GH_APP_REDIRECT_URL,
-  JWT_EXP_TIME,
-} from '../constants';
+import { JWT_EXP_TIME } from '../constants';
 import fetch from 'cross-fetch';
 import { sign, verify } from 'jsonwebtoken';
 import { context } from '../context';
 import { User } from '@generated/type-graphql';
 import { RequestAccessTokenSchema, RefreshAccessTokenSchema } from '../schemas/github';
 import { RefreshTokenPayload } from '../types';
+import { requestGithubOAuthToken, getGithubCurrentUserInfo } from '../github';
 
 export const githubRouter = Router();
-
-async function retrieveGithubToken(code: string): Promise<string> {
-  // Request to GitHub -> exchange code (from request body) for a GitHub access token
-  const body = {
-    client_id: GH_APP_CLIENT_ID,
-    client_secret: GH_APP_CLIENT_SECRET,
-    code,
-    redirect_uri: GH_APP_REDIRECT_URL,
-  };
-
-  const tokenResponse = await fetch('https://github.com/login/oauth/access_token', {
-    method: 'POST',
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(body),
-  });
-
-  const tokenJson = await tokenResponse.json();
-  console.log('Token JSON: ', tokenJson);
-  if (tokenJson?.error) {
-    /* don't use JSON.stringify long term here */
-    throw JSON.stringify(tokenJson);
-  }
-
-  return tokenJson.access_token;
-}
-
-async function retrieveGithubUserInfo(githubToken: string) {
-  const userResponse = await fetch('https://api.github.com/user', {
-    headers: {
-      Authorization: `token ${githubToken}`,
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-    },
-  });
-
-  if (userResponse.status >= 400) {
-    console.log(await userResponse.text());
-    return null;
-  }
-
-  return await userResponse.json();
-}
 
 function generateAccessToken(authTokenId: number, githubId: number, githubHandle: string): string {
   return sign({ authTokenId, githubId, githubHandle }, process.env.JWT_SECRET as string, {
@@ -88,7 +39,7 @@ githubRouter.post('/', async function (req, res) {
   let githubToken = null;
 
   try {
-    githubToken = await retrieveGithubToken(code);
+    githubToken = await requestGithubOAuthToken(code);
   } catch (error) {
     console.error('An error has occurred', error);
     return res.status(400).send({
@@ -97,7 +48,7 @@ githubRouter.post('/', async function (req, res) {
     });
   }
 
-  const githubUser = await retrieveGithubUserInfo(githubToken);
+  const githubUser = await getGithubCurrentUserInfo(githubToken);
   if (githubUser === null) {
     return res.status(400).send({
       message: 'A server error has occurred - GitHub current user',
