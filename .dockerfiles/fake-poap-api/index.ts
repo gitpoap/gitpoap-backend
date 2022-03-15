@@ -210,7 +210,7 @@ const ClaimQRSchema = z.object({
 let tokenId = 1;
 
 app.post('/actions/claim-qr', async (req, res) => {
-  console.log(`Received claim-qr request: ${JSON.stringify(req.body)}`);
+  console.log(`Received POST /actions/claim-qr request: ${JSON.stringify(req.body)}`);
 
   const schemaResult = ClaimQRSchema.safeParse(req.body);
 
@@ -264,6 +264,29 @@ app.get('/token/:id', async (req, res) => {
       created: '2022-03-14',
     }),
   );
+});
+
+const RedeemRequestsSchema = z.object({
+  event_id: z.number(),
+  requested_codes: z.number(),
+  secret_code: z.string(),
+  redeem_type: z.string(),
+});
+
+app.post('/redeem-requests', async (req, res) => {
+  console.log(`Received POST /redeem-requests request: ${JSON.stringify(req.body)}`);
+
+  const schemaResult = RedeemRequestsSchema.safeParse(req.body);
+
+  if (!schemaResult.success) {
+    return res.status(400).send({ issues: schemaResult.error.issues });
+  }
+
+  if (!(await validateAuth(req))) {
+    return res.status(401).send({ msg: 'The token is invalid' });
+  }
+
+  return res.status(200).send('324324');
 });
 
 app.listen(port, () => {
