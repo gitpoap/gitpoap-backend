@@ -81,7 +81,7 @@ for further information.
 
 ## Remove a Featured POAP
 
-`DELETE /featured/:id` - where `:id` is the ID of the POAP (A.K.A. it's `poapTokenId`)
+`DELETE /featured/:id` - where `:id` is the ID of the POAP (A.K.A. its `poapTokenId`)
 
 Data:
 
@@ -120,6 +120,19 @@ Data:
   "image": "https://gitpoap.io/favicon.png",
   "email": "burz@gitpoap.io",
   "requestedCodes": 10
+}
+```
+
+## Create Claims for a GitPOAP
+
+`POST /claims/create`
+
+Data:
+
+```json
+{
+  "gitPOAPId": 6,
+  "recipientGithubIds": [1555326]
 }
 ```
 
