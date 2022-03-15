@@ -33,13 +33,13 @@ and returns data in the form:
 }
 ```
 
-## Last Week's Most Honored Contributors
+## Most Honored Contributors
 
-The query to get the most honored contributors from the last week is as follows:
+The query to get the most honored contributors is as follows:
 
 ```graphql
 {
-  lastWeekMostHonoredContributors(count: 10) {
+  mostHonoredContributors(count: 10) {
     user {
       id
       githubHandle
@@ -54,7 +54,7 @@ and returns data in the form:
 ```json
 {
   "data": {
-    "lastWeekMostHonoredContributors": [
+    "mostHonoredContributors": [
       {
         "user": {
           "id": 2,

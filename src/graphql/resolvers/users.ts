@@ -34,12 +34,10 @@ export class CustomUserResolver {
   }
 
   @Query(returns => [UserWithClaimsCount])
-  async lastWeekMostHonoredContributors(
+  async mostHonoredContributors(
     @Ctx() { prisma }: Context,
     @Arg('count', { defaultValue: 10 }) count: Number,
   ): Promise<UserWithClaimsCount[]> {
-    const lastWeek = getLastWeekStartDatetime();
-
     type ResultType = User & {
       claimsCount: Number;
     };
@@ -48,7 +46,7 @@ export class CustomUserResolver {
       SELECT u.*, COUNT(c.id) AS "claimsCount"
       FROM "User" AS u
       JOIN "Claim" AS c ON c."userId" = u.id
-      WHERE c."updatedAt" > ${lastWeek} AND c.status = ${ClaimStatus.CLAIMED}
+      WHERE c.status = ${ClaimStatus.CLAIMED}
       GROUP BY u.id
       ORDER BY "claimsCount" DESC
       LIMIT ${count}
