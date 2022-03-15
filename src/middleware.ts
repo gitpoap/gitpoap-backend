@@ -2,7 +2,7 @@ import jwt from 'express-jwt';
 import { context } from './context';
 import set from 'lodash/set';
 import { AccessTokenPayload } from './types';
-import { RequestHandler } from 'express';
+import { ErrorRequestHandler, RequestHandler } from 'express';
 
 export function jwtWithOAuth() {
   const jwtMiddleware = jwt({ secret: process.env.JWT_SECRET as string, algorithms: ['HS256'] });
@@ -10,7 +10,8 @@ export function jwtWithOAuth() {
   const middleware: RequestHandler = async (req, res, next) => {
     const callback = async () => {
       if (!req.user) {
-        throw Error('Invalid or missing Access Token');
+        next({ status: 400, msg: 'Invalid or missing Access Token' });
+        return;
       }
       const userInfo = await context.prisma.authToken.findUnique({
         where: {
@@ -21,7 +22,8 @@ export function jwtWithOAuth() {
         },
       });
       if (userInfo === null) {
-        throw Error("Couldn't find your login");
+        next({ status: 500, msg: "Couldn't find your login" });
+        return;
       }
 
       set(req, 'user.githubOAuthToken', userInfo.githubOAuthToken);
@@ -34,3 +36,12 @@ export function jwtWithOAuth() {
 
   return middleware;
 }
+
+export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
+  if ('status' in err) {
+    res.status(err.status).send(err.msg);
+  } else {
+    console.log(err);
+    res.status(500).send(err.message);
+  }
+};

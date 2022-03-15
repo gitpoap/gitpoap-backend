@@ -17,6 +17,7 @@ import { PORT } from './constants';
 import { getSchema } from './graphql/schema';
 import { context } from './context';
 import { graphqlHTTP } from 'express-graphql';
+import { errorHandler } from './middleware';
 
 const main = async () => {
   const app = express();
@@ -41,6 +42,8 @@ const main = async () => {
   app.use('/gitpoaps', gitpoapsRouter);
   app.use('/profiles', profilesRouter);
   app.use('/projects', projectsRouter);
+
+  app.use(errorHandler);
 
   app.listen(PORT, () => {
     console.log(`The application is listening on port ${PORT}\n`);
