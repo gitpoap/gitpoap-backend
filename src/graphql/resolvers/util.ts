@@ -1,10 +1,10 @@
 import { DateTime } from 'luxon';
 
-export function getLastWeekStartDay(): string {
-  const lastWeek = DateTime.now().minus({ days: 7 });
-  return lastWeek.toFormat('yyyy-MM-dd');
+export function getLastMonthStartDay(): string {
+  const lastMonth = DateTime.now().minus({ days: 30 });
+  return lastMonth.toFormat('yyyy-MM-dd');
 }
 
-export function getLastWeekStartDatetime(): Date {
-  return new Date(getLastWeekStartDay());
+export function getLastMonthStartDatetime(): Date {
+  return new Date(getLastMonthStartDay());
 }

@@ -1,6 +1,6 @@
 import { Arg, Ctx, Resolver, Query } from 'type-graphql';
 import { Repo } from '@generated/type-graphql';
-import { getLastWeekStartDatetime } from './util';
+import { getLastMonthStartDatetime } from './util';
 import { Context } from '../../context';
 
 @Resolver(of => Repo)
@@ -12,13 +12,13 @@ export class CustomRepoResolver {
   }
 
   @Query(returns => Number)
-  async lastWeekRepos(@Ctx() { prisma }: Context): Promise<Number> {
+  async lastMonthRepos(@Ctx() { prisma }: Context): Promise<Number> {
     const result = await prisma.repo.aggregate({
       _count: {
         id: true,
       },
       where: {
-        createdAt: { gt: getLastWeekStartDatetime() },
+        createdAt: { gt: getLastMonthStartDatetime() },
       },
     });
     return result._count.id;
