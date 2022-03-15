@@ -10,23 +10,23 @@ export class ClaimFactory {
     address?: string,
     poapTokenId?: string,
   ): Promise<Claim> => {
-    const data: Prisma.ClaimCreateInput = {
-      gitPOAP: {
-        connect: {
-          id: gitPOAPId,
+    const claim = await prisma.claim.create({
+      data: <Prisma.ClaimCreateInput>{
+        gitPOAP: {
+          connect: {
+            id: gitPOAPId,
+          },
         },
-      },
-      user: {
-        connect: {
-          id: userId,
+        user: {
+          connect: {
+            id: userId,
+          },
         },
+        status,
+        address,
+        poapTokenId,
       },
-      status,
-      address,
-      poapTokenId,
-    };
-
-    const claim = await prisma.claim.create({ data });
+    });
     console.log(`Creating claim with id: ${claim.id}`);
 
     return claim;
@@ -35,12 +35,12 @@ export class ClaimFactory {
 
 export class UserFactory {
   static createUser = async (githubId: number, githubHandle: string): Promise<User> => {
-    const data: Prisma.UserCreateInput = {
-      githubId,
-      githubHandle,
-    };
-
-    const user = await prisma.user.create({ data });
+    const user = await prisma.user.create({
+      data: <Prisma.UserCreateInput>{
+        githubId,
+        githubHandle,
+      },
+    });
     console.log(`Creating user with id: ${user.id}`);
 
     return user;
@@ -49,12 +49,12 @@ export class UserFactory {
 
 export class OrganizationFactory {
   static createOrganization = async (githubOrgId: number, name: string): Promise<Organization> => {
-    const data: Prisma.OrganizationCreateInput = {
-      githubOrgId,
-      name,
-    };
-
-    const org = await prisma.organization.create({ data });
+    const org = await prisma.organization.create({
+      data: <Prisma.OrganizationCreateInput>{
+        githubOrgId,
+        name,
+      },
+    });
     console.log(`Creating organization with id: ${org.id}`);
 
     return org;
@@ -67,17 +67,17 @@ export class RepoFactory {
     githubRepoId: number,
     organizationId: number,
   ): Promise<Repo> => {
-    const data: Prisma.RepoCreateInput = {
-      name,
-      githubRepoId,
-      organization: {
-        connect: {
-          id: organizationId,
+    const repo = await prisma.repo.create({
+      data: <Prisma.RepoCreateInput>{
+        name,
+        githubRepoId,
+        organization: {
+          connect: {
+            id: organizationId,
+          },
         },
       },
-    };
-
-    const repo = await prisma.repo.create({ data });
+    });
     console.log(`Creating repo with id: ${repo.id}`);
 
     return repo;
@@ -91,18 +91,18 @@ export class GitPOAPFactory {
     repoId: number,
     poapSecret: string,
   ): Promise<GitPOAP> => {
-    const data: Prisma.GitPOAPCreateInput = {
-      year,
-      poapEventId,
-      poapSecret,
-      repo: {
-        connect: {
-          id: repoId,
+    const gitPOAP = await prisma.gitPOAP.create({
+      data: <Prisma.GitPOAPCreateInput>{
+        year,
+        poapEventId,
+        poapSecret,
+        repo: {
+          connect: {
+            id: repoId,
+          },
         },
       },
-    };
-
-    const gitPOAP = await prisma.gitPOAP.create({ data });
+    });
     console.log(`Creating gitPOAP with id: ${gitPOAP.id}`);
 
     return gitPOAP;
@@ -117,15 +117,15 @@ export class ProfileFactory {
     twitterHandle?: string,
     personalSiteUrl?: string,
   ): Promise<Profile> => {
-    const data: Prisma.ProfileCreateInput = {
-      address,
-      bio,
-      name,
-      twitterHandle,
-      personalSiteUrl,
-    };
-
-    const profile = await prisma.profile.create({ data });
+    const profile = await prisma.profile.create({
+      data: <Prisma.ProfileCreateInput>{
+        address,
+        bio,
+        name,
+        twitterHandle,
+        personalSiteUrl,
+      },
+    });
     console.log(`Creating profile with id: ${profile.id}`);
 
     return profile;
