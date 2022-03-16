@@ -4,7 +4,7 @@ import set from 'lodash/set';
 import { AccessTokenPayload } from './types/tokens';
 import { ErrorRequestHandler, RequestHandler } from 'express';
 import { JWT_SECRET } from './environment';
-import { logger } from './logging';
+import { createScopedLogger } from './logging';
 
 export function jwtWithOAuth() {
   const jwtMiddleware = jwt({ secret: JWT_SECRET as string, algorithms: ['HS256'] });
@@ -40,6 +40,8 @@ export function jwtWithOAuth() {
 }
 
 export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
+  const logger = createScopedLogger('errorHandler');
+
   if ('status' in err) {
     logger.warn(`Returning error status ${err.status} to user: ${err.msg}`);
     res.status(err.status).send(err.msg);

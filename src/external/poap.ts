@@ -2,11 +2,13 @@ import fetch from 'cross-fetch';
 import { context } from '../context';
 import { DateTime } from 'luxon';
 import { POAP_AUTH_URL, POAP_API_URL, POAP_CLIENT_ID, POAP_CLIENT_SECRET } from './environment';
-import { logger } from '../logging';
+import { createScopedLogger } from '../logging';
 
 const POAP_KEY_NAME = 'poap';
 
 async function retrievePOAPToken(): Promise<string | null> {
+  const logger = createScopedLogger('retrievePOAPToken');
+
   const secret = await context.prisma.secret.findUnique({
     where: {
       name: POAP_KEY_NAME,
@@ -18,13 +20,13 @@ async function retrievePOAPToken(): Promise<string | null> {
 
     // If the key is still valid let's use it
     if (updatedAt.plus({ hours: 10 }) >= DateTime.now()) {
-      logger.debug('retrievePOAPToken: Using saved POAP API Token');
+      logger.debug('Using saved POAP API Token');
 
       return secret.key;
     }
   }
 
-  logger.info('retrievePOAPToken: Retrieving a new POAP API Token');
+  logger.info('Retrieving a new POAP API Token');
 
   const poapResponse = await fetch(`${POAP_AUTH_URL}/oauth/token`, {
     method: 'POST',
@@ -40,7 +42,7 @@ async function retrievePOAPToken(): Promise<string | null> {
   });
 
   if (poapResponse.status >= 400) {
-    logger.warn(`retrievePOAPToken: Bad response from POAP Auth: ${await poapResponse.text()}`);
+    logger.warn(`Bad response from POAP Auth: ${await poapResponse.text()}`);
     return null;
   }
 
@@ -59,7 +61,7 @@ async function retrievePOAPToken(): Promise<string | null> {
     },
   });
 
-  logger.debug('retrievePOAPToken: Completed retrieving a new POAP API Token');
+  logger.debug('Completed retrieving a new POAP API Token');
 
   return data.access_token;
 }
@@ -83,6 +85,8 @@ async function generatePOAPHeaders(hasBody: boolean) {
 }
 
 async function makePOAPRequest(url: string, method: string, body: string | null) {
+  const logger = createScopedLogger('makePOAPRequest');
+
   let requestOptions;
   if (body !== null) {
     requestOptions = {
@@ -101,13 +105,13 @@ async function makePOAPRequest(url: string, method: string, body: string | null)
     const poapResponse = await fetch(url, requestOptions);
 
     if (poapResponse.status >= 400) {
-      logger.warn(`makePOAPRequest: Bad response from POAP API: ${await poapResponse.text()}`);
+      logger.warn(`Bad response from POAP API: ${await poapResponse.text()}`);
       return null;
     }
 
     return await poapResponse.json();
   } catch (err) {
-    logger.warn(`makePOAPRequest: Error while calling POAP API: ${err}`);
+    logger.warn(`Error while calling POAP API: ${err}`);
     return null;
   }
 }
@@ -138,10 +142,12 @@ async function claimPOAPQR(address: string, qrHash: string, secret: string) {
 }
 
 export async function claimPOAP(eventId: number, address: string, secret: string) {
+  const logger = createScopedLogger('claimPOAP');
+
   const qrHash = await createPOAPQR(eventId, secret);
 
   if (qrHash === null) {
-    logger.warn('claimPOAP: Failed to create a POAP QR hash');
+    logger.warn('Failed to create a POAP QR hash');
     return null;
   }
 

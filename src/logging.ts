@@ -14,3 +14,12 @@ export const logger = winston.createLogger({
   exceptionHandlers: [new winston.transports.Console()],
   rejectionHandlers: [new winston.transports.Console()],
 });
+
+export function createScopedLogger(scope: string) {
+  return {
+    debug: (msg: string) => logger.debug(`${scope}: ${msg}`),
+    info: (msg: string) => logger.info(`${scope}: ${msg}`),
+    warn: (msg: string) => logger.warn(`${scope}: ${msg}`),
+    error: (msg: string) => logger.error(`${scope}: ${msg}`),
+  };
+}
