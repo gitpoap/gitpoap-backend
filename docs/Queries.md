@@ -398,8 +398,11 @@ To search by a string (could be a name, address, or ENS name), we can run a quer
       address
     }
     profileByENS {
-      id
-      address
+      profile {
+        id
+        address
+      }
+      ens
     }
   }
 }
@@ -481,8 +484,11 @@ As an example for ENS:
       address
     }
     profileByENS {
-      id
-      address
+      profile {
+        id
+        address
+      }
+      ens
     }
   }
 }
@@ -498,8 +504,11 @@ returns:
       "profilesByName": [],
       "profilesByAddress": [],
       "profileByENS": {
-        "id": 4,
-        "address": "0xae95f7e7fb2fcf86148ef832faed2752ae5a358a"
+        "profile": {
+          "id": 4,
+          "address": "0xae95f7e7fb2fcf86148ef832faed2752ae5a358a"
+        },
+        "ens": "burz.eth"
       }
     }
   }
