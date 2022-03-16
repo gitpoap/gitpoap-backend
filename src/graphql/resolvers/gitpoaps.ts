@@ -241,9 +241,6 @@ export class CustomGitPOAPResolver {
           address: resolvedAddress.toLowerCase(),
         },
       },
-      include: {
-        claim: true,
-      },
     });
 
     let results: UserFeaturedPOAPs = {
@@ -257,9 +254,15 @@ export class CustomGitPOAPResolver {
         return null;
       }
 
-      if (poap.claim) {
+      const claim = await prisma.claim.findUnique({
+        where: {
+          poapTokenId: poap.poapTokenId,
+        },
+      });
+
+      if (claim !== null) {
         results.gitPOAPs.push({
-          claim: poap.claim,
+          claim: claim,
           poap: poapData,
         });
       } else {

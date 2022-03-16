@@ -73,7 +73,6 @@ model Claim {
   gitPOAP      GitPOAP       @relation(fields: [gitPOAPId], references: [id])
   userId       Int
   user         User          @relation(fields: [userId], references: [id])
-  featuredPOAP FeaturedPOAP?
 }
 
 model GitPOAP {
@@ -101,14 +100,8 @@ model FeaturedPOAP {
   id          Int     @id @default(autoincrement())
   // This key is chosen to allow both GitPOAPs and POAPs to be featured
   poapTokenId String  @unique @db.VarChar(255)
-  // This relation exists to make the resolver that splits the featured GitPOAPs
-  // vs POAPs simpler by fetching the corresponding claim (if it exists) when
-  // grabbing all of a user's Features
-  claim       Claim?  @relation(fields: [poapTokenId], references: [poapTokenId])
   profileId   Int
   profile     Profile @relation(fields: [profileId], references: [id])
-  // Required to avoid dumb bug: https://github.com/prisma/prisma/issues/4004
-  dummyField  String?
 
   @@unique([poapTokenId, profileId])
 }
