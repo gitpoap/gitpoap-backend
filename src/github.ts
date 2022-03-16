@@ -1,5 +1,6 @@
 import fetch from 'cross-fetch';
 import { GH_APP_CLIENT_ID, GH_APP_CLIENT_SECRET, GH_APP_REDIRECT_URL } from './constants';
+import { GITHUB_APP_URL, GITHUB_API_URL } from './environment';
 
 export async function requestGithubOAuthToken(code: string) {
   // Request to GitHub -> exchange code (from request body) for a GitHub access token
@@ -10,7 +11,7 @@ export async function requestGithubOAuthToken(code: string) {
     redirect_uri: GH_APP_REDIRECT_URL,
   };
 
-  const tokenResponse = await fetch(`${process.env.GITHUB_APP_URL}/login/oauth/access_token`, {
+  const tokenResponse = await fetch(`${GITHUB_APP_URL}/login/oauth/access_token`, {
     method: 'POST',
     headers: {
       Accept: 'application/json',
@@ -52,16 +53,13 @@ async function makeGithubAPIRequest(url: string, githubToken: string) {
 }
 
 export async function getGithubCurrentUserInfo(githubToken: string) {
-  return await makeGithubAPIRequest(`${process.env.GITHUB_API_URL}/user`, githubToken);
+  return await makeGithubAPIRequest(`${GITHUB_API_URL}/user`, githubToken);
 }
 
 export async function getGithubUserById(githubId: number, githubToken: string) {
-  return await makeGithubAPIRequest(`${process.env.GITHUB_API_URL}/user/${githubId}`, githubToken);
+  return await makeGithubAPIRequest(`${GITHUB_API_URL}/user/${githubId}`, githubToken);
 }
 
 export async function getGithubRepository(organization: string, name: string, githubToken: string) {
-  return await makeGithubAPIRequest(
-    `${process.env.GITHUB_API_URL}/repos/${organization}/${name}`,
-    githubToken,
-  );
+  return await makeGithubAPIRequest(`${GITHUB_API_URL}/repos/${organization}/${name}`, githubToken);
 }

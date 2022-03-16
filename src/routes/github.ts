@@ -7,17 +7,18 @@ import { User } from '@generated/type-graphql';
 import { RequestAccessTokenSchema, RefreshAccessTokenSchema } from '../schemas/github';
 import { RefreshTokenPayload } from '../types';
 import { requestGithubOAuthToken, getGithubCurrentUserInfo } from '../github';
+import { JWT_SECRET } from '../environment';
 
 export const githubRouter = Router();
 
 function generateAccessToken(authTokenId: number, githubId: number, githubHandle: string): string {
-  return sign({ authTokenId, githubId, githubHandle }, process.env.JWT_SECRET as string, {
+  return sign({ authTokenId, githubId, githubHandle }, JWT_SECRET as string, {
     expiresIn: JWT_EXP_TIME,
   });
 }
 
 function generateRefreshToken(authTokenId: number, githubId: number, generation: number) {
-  return sign({ authTokenId, githubId, generation }, process.env.JWT_SECRET as string);
+  return sign({ authTokenId, githubId, generation }, JWT_SECRET as string);
 }
 
 githubRouter.post('/', async function (req, res) {
@@ -96,7 +97,7 @@ githubRouter.post('/refresh', async function (req, res) {
   const { token } = req.body;
   let payload: RefreshTokenPayload;
   try {
-    payload = <RefreshTokenPayload>verify(token, process.env.JWT_SECRET);
+    payload = <RefreshTokenPayload>verify(token, JWT_SECRET);
   } catch (err) {
     return res.status(401).send({ message: 'The refresh token is invalid' });
   }

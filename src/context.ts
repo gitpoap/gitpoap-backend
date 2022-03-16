@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { getDefaultProvider } from 'ethers';
 import { Provider } from '@ethersproject/providers';
+import { INFURA_API_KEY } from './environment';
 
 export interface Context {
   prisma: PrismaClient;
@@ -10,8 +11,8 @@ export interface Context {
 const prisma = new PrismaClient();
 
 let apiObj = undefined;
-if (process.env.INFURA_API_KEY) {
-  apiObj = { infura: process.env.INFURA_API_KEY };
+if (INFURA_API_KEY) {
+  apiObj = { infura: INFURA_API_KEY };
 }
 const provider = getDefaultProvider('homestead', apiObj);
 

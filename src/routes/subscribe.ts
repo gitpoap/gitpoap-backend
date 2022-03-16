@@ -2,12 +2,13 @@ import { PutItemCommand } from '@aws-sdk/client-dynamodb';
 import { Router } from 'express';
 import jwt from 'express-jwt';
 import { dynamoDB, CONTACTS_TABLE_NAME } from '../dynamo';
+import { JWT_SECRET } from '../environment';
 
 const router = Router();
 
 router.post(
   '/',
-  jwt({ secret: process.env.JWT_SECRET as string, algorithms: ['HS256'] }),
+  jwt({ secret: JWT_SECRET as string, algorithms: ['HS256'] }),
   async function (req, res) {
     if (!req.user) {
       return res.sendStatus(401);

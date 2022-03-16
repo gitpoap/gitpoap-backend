@@ -1,11 +1,12 @@
 import { Router } from 'express';
 import { sign } from 'jsonwebtoken';
 import { JWT_EXP_TIME } from '../constants';
+import { JWT_SECRET } from '../environment';
 
 var router = Router();
 
 router.get('/', function (req, res) {
-  const token = sign({}, process.env.JWT_SECRET as string, {
+  const token = sign({}, JWT_SECRET as string, {
     expiresIn: JWT_EXP_TIME,
   });
 
