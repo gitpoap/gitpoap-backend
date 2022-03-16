@@ -1,6 +1,6 @@
 # gitpoap-backend
 
-### Resources
+## Resources
 
 * https://www.pullrequest.com/blog/intro-to-using-typescript-in-a-nodejs-express-project/
 * https://github.com/auth0/node-jsonwebtoken/
@@ -11,20 +11,45 @@
 * [prisma migrations](https://www.prisma.io/docs/concepts/components/prisma-migrate)
 * [relational queries (creation)](https://www.prisma.io/docs/concepts/components/prisma-client/relation-queries#create-a-related-record)
 
-### Running locally with docker-compose
+## Running Locally with docker-compose
 
-To run a local (seeded) version of the DB as well as the app, run:
+Example `.env`:
+```sh
+JWT_SECRET=yoyo
+
+AWS_PROFILE=docker-agent
+
+NODE_ENV=local
+
+DATABASE_URL="postgresql://postgres:foobar88@localhost:5432"
+
+POAP_API_URL="http://localhost:4004"
+POAP_AUTH_URL="http://localhost:4005"
+POAP_CLIENT_ID="a good client id"
+POAP_CLIENT_SECRET="super secret!"
+
+GITHUB_APP_URL="https://github.com"
+GITHUB_API_URL="https://api.github.com"
+```
+
+### Entire Backend
+
+To run all of the services (`fake-poap-api`, `fake-poap-auth`, `db`, and `server`) locally
+(with seeded data), we can run:
 ```sh
 docker-compose up --build --force-recreate --renew-anon-volumes
 ```
 
-To run the DB alone:
-```sh
-docker-compose up --build --force-recreate --renew-anon-volumes db
+### Everything but the Server
+
+To run background services (`fake-poap-api`, `fake-poap-auth`, and `db`), we can run:
+```bash
+docker-compose up --build --force-recreate --renew-anon-volumes db fake-poap-a{pi,uth}
 ```
 then you can easily work on the backend API while making code changes locally (which will restart after any changes) via:
 ```sh
+# First time to migrate and seed the DB:
+./.dockerfiles/run-server.sh
+# After we've already seeded the DB but want to restart the server for some reason:
 yarn run dev
 ```
-(Note that to get the migration+seeding done the first time you can simply run `./.dockerfiles/run-server.sh`, then run
-`yarn run dev` afterwards so long as you don't want the DB's data refreshed)
