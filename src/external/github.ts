@@ -5,7 +5,8 @@ import {
   GITHUB_APP_CLIENT_ID,
   GITHUB_APP_CLIENT_SECRET,
   GITHUB_APP_REDIRECT_URL,
-} from './environment';
+} from '../environment';
+import { logger } from '../logging';
 
 export async function requestGithubOAuthToken(code: string) {
   // Request to GitHub -> exchange code (from request body) for a GitHub access token
@@ -26,7 +27,7 @@ export async function requestGithubOAuthToken(code: string) {
   });
 
   const tokenJson = await tokenResponse.json();
-  console.log('Token JSON: ', tokenJson);
+  logger.debug(`requestGithubOAuthToken: Token JSON: ${tokenJson}`);
   if (tokenJson?.error) {
     /* don't use JSON.stringify long term here */
     throw JSON.stringify(tokenJson);
@@ -46,13 +47,13 @@ async function makeGithubAPIRequest(url: string, githubToken: string) {
     });
 
     if (githubResponse.status >= 400) {
-      console.log(await githubResponse.text());
+      logger.warn(`makeGithubAPIRequest: Bad response from GitHub: ${await githubResponse.text()}`);
       return null;
     }
 
     return await githubResponse.json();
   } catch (err) {
-    console.log(err);
+    logger.warn(`makeGithubAPIRequest: Error while calling GitHub: ${err}`);
     return null;
   }
 }

@@ -6,7 +6,7 @@ import { logger } from '../logging';
 
 const POAP_KEY_NAME = 'poap';
 
-async function retrievePOAPKey(): Promise<string | null> {
+async function retrievePOAPToken(): Promise<string | null> {
   const secret = await context.prisma.secret.findUnique({
     where: {
       name: POAP_KEY_NAME,
@@ -18,11 +18,13 @@ async function retrievePOAPKey(): Promise<string | null> {
 
     // If the key is still valid let's use it
     if (updatedAt.plus({ hours: 10 }) >= DateTime.now()) {
+      logger.debug('retrievePOAPToken: Using saved POAP API Token');
+
       return secret.key;
     }
   }
 
-  console.log('Retrieving a new POAP API OAuth Token');
+  logger.info('retrievePOAPToken: Retrieving a new POAP API Token');
 
   const poapResponse = await fetch(`${POAP_AUTH_URL}/oauth/token`, {
     method: 'POST',
@@ -38,7 +40,7 @@ async function retrievePOAPKey(): Promise<string | null> {
   });
 
   if (poapResponse.status >= 400) {
-    console.log(await poapResponse.text());
+    logger.warn(`retrievePOAPToken: Bad response from POAP Auth: ${await poapResponse.text()}`);
     return null;
   }
 
@@ -57,6 +59,8 @@ async function retrievePOAPKey(): Promise<string | null> {
     },
   });
 
+  logger.debug('retrievePOAPToken: Completed retrieving a new POAP API Token');
+
   return data.access_token;
 }
 
@@ -66,7 +70,7 @@ async function generatePOAPHeaders(hasBody: boolean) {
   const host = POAP_API_URL.substr(lastIndex + 1);
 
   let base = {
-    Authorization: `Bearer ${await retrievePOAPKey()}`,
+    Authorization: `Bearer ${await retrievePOAPToken()}`,
     Accept: 'application/json',
     Host: host,
   };
@@ -97,13 +101,13 @@ async function makePOAPRequest(url: string, method: string, body: string | null)
     const poapResponse = await fetch(url, requestOptions);
 
     if (poapResponse.status >= 400) {
-      console.log(await poapResponse.text());
+      logger.warn(`makePOAPRequest: Bad response from POAP API: ${await poapResponse.text()}`);
       return null;
     }
 
     return await poapResponse.json();
   } catch (err) {
-    console.log(err);
+    logger.warn(`makePOAPRequest: Error while calling POAP API: ${err}`);
     return null;
   }
 }
@@ -137,6 +141,7 @@ export async function claimPOAP(eventId: number, address: string, secret: string
   const qrHash = await createPOAPQR(eventId, secret);
 
   if (qrHash === null) {
+    logger.warn('claimPOAP: Failed to create a POAP QR hash');
     return null;
   }
 

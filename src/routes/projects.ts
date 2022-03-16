@@ -5,17 +5,23 @@ import { context } from '../context';
 import { getGithubRepository } from '../external/github';
 import { AccessTokenPayloadWithOAuth } from '../types/tokens';
 import { jwtWithOAuth } from '../middleware';
+import { logger } from '../logging';
 
 export const projectsRouter = Router();
 
 projectsRouter.post('/', jwtWithOAuth(), async function (req, res) {
+  logger.debug(`POST /projects: Body: ${req.body}`);
+
   const schemaResult = AddProjectSchema.safeParse(req.body);
 
   if (!schemaResult.success) {
+    logger.warn(
+      `POST /projects: Missing/invalid body fields in request: ${schemaResult.error.issues}`,
+    );
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
-  console.log(`Received request to add ${req.body.organization}/${req.body.repository}`);
+  logger.info(`POST /projects: Request to add ${req.body.organization}/${req.body.repository}`);
 
   const repoInfo = await getGithubRepository(
     req.body.organization,
@@ -23,12 +29,13 @@ projectsRouter.post('/', jwtWithOAuth(), async function (req, res) {
     (<AccessTokenPayloadWithOAuth>req.user).githubOAuthToken,
   );
   if (repoInfo === null) {
+    logger.warn(
+      `POST /projects: Couldn't find ${req.body.organization}/${req.body.repository} on GitHub`,
+    );
     return res.status(400).send({
       message: 'Failed to lookup repository on GitHub',
     });
   }
-
-  console.log(`Adding Org with githubId: ${repoInfo.owner.id} and name: ${repoInfo.owner.login}`);
 
   // Add the org if it doesn't already exist
   const org = await context.prisma.organization.upsert({
@@ -50,12 +57,9 @@ projectsRouter.post('/', jwtWithOAuth(), async function (req, res) {
   });
 
   if (repo) {
-    console.log(`Repo with githubId: ${repoInfo.id} and name: ${repoInfo.name} already exists`);
-
+    logger.warn(`POST /projects: ${req.body.organization}/${repoInfo.name} already exists`);
     return res.status(200).send('ALREADY EXISTS');
   }
-
-  console.log(`Creating Repo with githubId: ${repoInfo.id} and name: ${repoInfo.name}`);
 
   await context.prisma.repo.create({
     data: {
@@ -64,6 +68,10 @@ projectsRouter.post('/', jwtWithOAuth(), async function (req, res) {
       organizationId: org.id,
     },
   });
+
+  logger.debug(
+    `POST /projects: Completed request to add ${req.body.organization}/${req.body.repository}`,
+  );
 
   return res.status(201).send('CREATED');
 });

@@ -1,9 +1,10 @@
 import jwt from 'express-jwt';
 import { context } from './context';
 import set from 'lodash/set';
-import { AccessTokenPayload } from './types';
+import { AccessTokenPayload } from './types/tokens';
 import { ErrorRequestHandler, RequestHandler } from 'express';
 import { JWT_SECRET } from './environment';
+import { logger } from './logging';
 
 export function jwtWithOAuth() {
   const jwtMiddleware = jwt({ secret: JWT_SECRET as string, algorithms: ['HS256'] });
@@ -40,9 +41,10 @@ export function jwtWithOAuth() {
 
 export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
   if ('status' in err) {
+    logger.warn(`Returning error status ${err.status} to user: ${err.msg}`);
     res.status(err.status).send(err.msg);
   } else {
-    console.log(err);
+    logger.error(`Caught unkown error: ${err}`);
     res.status(500).send(err.message);
   }
 };

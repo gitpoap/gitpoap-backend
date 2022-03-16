@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { sign } from 'jsonwebtoken';
 import { JWT_EXP_TIME } from '../constants';
 import { JWT_SECRET } from '../environment';
+import { logger } from '../logging';
 
 var router = Router();
 
@@ -10,7 +11,7 @@ router.get('/', function (req, res) {
     expiresIn: JWT_EXP_TIME,
   });
 
-  console.log('Issuing a token: ' + token);
+  logger.debug(`Issuing a token: ${token}`);
 
   res.json({
     access_token: token,
