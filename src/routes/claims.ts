@@ -10,12 +10,13 @@ import { jwtWithOAuth } from '../middleware';
 import { AccessTokenPayload, AccessTokenPayloadWithOAuth } from '../types';
 import { claimPOAP, retrievePOAPEventInfo } from '../poap';
 import { getGithubUserById } from '../github';
+import { JWT_SECRET } from '../environment';
 
 export const claimsRouter = Router();
 
 claimsRouter.post(
   '/',
-  jwt({ secret: process.env.JWT_SECRET as string, algorithms: ['HS256'] }),
+  jwt({ secret: JWT_SECRET as string, algorithms: ['HS256'] }),
   async function (req, res) {
     if (!req.user) {
       return res.status(401).send({ message: 'Invalid or missing Access Token' });

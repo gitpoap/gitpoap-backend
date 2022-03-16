@@ -18,6 +18,7 @@ import { getSchema } from './graphql/schema';
 import { context } from './context';
 import { graphqlHTTP } from 'express-graphql';
 import { errorHandler } from './middleware';
+import { NODE_ENV, JWT_SECRET, AWS_PROFILE } from './environment';
 
 const main = async () => {
   const app = express();
@@ -48,14 +49,10 @@ const main = async () => {
   app.listen(PORT, () => {
     console.log(`The application is listening on port ${PORT}\n`);
 
-    const environment = process.env.NODE_ENV;
-    const secret = process.env.JWT_SECRET;
-    const aws_profile = process.env.AWS_PROFILE;
-
-    console.log('Environment: ', environment);
-    console.log('Secret: ', secret);
+    console.log('Environment: ', NODE_ENV);
+    console.log('Secret: ', JWT_SECRET);
     console.log('Contacts table: ', CONTACTS_TABLE_NAME);
-    console.log('Using AWS Profile: ', aws_profile);
+    console.log('Using AWS Profile: ', AWS_PROFILE);
   });
 };
 

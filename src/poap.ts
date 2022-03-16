@@ -1,6 +1,7 @@
 import fetch from 'cross-fetch';
 import { context } from './context';
 import { DateTime } from 'luxon';
+import { POAP_AUTH_URL, POAP_API_URL, POAP_CLIENT_ID, POAP_CLIENT_SECRET } from './environment';
 
 const POAP_KEY_NAME = 'poap';
 
@@ -22,13 +23,13 @@ async function retrievePOAPKey(): Promise<string | null> {
 
   console.log('Retrieving a new POAP API OAuth Token');
 
-  const poapResponse = await fetch(`${process.env.POAP_AUTH_URL}/oauth/token`, {
+  const poapResponse = await fetch(`${POAP_AUTH_URL}/oauth/token`, {
     method: 'POST',
     body: JSON.stringify({
       audience: 'gitpoap',
       grant_type: 'client_credentials',
-      client_id: process.env.POAP_CLIENT_ID,
-      client_secret: process.env.POAP_CLIENT_SECRET,
+      client_id: POAP_CLIENT_ID,
+      client_secret: POAP_CLIENT_SECRET,
     }),
     headers: {
       'Content-Type': 'application/json',
@@ -60,8 +61,8 @@ async function retrievePOAPKey(): Promise<string | null> {
 
 async function generatePOAPHeaders(hasBody: boolean) {
   // Remove the https:// from the url for the host header
-  const lastIndex = process.env.POAP_API_URL.lastIndexOf('/');
-  const host = process.env.POAP_API_URL.substr(lastIndex + 1);
+  const lastIndex = POAP_API_URL.lastIndexOf('/');
+  const host = POAP_API_URL.substr(lastIndex + 1);
 
   let base = {
     Authorization: `Bearer ${await retrievePOAPKey()}`,
@@ -108,7 +109,7 @@ async function makePOAPRequest(url: string, method: string, body: string | null)
 
 async function createPOAPQR(eventId: number, secret: string) {
   return await makePOAPRequest(
-    `${process.env.POAP_API_URL}/redeem-requests`,
+    `${POAP_API_URL}/redeem-requests`,
     'POST',
     JSON.stringify({
       event_id: eventId,
@@ -121,7 +122,7 @@ async function createPOAPQR(eventId: number, secret: string) {
 
 async function claimPOAPQR(address: string, qrHash: string, secret: string) {
   return await makePOAPRequest(
-    `${process.env.POAP_API_URL}/actions/claim-qr`,
+    `${POAP_API_URL}/actions/claim-qr`,
     'POST',
     JSON.stringify({
       address,
@@ -142,15 +143,15 @@ export async function claimPOAP(eventId: number, address: string, secret: string
 }
 
 export async function retrievePOAPEventInfo(eventId: number) {
-  return await makePOAPRequest(`${process.env.POAP_API_URL}/events/id/${eventId}`, 'GET', null);
+  return await makePOAPRequest(`${POAP_API_URL}/events/id/${eventId}`, 'GET', null);
 }
 
 export async function retrieveUsersPOAPs(address: string) {
-  return await makePOAPRequest(`${process.env.POAP_API_URL}/actions/scan/${address}`, 'GET', null);
+  return await makePOAPRequest(`${POAP_API_URL}/actions/scan/${address}`, 'GET', null);
 }
 
 export async function retrievePOAPInfo(poapTokenId: string) {
-  return await makePOAPRequest(`${process.env.POAP_API_URL}/token/${poapTokenId}`, 'GET', null);
+  return await makePOAPRequest(`${POAP_API_URL}/token/${poapTokenId}`, 'GET', null);
 }
 
 export async function createPOAPEvent(
@@ -167,7 +168,7 @@ export async function createPOAPEvent(
   requested_codes: number,
 ) {
   return await makePOAPRequest(
-    `${process.env.POAP_API_URL}/events`,
+    `${POAP_API_URL}/events`,
     'POST',
     JSON.stringify({
       name,

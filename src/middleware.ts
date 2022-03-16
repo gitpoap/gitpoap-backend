@@ -3,9 +3,10 @@ import { context } from './context';
 import set from 'lodash/set';
 import { AccessTokenPayload } from './types';
 import { ErrorRequestHandler, RequestHandler } from 'express';
+import { JWT_SECRET } from './environment';
 
 export function jwtWithOAuth() {
-  const jwtMiddleware = jwt({ secret: process.env.JWT_SECRET as string, algorithms: ['HS256'] });
+  const jwtMiddleware = jwt({ secret: JWT_SECRET as string, algorithms: ['HS256'] });
 
   const middleware: RequestHandler = async (req, res, next) => {
     const callback = async () => {

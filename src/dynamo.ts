@@ -1,17 +1,15 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { fromIni } from '@aws-sdk/credential-provider-ini';
+import { NODE_ENV, AWS_PROFILE } from './environment';
 
-const environment = process.env.NODE_ENV;
-const aws_profile = process.env.AWS_PROFILE;
-
-export const CONTACTS_TABLE_NAME = environment === 'local' ? 'contacts-local' : 'contacts';
-export const SUGGESTIONS_TABLE_NAME = environment === 'local' ? 'suggestions-local' : 'suggestions';
+export const CONTACTS_TABLE_NAME = NODE_ENV === 'local' ? 'contacts-local' : 'contacts';
+export const SUGGESTIONS_TABLE_NAME = NODE_ENV === 'local' ? 'suggestions-local' : 'suggestions';
 
 const DYNAMO_DB_OPTIONS =
-  environment === 'local'
+  NODE_ENV === 'local'
     ? {
         region: 'us-east-2',
-        credentials: fromIni({ profile: aws_profile }),
+        credentials: fromIni({ profile: AWS_PROFILE }),
       }
     : {
         region: 'us-east-2',
