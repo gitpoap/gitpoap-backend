@@ -5,7 +5,7 @@ import { Context } from '../../context';
 import { POAPEvent, POAPToken } from '../../types/poap';
 import { resolveENS } from '../../util';
 import { retrievePOAPEventInfo, retrieveUsersPOAPs, retrievePOAPInfo } from '../../external/poap';
-import { logger } from '../../logging';
+import { createScopedLogger } from '../../logging';
 
 @ObjectType()
 class FullGitPOAPData {
@@ -117,17 +117,19 @@ export class CustomGitPOAPResolver {
     @Arg('perPage', { defaultValue: null }) perPage?: number,
     @Arg('page', { defaultValue: null }) page?: number,
   ): Promise<UserPOAPs | null> {
+    const logger = createScopedLogger('GQL userPOAPs');
+
     switch (sort) {
       case 'date':
         break;
       case 'alphabetical':
         break;
       default:
-        logger.warn(`GQL userPOAPs: Unknown value provided for sort: ${sort}`);
+        logger.warn(`Unknown value provided for sort: ${sort}`);
         return null;
     }
     if ((page === null || perPage === null) && page !== perPage) {
-      logger.warn('GQL userPOAPs: "page" and "perPage" must be specified together');
+      logger.warn('"page" and "perPage" must be specified together');
       return null;
     }
 
@@ -152,9 +154,7 @@ export class CustomGitPOAPResolver {
     let foundPOAPIds: Record<string, Claim> = {};
     for (const claim of claims) {
       if (claim.poapTokenId === null) {
-        logger.warn(
-          `GQL userPOAPs: Found a null poapTokenId, but the Claim ID ${claim.id} has status CLAIMED`,
-        );
+        logger.warn(`Found a null poapTokenId, but the Claim ID ${claim.id} has status CLAIMED`);
         continue;
       }
       foundPOAPIds[claim.poapTokenId] = claim;
@@ -320,8 +320,10 @@ export class CustomGitPOAPResolver {
     @Arg('perPage', { defaultValue: null }) perPage?: number,
     @Arg('page', { defaultValue: null }) page?: number,
   ): Promise<Holders | null> {
+    const logger = createScopedLogger('GQL gitPOAPHolders');
+
     if ((page === null || perPage === null) && page !== perPage) {
-      logger.warn('GQL gitPOAPHolders: "page" and "perPage" must be specified together');
+      logger.warn('"page" and "perPage" must be specified together');
       return null;
     }
 
@@ -381,7 +383,7 @@ export class CustomGitPOAPResolver {
         }
         break;
       default:
-        logger.warn(`GQL gitPOAPHolders: Unknown value provided for sort: ${sort}`);
+        logger.warn(`Unknown value provided for sort: ${sort}`);
         return null;
     }
 

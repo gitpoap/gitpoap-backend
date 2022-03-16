@@ -19,9 +19,11 @@ import { context } from './context';
 import { graphqlHTTP } from 'express-graphql';
 import { errorHandler } from './middleware';
 import { NODE_ENV, JWT_SECRET, AWS_PROFILE } from './environment';
-import { logger } from './logging';
+import { createScopedLogger } from './logging';
 
 const main = async () => {
+  const logger = createScopedLogger('main');
+
   const app = express();
 
   app.use(cors());
@@ -50,10 +52,10 @@ const main = async () => {
   app.listen(PORT, () => {
     logger.info(`The application is listening on port ${PORT}`);
 
-    logger.debug('Environment: ', NODE_ENV);
-    logger.debug('Secret: ', JWT_SECRET);
-    logger.debug('Contacts table: ', CONTACTS_TABLE_NAME);
-    logger.debug('Using AWS Profile: ', AWS_PROFILE);
+    logger.debug(`Environment:       ${NODE_ENV}`);
+    logger.debug(`Secret:            ${JWT_SECRET}`);
+    logger.debug(`Contacts table:    ${CONTACTS_TABLE_NAME}`);
+    logger.debug(`Using AWS Profile: ${AWS_PROFILE}`);
   });
 };
 

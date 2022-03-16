@@ -7,8 +7,11 @@ import {
   GITHUB_APP_REDIRECT_URL,
 } from '../environment';
 import { logger } from '../logging';
+import { createScopedLogger } from '../logging';
 
 export async function requestGithubOAuthToken(code: string) {
+  const logger = createScopedLogger('requestGithubOAuthToken');
+
   // Request to GitHub -> exchange code (from request body) for a GitHub access token
   const body = {
     client_id: GITHUB_APP_CLIENT_ID,
@@ -27,7 +30,7 @@ export async function requestGithubOAuthToken(code: string) {
   });
 
   const tokenJson = await tokenResponse.json();
-  logger.debug(`requestGithubOAuthToken: Token JSON: ${tokenJson}`);
+  logger.debug(`Token JSON: ${tokenJson}`);
   if (tokenJson?.error) {
     /* don't use JSON.stringify long term here */
     throw JSON.stringify(tokenJson);
@@ -37,6 +40,8 @@ export async function requestGithubOAuthToken(code: string) {
 }
 
 async function makeGithubAPIRequest(url: string, githubToken: string) {
+  const logger = createScopedLogger('makeGithubAPIRequest');
+
   try {
     const githubResponse = await fetch(url, {
       method: 'GET',
@@ -47,13 +52,13 @@ async function makeGithubAPIRequest(url: string, githubToken: string) {
     });
 
     if (githubResponse.status >= 400) {
-      logger.warn(`makeGithubAPIRequest: Bad response from GitHub: ${await githubResponse.text()}`);
+      logger.warn(`Bad response from GitHub: ${await githubResponse.text()}`);
       return null;
     }
 
     return await githubResponse.json();
   } catch (err) {
-    logger.warn(`makeGithubAPIRequest: Error while calling GitHub: ${err}`);
+    logger.warn(`Error while calling GitHub: ${err}`);
     return null;
   }
 }

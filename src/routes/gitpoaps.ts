@@ -3,25 +3,25 @@ import { Router } from 'express';
 import { context } from '../context';
 import { v4 } from 'uuid';
 import { createPOAPEvent } from '../external/poap';
-import { logger } from '../logging';
+import { createScopedLogger } from '../logging';
 
 export const gitpoapsRouter = Router();
 
 // TODO: who should have access to this?
 gitpoapsRouter.post('/', async function (req, res) {
-  logger.debug(`POST /gitpoaps: Body: ${req.body}`);
+  const logger = createScopedLogger('POST /gitpoaps');
+
+  logger.debug(`Body: ${req.body}`);
 
   const schemaResult = CreateGitPOAPSchema.safeParse(req.body);
 
   if (!schemaResult.success) {
-    logger.warn(
-      `POST /gitpoaps: Missing/invalid body fields in request: ${schemaResult.error.issues}`,
-    );
+    logger.warn(`Missing/invalid body fields in request: ${schemaResult.error.issues}`);
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
   logger.info(
-    `POST /gitpoaps: Request to create a new GitPOAP "${req.body.name}" for repo ${req.body.githubRepoId}`,
+    `Request to create a new GitPOAP "${req.body.name}" for repo ${req.body.githubRepoId}`,
   );
 
   // Lookup the stored info about the repo provided
@@ -35,7 +35,7 @@ gitpoapsRouter.post('/', async function (req, res) {
   });
 
   if (!repo) {
-    logger.warn("POST /gitpoaps: Repo hasn't been added to GitPOAP");
+    logger.warn("Repo hasn't been added to GitPOAP");
     return res.status(404).send({
       message: `There is no repo with id: ${req.body.githubRepoId}`,
     });
@@ -60,7 +60,7 @@ gitpoapsRouter.post('/', async function (req, res) {
     req.body.requestedCodes,
   );
 
-  logger.debug(`POST /gitpoaps: Created GitPOAP in POAP system: ${JSON.stringify(poapInfo)}`);
+  logger.debug(`Created GitPOAP in POAP system: ${JSON.stringify(poapInfo)}`);
 
   await context.prisma.gitPOAP.create({
     data: {
@@ -76,7 +76,7 @@ gitpoapsRouter.post('/', async function (req, res) {
   });
 
   logger.debug(
-    `POST /gitpoaps: Completed request to create a new GitPOAP "${req.body.name}" for repo ${req.body.githubRepoId}`,
+    `Completed request to create a new GitPOAP "${req.body.name}" for repo ${req.body.githubRepoId}`,
   );
 
   return res.status(201).send('CREATED');
