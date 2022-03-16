@@ -19,6 +19,7 @@ import { context } from './context';
 import { graphqlHTTP } from 'express-graphql';
 import { errorHandler } from './middleware';
 import { NODE_ENV, JWT_SECRET, AWS_PROFILE } from './environment';
+import { logger } from './logging';
 
 const main = async () => {
   const app = express();
@@ -47,12 +48,12 @@ const main = async () => {
   app.use(errorHandler);
 
   app.listen(PORT, () => {
-    console.log(`The application is listening on port ${PORT}\n`);
+    logger.info(`The application is listening on port ${PORT}`);
 
-    console.log('Environment: ', NODE_ENV);
-    console.log('Secret: ', JWT_SECRET);
-    console.log('Contacts table: ', CONTACTS_TABLE_NAME);
-    console.log('Using AWS Profile: ', AWS_PROFILE);
+    logger.debug('Environment: ', NODE_ENV);
+    logger.debug('Secret: ', JWT_SECRET);
+    logger.debug('Contacts table: ', CONTACTS_TABLE_NAME);
+    logger.debug('Using AWS Profile: ', AWS_PROFILE);
   });
 };
 

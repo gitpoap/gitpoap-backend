@@ -5,6 +5,7 @@ import { Context } from '../../context';
 import { POAPEvent, POAPToken } from '../../types/poap';
 import { resolveENS } from '../../util';
 import { retrievePOAPEventInfo, retrieveUsersPOAPs, retrievePOAPInfo } from '../../external/poap';
+import { logger } from '../../logging';
 
 @ObjectType()
 class FullGitPOAPData {
@@ -122,11 +123,11 @@ export class CustomGitPOAPResolver {
       case 'alphabetical':
         break;
       default:
-        console.log(`Unknown value provided for sort: ${sort}`);
+        logger.warn(`GQL userPOAPs: Unknown value provided for sort: ${sort}`);
         return null;
     }
     if ((page === null || perPage === null) && page !== perPage) {
-      console.log('"page" and "perPage" must be specified together');
+      logger.warn('GQL userPOAPs: "page" and "perPage" must be specified together');
       return null;
     }
 
@@ -151,7 +152,9 @@ export class CustomGitPOAPResolver {
     let foundPOAPIds: Record<string, Claim> = {};
     for (const claim of claims) {
       if (claim.poapTokenId === null) {
-        console.log(`Found a null poapTokenId, but the Claim has status CLAIMED. id: ${claim.id}`);
+        logger.warn(
+          `GQL userPOAPs: Found a null poapTokenId, but the Claim ID ${claim.id} has status CLAIMED`,
+        );
         continue;
       }
       foundPOAPIds[claim.poapTokenId] = claim;
@@ -318,7 +321,7 @@ export class CustomGitPOAPResolver {
     @Arg('page', { defaultValue: null }) page?: number,
   ): Promise<Holders | null> {
     if ((page === null || perPage === null) && page !== perPage) {
-      console.log('"page" and "perPage" must be specified together');
+      logger.warn('GQL gitPOAPHolders: "page" and "perPage" must be specified together');
       return null;
     }
 
@@ -378,7 +381,7 @@ export class CustomGitPOAPResolver {
         }
         break;
       default:
-        console.log(`Unknown value provided for sort: ${sort}`);
+        logger.warn(`GQL gitPOAPHolders: Unknown value provided for sort: ${sort}`);
         return null;
     }
 

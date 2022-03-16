@@ -8,6 +8,7 @@ import { RequestAccessTokenSchema, RefreshAccessTokenSchema } from '../schemas/g
 import { RefreshTokenPayload } from '../types/tokens';
 import { requestGithubOAuthToken, getGithubCurrentUserInfo } from '../external/github';
 import { JWT_SECRET } from '../environment';
+import { logger } from '../logging';
 
 export const githubRouter = Router();
 
@@ -22,11 +23,18 @@ function generateRefreshToken(authTokenId: number, githubId: number, generation:
 }
 
 githubRouter.post('/', async function (req, res) {
+  logger.debug(`POST /github: Body: ${req.body}`);
+
   const schemaResult = RequestAccessTokenSchema.safeParse(req.body);
 
   if (!schemaResult.success) {
+    logger.warn(
+      `POST /github: Missing/invalid body fields in request: ${schemaResult.error.issues}`,
+    );
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
+
+  logger.info('POST /github: Received a GitHub login request');
 
   let { code } = req.body;
 
@@ -36,21 +44,20 @@ githubRouter.post('/', async function (req, res) {
     code = code.substr(0, andIndex);
   }
 
-  console.log('GitHub code: ', code);
-  let githubToken = null;
-
+  let githubToken: string;
   try {
     githubToken = await requestGithubOAuthToken(code);
-  } catch (error) {
-    console.error('An error has occurred', error);
+  } catch (err) {
+    logger.error(`POST /github: Failed to request OAuth token with code: ${err}`);
     return res.status(400).send({
       message: 'A server error has occurred - GitHub access token exchange',
-      error: JSON.parse(error as string),
+      error: JSON.parse(err as string),
     });
   }
 
   const githubUser = await getGithubCurrentUserInfo(githubToken);
   if (githubUser === null) {
+    logger.error('POST /github: Failed to retrieve data about logged in user');
     return res.status(400).send({
       message: 'A server error has occurred - GitHub current user',
     });
@@ -81,6 +88,8 @@ githubRouter.post('/', async function (req, res) {
     },
   });
 
+  logger.debug('POST /github: Completed a GitHub login request');
+
   return res.status(200).json({
     accessToken: generateAccessToken(authToken.id, user.githubId, user.githubHandle),
     refreshToken: generateRefreshToken(authToken.id, user.githubId, authToken.generation),
@@ -88,17 +97,25 @@ githubRouter.post('/', async function (req, res) {
 });
 
 githubRouter.post('/refresh', async function (req, res) {
+  logger.debug(`POST /github/refresh: Body: ${req.body}`);
+
   const schemaResult = RefreshAccessTokenSchema.safeParse(req.body);
 
   if (!schemaResult.success) {
+    logger.warn(
+      `POST /github/refresh: Missing/invalid body fields in request: ${schemaResult.error.issues}`,
+    );
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
+
+  logger.info('POST /github/refresh: Request to refresh AuthToken');
 
   const { token } = req.body;
   let payload: RefreshTokenPayload;
   try {
     payload = <RefreshTokenPayload>verify(token, JWT_SECRET);
   } catch (err) {
+    logger.warn('POST /github/refresh: The refresh token is invalid');
     return res.status(401).send({ message: 'The refresh token is invalid' });
   }
 
@@ -116,6 +133,7 @@ githubRouter.post('/refresh', async function (req, res) {
   });
 
   if (authToken === null) {
+    logger.warn('POST /github/refresh: The refresh token is invalid');
     return res.status(401).send({ message: 'The refresh token is invalid' });
   }
 
@@ -123,7 +141,10 @@ githubRouter.post('/refresh', async function (req, res) {
   // consider the lineage to be tainted, and therefore purge it completely
   // (user will need to log back in via GitHub).
   if (payload.generation !== authToken.generation) {
-    console.log(`GitHub user ${authToken.githubId} had a refresh token reused.`);
+    logger.warn(
+      `POST /github/refresh: GitHub user ${authToken.githubId} had a refresh token reused.`,
+    );
+
     await context.prisma.authToken.delete({
       where: {
         id: authToken.id,
@@ -142,6 +163,8 @@ githubRouter.post('/refresh', async function (req, res) {
       generation: nextGeneration,
     },
   });
+
+  logger.debug('POST /github/refresh: Request to refresh AuthToken');
 
   return res.status(200).json({
     accessToken: generateAccessToken(authToken.id, payload.githubId, authToken.user.githubHandle),

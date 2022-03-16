@@ -11,6 +11,7 @@ import { AccessTokenPayload, AccessTokenPayloadWithOAuth } from '../types/tokens
 import { claimPOAP, retrievePOAPEventInfo } from '../external/poap';
 import { getGithubUserById } from '../external/github';
 import { JWT_SECRET } from '../environment';
+import { logger } from '../logging';
 
 export const claimsRouter = Router();
 
@@ -18,23 +19,32 @@ claimsRouter.post(
   '/',
   jwt({ secret: JWT_SECRET as string, algorithms: ['HS256'] }),
   async function (req, res) {
+    logger.debug(`POST /claims: Body: ${req}`);
+
     if (!req.user) {
+      logger.warn('POST /claims: No access token provided');
       return res.status(401).send({ message: 'Invalid or missing Access Token' });
     }
+
+    logger.debug(`POST /claims: Access Token Payload: ${req.user}`);
 
     const schemaResult = ClaimGitPOAPSchema.safeParse(req.body);
 
     if (!schemaResult.success) {
+      logger.warn(
+        `POST /claims: Missing/invalid body fields in request: ${schemaResult.error.issues}`,
+      );
       return res.status(400).send({ issues: schemaResult.error.issues });
     }
 
-    console.log(
-      `Received request to claim GitPOAPs with ids: ${req.body.claimIds} at address ${req.body.address}`,
+    logger.info(
+      `POST /claims: Request claiming IDs ${req.body.claimIds} for address ${req.body.address}`,
     );
 
     // Resolve ENS if provided
     const resolvedAddress = await resolveENS(context.provider, req.body.address);
     if (resolvedAddress === null) {
+      logger.warn('POST /claims: Request address is invalid');
       return res.status(400).send({ msg: `${req.body.address} is not a valid address` });
     }
 
@@ -43,6 +53,7 @@ claimsRouter.post(
       req.body.signature,
     );
     if (recoveredAddress !== resolvedAddress) {
+      logger.warn('POST /claims: Request signature is invalid');
       return res.status(401).send({ msg: 'The signature is not valid for this address and data' });
     }
 
@@ -106,6 +117,8 @@ claimsRouter.post(
 
       // If minting the POAP failed we need to revert
       if (poapData === null) {
+        logger.error(`POST /claims: Failed to mint claim ${claimId} via the POAP API`);
+
         foundClaims.pop();
 
         invalidClaims.push({
@@ -137,31 +150,44 @@ claimsRouter.post(
       });
     }
 
-    // Return 400 iff no claims were completed
-    if (foundClaims.length === 0) {
-      return res.status(400).send({
-        claimed: foundClaims,
-        invalid: invalidClaims,
-      });
+    if (invalidClaims.length > 0) {
+      logger.warn(`POST /claims: Some claims were invalid: ${invalidClaims}`);
+
+      // Return 400 iff no claims were completed
+      if (foundClaims.length === 0) {
+        return res.status(400).send({
+          claimed: foundClaims,
+          invalid: invalidClaims,
+        });
+      }
     }
+
+    logger.debug(
+      `POST /claims: Completed request claiming IDs ${req.body.claimIds} for address ${req.body.address}`,
+    );
 
     res.status(200).send({
       claimed: foundClaims,
-      invalid: invalidClaims,
+      invalid: [],
     });
   },
 );
 
 // TODO: decide how we should be doing auth for this
 claimsRouter.post('/create', jwtWithOAuth(), async function (req, res) {
+  logger.debug(`POST /claims/create: Body: ${req.body}`);
+
   const schemaResult = CreateGitPOAPClaimsSchema.safeParse(req.body);
 
   if (!schemaResult.success) {
+    logger.warn(
+      `POST /claims/create: Missing/invalid body fields in request: ${schemaResult.error.issues}`,
+    );
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
-  console.log(
-    `Received a request to create ${req.body.recipientGithubIds.length} claims for GitPOAP Id: ${req.body.gitPOAPId}`,
+  logger.info(
+    `POST /claims/create: Request to create ${req.body.recipientGithubIds.length} claims for GitPOAP Id: ${req.body.gitPOAPId}`,
   );
 
   const gitPOAPData = await context.prisma.gitPOAP.findUnique({
@@ -170,6 +196,7 @@ claimsRouter.post('/create', jwtWithOAuth(), async function (req, res) {
     },
   });
   if (gitPOAPData === null) {
+    logger.warn(`POST /claims/create: GitPOAP ID ${req.body.gitPOAPId} not found`);
     return res.status(404).send({ msg: `There is not GitPOAP with ID: ${req.body.gitPOAPId}` });
   }
 
@@ -180,7 +207,7 @@ claimsRouter.post('/create', jwtWithOAuth(), async function (req, res) {
       (<AccessTokenPayloadWithOAuth>req.user).githubOAuthToken,
     );
     if (githubUserInfo === null) {
-      console.log(`Github ID ${githubId} not found!`);
+      logger.warn(`POST /claims/create: GitHub ID ${githubId} not found!`);
       notFound.push(githubId);
     }
 
@@ -220,7 +247,11 @@ claimsRouter.post('/create', jwtWithOAuth(), async function (req, res) {
       msg: 'Some of the githubIds were not found',
       ids: notFound,
     });
-  } else {
-    return res.status(200).send('CREATED');
   }
+
+  logger.debug(
+    `POST /claims/create: Completed request to create ${req.body.recipientGithubIds.length} claims for GitPOAP Id: ${req.body.gitPOAPId}`,
+  );
+
+  return res.status(200).send('CREATED');
 });
