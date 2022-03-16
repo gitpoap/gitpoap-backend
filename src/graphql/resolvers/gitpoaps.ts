@@ -313,23 +313,84 @@ export class CustomGitPOAPResolver {
   async gitPOAPHolders(
     @Ctx() { prisma, provider }: Context,
     @Arg('gitPOAPId') gitPOAPId: number,
+    @Arg('sort', { defaultValue: 'claim-date' }) sort: string,
+    @Arg('perPage', { defaultValue: null }) perPage?: number,
+    @Arg('page', { defaultValue: null }) page?: number,
   ): Promise<Holders | null> {
+    if ((page === null || perPage === null) && page !== perPage) {
+      console.log('"page" and "perPage" must be specified together');
+      return null;
+    }
+
     type ResultType = Profile & {
       githubHandle: string;
       claimsCount: number;
     };
 
-    const results: ResultType[] = await prisma.$queryRaw`
-      SELECT p.*, u."githubHandle",
-             (SELECT COUNT(c2.id) FROM "Claim" AS c2 WHERE p.address = c2.address) AS "claimsCount"
-      FROM "Claim" AS c
-      JOIN "Profile" AS p ON c.address = p.address
-      JOIN "User" AS u ON u.id = c."userId"
-      WHERE c."gitPOAPId" = ${gitPOAPId}
-    `;
+    let results: ResultType[];
+    switch (sort) {
+      case 'claim-date':
+        if (page !== null) {
+          results = await prisma.$queryRaw`
+            SELECT p.*, u."githubHandle",
+                   (SELECT COUNT(c2.id) FROM "Claim" AS c2 WHERE p.address = c2.address) AS "claimsCount"
+            FROM "Claim" AS c
+            JOIN "Profile" AS p ON c.address = p.address
+            JOIN "User" AS u ON u.id = c."userId"
+            WHERE c."gitPOAPId" = ${gitPOAPId} AND c.status = ${ClaimStatus.CLAIMED}
+            ORDER BY c."updatedAt" DESC
+            LIMIT ${<number>perPage} OFFSET ${(<number>page - 1) * <number>perPage}
+          `;
+        } else {
+          results = await prisma.$queryRaw`
+            SELECT p.*, u."githubHandle",
+                   (SELECT COUNT(c2.id) FROM "Claim" AS c2 WHERE p.address = c2.address) AS "claimsCount"
+            FROM "Claim" AS c
+            JOIN "Profile" AS p ON c.address = p.address
+            JOIN "User" AS u ON u.id = c."userId"
+            WHERE c."gitPOAPId" = ${gitPOAPId} AND c.status = ${ClaimStatus.CLAIMED}
+            ORDER BY c."updatedAt" DESC
+          `;
+        }
+        break;
+      case 'claim-count':
+        if (page !== null) {
+          results = await prisma.$queryRaw`
+            SELECT p.*, u."githubHandle",
+                   (SELECT COUNT(c2.id) FROM "Claim" AS c2 WHERE p.address = c2.address) AS "claimsCount"
+            FROM "Claim" AS c
+            JOIN "Profile" AS p ON c.address = p.address
+            JOIN "User" AS u ON u.id = c."userId"
+            WHERE c."gitPOAPId" = ${gitPOAPId} AND c.status = ${ClaimStatus.CLAIMED}
+            ORDER BY "claimsCount" DESC
+            LIMIT ${<number>perPage} OFFSET ${(<number>page - 1) * <number>perPage}
+          `;
+        } else {
+          results = await prisma.$queryRaw`
+            SELECT p.*, u."githubHandle",
+                   (SELECT COUNT(c2.id) FROM "Claim" AS c2 WHERE p.address = c2.address) AS "claimsCount"
+            FROM "Claim" AS c
+            JOIN "Profile" AS p ON c.address = p.address
+            JOIN "User" AS u ON u.id = c."userId"
+            WHERE c."gitPOAPId" = ${gitPOAPId} AND c.status = ${ClaimStatus.CLAIMED}
+            ORDER BY "claimsCount" DESC
+          `;
+        }
+        break;
+      default:
+        console.log(`Unknown value provided for sort: ${sort}`);
+        return null;
+    }
+
+    const totalHolders = await prisma.claim.count({
+      where: {
+        gitPOAPId: gitPOAPId,
+        status: ClaimStatus.CLAIMED,
+      },
+    });
 
     const holders = {
-      totalHolders: results.length,
+      totalHolders: totalHolders,
       holders: results.map(r => {
         return <Holder>{
           profileId: r.id,

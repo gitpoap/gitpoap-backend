@@ -556,3 +556,64 @@ That returns data like:
   }
 }
 ```
+
+## GitPOAP Holders
+
+To view information about the holders of some GitPOAP, we can run a query like:
+
+```graphql
+{
+  gitPOAPHolders(gitPOAPId: 5, sort: "claim-count", page: 1, perPage: 2) {
+    totalHolders
+    holders {
+      profileId
+      address
+      bio
+      profileImageUrl
+      githubHandle
+      twitterHandle
+      personalSiteUrl
+      gitPOAPCount
+    }
+  }
+}
+```
+
+That returns data like:
+
+```json
+{
+  "data": {
+    "gitPOAPHolders": {
+      "totalHolders": 3,
+      "holders": [
+        {
+          "profileId": 4,
+          "address": "0xae95f7e7fb2fcf86148ef832faed2752ae5a358a",
+          "bio": "I am addicted to POAPs",
+          "profileImageUrl": null,
+          "githubHandle": "burz",
+          "twitterHandle": null,
+          "personalSiteUrl": null,
+          "gitPOAPCount": 3
+        },
+        {
+          "profileId": 1,
+          "address": "0x56d389c4e07a48d429035532402301310b8143a0",
+          "bio": "I like brisket.",
+          "profileImageUrl": null,
+          "githubHandle": "colfax23",
+          "twitterHandle": null,
+          "personalSiteUrl": null,
+          "gitPOAPCount": 1
+        }
+      ]
+    }
+  }
+}
+```
+
+Note that `page` and `perPage` are optional but must be specified. The options for `sort` are:
+
+- `"claim-date"` (default): sort the holders by the time they claimed the GitPOAP (descending)
+- `"claim-count"`: sort the holders by the number of claimed GitPOAPs they have (descending)
