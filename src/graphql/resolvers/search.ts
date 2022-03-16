@@ -4,6 +4,15 @@ import { Context } from '../../context';
 import { resolveENS } from '../../util';
 
 @ObjectType()
+class ProfileWithENS {
+  @Field(() => Profile)
+  profile: Profile;
+
+  @Field()
+  ens: string;
+}
+
+@ObjectType()
 class SearchResults {
   @Field(() => [User])
   usersByGithubHandle: User[];
@@ -14,8 +23,8 @@ class SearchResults {
   @Field(() => [Profile])
   profilesByAddress: Profile[];
 
-  @Field(() => Profile, { nullable: true })
-  profileByENS: Profile | null;
+  @Field(() => ProfileWithENS, { nullable: true })
+  profileByENS: ProfileWithENS | null;
 }
 
 @Resolver()
@@ -44,11 +53,17 @@ export class CustomSearchResolver {
     let profileByENS = null;
     const resolvedAddress = await resolveENS(provider, text);
     if (resolvedAddress !== text && resolvedAddress !== null) {
-      profileByENS = await prisma.profile.findUnique({
+      const result = await prisma.profile.findUnique({
         where: {
           address: resolvedAddress.toLowerCase(),
         },
       });
+      if (result !== null) {
+        profileByENS = {
+          profile: result,
+          ens: text,
+        };
+      }
     }
 
     return {
