@@ -105,7 +105,9 @@ async function makePOAPRequest(url: string, method: string, body: string | null)
     const poapResponse = await fetch(url, requestOptions);
 
     if (poapResponse.status >= 400) {
-      logger.warn(`Bad response from POAP API: ${await poapResponse.text()}`);
+      logger.warn(
+        `Bad response (${poapResponse.status}) from POAP API: ${await poapResponse.text()}`,
+      );
       return null;
     }
 

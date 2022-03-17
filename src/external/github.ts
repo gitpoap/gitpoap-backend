@@ -52,7 +52,9 @@ async function makeGithubAPIRequest(url: string, githubToken: string) {
     });
 
     if (githubResponse.status >= 400) {
-      logger.warn(`Bad response from GitHub: ${await githubResponse.text()}`);
+      logger.warn(
+        `Bad response (${githubResponse.status}) from GitHub: ${await githubResponse.text()}`,
+      );
       return null;
     }
 
