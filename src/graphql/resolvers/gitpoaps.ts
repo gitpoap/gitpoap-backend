@@ -8,7 +8,16 @@ import { retrievePOAPEventInfo, retrieveUsersPOAPs, retrievePOAPInfo } from '../
 import { createScopedLogger } from '../../logging';
 
 @ObjectType()
-class FullGitPOAPData {
+class FullGitPOAPEventData {
+  @Field(() => GitPOAP)
+  gitPOAP: GitPOAP;
+
+  @Field(() => POAPEvent)
+  event: POAPEvent;
+}
+
+@ObjectType()
+class FullClaimedGitPOAPData {
   @Field(() => Claim)
   claim: Claim;
 
@@ -24,8 +33,8 @@ class UserPOAPs {
   @Field()
   totalPOAPs: number;
 
-  @Field(() => [FullGitPOAPData])
-  gitPOAPs: FullGitPOAPData[];
+  @Field(() => [FullClaimedGitPOAPData])
+  gitPOAPs: FullClaimedGitPOAPData[];
 
   @Field(() => [POAPToken])
   poaps: POAPToken[];
@@ -45,8 +54,8 @@ class GitPOAPWithClaimsCount {
 
 @ObjectType()
 class UserFeaturedPOAPs {
-  @Field(() => [FullGitPOAPData])
-  gitPOAPs: FullGitPOAPData[];
+  @Field(() => [FullClaimedGitPOAPData])
+  gitPOAPs: FullClaimedGitPOAPData[];
 
   @Field(() => [POAPToken])
   poaps: POAPToken[];
@@ -121,6 +130,34 @@ export class CustomGitPOAPResolver {
     logger.debug('Completed request for the count of GitPOAPs created last month');
 
     return result._count.id;
+  }
+
+  @Query(returns => FullGitPOAPEventData, { nullable: true })
+  async gitPOAPEvent(
+    @Ctx() { prisma }: Context,
+    @Arg('id') id: number,
+  ): Promise<FullGitPOAPEventData | null> {
+    const logger = createScopedLogger('GQL gitPOAP');
+
+    logger.info(`Request for info about GitPOAP ${id}`);
+
+    const gitPOAP = await prisma.gitPOAP.findUnique({
+      where: { id },
+    });
+    if (gitPOAP === null) {
+      logger.warn(`Failed to find GitPOAP with id: ${id}`);
+      return null;
+    }
+
+    const event = await retrievePOAPEventInfo(gitPOAP.poapEventId);
+    if (event === null) {
+      logger.error(`Failed to query event ${gitPOAP.poapEventId} data from POAP API`);
+      return null;
+    }
+
+    logger.debug(`Completed request for info about GitPOAP ${id}`);
+
+    return { gitPOAP, event };
   }
 
   @Query(returns => UserPOAPs, { nullable: true })
@@ -280,7 +317,6 @@ export class CustomGitPOAPResolver {
       const { claimsCount, ...gitPOAP } = result;
 
       const event = await retrievePOAPEventInfo(gitPOAP.poapEventId);
-
       if (event === null) {
         logger.error(`Failed to query event ${gitPOAP.poapEventId} data from POAP API`);
         return null;
