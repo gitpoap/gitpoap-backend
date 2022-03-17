@@ -626,3 +626,39 @@ Note that `page` and `perPage` are optional but must be specified. The options f
 
 - `"claim-date"` (default): sort the holders by the time they claimed the GitPOAP (descending)
 - `"claim-count"`: sort the holders by the number of claimed GitPOAPs they have (descending)
+
+## GitPOAP Event Info
+
+To retrieve info about a GitPOAP event, we can run a query like:
+
+```graphql
+{
+  gitPOAPEvent(id: 3) {
+    gitPOAP {
+      id
+    }
+    event {
+      name
+      image_url
+    }
+  }
+}
+```
+
+that returns data like:
+
+```json
+{
+  "data": {
+    "gitPOAPEvent": {
+      "gitPOAP": {
+        "id": 3
+      },
+      "event": {
+        "name": "DevCon1",
+        "image_url": "https://www.poap.xyz/events/badges/devcon1.png"
+      }
+    }
+  }
+}
+```
