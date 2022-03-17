@@ -19,10 +19,17 @@ import { context } from './context';
 import { graphqlHTTP } from 'express-graphql';
 import { errorHandler } from './middleware';
 import { NODE_ENV, JWT_SECRET, AWS_PROFILE } from './environment';
-import { createScopedLogger } from './logging';
+import { createScopedLogger, updateLogLevel } from './logging';
+import minimist from 'minimist';
 
 const main = async () => {
   const logger = createScopedLogger('main');
+
+  const argv = minimist(process.argv.slice(2));
+
+  logger.info(`Command line args: ${JSON.stringify(argv)}`);
+
+  updateLogLevel(argv['level']);
 
   const app = express();
 

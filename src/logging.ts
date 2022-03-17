@@ -27,3 +27,21 @@ export function createScopedLogger(scope: string) {
     error: (msg: string) => logger.error(`${scope} (${scopeId}): ${msg}`),
   };
 }
+
+export function updateLogLevel(level: string) {
+  const lg = createScopedLogger('updateLogLevel');
+
+  switch (level) {
+    case 'debug':
+    case 'info':
+    case 'warn':
+    case 'error':
+      logger.level = level;
+      lg.info(`Updated log level to ${level}`);
+    case undefined:
+      break;
+    default:
+      lg.warn(`Unkown log level "${level}". Defaulting to "info"`);
+      break;
+  }
+}

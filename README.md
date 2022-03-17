@@ -53,3 +53,11 @@ then you can easily work on the backend API while making code changes locally (w
 # After we've already seeded the DB but want to restart the server for some reason:
 yarn run dev
 ```
+
+## Changing the Logging Level
+
+You can change the logging level by specifying one option (`debug`, `info`, `warn`, `error`) to the `--level` option
+on the command line. For example:
+```sh
+yarn run dev --level debug
+```
