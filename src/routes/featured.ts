@@ -30,7 +30,7 @@ featuredRouter.put('/', async function (req, res) {
   }
 
   const recoveredAddress = utils.verifyMessage(
-    JSON.stringify({ action: 'add', id: req.body.poapTokenId }),
+    JSON.stringify({ action: 'add', poapTokenId: req.body.poapTokenId }),
     req.body.signature,
   );
   if (recoveredAddress !== resolvedAddress) {
@@ -100,7 +100,7 @@ featuredRouter.delete('/:id', async function (req, res) {
   }
 
   const recoveredAddress = utils.verifyMessage(
-    JSON.stringify({ action: 'remove', id: req.params.id }),
+    JSON.stringify({ action: 'remove', poapTokenId: req.params.id }),
     req.body.signature,
   );
   if (recoveredAddress !== resolvedAddress) {
