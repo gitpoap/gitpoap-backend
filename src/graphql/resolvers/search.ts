@@ -39,7 +39,7 @@ export class CustomSearchResolver {
 
     logger.info(`Request to search for "${text}"`);
 
-    if (text.length < 2) {
+    if (text.length < 1) {
       logger.info('Skipping search for single character');
       return {
         usersByGithubHandle: [],
