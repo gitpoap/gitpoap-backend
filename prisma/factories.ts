@@ -1,5 +1,14 @@
 import { ClaimStatus } from '@generated/type-graphql';
-import { Prisma, User, Organization, Repo, GitPOAP, Claim, Profile } from '@prisma/client';
+import {
+  Prisma,
+  User,
+  Organization,
+  Repo,
+  GitPOAP,
+  Claim,
+  Profile,
+  FeaturedPOAP,
+} from '@prisma/client';
 import { prisma } from './seed';
 
 export class ClaimFactory {
@@ -109,6 +118,27 @@ export class GitPOAPFactory {
   };
 }
 
+export class FeaturedPOAPFactory {
+  static createFeaturedPOAP = async (
+    poapTokenId: string,
+    profileId: number,
+  ): Promise<FeaturedPOAP> => {
+    const featuredPOAP = await prisma.featuredPOAP.create({
+      data: <Prisma.FeaturedPOAPCreateInput>{
+        poapTokenId,
+        profile: {
+          connect: {
+            id: profileId,
+          },
+        },
+      },
+    });
+    console.log(`Creating featuredPOAP with id: ${featuredPOAP.id}`);
+
+    return featuredPOAP;
+  };
+}
+
 export class ProfileFactory {
   static createProfile = async (
     address: string,
@@ -131,3 +161,5 @@ export class ProfileFactory {
     return profile;
   };
 }
+
+// export class FeaturedPOAPFac
