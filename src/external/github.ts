@@ -6,7 +6,6 @@ import {
   GITHUB_APP_CLIENT_SECRET,
   GITHUB_APP_REDIRECT_URL,
 } from '../environment';
-import { logger } from '../logging';
 import { createScopedLogger } from '../logging';
 
 export async function requestGithubOAuthToken(code: string) {
