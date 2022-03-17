@@ -11,7 +11,7 @@ export const featuredRouter = Router();
 featuredRouter.put('/', async function (req, res) {
   const logger = createScopedLogger('PUT /featured');
 
-  logger.debug(`Body: ${req.body}`);
+  logger.debug(`Body: ${JSON.stringify(req.body)}`);
 
   const schemaResult = AddFeaturedSchema.safeParse(req.body);
 
@@ -81,7 +81,7 @@ featuredRouter.put('/', async function (req, res) {
 featuredRouter.delete('/:id', async function (req, res) {
   const logger = createScopedLogger('DELETE /featured/:id');
 
-  logger.debug(`Params: ${req.params} Body: ${req.body}`);
+  logger.debug(`Params: ${JSON.stringify(req.params)} Body: ${JSON.stringify(req.body)}`);
 
   const schemaResult = RemoveFeaturedSchema.safeParse(req.body);
 

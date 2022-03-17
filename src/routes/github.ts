@@ -25,7 +25,7 @@ function generateRefreshToken(authTokenId: number, githubId: number, generation:
 githubRouter.post('/', async function (req, res) {
   const logger = createScopedLogger('POST /github');
 
-  logger.debug(`Body: ${req.body}`);
+  logger.debug(`Body: ${JSON.stringify(req.body)}`);
 
   const schemaResult = RequestAccessTokenSchema.safeParse(req.body);
 
@@ -99,7 +99,7 @@ githubRouter.post('/', async function (req, res) {
 githubRouter.post('/refresh', async function (req, res) {
   const logger = createScopedLogger('POST /github/refresh');
 
-  logger.debug(`Body: ${req.body}`);
+  logger.debug(`Body: ${JSON.stringify(req.body)}`);
 
   const schemaResult = RefreshAccessTokenSchema.safeParse(req.body);
 

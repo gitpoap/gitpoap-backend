@@ -11,7 +11,7 @@ export const gitpoapsRouter = Router();
 gitpoapsRouter.post('/', async function (req, res) {
   const logger = createScopedLogger('POST /gitpoaps');
 
-  logger.debug(`Body: ${req.body}`);
+  logger.debug(`Body: ${JSON.stringify(req.body)}`);
 
   const schemaResult = CreateGitPOAPSchema.safeParse(req.body);
 
@@ -59,6 +59,10 @@ gitpoapsRouter.post('/', async function (req, res) {
     req.body.email,
     req.body.requestedCodes,
   );
+  if (poapInfo == null) {
+    logger.error('Failed to create event via POAP API');
+    return res.status(500).send({ msg: 'Failed to create POAP via API' });
+  }
 
   logger.debug(`Created GitPOAP in POAP system: ${JSON.stringify(poapInfo)}`);
 
