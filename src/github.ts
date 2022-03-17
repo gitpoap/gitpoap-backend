@@ -1,17 +1,22 @@
 import fetch from 'cross-fetch';
-import { GH_APP_CLIENT_ID, GH_APP_CLIENT_SECRET, GH_APP_REDIRECT_URL } from './constants';
-import { GITHUB_APP_URL, GITHUB_API_URL } from './environment';
+import {
+  GITHUB_URL,
+  GITHUB_API_URL,
+  GITHUB_APP_CLIENT_ID,
+  GITHUB_APP_CLIENT_SECRET,
+  GITHUB_APP_REDIRECT_URL,
+} from './environment';
 
 export async function requestGithubOAuthToken(code: string) {
   // Request to GitHub -> exchange code (from request body) for a GitHub access token
   const body = {
-    client_id: GH_APP_CLIENT_ID,
-    client_secret: GH_APP_CLIENT_SECRET,
+    client_id: GITHUB_APP_CLIENT_ID,
+    client_secret: GITHUB_APP_CLIENT_SECRET,
     code,
-    redirect_uri: GH_APP_REDIRECT_URL,
+    redirect_uri: GITHUB_APP_REDIRECT_URL,
   };
 
-  const tokenResponse = await fetch(`${GITHUB_APP_URL}/login/oauth/access_token`, {
+  const tokenResponse = await fetch(`${GITHUB_URL}/login/oauth/access_token`, {
     method: 'POST',
     headers: {
       Accept: 'application/json',
