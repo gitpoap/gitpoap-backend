@@ -149,7 +149,7 @@ claimsRouter.post(
     }
 
     if (invalidClaims.length > 0) {
-      logger.warn(`Some claims were invalid: ${invalidClaims}`);
+      logger.warn(`Some claims were invalid: ${JSON.stringify(invalidClaims)}`);
 
       // Return 400 iff no claims were completed
       if (foundClaims.length === 0) {

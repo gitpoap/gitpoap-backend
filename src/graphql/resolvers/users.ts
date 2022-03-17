@@ -2,6 +2,7 @@ import { Arg, Ctx, Field, ObjectType, Resolver, Query } from 'type-graphql';
 import { ClaimStatus, User } from '@generated/type-graphql';
 import { getLastMonthStartDatetime } from './util';
 import { Context } from '../../context';
+import { createScopedLogger } from '../../logging';
 
 @ObjectType()
 class UserWithClaimsCount {
@@ -16,12 +17,23 @@ class UserWithClaimsCount {
 export class CustomUserResolver {
   @Query(returns => Number)
   async totalContributors(@Ctx() { prisma }: Context): Promise<Number> {
+    const logger = createScopedLogger('GQL totalContributors');
+
+    logger.info('Request for total contributors');
+
     const result = await prisma.user.count();
+
+    logger.debug('Completed request for total contributors');
+
     return result;
   }
 
   @Query(returns => Number)
   async lastMonthContributors(@Ctx() { prisma }: Context): Promise<Number> {
+    const logger = createScopedLogger('GQL lastMonthContributors');
+
+    logger.info("Request for last month's contributors");
+
     const result = await prisma.user.aggregate({
       _count: {
         id: true,
@@ -30,6 +42,9 @@ export class CustomUserResolver {
         createdAt: { gt: getLastMonthStartDatetime() },
       },
     });
+
+    logger.debug("Completed request for last month's contributors");
+
     return result._count.id;
   }
 
@@ -38,6 +53,10 @@ export class CustomUserResolver {
     @Ctx() { prisma }: Context,
     @Arg('count', { defaultValue: 10 }) count: Number,
   ): Promise<UserWithClaimsCount[]> {
+    const logger = createScopedLogger('GQL mostHonoredContributors');
+
+    logger.info(`Request for ${count} most honored contributors`);
+
     type ResultType = User & {
       claimsCount: Number;
     };
@@ -59,6 +78,8 @@ export class CustomUserResolver {
 
       finalResults.push({ user, claimsCount });
     }
+
+    logger.debug(`Completed request for ${count} most honored contributors`);
 
     return finalResults;
   }

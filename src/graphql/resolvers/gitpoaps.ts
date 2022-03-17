@@ -92,12 +92,23 @@ class Holders {
 export class CustomGitPOAPResolver {
   @Query(returns => Number)
   async totalGitPOAPs(@Ctx() { prisma }: Context): Promise<Number> {
+    const logger = createScopedLogger('GQL totalGitPOAPs');
+
+    logger.info('Request for total number of GitPOAPs');
+
     const result = await prisma.gitPOAP.count();
+
+    logger.debug('Completed request for total number of GitPOAPs');
+
     return result;
   }
 
   @Query(returns => Number)
   async lastMonthGitPOAPs(@Ctx() { prisma }: Context): Promise<Number> {
+    const logger = createScopedLogger('GQL lastMonthGitPOAPs');
+
+    logger.info('Request for the count of GitPOAPs created last month');
+
     const result = await prisma.gitPOAP.aggregate({
       _count: {
         id: true,
@@ -106,6 +117,9 @@ export class CustomGitPOAPResolver {
         createdAt: { gt: getLastMonthStartDatetime() },
       },
     });
+
+    logger.debug('Completed request for the count of GitPOAPs created last month');
+
     return result._count.id;
   }
 
@@ -118,6 +132,10 @@ export class CustomGitPOAPResolver {
     @Arg('page', { defaultValue: null }) page?: number,
   ): Promise<UserPOAPs | null> {
     const logger = createScopedLogger('GQL userPOAPs');
+
+    logger.info(
+      `Request for POAPs for address ${address} using sort ${sort}, with ${perPage} results per page and page ${page}`,
+    );
 
     switch (sort) {
       case 'date':
@@ -136,11 +154,13 @@ export class CustomGitPOAPResolver {
     // Resolve ENS if provided
     const resolvedAddress = await resolveENS(provider, address);
     if (resolvedAddress === null) {
+      logger.warn('The address provided is invalid');
       return null;
     }
 
     const poaps = await retrieveUsersPOAPs(resolvedAddress);
     if (poaps === null) {
+      logger.error(`Failed to query POAPs from POAP API for address: ${resolvedAddress}`);
       return null;
     }
 
@@ -210,6 +230,10 @@ export class CustomGitPOAPResolver {
       });
     }
 
+    logger.debug(
+      `Completed request for POAPs for address ${address} using sort ${sort}, with ${perPage} results per page and page ${page}`,
+    );
+
     if (page) {
       const index = (page - 1) * <number>perPage;
       return {
@@ -233,6 +257,10 @@ export class CustomGitPOAPResolver {
     @Ctx() { prisma }: Context,
     @Arg('count', { defaultValue: 10 }) count: number,
   ): Promise<GitPOAPWithClaimsCount[] | null> {
+    const logger = createScopedLogger('GQL mostClaimedGitPOAPs');
+
+    logger.info(`Request for ${count} most claimed GitPOAPs`);
+
     type ResultType = GitPOAP & {
       claimsCount: number;
     };
@@ -254,11 +282,14 @@ export class CustomGitPOAPResolver {
       const event = await retrievePOAPEventInfo(gitPOAP.poapEventId);
 
       if (event === null) {
+        logger.error(`Failed to query event ${gitPOAP.poapEventId} data from POAP API`);
         return null;
       }
 
       finalResults.push({ gitPOAP, event, claimsCount });
     }
+
+    logger.debug(`Completed request for ${count} most claimed GitPOAPs`);
 
     return finalResults;
   }
@@ -268,9 +299,14 @@ export class CustomGitPOAPResolver {
     @Ctx() { prisma, provider }: Context,
     @Arg('address') address: string,
   ): Promise<UserFeaturedPOAPs | null> {
+    const logger = createScopedLogger('GQL profileFeaturedPOAPs');
+
+    logger.info(`Request for the featured POAPs for address: ${address}`);
+
     // Resolve ENS if provided
     const resolvedAddress = await resolveENS(provider, address);
     if (resolvedAddress === null) {
+      logger.warn('The address provided is invalid');
       return null;
     }
 
@@ -290,6 +326,7 @@ export class CustomGitPOAPResolver {
     for (const poap of poaps) {
       const poapData = await retrievePOAPInfo(poap.poapTokenId);
       if (poapData === null) {
+        logger.error(`Failed to query POAP ${poap.poapTokenId} data from POAP API`);
         return null;
       }
 
@@ -309,6 +346,8 @@ export class CustomGitPOAPResolver {
       }
     }
 
+    logger.debug(`Completed request for the featured POAPs for address: ${address}`);
+
     return results;
   }
 
@@ -321,6 +360,10 @@ export class CustomGitPOAPResolver {
     @Arg('page', { defaultValue: null }) page?: number,
   ): Promise<Holders | null> {
     const logger = createScopedLogger('GQL gitPOAPHolders');
+
+    logger.info(
+      `Request for holders of GitPOAP ${gitPOAPId} using sort ${sort}, with ${perPage} results per page and page ${page}`,
+    );
 
     if ((page === null || perPage === null) && page !== perPage) {
       logger.warn('"page" and "perPage" must be specified together');
@@ -409,6 +452,10 @@ export class CustomGitPOAPResolver {
         };
       }),
     };
+
+    logger.debug(
+      `Completed request for holders of GitPOAP ${gitPOAPId} using sort ${sort}, with ${perPage} results per page and page ${page}`,
+    );
 
     return holders;
   }

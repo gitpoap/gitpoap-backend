@@ -3,16 +3,24 @@ import { Router } from 'express';
 import jwt from 'express-jwt';
 import { dynamoDB, CONTACTS_TABLE_NAME } from '../dynamo';
 import { JWT_SECRET } from '../environment';
+import { createScopedLogger } from '../logging';
 
-const router = Router();
+export const subscribeRouter = Router();
 
-router.post(
+subscribeRouter.post(
   '/',
   jwt({ secret: JWT_SECRET as string, algorithms: ['HS256'] }),
   async function (req, res) {
+    const logger = createScopedLogger('POST /subscribe');
+
+    logger.debug(`Body: ${req.body}`);
+
     if (!req.user) {
+      logger.warn('Token is invalid');
       return res.sendStatus(401);
     } else {
+      logger.info(`Request to subscribe ${req.body.email}`);
+
       const params = {
         TableName: CONTACTS_TABLE_NAME,
         Item: {
@@ -22,9 +30,9 @@ router.post(
       };
       await dynamoDB.send(new PutItemCommand(params));
 
+      logger.debug(`Completed request to subscribe ${req.body.email}`);
+
       res.sendStatus(200);
     }
   },
 );
-
-export default router;

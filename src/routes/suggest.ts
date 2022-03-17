@@ -3,6 +3,7 @@ import { Router } from 'express';
 import jwt from 'express-jwt';
 import { dynamoDB, SUGGESTIONS_TABLE_NAME } from '../dynamo';
 import { JWT_SECRET } from '../environment';
+import { createScopedLogger } from '../logging';
 
 type SuggestionFormData = {
   email: string;
@@ -21,9 +22,16 @@ suggestRouter.post(
   '/',
   jwt({ secret: JWT_SECRET as string, algorithms: ['HS256'] }),
   async function (req, res) {
+    const logger = createScopedLogger('PUT /suggest');
+
+    logger.debug(`Body: ${req.body}`);
+
     if (!req.user) {
+      logger.warn('Token is invalid');
       return res.sendStatus(401);
     } else {
+      logger.info(`Request from ${req.body.email} to make a suggestion`);
+
       const body = req.body as SuggestionFormData;
       const params = {
         TableName: SUGGESTIONS_TABLE_NAME,
@@ -35,6 +43,8 @@ suggestRouter.post(
         },
       };
       await dynamoDB.send(new PutItemCommand(params));
+
+      logger.debug(`Completed request from ${req.body.email} to make a suggestion`);
 
       res.sendStatus(200);
     }
