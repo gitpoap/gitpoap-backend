@@ -1,7 +1,15 @@
 import 'reflect-metadata';
 import { PrismaClient } from '@prisma/client';
 import { ClaimStatus } from '@generated/type-graphql';
-import { ClaimFactory, UserFactory, OrganizationFactory, RepoFactory, GitPOAPFactory, ProfileFactory } from './factories';
+import {
+  ClaimFactory,
+  UserFactory,
+  OrganizationFactory,
+  RepoFactory,
+  GitPOAPFactory,
+  ProfileFactory,
+  FeaturedPOAPFactory,
+} from './factories';
 
 export const prisma = new PrismaClient();
 
@@ -58,41 +66,46 @@ async function main() {
   // GitPOAP 1
   const claim1 = await ClaimFactory.createClaim(gitpoap1.id, vitalik.id, ClaimStatus.CLAIMED, ADDRESSES.test1, 'thunderdome');
   const claim2 = await ClaimFactory.createClaim(gitpoap1.id, jay.id, ClaimStatus.CLAIMED, ADDRESSES.jay, '4068606');
-  const claim2a = await ClaimFactory.createClaim(gitpoap1.id, johnz.id);
+  const claim3 = await ClaimFactory.createClaim(gitpoap1.id, johnz.id);
 
   // GitPOAP 2
-  const claim3 = await ClaimFactory.createClaim(gitpoap2.id, vitalik.id, ClaimStatus.CLAIMED, ADDRESSES.test1, 'ethdenver');
-  const claim4 = await ClaimFactory.createClaim(gitpoap2.id, jay.id, ClaimStatus.CLAIMED, ADDRESSES.jay, '4078452');
-  const claim5 = await ClaimFactory.createClaim(gitpoap2.id, anthony.id);
-  const claim5a = await ClaimFactory.createClaim(gitpoap2.id, johnz.id);
+  const claim4 = await ClaimFactory.createClaim(gitpoap2.id, vitalik.id, ClaimStatus.CLAIMED, ADDRESSES.test1, 'ethdenver');
+  const claim5 = await ClaimFactory.createClaim(gitpoap2.id, jay.id, ClaimStatus.CLAIMED, ADDRESSES.jay, '4078452');
+  const claim6 = await ClaimFactory.createClaim(gitpoap2.id, anthony.id);
+  const claim7 = await ClaimFactory.createClaim(gitpoap2.id, johnz.id);
 
   // GitPOAP 3
-  const claim6 = await ClaimFactory.createClaim(gitpoap3.id, anthony.id);
-  const claim7 = await ClaimFactory.createClaim(gitpoap3.id, jay.id, ClaimStatus.CLAIMED, ADDRESSES.jay, '4082459');
-  const claim7a = await ClaimFactory.createClaim(gitpoap3.id, johnz.id);
+  const claim8 = await ClaimFactory.createClaim(gitpoap3.id, anthony.id);
+  const claim9 = await ClaimFactory.createClaim(gitpoap3.id, jay.id, ClaimStatus.CLAIMED, ADDRESSES.jay, '4082459');
+  const claim10 = await ClaimFactory.createClaim(gitpoap3.id, johnz.id);
 
   // GitPOAP 4 - GitPOAP FE Repo
-  const claim8 = await ClaimFactory.createClaim(gitpoap4.id, anthony.id);
-  const claim8a = await ClaimFactory.createClaim(gitpoap4.id, colfax.id);
-  const claim8b = await ClaimFactory.createClaim(gitpoap4.id, vitalik.id);
-  const claim9 = await ClaimFactory.createClaim(gitpoap4.id, jay.id, ClaimStatus.CLAIMED, ADDRESSES.jay, '3217451');
-  const claim9a = await ClaimFactory.createClaim(gitpoap4.id, johnz.id);
+  const claim11 = await ClaimFactory.createClaim(gitpoap4.id, anthony.id);
+  const claim12 = await ClaimFactory.createClaim(gitpoap4.id, colfax.id);
+  const claim13 = await ClaimFactory.createClaim(gitpoap4.id, vitalik.id);
+  const claim14 = await ClaimFactory.createClaim(gitpoap4.id, jay.id, ClaimStatus.CLAIMED, ADDRESSES.jay, '3217451');
+  const claim15 = await ClaimFactory.createClaim(gitpoap4.id, johnz.id);
 
   // GitPOAP 5 - GitPOAP BE Repo
-  const claim10 = await ClaimFactory.createClaim(gitpoap5.id, anthony.id, ClaimStatus.CLAIMED, ADDRESSES.anthony, '3973554');
-  const claim10a = await ClaimFactory.createClaim(gitpoap5.id, colfax.id, ClaimStatus.CLAIMED, ADDRESSES.colfax, '4126448');
-  const claim11 = await ClaimFactory.createClaim(gitpoap5.id, jay.id);
-  const claim12 = await ClaimFactory.createClaim(gitpoap5.id, johnz.id);
-  const claim13 = await ClaimFactory.createClaim(gitpoap5.id, vitalik.id);
-  const claim14 = await ClaimFactory.createClaim(gitpoap5.id, anthony2.id, ClaimStatus.CLAIMED, ADDRESSES.anthony2, '123456789');
+  const claim16 = await ClaimFactory.createClaim(gitpoap5.id, anthony.id, ClaimStatus.CLAIMED, ADDRESSES.anthony, '3973554');
+  const claim17 = await ClaimFactory.createClaim(gitpoap5.id, colfax.id, ClaimStatus.CLAIMED, ADDRESSES.colfax, '4126448');
+  const claim18 = await ClaimFactory.createClaim(gitpoap5.id, jay.id);
+  const claim19 = await ClaimFactory.createClaim(gitpoap5.id, johnz.id);
+  const claim20 = await ClaimFactory.createClaim(gitpoap5.id, vitalik.id);
+  const claim21 = await ClaimFactory.createClaim(gitpoap5.id, anthony2.id, ClaimStatus.CLAIMED, ADDRESSES.anthony2, '123456789');
 
   /* Create Profiles */
   const profile1 = await ProfileFactory.createProfile(ADDRESSES.colfax, 'I like brisket.');
   const profile2 = await ProfileFactory.createProfile('0x89dab21047e6de0e77deee5f4f286d72be50b942', 'I like bbq.');
-  const profile3 = await ProfileFactory.createProfile(ADDRESSES.jay, 'I like factorio.', 'Jay PB', '0xpeebeejay', 'https://s.jay.gg');
+  const profileJay = await ProfileFactory.createProfile(ADDRESSES.jay, 'I like factorio.', 'Jay PB', '0xpeebeejay', 'https://s.jay.gg');
   const profile4 = await ProfileFactory.createProfile(ADDRESSES.anthony, 'I am addicted to POAPs', 'Anthony Burzillo');
   const profile5 = await ProfileFactory.createProfile(ADDRESSES.anthony2, 'I am not real');
   const profile6 = await ProfileFactory.createProfile(ADDRESSES.vitalik, 'I like unicorns');
+
+  /* Create Featured POAPs */
+  const featured1 = await FeaturedPOAPFactory.createFeaturedPOAP(claim14.poapTokenId!, profileJay.id); // Featured GitPOAP
+  const featured2 = await FeaturedPOAPFactory.createFeaturedPOAP(claim9.poapTokenId!, profileJay.id); // Featured GitPOAP
+  const featured3 = await FeaturedPOAPFactory.createFeaturedPOAP('3976027', profileJay.id); // Featured Classic POAP - Bangia Night
 
   console.log('DB Seeding complete. ');
 }
