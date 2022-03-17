@@ -1,1 +1,1 @@
-../../src/graphql/types/poap.ts
+../../src/types/poap.ts
