@@ -9,6 +9,16 @@ services:
     environment:
       POSTGRES_PASSWORD: foobar88
 
+  redis:
+    build:
+      context: .dockerfiles
+      dockerfile: redis.Dockerfile
+      args:
+        - GITPOAP_REDIS_USER=gitpoap-redis
+        - GITPOAP_REDIS_PASSWORD=ICanHazASecurePassword
+    ports:
+      - '6379:6379'
+
   fake-poap-auth:
     build:
       context: .
@@ -41,3 +51,5 @@ services:
     environment:
       - POAP_CLIENT_ID=a good client id
       - POAP_CLIENT_SECRET=super secret!
+      - GITPOAP_REDIS_USER=gitpoap-redis
+      - GITPOAP_REDIS_PASSWORD=ICanHazASecurePassword
