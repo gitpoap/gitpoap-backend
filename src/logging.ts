@@ -25,11 +25,13 @@ let nextScopeId = 1;
 export function createScopedLogger(scope: string) {
   let scopeId = nextScopeId++;
 
+  let format = (msg: string) => `(${scopeId.toString().padStart(7)}) ${scope}: ${msg}`;
+
   return {
-    debug: (msg: string) => logger.debug(`(${scopeId}) ${scope}: ${msg}`),
-    info: (msg: string) => logger.info(`(${scopeId}) ${scope}: ${msg}`),
-    warn: (msg: string) => logger.warn(`(${scopeId}) ${scope}: ${msg}`),
-    error: (msg: string) => logger.error(`(${scopeId}) ${scope}: ${msg}`),
+    debug: (msg: string) => logger.debug(format(msg)),
+    info: (msg: string) => logger.info(format(msg)),
+    warn: (msg: string) => logger.warn(format(msg)),
+    error: (msg: string) => logger.error(format(msg)),
   };
 }
 

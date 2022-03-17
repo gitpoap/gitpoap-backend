@@ -12,7 +12,7 @@ export const projectsRouter = Router();
 projectsRouter.post('/', jwtWithOAuth(), async function (req, res) {
   const logger = createScopedLogger('POST /projects');
 
-  logger.debug(`Body: ${req.body}`);
+  logger.debug(`Body: ${JSON.stringify(req.body)}`);
 
   const schemaResult = AddProjectSchema.safeParse(req.body);
 

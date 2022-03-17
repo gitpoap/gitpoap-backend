@@ -24,7 +24,7 @@ suggestRouter.post(
   async function (req, res) {
     const logger = createScopedLogger('PUT /suggest');
 
-    logger.debug(`Body: ${req.body}`);
+    logger.debug(`Body: ${JSON.stringify(req.body)}`);
 
     if (!req.user) {
       logger.warn('Token is invalid');

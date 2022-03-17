@@ -21,7 +21,7 @@ claimsRouter.post(
   async function (req, res) {
     const logger = createScopedLogger('POST /claims');
 
-    logger.debug(`Body: ${req}`);
+    logger.debug(`Body: ${JSON.stringify(req.body)}`);
 
     if (!req.user) {
       logger.warn('No access token provided');
@@ -175,7 +175,7 @@ claimsRouter.post(
 claimsRouter.post('/create', jwtWithOAuth(), async function (req, res) {
   const logger = createScopedLogger('POST /claims/create');
 
-  logger.debug(`Body: ${req.body}`);
+  logger.debug(`Body: ${JSON.stringify(req.body)}`);
 
   const schemaResult = CreateGitPOAPClaimsSchema.safeParse(req.body);
 
