@@ -3,6 +3,7 @@ import express from 'express';
 import fetch from 'cross-fetch';
 import { z } from 'zod';
 import * as events from './data';
+import { POAPEvent } from './poap';
 import winston from 'winston';
 
 const logger = winston.createLogger({
@@ -271,11 +272,41 @@ app.get('/token/:id', async (req, res) => {
 
   res.setHeader('Content-Type', 'application/json');
 
+  let event: POAPEvent;
+  let owner: string;
+  switch (req.params.id) {
+    case '4082459':
+      event = events.event27309; // you've met burz
+      owner = '0xaE32D159BB3ABFcAdFaBE7aBB461C2AB4805596D'; // peebeejay.eth
+      break;
+    case '3217451':
+      event = events.event19375; // gitpoap test (REAL POAP)
+      owner = '0xaE32D159BB3ABFcAdFaBE7aBB461C2AB4805596D'; // peebeejay.eth
+      break;
+    case '4078452':
+      event = events.event25149; // you've met patricio
+      owner = '0xaE32D159BB3ABFcAdFaBE7aBB461C2AB4805596D'; // peebeejay.eth
+      break;
+    case '4068606':
+      event = events.event27305; // you've met colfax
+      owner = '0xaE32D159BB3ABFcAdFaBE7aBB461C2AB4805596D'; // peebeejay.eth
+      break;
+    case '4068504':
+      event = events.event27307; // you've met jay
+      owner = '0xaE32D159BB3ABFcAdFaBE7aBB461C2AB4805596D'; // peebeejay.eth
+      break;
+
+    default:
+      event = events.event29009;
+      owner = '0x206e554084BEeC98e08043397be63C5132Cc01A1';
+      break;
+  }
+
   res.end(
     JSON.stringify({
-      event: events.event27309,
+      event,
       tokenId: req.params.id,
-      owner: '0x206e554084BEeC98e08043397be63C5132Cc01A1',
+      owner,
       chain: 'xdai',
       created: '2022-03-14',
     }),
