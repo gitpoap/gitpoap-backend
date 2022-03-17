@@ -2,6 +2,7 @@ import { Arg, Ctx, Resolver, Query } from 'type-graphql';
 import { Profile } from '@generated/type-graphql';
 import { Context } from '../../context';
 import { resolveENS } from '../../util';
+import { createScopedLogger } from '../../logging';
 
 @Resolver(of => Profile)
 export class CustomProfileResolver {
@@ -10,16 +11,24 @@ export class CustomProfileResolver {
     @Ctx() { prisma, provider }: Context,
     @Arg('address') address: string,
   ): Promise<Profile | null> {
+    const logger = createScopedLogger('GQL profileData');
+
+    logger.info(`Request data for address: ${address}`);
+
     // Resolve ENS if provided
     const resolvedAddress = await resolveENS(provider, address);
     if (resolvedAddress === null) {
       return null;
     }
 
-    return await prisma.profile.findUnique({
+    const result = await prisma.profile.findUnique({
       where: {
         address: resolvedAddress.toLowerCase(),
       },
     });
+
+    logger.debug(`Completed request data for address: ${address}`);
+
+    return result;
   }
 }

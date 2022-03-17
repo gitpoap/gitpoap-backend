@@ -1,6 +1,6 @@
 import winston from 'winston';
 
-export const logger = winston.createLogger({
+const logger = winston.createLogger({
   level: 'info',
   format: winston.format.combine(
     winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
@@ -15,11 +15,15 @@ export const logger = winston.createLogger({
   rejectionHandlers: [new winston.transports.Console()],
 });
 
+let nextScopeId = 1;
+
 export function createScopedLogger(scope: string) {
+  let scopeId = nextScopeId++;
+
   return {
-    debug: (msg: string) => logger.debug(`${scope}: ${msg}`),
-    info: (msg: string) => logger.info(`${scope}: ${msg}`),
-    warn: (msg: string) => logger.warn(`${scope}: ${msg}`),
-    error: (msg: string) => logger.error(`${scope}: ${msg}`),
+    debug: (msg: string) => logger.debug(`${scope} (${scopeId}): ${msg}`),
+    info: (msg: string) => logger.info(`${scope} (${scopeId}): ${msg}`),
+    warn: (msg: string) => logger.warn(`${scope} (${scopeId}): ${msg}`),
+    error: (msg: string) => logger.error(`${scope} (${scopeId}): ${msg}`),
   };
 }

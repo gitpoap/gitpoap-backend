@@ -2,6 +2,7 @@ import { Arg, Ctx, Field, ObjectType, Resolver, Query } from 'type-graphql';
 import { Profile, User } from '@generated/type-graphql';
 import { Context } from '../../context';
 import { resolveENS } from '../../util';
+import { createScopedLogger } from '../../logging';
 
 @ObjectType()
 class ProfileWithENS {
@@ -34,6 +35,10 @@ export class CustomSearchResolver {
     @Ctx() { prisma, provider }: Context,
     @Arg('text') text: string,
   ): Promise<SearchResults> {
+    const logger = createScopedLogger('GQL search');
+
+    logger.info(`Request to search for "${text}"`);
+
     const matchText = `%${text}%`;
     const usersByGithubHandle = await prisma.$queryRaw<User[]>`
       SELECT * FROM "User"
@@ -65,6 +70,8 @@ export class CustomSearchResolver {
         };
       }
     }
+
+    logger.debug(`Completed request to search for "${text}"`);
 
     return {
       usersByGithubHandle,

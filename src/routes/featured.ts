@@ -73,7 +73,7 @@ featuredRouter.put('/', async function (req, res) {
     },
   });
 
-  logger.info(`Completed request from ${req.body.address} for POAP ID: ${req.body.poapTokenId}`);
+  logger.debug(`Completed request from ${req.body.address} for POAP ID: ${req.body.poapTokenId}`);
 
   return res.status(200).send('ADDED');
 });
@@ -127,7 +127,7 @@ featuredRouter.delete('/:id', async function (req, res) {
     },
   });
 
-  logger.info(`Completed request from ${req.body.address} for POAP ID: ${req.params.id}`);
+  logger.debug(`Completed request from ${req.body.address} for POAP ID: ${req.params.id}`);
 
   return res.status(200).send('DELETED');
 });

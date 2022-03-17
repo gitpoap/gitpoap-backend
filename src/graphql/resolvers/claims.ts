@@ -3,6 +3,7 @@ import { Claim, ClaimStatus } from '@generated/type-graphql';
 import { Context } from '../../context';
 import { POAPEvent } from '../../types/poap';
 import { retrievePOAPEventInfo } from '../../external/poap';
+import { createScopedLogger } from '../../logging';
 
 @ObjectType()
 class FullClaimData {
@@ -20,6 +21,10 @@ export class CustomClaimResolver {
     @Ctx() { prisma }: Context,
     @Arg('githubId') githubId: number,
   ): Promise<FullClaimData[] | null> {
+    const logger = createScopedLogger('GQL userClaims');
+
+    logger.info(`Request for the claims for githubId: ${githubId}`);
+
     const claims = await prisma.claim.findMany({
       where: {
         user: {
@@ -44,6 +49,7 @@ export class CustomClaimResolver {
       const eventData = await retrievePOAPEventInfo(gitPOAP.poapEventId);
 
       if (eventData === null) {
+        logger.error(`Failed to query event ${gitPOAP.poapEventId} data from POAP API`);
         return null;
       }
 
@@ -52,6 +58,8 @@ export class CustomClaimResolver {
         event: eventData,
       });
     }
+
+    logger.debug(`Completed request for the claims for githubId: ${githubId}`);
 
     return results;
   }

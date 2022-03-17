@@ -3,7 +3,7 @@ require('dotenv').config();
 import express from 'express';
 import 'reflect-metadata';
 import cors from 'cors';
-import subscribeRouter from './routes/subscribe';
+import { subscribeRouter } from './routes/subscribe';
 import { suggestRouter } from './routes/suggest';
 import jwtRouter from './routes/jwt';
 import { claimsRouter } from './routes/claims';
