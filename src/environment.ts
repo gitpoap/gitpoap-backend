@@ -21,3 +21,5 @@ export const GITHUB_API_URL = env.get('GITHUB_API_URL').required().asString();
 export const GITHUB_APP_CLIENT_ID = env.get('GITHUB_APP_CLIENT_ID').required().asString();
 export const GITHUB_APP_CLIENT_SECRET = env.get('GITHUB_APP_CLIENT_SECRET').required().asString();
 export const GITHUB_APP_REDIRECT_URL = env.get('GITHUB_APP_REDIRECT_URL').required().asString();
+
+export const REDIS_URL = env.get('REDIS_URL').required().asString();

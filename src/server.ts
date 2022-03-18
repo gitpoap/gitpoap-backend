@@ -31,6 +31,9 @@ const main = async () => {
 
   updateLogLevel(argv['level']);
 
+  await context.redis.connect();
+  logger.info('Connected to redis');
+
   const app = express();
 
   app.use(cors());
