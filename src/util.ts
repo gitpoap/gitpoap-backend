@@ -4,6 +4,11 @@ import { createScopedLogger } from './logging';
 export async function resolveENS(provider: Provider, address: string): Promise<string | null> {
   const logger = createScopedLogger('resolveENS');
 
+  if (!address.endsWith('.eth')) {
+    logger.debug("Skipping lookup since address doesn't end with '.eth'");
+    return null;
+  }
+
   try {
     const resolvedAddress = await provider.resolveName(address);
     if (address !== resolvedAddress) {
