@@ -28,13 +28,19 @@ POAP_AUTH_URL="http://localhost:4005"
 POAP_CLIENT_ID="a good client id"
 POAP_CLIENT_SECRET="super secret!"
 
-GITHUB_APP_URL="https://github.com"
+GITHUB_URL="https://github.com"
 GITHUB_API_URL="https://api.github.com"
+
+GITHUB_APP_CLIENT_ID="foobar"
+GITHUB_APP_CLIENT_SECRET="whoville"
+GITHUB_APP_REDIRECT_URL="http://localhost:3000/login"
+
+REDIS_URL="redis://gitpoap-redis:ICanHazASecurePassword@localhost:6379"
 ```
 
 ### Entire Backend
 
-To run all of the services (`fake-poap-api`, `fake-poap-auth`, `db`, and `server`) locally
+To run all of the services (`fake-poap-api`, `fake-poap-auth`, `db`, `redis`, and `server`) locally
 (with seeded data), we can run:
 ```sh
 docker-compose up --build --force-recreate --renew-anon-volumes
@@ -42,9 +48,9 @@ docker-compose up --build --force-recreate --renew-anon-volumes
 
 ### Everything but the Server
 
-To run background services (`fake-poap-api`, `fake-poap-auth`, and `db`), we can run:
+To run background services (`fake-poap-api`, `fake-poap-auth`, `db`, and `redis`), we can run:
 ```bash
-docker-compose up --build --force-recreate --renew-anon-volumes db fake-poap-a{pi,uth}
+docker-compose up --build --force-recreate --renew-anon-volumes db fake-poap-a{pi,uth} redis
 ```
 then you can easily work on the backend API while making code changes locally (which will restart after any changes) via:
 ```sh
