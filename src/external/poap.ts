@@ -4,14 +4,20 @@ import { DateTime } from 'luxon';
 import { POAP_AUTH_URL, POAP_API_URL, POAP_CLIENT_ID, POAP_CLIENT_SECRET } from '../environment';
 import { createScopedLogger } from '../logging';
 
-const POAP_KEY_NAME = 'poap';
+// DB keys
+const POAP_DB_KEY_NAME = 'poap';
+
+// Cache prefixes
+const POAP_EVENT_CACHE_PREFIX = 'poap#event';
+const POAP_TOKEN_CACHE_PREFIX = 'poap#token';
+const POAP_USER_TOKENS_CACHE_PREFIX = 'poap#user-tokens';
 
 async function retrievePOAPToken(): Promise<string | null> {
   const logger = createScopedLogger('retrievePOAPToken');
 
   const secret = await context.prisma.secret.findUnique({
     where: {
-      name: POAP_KEY_NAME,
+      name: POAP_DB_KEY_NAME,
     },
   });
 
@@ -50,13 +56,13 @@ async function retrievePOAPToken(): Promise<string | null> {
 
   await context.prisma.secret.upsert({
     where: {
-      name: POAP_KEY_NAME,
+      name: POAP_DB_KEY_NAME,
     },
     update: {
       key: data.access_token,
     },
     create: {
-      name: POAP_KEY_NAME,
+      name: POAP_DB_KEY_NAME,
       key: data.access_token,
     },
   });
@@ -157,15 +163,90 @@ export async function claimPOAP(eventId: number, address: string, secret: string
 }
 
 export async function retrievePOAPEventInfo(eventId: number) {
-  return await makePOAPRequest(`${POAP_API_URL}/events/id/${eventId}`, 'GET', null);
+  const logger = createScopedLogger('retrievePOAPEventInfo');
+
+  const cacheResponse = await context.redis.getValue(POAP_EVENT_CACHE_PREFIX, eventId.toString());
+
+  if (cacheResponse !== null) {
+    logger.debug(`Found POAP event ${eventId} info in cache`);
+
+    return JSON.parse(cacheResponse);
+  }
+
+  logger.debug(`POAP event ${eventId} info not in cache`);
+
+  const poapResponse = await makePOAPRequest(`${POAP_API_URL}/events/id/${eventId}`, 'GET', null);
+
+  if (poapResponse !== null) {
+    // Set no TTL since we assume events don't change
+    context.redis.setValue(
+      POAP_EVENT_CACHE_PREFIX,
+      eventId.toString(),
+      JSON.stringify(poapResponse),
+    );
+  }
+
+  return poapResponse;
 }
 
 export async function retrieveUsersPOAPs(address: string) {
-  return await makePOAPRequest(`${POAP_API_URL}/actions/scan/${address}`, 'GET', null);
+  const logger = createScopedLogger('retrieveUsersPOAPs');
+
+  const cacheResponse = await context.redis.getValue(POAP_USER_TOKENS_CACHE_PREFIX, address);
+
+  if (cacheResponse !== null) {
+    logger.debug(`Found User ${address}'s POAPs in cache`);
+
+    return JSON.parse(cacheResponse);
+  }
+
+  logger.debug(`User ${address}'s POAPs not in cache`);
+
+  const poapResponse = await makePOAPRequest(
+    `${POAP_API_URL}/actions/scan/${address}`,
+    'GET',
+    null,
+  );
+
+  if (poapResponse !== null) {
+    // Cache for 1 minute
+    context.redis.setValue(
+      POAP_USER_TOKENS_CACHE_PREFIX,
+      address,
+      JSON.stringify(poapResponse),
+      60,
+    );
+  }
+
+  return poapResponse;
 }
 
 export async function retrievePOAPInfo(poapTokenId: string) {
-  return await makePOAPRequest(`${POAP_API_URL}/token/${poapTokenId}`, 'GET', null);
+  const logger = createScopedLogger('retrievePOAPInfo');
+
+  const cacheResponse = await context.redis.getValue(
+    POAP_TOKEN_CACHE_PREFIX,
+    poapTokenId.toString(),
+  );
+
+  if (cacheResponse !== null) {
+    logger.debug(`Found POAP token ${poapTokenId} info in cache`);
+  }
+
+  logger.debug(`POAP token ${poapTokenId} info not in cache`);
+
+  const poapResponse = await makePOAPRequest(`${POAP_API_URL}/token/${poapTokenId}`, 'GET', null);
+
+  if (poapResponse !== null) {
+    // Set no TTL since we assume tokens don't change (e.g. they won't be transferred)
+    context.redis.setValue(
+      POAP_TOKEN_CACHE_PREFIX,
+      poapTokenId.toString(),
+      JSON.stringify(poapResponse),
+    );
+  }
+
+  return poapResponse;
 }
 
 export async function createPOAPEvent(

@@ -11,4 +11,4 @@ npx prisma migrate dev
 # Make sure we've seeded our local db
 npx prisma db seed
 
-exec yarn run dev
+exec yarn run dev --level debug
