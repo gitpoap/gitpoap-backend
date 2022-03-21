@@ -2,7 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import { getDefaultProvider } from 'ethers';
 import { Provider } from '@ethersproject/providers';
 import { INFURA_API_KEY } from './environment';
-import { createRedisClient, RedisClient } from './redis';
+import { createRedisClient, RedisClient } from './redis/client';
 
 export interface Context {
   prisma: PrismaClient;
