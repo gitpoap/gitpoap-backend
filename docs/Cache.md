@@ -14,6 +14,6 @@ via the `deletePrefix` function provided in our client wrapper.
 
 ## ENS
 
-| Request Type | Prefix        | Key      | TTL     | Notes                                                    |
-| ------------ | ------------- | -------- | ------- | -------------------------------------------------------- |
-| Resolve ENS  | `ens#resolve` | ENS Name | Forever | We assume (for now) that ENS resolutions will not change |
+| Request Type | Prefix        | Key      | TTL     | Notes                                                             |
+| ------------ | ------------- | -------- | ------- | ----------------------------------------------------------------- |
+| Resolve ENS  | `ens#resolve` | ENS Name | 30 Days | We assume (for now) that ENS resolutions will change infrequently |

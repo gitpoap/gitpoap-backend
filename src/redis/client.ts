@@ -11,8 +11,6 @@ export type RedisClient = {
   deletePrefix: (prefix: string) => Promise<any>;
 };
 
-//export type RedisClient = RedisClientType<RedisModules, RedisScripts>;
-
 function genKey(prefix: string, key: string) {
   return `${prefix}:${key}`;
 }

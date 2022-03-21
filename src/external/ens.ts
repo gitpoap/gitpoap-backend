@@ -3,6 +3,8 @@ import { context } from '../context';
 
 const ENS_RESOLVE_CACHE_PREFIX = 'ens#resolve';
 
+const ENS_RESOLVE_TTL = 30 * 24 * 60 * 60; // 30 days in seconds
+
 export async function resolveENS(address: string): Promise<string | null> {
   const logger = createScopedLogger('resolveENS');
 
@@ -31,8 +33,8 @@ export async function resolveENS(address: string): Promise<string | null> {
       }
     }
 
-    // Set no TTL since we assume ENS resolutions won't change
-    context.redis.setValue(ENS_RESOLVE_CACHE_PREFIX, address, resolvedAddress);
+    // Set no TTL to 30 days since we assume ENS will change infrequently
+    context.redis.setValue(ENS_RESOLVE_CACHE_PREFIX, address, resolvedAddress, ENS_RESOLVE_TTL);
 
     return resolvedAddress;
   } catch (err) {
