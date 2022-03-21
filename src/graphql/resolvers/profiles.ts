@@ -1,14 +1,14 @@
 import { Arg, Ctx, Resolver, Query } from 'type-graphql';
 import { Profile } from '@generated/type-graphql';
 import { Context } from '../../context';
-import { resolveENS } from '../../util';
+import { resolveENS } from '../../external/ens';
 import { createScopedLogger } from '../../logging';
 
 @Resolver(of => Profile)
 export class CustomProfileResolver {
   @Query(returns => Profile, { nullable: true })
   async profileData(
-    @Ctx() { prisma, provider }: Context,
+    @Ctx() { prisma }: Context,
     @Arg('address') address: string,
   ): Promise<Profile | null> {
     const logger = createScopedLogger('GQL profileData');
@@ -16,7 +16,7 @@ export class CustomProfileResolver {
     logger.info(`Request data for address: ${address}`);
 
     // Resolve ENS if provided
-    const resolvedAddress = await resolveENS(provider, address);
+    const resolvedAddress = await resolveENS(address);
     if (resolvedAddress === null) {
       return null;
     }

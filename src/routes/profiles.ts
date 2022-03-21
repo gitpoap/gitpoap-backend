@@ -1,7 +1,7 @@
 import { UpdateProfileSchema } from '../schemas/profiles';
 import { Router } from 'express';
 import { context } from '../context';
-import { resolveENS } from '../util';
+import { resolveENS } from '../external/ens';
 import { utils } from 'ethers';
 import { createScopedLogger } from '../logging';
 
@@ -21,7 +21,7 @@ profilesRouter.post('/', async function (req, res) {
 
   logger.info(`Request to update profile for address: ${req.body.address}`);
 
-  const resolvedAddress = await resolveENS(context.provider, req.body.address);
+  const resolvedAddress = await resolveENS(req.body.address);
   if (resolvedAddress === null) {
     logger.warn('Request address is invalid');
     return res.status(400).send({ msg: `${req.body.address} is not a valid address` });

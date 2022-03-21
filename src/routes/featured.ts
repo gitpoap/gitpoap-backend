@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { AddFeaturedSchema, RemoveFeaturedSchema } from '../schemas/featured';
 import { context } from '../context';
-import { resolveENS } from '../util';
+import { resolveENS } from '../external/ens';
 import { utils } from 'ethers';
 import { retrievePOAPInfo } from '../external/poap';
 import { createScopedLogger } from '../logging';
@@ -23,7 +23,7 @@ featuredRouter.put('/', async function (req, res) {
   logger.info(`Request from ${req.body.address} for POAP ID: ${req.body.poapTokenId}`);
 
   // Resolve ENS if provided
-  const resolvedAddress = await resolveENS(context.provider, req.body.address);
+  const resolvedAddress = await resolveENS(req.body.address);
   if (resolvedAddress === null) {
     logger.warn('Request address is invalid');
     return res.status(400).send({ msg: `${req.body.address} is not a valid address` });
@@ -93,7 +93,7 @@ featuredRouter.delete('/:id', async function (req, res) {
   logger.info(`Received request from ${req.body.address} for POAP ID: ${req.params.id}`);
 
   // Resolve ENS if provided
-  const resolvedAddress = await resolveENS(context.provider, req.body.address);
+  const resolvedAddress = await resolveENS(req.body.address);
   if (resolvedAddress === null) {
     logger.warn('Request address is invalid');
     return res.status(400).send({ msg: `${req.body.address} is not a valid address` });
