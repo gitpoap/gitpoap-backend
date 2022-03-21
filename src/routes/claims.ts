@@ -3,7 +3,7 @@ import { Router } from 'express';
 import fetch from 'cross-fetch';
 import { context } from '../context';
 import { ClaimStatus } from '@prisma/client';
-import { resolveENS } from '../util';
+import { resolveENS } from '../external/ens';
 import { utils } from 'ethers';
 import jwt from 'express-jwt';
 import { jwtWithOAuth } from '../middleware';
@@ -40,7 +40,7 @@ claimsRouter.post(
     logger.info(`Request claiming IDs ${req.body.claimIds} for address ${req.body.address}`);
 
     // Resolve ENS if provided
-    const resolvedAddress = await resolveENS(context.provider, req.body.address);
+    const resolvedAddress = await resolveENS(req.body.address);
     if (resolvedAddress === null) {
       logger.warn('Request address is invalid');
       return res.status(400).send({ msg: `${req.body.address} is not a valid address` });

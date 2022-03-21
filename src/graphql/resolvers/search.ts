@@ -1,7 +1,7 @@
 import { Arg, Ctx, Field, ObjectType, Resolver, Query } from 'type-graphql';
 import { Profile, User } from '@generated/type-graphql';
 import { Context } from '../../context';
-import { resolveENS } from '../../util';
+import { resolveENS } from '../../external/ens';
 import { createScopedLogger } from '../../logging';
 
 @ObjectType()
@@ -31,10 +31,7 @@ class SearchResults {
 @Resolver()
 export class CustomSearchResolver {
   @Query(returns => SearchResults)
-  async search(
-    @Ctx() { prisma, provider }: Context,
-    @Arg('text') text: string,
-  ): Promise<SearchResults> {
+  async search(@Ctx() { prisma }: Context, @Arg('text') text: string): Promise<SearchResults> {
     const logger = createScopedLogger('GQL search');
 
     logger.info(`Request to search for "${text}"`);
@@ -66,7 +63,7 @@ export class CustomSearchResolver {
     `;
 
     let profileByENS = null;
-    const resolvedAddress = await resolveENS(provider, text);
+    const resolvedAddress = await resolveENS(text);
     if (resolvedAddress !== text && resolvedAddress !== null) {
       const result = await prisma.profile.findUnique({
         where: {

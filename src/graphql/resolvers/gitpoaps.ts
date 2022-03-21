@@ -3,7 +3,7 @@ import { Claim, ClaimStatus, GitPOAP, Profile } from '@generated/type-graphql';
 import { getLastMonthStartDatetime } from './util';
 import { Context } from '../../context';
 import { POAPEvent, POAPToken } from '../../types/poap';
-import { resolveENS } from '../../util';
+import { resolveENS } from '../../external/ens';
 import { retrievePOAPEventInfo, retrieveUsersPOAPs, retrievePOAPInfo } from '../../external/poap';
 import { createScopedLogger } from '../../logging';
 
@@ -162,7 +162,7 @@ export class CustomGitPOAPResolver {
 
   @Query(returns => UserPOAPs, { nullable: true })
   async userPOAPs(
-    @Ctx() { prisma, provider }: Context,
+    @Ctx() { prisma }: Context,
     @Arg('address') address: string,
     @Arg('sort', { defaultValue: 'date' }) sort: string,
     @Arg('perPage', { defaultValue: null }) perPage?: number,
@@ -189,7 +189,7 @@ export class CustomGitPOAPResolver {
     }
 
     // Resolve ENS if provided
-    const resolvedAddress = await resolveENS(provider, address);
+    const resolvedAddress = await resolveENS(address);
     if (resolvedAddress === null) {
       logger.warn('The address provided is invalid');
       return null;
@@ -332,7 +332,7 @@ export class CustomGitPOAPResolver {
 
   @Query(returns => UserFeaturedPOAPs, { nullable: true })
   async profileFeaturedPOAPs(
-    @Ctx() { prisma, provider }: Context,
+    @Ctx() { prisma }: Context,
     @Arg('address') address: string,
   ): Promise<UserFeaturedPOAPs | null> {
     const logger = createScopedLogger('GQL profileFeaturedPOAPs');
@@ -340,7 +340,7 @@ export class CustomGitPOAPResolver {
     logger.info(`Request for the featured POAPs for address: ${address}`);
 
     // Resolve ENS if provided
-    const resolvedAddress = await resolveENS(provider, address);
+    const resolvedAddress = await resolveENS(address);
     if (resolvedAddress === null) {
       logger.warn('The address provided is invalid');
       return null;
@@ -389,7 +389,7 @@ export class CustomGitPOAPResolver {
 
   @Query(returns => Holders, { nullable: true })
   async gitPOAPHolders(
-    @Ctx() { prisma, provider }: Context,
+    @Ctx() { prisma }: Context,
     @Arg('gitPOAPId') gitPOAPId: number,
     @Arg('sort', { defaultValue: 'claim-date' }) sort: string,
     @Arg('perPage', { defaultValue: null }) perPage?: number,
