@@ -6,7 +6,7 @@ export async function resolveENS(provider: Provider, address: string): Promise<s
 
   if (!address.endsWith('.eth')) {
     logger.debug("Skipping lookup since address doesn't end with '.eth'");
-    return null;
+    return address;
   }
 
   try {
