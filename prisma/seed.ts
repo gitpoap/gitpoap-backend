@@ -51,6 +51,7 @@ async function main() {
     'gitpoap',
     'http://gitpoap.io',
   );
+  const org5 = await OrganizationFactory.createOrganization(1555326, 'burz');
 
   /* Create Repos */
   const repo1 = await RepoFactory.createRepo('GitPOAP Frontend', 1, org4.id);
@@ -58,6 +59,7 @@ async function main() {
   const repo7 = await RepoFactory.createRepo('repo7', 7, org2.id);
   const repo34 = await RepoFactory.createRepo('repo34', 34, org1.id);
   const repo568 = await RepoFactory.createRepo('repo568', 568, org3.id);
+  const repoDopex = await RepoFactory.createRepo('dopex', 127534193, org5.id);
 
   /* Create GitPOAPs */
   const gitpoap1 = await GitPOAPFactory.createGitPOAP(2022, 1, repo34.id, '012345');
@@ -66,7 +68,9 @@ async function main() {
   // For GitPOAP FE Repo ~ Using generic GitPOAP related POAP for now ~ eventID: 19375
   const gitpoap4 = await GitPOAPFactory.createGitPOAP(2020, 19375, repo1.id, '345678');
   // For GitPOAP BE Repo ~ Using GitPOAP Strategy Meeting POAP for now ~ eventID: 29009
-  const gitpoap5 = await GitPOAPFactory.createGitPOAP(2020, 29009, repo2.id, '456789'); // For GitPOAP BE Repo
+  const gitpoap5 = await GitPOAPFactory.createGitPOAP(2020, 29009, repo2.id, '456789');
+  // For burz/dopex repo ~ eventID: 34634
+  const gitpoap6 = await GitPOAPFactory.createGitPOAP(2022, 34634, repoDopex.id, '304374');
 
   /* Create Claims */
   // GitPOAP 1
