@@ -28,7 +28,14 @@ profilesRouter.post('/', async function (req, res) {
   }
 
   // Validate the signature for the updates
-  const recoveredAddress = utils.verifyMessage(JSON.stringify(req.body.data), req.body.signature);
+  const recoveredAddress = utils.verifyMessage(
+    JSON.stringify({
+      site: 'gitpoap.io',
+      method: 'POST /profiles',
+      data: req.body.data,
+    }),
+    req.body.signature,
+  );
   if (recoveredAddress !== resolvedAddress) {
     logger.warn('Request signature is invalid');
     return res.status(401).send({ msg: 'The signature is not valid for this address and data' });
