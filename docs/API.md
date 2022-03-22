@@ -25,27 +25,32 @@ Data:
   "data": {
     "bio": "something cool, I guess"
   },
-  "signature": "John Hancock"
+  "signature": {
+    "data": "John Hancock",
+    "createdAt": 1647987506199
+  }
 }
 ```
 
 Note that the `"data"` object can accept additional (nullable) fields to update. Fields
 that are not specified in `"data"` will not be updated (or made to be `null`).
+`"createdAt"` should be the number returned by `Date.now()`.
 
-Also note that `"signature"` should sign something with the `"address"` like the following
-(which corresponds with the data above):
+Also note that the `"signature"`'s `"data"` field should contain the signature created with the
+`"address"` like the following:
 
 ```json
 {
   "site": "gitpoap.io",
   "method": "POST /profiles",
+  "createdAt": 1647987506199
   "data": {
     "bio": "something cool, I guess"
   }
 }
 ```
 
-where `"data"` is the same as in the request.
+where `"data"` and `"createdAt"` are the same as in the request.
 See [the appendix](https://github.com/gitpoap/gitpoap-backend/blob/main/API.md#generating-signatures)
 for further information.
 
@@ -59,21 +64,28 @@ Data:
 {
   "claimIds": [4, 5],
   "address": "colfax.eth",
-  "signature": "it is I"
+  "signature": {
+    "data": "it is I",
+    "createdAt": 1647987506199
+  }
 }
 ```
 
-The "signature" should contain the signature that the `"address"` generated for data like:
+`"createdAt"` should be the number returned by `Date.now()`.
+
+Also note that the `"signature"`'s `"data"` field should contain the signature created with the
+`"address"` like the following:
 
 ```json
 {
   "site": "gitpoap.io",
   "method": "POST /claims",
-  "claimIds": [4, 5]
+  "claimIds": [4, 5],
+  "createdAt": 1647987506199
 }
 ```
 
-where `"claimIds"` is the same as in the request.
+where `"claimIds"` and `"createdAt"` are the same as in the request.
 See [the appendix](https://github.com/gitpoap/gitpoap-backend/blob/main/API.md#generating-signatures)
 for further information.
 
@@ -87,21 +99,28 @@ Data:
 {
   "address": "0x206e554084BEeC98e08043397be63C5132Cc01A1",
   "poapTokenId": "123456789",
-  "signature": "siggy wiggy"
+  "signature": {
+    "data": "siggy wiggy",
+    "createdAt": 1647987506199
+  }
 }
 ```
 
-The "signature" should contain the signature that the `"address"` generated for the following data:
+`"createdAt"` should be the number returned by `Date.now()`.
+
+Also note that the `"signature"`'s `"data"` field should contain the signature created with the
+`"address"` like the following:
 
 ```json
 {
   "site": "gitpoap.io",
   "method": "PUT /featured",
+  "createdAt": 1647987506199,
   "poapTokenId": "123456789"
 }
 ```
 
-where `"poapTokenId"` is the same as in the request.
+where `"poapTokenId"` and `"createdAt"` are the same as in the request.
 See [the appendix](https://github.com/gitpoap/gitpoap-backend/blob/main/API.md#generating-signatures)
 for further information.
 
@@ -114,21 +133,29 @@ Data:
 ```json
 {
   "address": "0x206e554084BEeC98e08043397be63C5132Cc01A1",
-  "signature": "siggy wiggy"
+  "signature": {
+    "data": "siggy wiggy",
+    "createdAt": 1647987506199
+  }
 }
 ```
 
-The "signature" should contain the signature that the `"address"` generated for the following data:
+`"createdAt"` should be the number returned by `Date.now()`.
+
+Also note that the `"signature"`'s `"data"` field should contain the signature created with the
+`"address"` like the following:
 
 ```json
 {
   "site": "gitpoap.io",
   "method": "DELETE /featured/:id",
+  "createdAt": 1647987506199,
   "poapTokenId": "123456789"
 }
 ```
 
-where `"poapTokenId"` is the same as `":id"` in the request URL.
+where `"poapTokenId"` is the same as `":id"` in the request URL, and `"createdAt"` is the same
+as in the request body.
 See [the appendix](https://github.com/gitpoap/gitpoap-backend/blob/main/API.md#generating-signatures)
 for further information.
 
