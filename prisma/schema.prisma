@@ -33,7 +33,7 @@ model Profile {
   address         String         @unique @db.VarChar(255)
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
-  bio             String
+  bio             String?
   bannerImageUrl  String?        @db.VarChar(255)
   name            String?        @db.VarChar(255)
   profileImageUrl String?        @db.VarChar(255)
@@ -63,16 +63,16 @@ model Repo {
 }
 
 model Claim {
-  id           Int           @id @default(autoincrement())
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  status       ClaimStatus   @default(UNCLAIMED)
-  poapTokenId  String?       @unique @db.VarChar(255)
-  address      String?       @db.VarChar(255)
-  gitPOAPId    Int
-  gitPOAP      GitPOAP       @relation(fields: [gitPOAPId], references: [id])
-  userId       Int
-  user         User          @relation(fields: [userId], references: [id])
+  id          Int         @id @default(autoincrement())
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  status      ClaimStatus @default(UNCLAIMED)
+  poapTokenId String?     @unique @db.VarChar(255)
+  address     String?     @db.VarChar(255)
+  gitPOAPId   Int
+  gitPOAP     GitPOAP     @relation(fields: [gitPOAPId], references: [id])
+  userId      Int
+  user        User        @relation(fields: [userId], references: [id])
 }
 
 model GitPOAP {
