@@ -5,12 +5,18 @@ import { AccessTokenPayload } from './types/tokens';
 import { ErrorRequestHandler, RequestHandler } from 'express';
 import { JWT_SECRET } from './environment';
 import { createScopedLogger } from './logging';
+import { ADMIN_GITHUB_IDS } from './constants';
 
 export function jwtWithOAuth() {
   const jwtMiddleware = jwt({ secret: JWT_SECRET as string, algorithms: ['HS256'] });
 
   const middleware: RequestHandler = async (req, res, next) => {
-    const callback = async () => {
+    const callback = async (err?: any) => {
+      // If the previous middleware failed, pass on the error
+      if (err) {
+        next(err);
+      }
+
       if (!req.user) {
         next({ status: 400, msg: 'Invalid or missing Access Token' });
         return;
@@ -29,6 +35,37 @@ export function jwtWithOAuth() {
       }
 
       set(req, 'user.githubOAuthToken', userInfo.githubOAuthToken);
+
+      next();
+    };
+
+    jwtMiddleware(req, res, callback);
+  };
+
+  return middleware;
+}
+
+export function jwtWithAdminOAuth() {
+  const logger = createScopedLogger('jwtWithAdminOAuth');
+
+  const jwtMiddleware = jwtWithOAuth();
+
+  const middleware: RequestHandler = (req, res, next) => {
+    const callback = (err?: any) => {
+      // If the previous middleware failed, pass on the error
+      if (err) {
+        next(err);
+      }
+
+      const payload = <AccessTokenPayload>req.user;
+
+      if (!ADMIN_GITHUB_IDS.includes(payload.githubId)) {
+        logger.warn(
+          `Non-admin user (GitHub handle: ${payload.githubHandle}) attempted to use admin-only routes`,
+        );
+        next({ status: 401, msg: 'You are not privileged for this endpoint' });
+        return;
+      }
 
       next();
     };

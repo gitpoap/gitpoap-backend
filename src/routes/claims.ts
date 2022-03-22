@@ -6,7 +6,7 @@ import { ClaimStatus } from '@prisma/client';
 import { resolveENS } from '../external/ens';
 import { utils } from 'ethers';
 import jwt from 'express-jwt';
-import { jwtWithOAuth } from '../middleware';
+import { jwtWithAdminOAuth } from '../middleware';
 import { AccessTokenPayload, AccessTokenPayloadWithOAuth } from '../types/tokens';
 import { claimPOAP, retrievePOAPEventInfo } from '../external/poap';
 import { getGithubUserById } from '../external/github';
@@ -171,8 +171,7 @@ claimsRouter.post(
   },
 );
 
-// TODO: decide how we should be doing auth for this
-claimsRouter.post('/create', jwtWithOAuth(), async function (req, res) {
+claimsRouter.post('/create', jwtWithAdminOAuth(), async function (req, res) {
   const logger = createScopedLogger('POST /claims/create');
 
   logger.debug(`Body: ${JSON.stringify(req.body)}`);

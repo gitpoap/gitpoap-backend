@@ -4,11 +4,11 @@ import { context } from '../context';
 import { v4 } from 'uuid';
 import { createPOAPEvent } from '../external/poap';
 import { createScopedLogger } from '../logging';
+import { jwtWithAdminOAuth } from '../middleware';
 
 export const gitpoapsRouter = Router();
 
-// TODO: who should have access to this?
-gitpoapsRouter.post('/', async function (req, res) {
+gitpoapsRouter.post('/', jwtWithAdminOAuth(), async function (req, res) {
   const logger = createScopedLogger('POST /gitpoaps');
 
   logger.debug(`Body: ${JSON.stringify(req.body)}`);
