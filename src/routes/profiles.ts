@@ -2,7 +2,7 @@ import { UpdateProfileSchema } from '../schemas/profiles';
 import { Router } from 'express';
 import { context } from '../context';
 import { resolveENS } from '../external/ens';
-import { utils } from 'ethers';
+import { verifySignature } from '../signatures';
 import { createScopedLogger } from '../logging';
 
 export const profilesRouter = Router();
@@ -28,15 +28,9 @@ profilesRouter.post('/', async function (req, res) {
   }
 
   // Validate the signature for the updates
-  const recoveredAddress = utils.verifyMessage(
-    JSON.stringify({
-      site: 'gitpoap.io',
-      method: 'POST /profiles',
-      data: req.body.data,
-    }),
-    req.body.signature,
-  );
-  if (recoveredAddress !== resolvedAddress) {
+  if (
+    !verifySignature(resolvedAddress, 'POST /profiles', req.body.signature, { data: req.body.data })
+  ) {
     logger.warn('Request signature is invalid');
     return res.status(401).send({ msg: 'The signature is not valid for this address and data' });
   }

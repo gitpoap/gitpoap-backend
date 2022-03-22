@@ -4,7 +4,7 @@ import fetch from 'cross-fetch';
 import { context } from '../context';
 import { ClaimStatus } from '@prisma/client';
 import { resolveENS } from '../external/ens';
-import { utils } from 'ethers';
+import { verifySignature } from '../signatures';
 import jwt from 'express-jwt';
 import { jwtWithAdminOAuth } from '../middleware';
 import { AccessTokenPayload, AccessTokenPayloadWithOAuth } from '../types/tokens';
@@ -46,15 +46,11 @@ claimsRouter.post(
       return res.status(400).send({ msg: `${req.body.address} is not a valid address` });
     }
 
-    const recoveredAddress = utils.verifyMessage(
-      JSON.stringify({
-        site: 'gitpoap.io',
-        method: 'POST /claims',
+    if (
+      !verifySignature(resolvedAddress, 'POST /claims', req.body.signature, {
         claimIds: req.body.claimIds,
-      }),
-      req.body.signature,
-    );
-    if (recoveredAddress !== resolvedAddress) {
+      })
+    ) {
       logger.warn('Request signature is invalid');
       return res.status(401).send({ msg: 'The signature is not valid for this address and data' });
     }

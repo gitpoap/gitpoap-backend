@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { AddFeaturedSchema, RemoveFeaturedSchema } from '../schemas/featured';
 import { context } from '../context';
 import { resolveENS } from '../external/ens';
-import { utils } from 'ethers';
+import { verifySignature } from '../signatures';
 import { retrievePOAPInfo } from '../external/poap';
 import { createScopedLogger } from '../logging';
 
@@ -29,15 +29,11 @@ featuredRouter.put('/', async function (req, res) {
     return res.status(400).send({ msg: `${req.body.address} is not a valid address` });
   }
 
-  const recoveredAddress = utils.verifyMessage(
-    JSON.stringify({
-      site: 'gitpoap.io',
-      method: 'PUT /featured',
+  if (
+    !verifySignature(resolvedAddress, 'PUT /featured', req.body.signature, {
       poapTokenId: req.body.poapTokenId,
-    }),
-    req.body.signature,
-  );
-  if (recoveredAddress !== resolvedAddress) {
+    })
+  ) {
     logger.warn('Request signature is invalid');
     return res.status(401).send({ msg: 'The signature is not valid for this address and data' });
   }
@@ -103,15 +99,11 @@ featuredRouter.delete('/:id', async function (req, res) {
     return res.status(400).send({ msg: `${req.body.address} is not a valid address` });
   }
 
-  const recoveredAddress = utils.verifyMessage(
-    JSON.stringify({
-      site: 'gitpoap.io',
-      method: 'DELETE /featured/:id',
+  if (
+    !verifySignature(resolvedAddress, 'DELETE /featured/:id', req.body.signature, {
       poapTokenId: req.params.id,
-    }),
-    req.body.signature,
-  );
-  if (recoveredAddress !== resolvedAddress) {
+    })
+  ) {
     logger.warn('Request signature is invalid');
     return res.status(401).send({ msg: 'The signature is not valid for this address and data' });
   }
