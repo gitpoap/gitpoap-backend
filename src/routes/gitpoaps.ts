@@ -1,10 +1,10 @@
 import { CreateGitPOAPSchema } from '../schemas/gitpoaps';
 import { Router } from 'express';
 import { context } from '../context';
-import { v4 } from 'uuid';
 import { createPOAPEvent } from '../external/poap';
 import { createScopedLogger } from '../logging';
 import { jwtWithAdminOAuth } from '../middleware';
+import short from 'short-uuid';
 
 export const gitpoapsRouter = Router();
 
@@ -41,9 +41,9 @@ gitpoapsRouter.post('/', jwtWithAdminOAuth(), async function (req, res) {
     });
   }
 
-  // Create a secret code that will be used to modify the event
-  // and allow minting of POAPs
-  const secretCode = v4();
+  // Create a secret code of the form "[0-9]{6}" that will be used to
+  // modify the event and allow minting of POAPs
+  const secretCode = short('0123456789').new().slice(0, 6);
 
   // Call the POAP API to create the event
   const poapInfo = await createPOAPEvent(
