@@ -32,8 +32,20 @@ Data:
 Note that the `"data"` object can accept additional (nullable) fields to update. Fields
 that are not specified in `"data"` will not be updated (or made to be `null`).
 
-Also note that `"signature"` should contain the signature that the `"address"` generated
-for the data in the `"data"` field.
+Also note that `"signature"` should sign something with the `"address"` like the following
+(which corresponds with the data above):
+
+```json
+{
+  "site": "gitpoap.io",
+  "method": "POST /profiles",
+  "data": {
+    "bio": "something cool, I guess"
+  }
+}
+```
+
+where `"data"` is the same as in the request.
 See [the appendix](https://github.com/gitpoap/gitpoap-backend/blob/main/API.md#generating-signatures)
 for further information.
 
@@ -51,8 +63,17 @@ Data:
 }
 ```
 
-The "signature" should contain the signature that the `"address"` generated for the data
-in the `"claimIds"` field.
+The "signature" should contain the signature that the `"address"` generated for data like:
+
+```json
+{
+  "site": "gitpoap.io",
+  "method": "POST /claims",
+  "claimIds": [4, 5]
+}
+```
+
+where `"claimIds"` is the same as in the request.
 See [the appendix](https://github.com/gitpoap/gitpoap-backend/blob/main/API.md#generating-signatures)
 for further information.
 
@@ -73,9 +94,14 @@ Data:
 The "signature" should contain the signature that the `"address"` generated for the following data:
 
 ```json
-{ "action": "add", "poapTokenId": "123456789" }
+{
+  "site": "gitpoap.io",
+  "method": "PUT /featured",
+  "poapTokenId": "123456789"
+}
 ```
 
+where `"poapTokenId"` is the same as in the request.
 See [the appendix](https://github.com/gitpoap/gitpoap-backend/blob/main/API.md#generating-signatures)
 for further information.
 
@@ -95,9 +121,14 @@ Data:
 The "signature" should contain the signature that the `"address"` generated for the following data:
 
 ```json
-{ "action": "remove", "poapTokenId": "123456789" }
+{
+  "site": "gitpoap.io",
+  "method": "DELETE /featured/:id",
+  "poapTokenId": "123456789"
+}
 ```
 
+where `"poapTokenId"` is the same as `":id"` in the request URL.
 See [the appendix](https://github.com/gitpoap/gitpoap-backend/blob/main/API.md#generating-signatures)
 for further information.
 
