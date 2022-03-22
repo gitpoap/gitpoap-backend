@@ -35,11 +35,17 @@ profilesRouter.post('/', async function (req, res) {
   }
 
   try {
-    await context.prisma.profile.update({
+    await context.prisma.profile.upsert({
       where: {
         address: (<string>resolvedAddress).toLowerCase(),
       },
-      data: req.body.data,
+      update: {
+        ...req.body.data,
+      },
+      create: {
+        ...req.body.data,
+        address: (<string>resolvedAddress).toLowerCase(),
+      },
     });
   } catch (err) {
     logger.warn(`No profile for address ${req.body.address}`);
