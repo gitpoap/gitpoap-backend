@@ -60,13 +60,13 @@ async function main() {
   const repo568 = await RepoFactory.createRepo('repo568', 568, org3.id);
 
   /* Create GitPOAPs */
-  const gitpoap1 = await GitPOAPFactory.createGitPOAP(2022, 1, repo34.id, 'secret1');
-  const gitpoap2 = await GitPOAPFactory.createGitPOAP(2024, 2, repo7.id, 'secret2');
-  const gitpoap3 = await GitPOAPFactory.createGitPOAP(2015, 3, repo568.id, 'secret3');
+  const gitpoap1 = await GitPOAPFactory.createGitPOAP(2022, 1, repo34.id, '012345');
+  const gitpoap2 = await GitPOAPFactory.createGitPOAP(2024, 2, repo7.id, '123456');
+  const gitpoap3 = await GitPOAPFactory.createGitPOAP(2015, 3, repo568.id, '234567');
   // For GitPOAP FE Repo ~ Using generic GitPOAP related POAP for now ~ eventID: 19375
-  const gitpoap4 = await GitPOAPFactory.createGitPOAP(2020, 19375, repo1.id, 'secret4');
+  const gitpoap4 = await GitPOAPFactory.createGitPOAP(2020, 19375, repo1.id, '345678');
   // For GitPOAP BE Repo ~ Using GitPOAP Strategy Meeting POAP for now ~ eventID: 29009
-  const gitpoap5 = await GitPOAPFactory.createGitPOAP(2020, 29009, repo2.id, 'secret5'); // For GitPOAP BE Repo
+  const gitpoap5 = await GitPOAPFactory.createGitPOAP(2020, 29009, repo2.id, '456789'); // For GitPOAP BE Repo
 
   /* Create Claims */
   // GitPOAP 1

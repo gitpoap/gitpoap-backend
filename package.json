@@ -53,9 +53,9 @@
     "prisma": "^3.8.1",
     "redis": "^4.0.4",
     "reflect-metadata": "^0.1.13",
+    "short-uuid": "^4.2.0",
     "type-graphql": "^1.1.1",
     "typegraphql-prisma": "^0.18.4",
-    "uuid": "^8.3.2",
     "winston": "^3.6.0",
     "zod": "^3.12.0"
   },

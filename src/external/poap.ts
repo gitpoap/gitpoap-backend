@@ -3,6 +3,8 @@ import { context } from '../context';
 import { DateTime } from 'luxon';
 import { POAP_AUTH_URL, POAP_API_URL, POAP_CLIENT_ID, POAP_CLIENT_SECRET } from '../environment';
 import { createScopedLogger } from '../logging';
+import { createReadStream } from 'fs';
+import FormData from 'form-data';
 
 // DB keys
 const POAP_DB_KEY_NAME = 'poap';
@@ -90,20 +92,20 @@ async function generatePOAPHeaders(hasBody: boolean) {
   return base;
 }
 
-async function makePOAPRequest(url: string, method: string, body: string | null) {
-  const logger = createScopedLogger('makePOAPRequest');
+async function makeGenericPOAPRequest(url: string, method: string, headers: any, body: any) {
+  const logger = createScopedLogger('makeGenericPOAPRequest');
 
   let requestOptions;
   if (body !== null) {
     requestOptions = {
       method,
       body: body,
-      headers: await generatePOAPHeaders(true),
+      headers: headers,
     };
   } else {
     requestOptions = {
       method,
-      headers: await generatePOAPHeaders(false),
+      headers: headers,
     };
   }
 
@@ -120,8 +122,15 @@ async function makePOAPRequest(url: string, method: string, body: string | null)
     return await poapResponse.json();
   } catch (err) {
     logger.warn(`Error while calling POAP API: ${err}`);
+    console.log(err);
     return null;
   }
+}
+
+async function makePOAPRequest(url: string, method: string, body: string | null) {
+  const headers = await generatePOAPHeaders(body !== null);
+
+  return makeGenericPOAPRequest(url, method, headers, body);
 }
 
 async function createPOAPQR(eventId: number, secret: string) {
@@ -262,26 +271,27 @@ export async function createPOAPEvent(
   email: string,
   requested_codes: number,
 ) {
-  return await makePOAPRequest(
-    `${POAP_API_URL}/events`,
-    'POST',
-    JSON.stringify({
-      name,
-      description,
-      city: '',
-      country: '',
-      start_date,
-      end_date,
-      expiry_date,
-      year,
-      event_url,
-      virtual_event: true,
-      image,
-      secret_code,
-      event_template_id: 0,
-      email,
-      requested_codes,
-      private_event: false,
-    }),
-  );
+  let form = new FormData();
+
+  form.append('name', name);
+  form.append('description', description);
+  form.append('city', '');
+  form.append('country', '');
+  form.append('start_date', start_date);
+  form.append('end_date', end_date);
+  form.append('expiry_date', expiry_date);
+  form.append('year', year);
+  form.append('event_url', event_url);
+  form.append('virtual_event', 'true');
+  form.append('image', createReadStream('/Users/burz/Downloads/VaultBoyFO3.png'), {
+    filename: 'VaultBoyFO3.png',
+  });
+  form.append('secret_code', secret_code);
+  form.append('event_template_id', 0);
+  form.append('email', email);
+  form.append('requested_codes', requested_codes);
+  form.append('private_event', 'true');
+  let headers = { ...form.getHeaders(), ...(await generatePOAPHeaders(false)) };
+
+  return await makeGenericPOAPRequest(`${POAP_API_URL}/events`, 'POST', headers, form);
 }
