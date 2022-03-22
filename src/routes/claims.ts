@@ -47,7 +47,11 @@ claimsRouter.post(
     }
 
     const recoveredAddress = utils.verifyMessage(
-      JSON.stringify(req.body.claimIds),
+      JSON.stringify({
+        site: 'gitpoap.io',
+        method: 'POST /claims',
+        claimIds: req.body.claimIds,
+      }),
       req.body.signature,
     );
     if (recoveredAddress !== resolvedAddress) {
