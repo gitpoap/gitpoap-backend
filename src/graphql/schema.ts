@@ -1,5 +1,5 @@
 import { buildSchema, NonEmptyArray } from 'type-graphql';
-/* Don't export generated resolvers for now
+/* Don't export generated resolvers for now */
 import {
   UserCrudResolver,
   UserRelationsResolver,
@@ -16,7 +16,7 @@ import {
   FeaturedPOAPCrudResolver,
   FeaturedPOAPRelationsResolver,
 } from '@generated/type-graphql';
-*/
+
 import { CustomClaimResolver } from './resolvers/claims';
 import { CustomGitPOAPResolver } from './resolvers/gitpoaps';
 import { CustomProfileResolver } from './resolvers/profiles';
@@ -25,7 +25,7 @@ import { CustomSearchResolver } from './resolvers/search';
 import { CustomUserResolver } from './resolvers/users';
 
 const allResolvers: NonEmptyArray<Function> = [
-  /* Don't export generated resolvers for now
+  /* Don't export generated resolvers for now */
   // Generated resolvers
   UserCrudResolver,
   UserRelationsResolver,
@@ -41,7 +41,7 @@ const allResolvers: NonEmptyArray<Function> = [
   GitPOAPRelationsResolver,
   FeaturedPOAPCrudResolver,
   FeaturedPOAPRelationsResolver,
-*/
+
   // Custom resolvers
   CustomClaimResolver,
   CustomGitPOAPResolver,

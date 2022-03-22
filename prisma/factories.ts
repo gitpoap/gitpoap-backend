@@ -161,5 +161,3 @@ export class ProfileFactory {
     return profile;
   };
 }
-
-// export class FeaturedPOAPFac
