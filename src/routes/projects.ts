@@ -17,7 +17,9 @@ projectsRouter.post('/', jwtWithOAuth(), async function (req, res) {
   const schemaResult = AddProjectSchema.safeParse(req.body);
 
   if (!schemaResult.success) {
-    logger.warn(`Missing/invalid body fields in request: ${schemaResult.error.issues}`);
+    logger.warn(
+      `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
+    );
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
