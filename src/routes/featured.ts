@@ -38,15 +38,16 @@ featuredRouter.put('/', async function (req, res) {
     return res.status(401).send({ msg: 'The signature is not valid for this address and data' });
   }
 
-  const profile = await context.prisma.profile.findUnique({
+  // Get the profile and create one if it doesn't exist
+  const profile = await context.prisma.profile.upsert({
     where: {
       address: resolvedAddress.toLowerCase(),
     },
+    update: {},
+    create: {
+      address: resolvedAddress.toLowerCase(),
+    },
   });
-  if (profile === null) {
-    logger.warn(`No profile for address: ${req.body.address}`);
-    return res.status(404).send({ msg: `There is no profile for the address ${req.body.address}` });
-  }
 
   const poapData = await retrievePOAPInfo(req.body.poapTokenId);
   if (poapData === null) {
