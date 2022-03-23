@@ -19,6 +19,13 @@ services:
     ports:
       - '6379:6379'
 
+  prometheus:
+    build:
+      context: .
+      dockerfile: .dockerfiles/prometheus.Dockerfile
+    ports:
+      - '9090:9090'
+
   fake-poap-auth:
     build:
       context: .
