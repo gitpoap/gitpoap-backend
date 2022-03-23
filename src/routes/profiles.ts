@@ -2,7 +2,7 @@ import { UpdateProfileSchema } from '../schemas/profiles';
 import { Router } from 'express';
 import { context } from '../context';
 import { resolveENS } from '../external/ens';
-import { verifySignature } from '../signatures';
+import { isSignatureValid } from '../signatures';
 import { createScopedLogger } from '../logging';
 
 export const profilesRouter = Router();
@@ -29,7 +29,9 @@ profilesRouter.post('/', async function (req, res) {
 
   // Validate the signature for the updates
   if (
-    !verifySignature(resolvedAddress, 'POST /profiles', req.body.signature, { data: req.body.data })
+    !isSignatureValid(resolvedAddress, 'POST /profiles', req.body.signature, {
+      data: req.body.data,
+    })
   ) {
     logger.warn('Request signature is invalid');
     return res.status(401).send({ msg: 'The signature is not valid for this address and data' });

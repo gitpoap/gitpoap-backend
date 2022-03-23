@@ -4,7 +4,7 @@ import fetch from 'cross-fetch';
 import { context } from '../context';
 import { ClaimStatus } from '@prisma/client';
 import { resolveENS } from '../external/ens';
-import { verifySignature } from '../signatures';
+import { isSignatureValid } from '../signatures';
 import jwt from 'express-jwt';
 import { jwtWithAdminOAuth } from '../middleware';
 import { AccessTokenPayload, AccessTokenPayloadWithOAuth } from '../types/tokens';
@@ -47,7 +47,7 @@ claimsRouter.post(
     }
 
     if (
-      !verifySignature(resolvedAddress, 'POST /claims', req.body.signature, {
+      !isSignatureValid(resolvedAddress, 'POST /claims', req.body.signature, {
         claimIds: req.body.claimIds,
       })
     ) {

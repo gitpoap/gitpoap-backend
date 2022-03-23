@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { AddFeaturedSchema, RemoveFeaturedSchema } from '../schemas/featured';
 import { context } from '../context';
 import { resolveENS } from '../external/ens';
-import { verifySignature } from '../signatures';
+import { isSignatureValid } from '../signatures';
 import { retrievePOAPInfo } from '../external/poap';
 import { createScopedLogger } from '../logging';
 
@@ -30,7 +30,7 @@ featuredRouter.put('/', async function (req, res) {
   }
 
   if (
-    !verifySignature(resolvedAddress, 'PUT /featured', req.body.signature, {
+    !isSignatureValid(resolvedAddress, 'PUT /featured', req.body.signature, {
       poapTokenId: req.body.poapTokenId,
     })
   ) {
@@ -100,7 +100,7 @@ featuredRouter.delete('/:id', async function (req, res) {
   }
 
   if (
-    !verifySignature(resolvedAddress, 'DELETE /featured/:id', req.body.signature, {
+    !isSignatureValid(resolvedAddress, 'DELETE /featured/:id', req.body.signature, {
       poapTokenId: req.params.id,
     })
   ) {
