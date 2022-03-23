@@ -57,11 +57,20 @@ export class UserFactory {
 }
 
 export class OrganizationFactory {
-  static createOrganization = async (githubOrgId: number, name: string): Promise<Organization> => {
+  static createOrganization = async (
+    githubOrgId: number,
+    name: string,
+    description?: string,
+    twitterHandle?: string,
+    url?: string,
+  ): Promise<Organization> => {
     const org = await prisma.organization.create({
       data: <Prisma.OrganizationCreateInput>{
         githubOrgId,
         name,
+        description,
+        twitterHandle,
+        url,
       },
     });
     console.log(`Creating organization with id: ${org.id}`);
