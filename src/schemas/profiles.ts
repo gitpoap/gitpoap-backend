@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 const ProfileData = z.object({
-  bio: z.string(),
+  bio: z.nullable(z.string()),
   bannerImageUrl: z.nullable(z.string()),
   name: z.nullable(z.string()),
   profileImageUrl: z.nullable(z.string()),
