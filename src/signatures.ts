@@ -8,8 +8,13 @@ type Signature = {
   createdAt: number;
 };
 
-export function verifySignature(address: string, method: string, signature: Signature, data: any) {
-  const logger = createScopedLogger('verifySignature');
+export function isSignatureValid<T = Record<string, any>>(
+  address: string,
+  method: string,
+  signature: Signature,
+  data: T,
+) {
+  const logger = createScopedLogger('isSignatureValid');
 
   const createdAt = DateTime.fromSeconds(signature.createdAt / 1000.0);
 
