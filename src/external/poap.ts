@@ -266,7 +266,8 @@ export async function createPOAPEvent(
   expiry_date: string,
   year: number,
   event_url: string,
-  image: string,
+  imageName: string,
+  imageBuffer: Buffer,
   secret_code: string,
   email: string,
   requested_codes: number,
@@ -283,9 +284,7 @@ export async function createPOAPEvent(
   form.append('year', year);
   form.append('event_url', event_url);
   form.append('virtual_event', 'true');
-  form.append('image', createReadStream('/Users/burz/Downloads/VaultBoyFO3.png'), {
-    filename: 'VaultBoyFO3.png',
-  });
+  form.append('image', imageBuffer, { filename: imageName });
   form.append('secret_code', secret_code);
   form.append('event_template_id', 0);
   form.append('email', email);

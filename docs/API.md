@@ -163,7 +163,8 @@ for further information.
 
 `POST /gitpoaps`
 
-Data:
+This endpoint should receive the data as `multipart/form-data` with fields like the following (shown in JSON
+for convenience):
 
 ```json
 {
@@ -175,11 +176,13 @@ Data:
   "expiryDate": "31-Jan-2023",
   "year": 2022,
   "eventUrl": "https://github.com/gitpoap/gitpoap-backend",
-  "image": "https://gitpoap.io/favicon.png",
   "email": "burz@gitpoap.io",
   "requestedCodes": 10
 }
 ```
+
+Furthermore, there should be a part of the `multipart/form-data` named `"image"` that contains an uploaded
+image.
 
 ## Create Claims for a GitPOAP
 

@@ -5,10 +5,13 @@ import { createPOAPEvent } from '../external/poap';
 import { createScopedLogger } from '../logging';
 import { jwtWithAdminOAuth } from '../middleware';
 import short from 'short-uuid';
+import multer from 'multer';
 
 export const gitpoapsRouter = Router();
 
-gitpoapsRouter.post('/', jwtWithAdminOAuth(), async function (req, res) {
+const upload = multer();
+
+gitpoapsRouter.post('/', jwtWithAdminOAuth(), upload.single('image'), async function (req, res) {
   const logger = createScopedLogger('POST /gitpoaps');
 
   logger.debug(`Body: ${JSON.stringify(req.body)}`);
@@ -16,18 +19,25 @@ gitpoapsRouter.post('/', jwtWithAdminOAuth(), async function (req, res) {
   const schemaResult = CreateGitPOAPSchema.safeParse(req.body);
 
   if (!schemaResult.success) {
-    logger.warn(`Missing/invalid body fields in request: ${schemaResult.error.issues}`);
+    logger.warn(
+      `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
+    );
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
+  if (!req.file) {
+    const msg = 'Missing/invalid "image" upload in request';
+    logger.warn(msg);
+    return res.status(400).send({ msg });
+  }
 
-  logger.info(
-    `Request to create a new GitPOAP "${req.body.name}" for repo ${req.body.githubRepoId}`,
-  );
+  const githubRepoId = parseInt(req.body.githubRepoId, 10);
+
+  logger.info(`Request to create a new GitPOAP "${req.body.name}" for repo ${githubRepoId}`);
 
   // Lookup the stored info about the repo provided
   const repo = await context.prisma.repo.findUnique({
     where: {
-      id: req.body.githubRepoId,
+      id: githubRepoId,
     },
     include: {
       organization: true,
@@ -37,7 +47,7 @@ gitpoapsRouter.post('/', jwtWithAdminOAuth(), async function (req, res) {
   if (!repo) {
     logger.warn("Repo hasn't been added to GitPOAP");
     return res.status(404).send({
-      message: `There is no repo with id: ${req.body.githubRepoId}`,
+      message: `There is no repo with id: ${githubRepoId}`,
     });
   }
 
@@ -54,7 +64,8 @@ gitpoapsRouter.post('/', jwtWithAdminOAuth(), async function (req, res) {
     req.body.expiryDate,
     req.body.year,
     req.body.eventUrl,
-    req.body.image,
+    req.file.originalname,
+    req.file.buffer,
     secretCode,
     req.body.email,
     req.body.requestedCodes,
@@ -80,7 +91,7 @@ gitpoapsRouter.post('/', jwtWithAdminOAuth(), async function (req, res) {
   });
 
   logger.debug(
-    `Completed request to create a new GitPOAP "${req.body.name}" for repo ${req.body.githubRepoId}`,
+    `Completed request to create a new GitPOAP "${req.body.name}" for repo ${githubRepoId}`,
   );
 
   return res.status(201).send('CREATED');

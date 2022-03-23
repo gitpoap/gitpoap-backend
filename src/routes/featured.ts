@@ -16,7 +16,9 @@ featuredRouter.put('/', async function (req, res) {
   const schemaResult = AddFeaturedSchema.safeParse(req.body);
 
   if (!schemaResult.success) {
-    logger.warn(`Missing/invalid body fields in request: ${schemaResult.error.issues}`);
+    logger.warn(
+      `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
+    );
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
@@ -87,7 +89,9 @@ featuredRouter.delete('/:id', async function (req, res) {
   const schemaResult = RemoveFeaturedSchema.safeParse(req.body);
 
   if (!schemaResult.success) {
-    logger.warn(`Missing/invalid body fields in request ${schemaResult.error.issues}`);
+    logger.warn(
+      `Missing/invalid body fields in request ${JSON.stringify(schemaResult.error.issues)}`,
+    );
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
