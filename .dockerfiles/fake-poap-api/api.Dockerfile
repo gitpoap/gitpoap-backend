@@ -9,4 +9,8 @@ RUN yarn install
 COPY .dockerfiles/fake-poap-api/ .
 COPY src/types/poap.ts tsconfig.json .
 
+ENV UPLOAD_FOLDER=/var/fake-poap-api/uploads
+
+RUN mkdir -p $UPLOAD_FOLDER
+
 CMD ["yarn", "run", "dev"]

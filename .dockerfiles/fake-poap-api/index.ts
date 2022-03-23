@@ -5,6 +5,8 @@ import { z } from 'zod';
 import * as events from './data';
 import { POAPEvent } from './poap';
 import winston from 'winston';
+import multer from 'multer';
+import { extname } from 'path';
 
 const logger = winston.createLogger({
   level: 'info',
@@ -23,6 +25,61 @@ const logger = winston.createLogger({
 
 const app = express();
 const port = 4004;
+
+const UPLOAD_FOLDER = <string>process.env.UPLOAD_FOLDER;
+app.use('/public', express.static(UPLOAD_FOLDER));
+
+let eventsCache: Record<string, any> = {
+  1: events.event1,
+  2: events.event2,
+  3: events.event3,
+  27309: events.event27309,
+  27307: events.event27307,
+  27305: events.event27305,
+  25149: events.event25149,
+  19375: events.event19375,
+  29009: events.event29009,
+};
+let nextEventId = 900000;
+
+let tokensCache: Record<string, any> = {
+  4082459: {
+    event: events.event27309, // you've met burz
+    owner: '0xaE32D159BB3ABFcAdFaBE7aBB461C2AB4805596D', // peebeejay.eth
+    tokenId: '4082459',
+    chain: 'xdai',
+    created: '2022-03-14',
+  },
+  3217451: {
+    event: events.event19375, // gitpoap test (REAL POAP)
+    owner: '0xaE32D159BB3ABFcAdFaBE7aBB461C2AB4805596D', // peebeejay.eth
+    tokenId: '3217451',
+    chain: 'xdai',
+    created: '2022-03-14',
+  },
+  4078452: {
+    event: events.event25149, // you've met patricio
+    owner: '0xaE32D159BB3ABFcAdFaBE7aBB461C2AB4805596D', // peebeejay.eth
+    tokenId: '4078452',
+    chain: 'xdai',
+    created: '2022-03-14',
+  },
+  4068606: {
+    event: events.event27305, // you've met colfax
+    owner: '0xaE32D159BB3ABFcAdFaBE7aBB461C2AB4805596D', // peebeejay.eth
+    tokenId: '4068606',
+    chain: 'xdai',
+    created: '2022-03-14',
+  },
+  4068504: {
+    event: events.event27307, // you've met jay
+    owner: '0xaE32D159BB3ABFcAdFaBE7aBB461C2AB4805596D', // peebeejay.eth
+    tokenId: '4068504',
+    chain: 'xdai',
+    created: '2022-03-14',
+  },
+};
+let nextTokenId = 100000000;
 
 app.use(express.json());
 
@@ -53,6 +110,7 @@ async function validateAuth(req: express.Request) {
   }
 }
 
+// Everything is a string since it's from multipart
 const CreateEventSchema = z.object({
   name: z.string(),
   description: z.string(),
@@ -61,18 +119,26 @@ const CreateEventSchema = z.object({
   start_date: z.string(),
   end_date: z.string(),
   expiry_date: z.string(),
-  year: z.number(),
+  year: z.string(),
   event_url: z.string(),
-  virtual_event: z.boolean(),
-  image: z.string(),
+  virtual_event: z.string(),
+  //image: z.string(), Included in multipart
   secret_code: z.string(),
-  event_template_id: z.number(),
+  event_template_id: z.string(),
   email: z.string(),
-  requested_codes: z.number(),
-  private_event: z.boolean(),
+  requested_codes: z.string(),
+  private_event: z.string(),
 });
 
-app.post('/events', async (req, res) => {
+const storage = multer.diskStorage({
+  destination: UPLOAD_FOLDER,
+  filename: (req, file, cb) => {
+    return cb(null, Date.now() + extname(file.originalname));
+  },
+});
+const upload = multer({ storage });
+
+app.post('/events', upload.single('image'), async (req, res) => {
   logger.info('Received POST /events request');
 
   const schemaResult = CreateEventSchema.safeParse(req.body);
@@ -80,35 +146,42 @@ app.post('/events', async (req, res) => {
   if (!schemaResult.success) {
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
+  if (!req.file) {
+    return res.status(400).send({ msg: 'Missing image field' });
+  }
 
   if (!(await validateAuth(req))) {
     return res.status(401).send({ msg: 'The token is invalid' });
   }
 
+  const eventId = nextEventId++;
+
+  const event = {
+    id: eventId,
+    fancy_id: 'string',
+    name: req.body.name,
+    event_url: req.body.event_url,
+    image_url: `http://localhost:4004/public/${req.file.filename}`,
+    country: req.body.country,
+    city: req.body.city,
+    description: req.body.description,
+    year: parseInt(req.body.year, 10),
+    start_date: req.body.start_date,
+    end_date: req.body.end_date,
+    expiry_date: req.body.expiry_date,
+    created_date: DateTime.now().toFormat('yyyy-MM-dd'),
+    from_admin: false,
+    virtual_event: req.body.virtual_date === 'true',
+    event_template_id: parseInt(req.body.event_template_id, 10),
+    event_host_id: 0,
+    private_event: req.body.private_event === 'true',
+  };
+
   res.setHeader('Content-Type', 'application/json');
 
-  res.end(
-    JSON.stringify({
-      id: 0,
-      fancy_id: 'string',
-      name: req.body.name,
-      event_url: req.body.event_url,
-      image_url: 'string',
-      country: req.body.country,
-      city: req.body.city,
-      description: req.body.description,
-      year: req.body.year,
-      start_date: req.body.start_date,
-      end_date: req.body.end_date,
-      expiry_date: req.body.expiry_date,
-      created_date: 'string',
-      from_admin: true,
-      virtual_event: req.body.virtual_date,
-      event_template_id: req.body.event_template_id,
-      event_host_id: 0,
-      private_event: req.body.private_event,
-    }),
-  );
+  eventsCache[eventId.toString()] = event;
+
+  res.end(JSON.stringify(event));
 });
 
 app.get('/actions/scan/:address', async (req, res) => {
@@ -184,37 +257,10 @@ app.get('/events/id/:id', async (req, res) => {
 
   res.setHeader('Content-Type', 'application/json');
 
-  switch (req.params.id) {
-    case '1':
-      res.end(JSON.stringify(events.event1));
-      break;
-    case '2':
-      res.end(JSON.stringify(events.event2));
-      break;
-    case '3':
-      res.end(JSON.stringify(events.event3));
-      break;
-    case '27309':
-      res.end(JSON.stringify(events.event27309));
-      break;
-    case '27307':
-      res.end(JSON.stringify(events.event27307));
-      break;
-    case '27305':
-      res.end(JSON.stringify(events.event27305));
-      break;
-    case '25149':
-      res.end(JSON.stringify(events.event25149));
-      break;
-    case '19375':
-      res.end(JSON.stringify(events.event19375));
-      break;
-    case '29009':
-      res.end(JSON.stringify(events.event29009));
-      break;
-    default:
-      res.status(404).send(`ID ${req.params.id} NOT FOUND`);
-      break;
+  if (req.params.id in eventsCache) {
+    res.end(JSON.stringify(eventsCache[req.params.id]));
+  } else {
+    res.status(404).send(`ID ${req.params.id} NOT FOUND`);
   }
 });
 
@@ -223,8 +269,6 @@ const ClaimQRSchema = z.object({
   qr_hash: z.string(),
   secret: z.string(),
 });
-
-let tokenId = 1;
 
 app.post('/actions/claim-qr', async (req, res) => {
   logger.info('Received POST /actions/claim-qr request');
@@ -243,24 +287,26 @@ app.post('/actions/claim-qr', async (req, res) => {
 
   const today = DateTime.now().toFormat('yyyy-MM-dd');
 
-  res.end(
-    JSON.stringify({
-      id: (tokenId++).toString(),
-      qr_hash: req.body.qr_hash,
-      queue_uid: 'string',
-      event_id: 1,
-      beneficiary: req.body.address,
-      user_input: 'string',
-      signer: 'burz.eth',
-      claimed: true,
-      claimed_date: today,
-      created_date: today,
-      is_active: true,
-      event: events.event1,
-      delegated_mint: true,
-      delegated_signed_message: 'string',
-    }),
-  );
+  const token = {
+    id: (nextTokenId++).toString(),
+    qr_hash: req.body.qr_hash,
+    queue_uid: 'string',
+    event_id: 1,
+    beneficiary: req.body.address,
+    user_input: 'string',
+    signer: 'burz.eth',
+    claimed: true,
+    claimed_date: today,
+    created_date: today,
+    is_active: true,
+    event: events.event1,
+    delegated_mint: true,
+    delegated_signed_message: 'string',
+  };
+
+  tokensCache[token.id] = token;
+
+  res.end(JSON.stringify(token));
 });
 
 app.get('/token/:id', async (req, res) => {
@@ -272,45 +318,20 @@ app.get('/token/:id', async (req, res) => {
 
   res.setHeader('Content-Type', 'application/json');
 
-  let event: POAPEvent;
-  let owner: string;
-  switch (req.params.id) {
-    case '4082459':
-      event = events.event27309; // you've met burz
-      owner = '0xaE32D159BB3ABFcAdFaBE7aBB461C2AB4805596D'; // peebeejay.eth
-      break;
-    case '3217451':
-      event = events.event19375; // gitpoap test (REAL POAP)
-      owner = '0xaE32D159BB3ABFcAdFaBE7aBB461C2AB4805596D'; // peebeejay.eth
-      break;
-    case '4078452':
-      event = events.event25149; // you've met patricio
-      owner = '0xaE32D159BB3ABFcAdFaBE7aBB461C2AB4805596D'; // peebeejay.eth
-      break;
-    case '4068606':
-      event = events.event27305; // you've met colfax
-      owner = '0xaE32D159BB3ABFcAdFaBE7aBB461C2AB4805596D'; // peebeejay.eth
-      break;
-    case '4068504':
-      event = events.event27307; // you've met jay
-      owner = '0xaE32D159BB3ABFcAdFaBE7aBB461C2AB4805596D'; // peebeejay.eth
-      break;
-
-    default:
-      event = events.event29009;
-      owner = '0x206e554084BEeC98e08043397be63C5132Cc01A1';
-      break;
+  if (req.params.id in tokensCache) {
+    res.end(JSON.stringify(tokensCache[req.params.id]));
+  } else {
+    // default
+    res.end(
+      JSON.stringify({
+        event: events.event29009,
+        tokenId: req.params.id,
+        owner: '0x206e554084BEeC98e08043397be63C5132Cc01A1',
+        chain: 'xdai',
+        created: '2022-03-14',
+      }),
+    );
   }
-
-  res.end(
-    JSON.stringify({
-      event,
-      tokenId: req.params.id,
-      owner,
-      chain: 'xdai',
-      created: '2022-03-14',
-    }),
-  );
 });
 
 const RedeemRequestsSchema = z.object({

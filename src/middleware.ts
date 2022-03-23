@@ -12,11 +12,6 @@ export function jwtWithOAuth() {
 
   const middleware: RequestHandler = async (req, res, next) => {
     const callback = async (err?: any) => {
-      // If the previous middleware failed, pass on the error
-      if (err) {
-        next(err);
-      }
-
       if (!req.user) {
         next({ status: 400, msg: 'Invalid or missing Access Token' });
         return;
@@ -55,6 +50,7 @@ export function jwtWithAdminOAuth() {
       // If the previous middleware failed, pass on the error
       if (err) {
         next(err);
+        return;
       }
 
       const payload = <AccessTokenPayload>req.user;
