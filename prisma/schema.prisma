@@ -43,12 +43,15 @@ model Profile {
 }
 
 model Organization {
-  id          Int      @id @default(autoincrement())
-  githubOrgId Int      @unique
-  name        String   @db.VarChar(50)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  repos       Repo[]
+  id            Int      @id @default(autoincrement())
+  githubOrgId   Int      @unique
+  name          String   @db.VarChar(50)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  description   String?
+  twitterHandle String?  @db.VarChar(255)
+  url           String?  @db.VarChar(255)
+  repos         Repo[]
 }
 
 model Repo {
@@ -63,16 +66,16 @@ model Repo {
 }
 
 model Claim {
-  id           Int           @id @default(autoincrement())
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  status       ClaimStatus   @default(UNCLAIMED)
-  poapTokenId  String?       @unique @db.VarChar(255)
-  address      String?       @db.VarChar(255)
-  gitPOAPId    Int
-  gitPOAP      GitPOAP       @relation(fields: [gitPOAPId], references: [id])
-  userId       Int
-  user         User          @relation(fields: [userId], references: [id])
+  id          Int         @id @default(autoincrement())
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  status      ClaimStatus @default(UNCLAIMED)
+  poapTokenId String?     @unique @db.VarChar(255)
+  address     String?     @db.VarChar(255)
+  gitPOAPId   Int
+  gitPOAP     GitPOAP     @relation(fields: [gitPOAPId], references: [id])
+  userId      Int
+  user        User        @relation(fields: [userId], references: [id])
 }
 
 model GitPOAP {

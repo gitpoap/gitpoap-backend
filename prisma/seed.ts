@@ -44,7 +44,13 @@ async function main() {
   const org1 = await OrganizationFactory.createOrganization(43, 'org43');
   const org2 = await OrganizationFactory.createOrganization(7, 'seven-heaven');
   const org3 = await OrganizationFactory.createOrganization(34343, 'some-other-org');
-  const org4 = await OrganizationFactory.createOrganization(1, 'MetaRep Labs');
+  const org4 = await OrganizationFactory.createOrganization(
+    1,
+    'gitpoap',
+    'An open source and non-custodial liquidity protocol for earning interest on deposits and borrowing assets.',
+    'gitpoap',
+    'http://gitpoap.io',
+  );
 
   /* Create Repos */
   const repo1 = await RepoFactory.createRepo('GitPOAP Frontend', 1, org4.id);
