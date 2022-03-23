@@ -39,9 +39,7 @@ profilesRouter.post('/', async function (req, res) {
       where: {
         address: (<string>resolvedAddress).toLowerCase(),
       },
-      update: {
-        ...req.body.data,
-      },
+      update: req.body.data,
       create: {
         ...req.body.data,
         address: (<string>resolvedAddress).toLowerCase(),
