@@ -198,6 +198,11 @@ claimsRouter.post('/create', jwtWithAdminOAuth(), async function (req, res) {
     logger.warn(`GitPOAP ID ${req.body.gitPOAPId} not found`);
     return res.status(404).send({ msg: `There is not GitPOAP with ID: ${req.body.gitPOAPId}` });
   }
+  if (gitPOAPData.approved !== true) {
+    const msg = `GitPOAP ID ${req.body.gitPOAPId} has not been approved yet`;
+    logger.warn(msg);
+    return res.status(400).send({ msg });
+  }
 
   let notFound = [];
   for (const githubId of req.body.recipientGithubIds) {
