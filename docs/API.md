@@ -184,6 +184,9 @@ for convenience):
 Furthermore, there should be a part of the `multipart/form-data` named `"image"` that contains an uploaded
 image.
 
+Note that this endpoint requires that the (GitHub) authenticated user be an admin of GitPOAP,
+as defined by [`ADMIN_GITHUB_IDS` at `src/constants.ts`](https://github.com/gitpoap/gitpoap-backend/blob/main/src/constants.ts).
+
 ## Create Claims for a GitPOAP
 
 `POST /claims/create`
@@ -217,6 +220,15 @@ Note that `"data"` can accept multiple nullable fields to update.
 
 The (GitHub) authenticated user must be an admin (not necessarily public)
 of the organization whose info they are trying to update.
+
+## Mark a GitPOAP as Approved
+
+`PUT /gitpoaps/approve/:id`
+
+Note that the `:id` in the request is the ID of the GitPOAP in the DB.
+
+Note that this endpoint requires that the (GitHub) authenticated user be an admin of GitPOAP,
+as defined by [`ADMIN_GITHUB_IDS` at `src/constants.ts`](https://github.com/gitpoap/gitpoap-backend/blob/main/src/constants.ts).
 
 ## Appendix
 

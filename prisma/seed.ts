@@ -62,13 +62,13 @@ async function main() {
   const repoDopex = await RepoFactory.createRepo('dopex', 127534193, org5.id);
 
   /* Create GitPOAPs */
-  const gitpoap1 = await GitPOAPFactory.createGitPOAP(2022, 1, repo34.id, '012345');
-  const gitpoap2 = await GitPOAPFactory.createGitPOAP(2024, 2, repo7.id, '123456');
-  const gitpoap3 = await GitPOAPFactory.createGitPOAP(2015, 3, repo568.id, '234567');
+  const gitpoap1 = await GitPOAPFactory.createGitPOAP(2022, 1, repo34.id, '012345', true);
+  const gitpoap2 = await GitPOAPFactory.createGitPOAP(2024, 2, repo7.id, '123456', true);
+  const gitpoap3 = await GitPOAPFactory.createGitPOAP(2015, 3, repo568.id, '234567', true);
   // For GitPOAP FE Repo ~ Using generic GitPOAP related POAP for now ~ eventID: 19375
-  const gitpoap4 = await GitPOAPFactory.createGitPOAP(2020, 19375, repo1.id, '345678');
+  const gitpoap4 = await GitPOAPFactory.createGitPOAP(2020, 19375, repo1.id, '345678', true);
   // For GitPOAP BE Repo ~ Using GitPOAP Strategy Meeting POAP for now ~ eventID: 29009
-  const gitpoap5 = await GitPOAPFactory.createGitPOAP(2020, 29009, repo2.id, '456789');
+  const gitpoap5 = await GitPOAPFactory.createGitPOAP(2020, 29009, repo2.id, '456789', true);
   // For burz/dopex repo ~ eventID: 34634
   const gitpoap6 = await GitPOAPFactory.createGitPOAP(2022, 34634, repoDopex.id, '304374');
 
