@@ -89,6 +89,7 @@ model GitPOAP {
   repo        Repo      @relation(fields: [repoId], references: [id])
   claims      Claim[]
   poapSecret  String    @db.VarChar(6)
+  approved    Boolean   @default(false)
 }
 
 model AuthToken {

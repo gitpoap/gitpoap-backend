@@ -95,3 +95,27 @@ gitpoapsRouter.post('/', jwtWithAdminOAuth(), upload.single('image'), async func
 
   return res.status(201).send('CREATED');
 });
+
+gitpoapsRouter.put('/approve/:id', jwtWithAdminOAuth(), async function (req, res) {
+  const logger = createScopedLogger('PUT /gitpoaps/approve/:id');
+
+  logger.info(`Request to mark GitPOAP ${req.params.id} as approved`);
+
+  const id = parseInt(req.params.id, 10);
+
+  const gitpoap = await context.prisma.gitPOAP.update({
+    where: {
+      id,
+    },
+    data: {
+      approved: true,
+    },
+  });
+  if (gitpoap === null) {
+    const msg = `There's GitPOAP with ID: ${id}`;
+    logger.debug(msg);
+    return res.status(404).send({ msg });
+  }
+
+  return res.status(200).send('UPDATED');
+});
