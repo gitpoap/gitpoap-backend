@@ -36,7 +36,7 @@ gitpoapsRouter.post('/', jwtWithAdminOAuth(), upload.single('image'), async func
   // Lookup the stored info about the repo provided
   const repo = await context.prisma.repo.findUnique({
     where: {
-      id: githubRepoId,
+      githubRepoId,
     },
     include: {
       organization: true,
