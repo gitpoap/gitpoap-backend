@@ -105,7 +105,11 @@ export class CustomGitPOAPResolver {
 
     logger.info('Request for total number of GitPOAPs');
 
-    const result = await prisma.gitPOAP.count();
+    const result = await prisma.gitPOAP.count({
+      where: {
+        approved: true,
+      },
+    });
 
     logger.debug('Completed request for total number of GitPOAPs');
 
@@ -124,6 +128,7 @@ export class CustomGitPOAPResolver {
       },
       where: {
         createdAt: { gt: getLastMonthStartDatetime() },
+        approved: true,
       },
     });
 
