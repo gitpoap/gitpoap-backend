@@ -10,7 +10,6 @@ export const CreateGitPOAPSchema = z.object({
   expiryDate: z.string(),
   eventUrl: z.string(),
   year: z.string(),
-  //image: z.string(), // upload won't be in request body
   email: z.string(),
   requestedCodes: z.string(),
 });

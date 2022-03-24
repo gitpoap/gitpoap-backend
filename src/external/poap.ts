@@ -92,14 +92,19 @@ async function generatePOAPHeaders(hasBody: boolean) {
   return base;
 }
 
-async function makeGenericPOAPRequest(url: string, method: string, headers: any, body: any) {
+async function makeGenericPOAPRequest(
+  url: string,
+  method: string,
+  headers: Record<string, string>,
+  body: string | FormData | null,
+) {
   const logger = createScopedLogger('makeGenericPOAPRequest');
 
   let requestOptions;
   if (body !== null) {
     requestOptions = {
       method,
-      body: body,
+      body: body as any,
       headers: headers,
     };
   } else {
@@ -122,7 +127,6 @@ async function makeGenericPOAPRequest(url: string, method: string, headers: any,
     return await poapResponse.json();
   } catch (err) {
     logger.warn(`Error while calling POAP API: ${err}`);
-    console.log(err);
     return null;
   }
 }

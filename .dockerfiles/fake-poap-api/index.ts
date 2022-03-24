@@ -122,7 +122,6 @@ const CreateEventSchema = z.object({
   year: z.string(),
   event_url: z.string(),
   virtual_event: z.string(),
-  //image: z.string(), Included in multipart
   secret_code: z.string(),
   event_template_id: z.string(),
   email: z.string(),
