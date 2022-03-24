@@ -90,6 +90,9 @@ model GitPOAP {
   claims      Claim[]
   poapSecret  String        @db.VarChar(6)
   status      GitPOAPStatus @default(UNAPPROVED)
+  // If a GitPOAP is marked as ongoing then the backend will automatically
+  // request additional codes when we reach a minimum number remaining
+  ongoing     Boolean       @default(false)
   redeemCodes RedeemCode[]
 }
 

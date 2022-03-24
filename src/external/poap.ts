@@ -144,26 +144,30 @@ async function makePOAPRequest(url: string, method: string, body: string | null)
   return makeGenericPOAPRequest(url, method, headers, body);
 }
 
-async function createPOAPQR(eventId: number, secret: string) {
+export async function requestPOAPCodes(
+  event_id: number,
+  secret_code: string,
+  requested_codes: number,
+) {
   return await makePOAPRequest(
     `${POAP_API_URL}/redeem-requests`,
     'POST',
     JSON.stringify({
-      event_id: eventId,
-      requested_codes: 1,
-      secret_code: secret,
+      event_id,
+      requested_codes,
+      secret_code,
       redeem_type: 'qr_code',
     }),
   );
 }
 
-async function claimPOAPQR(address: string, qrHash: string, secret: string) {
+async function claimPOAPQR(address: string, qr_hash: string, secret: string) {
   return await makePOAPRequest(
     `${POAP_API_URL}/actions/claim-qr`,
     'POST',
     JSON.stringify({
       address,
-      qr_hash: qrHash,
+      qr_hash,
       secret,
     }),
   );
@@ -172,7 +176,7 @@ async function claimPOAPQR(address: string, qrHash: string, secret: string) {
 export async function claimPOAP(eventId: number, address: string, secret: string) {
   const logger = createScopedLogger('claimPOAP');
 
-  const qrHash = await createPOAPQR(eventId, secret);
+  const qrHash = await requestPOAPCodes(eventId, secret, 1);
 
   if (qrHash === null) {
     logger.warn('Failed to create a POAP QR hash');

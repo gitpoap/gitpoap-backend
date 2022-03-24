@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "GitPOAP" ADD COLUMN     "ongoing" BOOLEAN NOT NULL DEFAULT false;
