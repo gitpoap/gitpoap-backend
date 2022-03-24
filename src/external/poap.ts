@@ -161,7 +161,29 @@ export async function requestPOAPCodes(
   );
 }
 
-async function claimPOAPQR(address: string, qr_hash: string, secret: string) {
+async function getMintSecret(qr_hash: string) {
+  const poapResponse = await makePOAPRequest(
+    `${POAP_API_URL}/actions/claim-qr?qr_hash=${qr_hash}`,
+    'GET',
+    null,
+  );
+
+  if (poapResponse === null) {
+    return null;
+  }
+
+  return poapResponse.secret;
+}
+
+export async function redeemPOAP(address: string, qr_hash: string) {
+  const logger = createScopedLogger('redeemPOAP');
+
+  const secret = await getMintSecret(qr_hash);
+  if (secret === null) {
+    logger.error(`Failed to retrieve minting secret for qr_hash: ${qr_hash}`);
+    return null;
+  }
+
   return await makePOAPRequest(
     `${POAP_API_URL}/actions/claim-qr`,
     'POST',
@@ -171,19 +193,6 @@ async function claimPOAPQR(address: string, qr_hash: string, secret: string) {
       secret,
     }),
   );
-}
-
-export async function claimPOAP(eventId: number, address: string, secret: string) {
-  const logger = createScopedLogger('claimPOAP');
-
-  const qrHash = await requestPOAPCodes(eventId, secret, 1);
-
-  if (qrHash === null) {
-    logger.warn('Failed to create a POAP QR hash');
-    return null;
-  }
-
-  return await claimPOAPQR(address, qrHash.toString(), secret);
 }
 
 export async function retrievePOAPEventInfo(eventId: number) {

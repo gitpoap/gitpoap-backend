@@ -8,7 +8,7 @@ import { isSignatureValid } from '../signatures';
 import jwt from 'express-jwt';
 import { jwtWithAdminOAuth } from '../middleware';
 import { AccessTokenPayload, AccessTokenPayloadWithOAuth } from '../types/tokens';
-import { claimPOAP, requestPOAPCodes, retrievePOAPEventInfo } from '../external/poap';
+import { redeemPOAP, requestPOAPCodes, retrievePOAPEventInfo } from '../external/poap';
 import { getGithubUserById } from '../external/github';
 import { JWT_SECRET } from '../environment';
 import { createScopedLogger } from '../logging';
@@ -155,6 +155,23 @@ claimsRouter.post(
         continue;
       }
 
+      const redeemCode = await context.prisma.redeemCode.findFirst({
+        where: {
+          gitPOAPId: claim.gitPOAP.id,
+        },
+      });
+      if (redeemCode === null) {
+        const msg = `GitPOAP ID ${claim.gitPOAP.id} has no more redeem codes`;
+        logger.error(msg);
+        invalidClaims.push({ claimId: claimId, reason: msg });
+        continue;
+      }
+      await context.prisma.redeemCode.delete({
+        where: {
+          id: redeemCode.id,
+        },
+      });
+
       // Mark that we are processing the claim
       await context.prisma.claim.update({
         where: {
@@ -165,25 +182,27 @@ claimsRouter.post(
           address: resolvedAddress.toLowerCase(),
         },
       });
-      foundClaims.push(claimId);
 
-      const poapData = await claimPOAP(
-        claim.gitPOAP.poapEventId,
-        req.body.address,
-        claim.gitPOAP.poapSecret,
-      );
-
+      const poapData = await redeemPOAP(req.body.address, redeemCode.code);
       // If minting the POAP failed we need to revert
       if (poapData === null) {
         logger.error(`Failed to mint claim ${claimId} via the POAP API`);
-
-        foundClaims.pop();
 
         invalidClaims.push({
           claimId: claimId,
           reason: 'Failed to claim via POAP API',
         });
 
+        await context.prisma.redeemCode.create({
+          data: {
+            gitPOAP: {
+              connect: {
+                id: claim.gitPOAP.id,
+              },
+            },
+            code: redeemCode.code,
+          },
+        });
         await context.prisma.claim.update({
           where: {
             id: claimId,
@@ -195,6 +214,7 @@ claimsRouter.post(
 
         continue;
       }
+      foundClaims.push(claimId);
 
       // Mark that the POAP has been claimed
       await context.prisma.claim.update({
