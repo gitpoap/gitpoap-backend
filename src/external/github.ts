@@ -75,3 +75,7 @@ export async function getGithubUserById(githubId: number, githubToken: string) {
 export async function getGithubRepository(organization: string, name: string, githubToken: string) {
   return await makeGithubAPIRequest(`${GITHUB_API_URL}/repos/${organization}/${name}`, githubToken);
 }
+
+export async function getGithubOrganizationMembers(organization: string, githubToken: string) {
+  return await makeGithubAPIRequest(`${GITHUB_API_URL}/orgs/${organization}/members`, githubToken);
+}
