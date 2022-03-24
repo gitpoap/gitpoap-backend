@@ -13,3 +13,8 @@ export const CreateGitPOAPSchema = z.object({
   email: z.string(),
   requestedCodes: z.string(),
 });
+
+// Everything is a string since it came from multipart
+export const UploadGitPOAPCodesSchema = z.object({
+  id: z.string(),
+});
