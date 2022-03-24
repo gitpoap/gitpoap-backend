@@ -2,7 +2,7 @@ import { ClaimGitPOAPSchema, CreateGitPOAPClaimsSchema } from '../schemas/claims
 import { Router } from 'express';
 import fetch from 'cross-fetch';
 import { context } from '../context';
-import { ClaimStatus } from '@prisma/client';
+import { ClaimStatus, GitPOAPStatus } from '@prisma/client';
 import { resolveENS } from '../external/ens';
 import { isSignatureValid } from '../signatures';
 import jwt from 'express-jwt';
@@ -198,7 +198,7 @@ claimsRouter.post('/create', jwtWithAdminOAuth(), async function (req, res) {
     logger.warn(`GitPOAP ID ${req.body.gitPOAPId} not found`);
     return res.status(404).send({ msg: `There is not GitPOAP with ID: ${req.body.gitPOAPId}` });
   }
-  if (gitPOAPData.approved !== true) {
+  if (gitPOAPData.status === GitPOAPStatus.UNAPPROVED) {
     const msg = `GitPOAP ID ${req.body.gitPOAPId} has not been approved yet`;
     logger.warn(msg);
     return res.status(400).send({ msg });

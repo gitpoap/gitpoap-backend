@@ -1,5 +1,5 @@
 import { Arg, Ctx, Field, ObjectType, Resolver, Query } from 'type-graphql';
-import { Claim, ClaimStatus, GitPOAP, Profile } from '@generated/type-graphql';
+import { Claim, ClaimStatus, GitPOAPStatus, GitPOAP, Profile } from '@generated/type-graphql';
 import { getLastMonthStartDatetime } from './util';
 import { Context } from '../../context';
 import { POAPEvent, POAPToken } from '../../types/poap';
@@ -107,7 +107,9 @@ export class CustomGitPOAPResolver {
 
     const result = await prisma.gitPOAP.count({
       where: {
-        approved: true,
+        NOT: {
+          status: GitPOAPStatus.UNAPPROVED,
+        },
       },
     });
 
@@ -128,7 +130,9 @@ export class CustomGitPOAPResolver {
       },
       where: {
         createdAt: { gt: getLastMonthStartDatetime() },
-        approved: true,
+        NOT: {
+          status: GitPOAPStatus.UNAPPROVED,
+        },
       },
     });
 

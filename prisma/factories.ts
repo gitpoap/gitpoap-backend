@@ -1,4 +1,4 @@
-import { ClaimStatus } from '@generated/type-graphql';
+import { ClaimStatus, GitPOAPStatus } from '@generated/type-graphql';
 import {
   Prisma,
   User,
@@ -108,14 +108,14 @@ export class GitPOAPFactory {
     poapEventId: number,
     repoId: number,
     poapSecret: string,
-    approved?: boolean,
+    status?: GitPOAPStatus,
   ): Promise<GitPOAP> => {
     const gitPOAP = await prisma.gitPOAP.create({
       data: <Prisma.GitPOAPCreateInput>{
         year,
         poapEventId,
         poapSecret,
-        approved,
+        status,
         repo: {
           connect: {
             id: repoId,

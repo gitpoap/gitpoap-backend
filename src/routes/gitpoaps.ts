@@ -6,6 +6,7 @@ import { createScopedLogger } from '../logging';
 import { jwtWithAdminOAuth } from '../middleware';
 import short from 'short-uuid';
 import multer from 'multer';
+import { GitPOAPStatus } from '@generated/type-graphql';
 
 export const gitpoapsRouter = Router();
 
@@ -108,7 +109,7 @@ gitpoapsRouter.put('/approve/:id', jwtWithAdminOAuth(), async function (req, res
       id,
     },
     data: {
-      approved: true,
+      status: GitPOAPStatus.APPROVED,
     },
   });
   if (gitpoap === null) {
