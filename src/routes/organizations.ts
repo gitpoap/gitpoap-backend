@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { createScopedLogger } from '../logging';
 import { jwtWithOAuth } from '../middleware';
-import { getGithubOrganizationMembers } from '../external/github';
+import { getGithubOrganizationAdmins } from '../external/github';
 import { UpdateOrganizationSchema } from '../schemas/organizations';
 import { context } from '../context';
 import { AccessTokenPayloadWithOAuth } from '../types/tokens';
@@ -39,12 +39,16 @@ organizationsRouter.post('/', jwtWithOAuth(), async function (req, res) {
 
   const accessToken = <AccessTokenPayloadWithOAuth>req.user;
 
-  // Ensure that the (GitHub) authenticated member is a member of the organization
-  const members = await getGithubOrganizationMembers(
+  // Ensure that the (GitHub) authenticated member is an admin of the organization
+  const members = await getGithubOrganizationAdmins(
     organization.name,
     accessToken.githubOAuthToken,
   );
-  if (!members.map((m: Record<string, any>) => m.login).includes(accessToken.githubHandle)) {
+  if (
+    !members
+      .map((m: Record<string, { login: string }>) => m.login)
+      .includes(accessToken.githubHandle)
+  ) {
     logger.warn(
       `Non-member (GitHub handle: ${accessToken.githubHandle} of repo ${organization.name} tried to update its data`,
     );

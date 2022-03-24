@@ -215,8 +215,8 @@ Data:
 
 Note that `"data"` can accept multiple nullable fields to update.
 
-The (GitHub) authenticated user must be a member (not necessarily public)
-of the organization's info they are trying to update.
+The (GitHub) authenticated user must be an admin (not necessarily public)
+of the organization whose info they are trying to update.
 
 ## Appendix
 
