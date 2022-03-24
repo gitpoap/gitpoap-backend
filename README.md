@@ -1,16 +1,5 @@
 # gitpoap-backend
 
-## Resources
-
-* https://www.pullrequest.com/blog/intro-to-using-typescript-in-a-nodejs-express-project/
-* https://github.com/auth0/node-jsonwebtoken/
-* https://github.com/auth0/express-jwt
-* https://stackoverflow.com/questions/42406913/nodejs-import-require-conversion
-* https://javascript.plainenglish.io/how-to-get-typescript-type-completion-by-defining-process-env-types-6a5869174f57
-* https://stackoverflow.com/questions/66328425/jwt-argument-of-type-string-undefined-is-not-assignable-to-parameter-of-typ
-* [prisma migrations](https://www.prisma.io/docs/concepts/components/prisma-migrate)
-* [relational queries (creation)](https://www.prisma.io/docs/concepts/components/prisma-client/relation-queries#create-a-related-record)
-
 ## Running Locally with docker-compose
 
 Example `.env`:
@@ -27,6 +16,7 @@ POAP_API_URL="http://localhost:4004"
 POAP_AUTH_URL="http://localhost:4005"
 POAP_CLIENT_ID="a good client id"
 POAP_CLIENT_SECRET="super secret!"
+POAP_API_KEY="key to the city"
 
 GITHUB_URL="https://github.com"
 GITHUB_API_URL="https://api.github.com"
@@ -67,3 +57,14 @@ on the command line. For example:
 ```sh
 yarn run dev --level debug
 ```
+
+## Extra Resources
+
+* https://www.pullrequest.com/blog/intro-to-using-typescript-in-a-nodejs-express-project/
+* https://github.com/auth0/node-jsonwebtoken/
+* https://github.com/auth0/express-jwt
+* https://stackoverflow.com/questions/42406913/nodejs-import-require-conversion
+* https://javascript.plainenglish.io/how-to-get-typescript-type-completion-by-defining-process-env-types-6a5869174f57
+* https://stackoverflow.com/questions/66328425/jwt-argument-of-type-string-undefined-is-not-assignable-to-parameter-of-typ
+* [prisma migrations](https://www.prisma.io/docs/concepts/components/prisma-migrate)
+* [relational queries (creation)](https://www.prisma.io/docs/concepts/components/prisma-client/relation-queries#create-a-related-record)
