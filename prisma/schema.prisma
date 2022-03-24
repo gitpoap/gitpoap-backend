@@ -90,6 +90,7 @@ model GitPOAP {
   claims      Claim[]
   poapSecret  String        @db.VarChar(6)
   status      GitPOAPStatus @default(UNAPPROVED)
+  redeemCodes RedeemCode[]
 }
 
 model AuthToken {
@@ -116,6 +117,13 @@ model Secret {
   key       String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model RedeemCode {
+  id        Int     @id @default(autoincrement())
+  gitPOAPId Int
+  gitPOAP   GitPOAP @relation(fields: [gitPOAPId], references: [id])
+  code      String
 }
 
 enum GitPOAPStatus {

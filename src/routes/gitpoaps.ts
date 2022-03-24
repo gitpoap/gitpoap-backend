@@ -1,4 +1,4 @@
-import { CreateGitPOAPSchema } from '../schemas/gitpoaps';
+import { CreateGitPOAPSchema, UploadGitPOAPCodesSchema } from '../schemas/gitpoaps';
 import { Router } from 'express';
 import { context } from '../context';
 import { createPOAPEvent } from '../external/poap';
@@ -97,26 +97,60 @@ gitpoapsRouter.post('/', jwtWithAdminOAuth(), upload.single('image'), async func
   return res.status(201).send('CREATED');
 });
 
-gitpoapsRouter.put('/approve/:id', jwtWithAdminOAuth(), async function (req, res) {
-  const logger = createScopedLogger('PUT /gitpoaps/approve/:id');
+gitpoapsRouter.post(
+  '/codes',
+  jwtWithAdminOAuth(),
+  upload.single('codes'),
+  async function (req, res) {
+    const logger = createScopedLogger('POST /gitpoaps/codes');
 
-  logger.info(`Request to mark GitPOAP ${req.params.id} as approved`);
+    logger.debug(`Body: ${JSON.stringify(req.body)}`);
 
-  const id = parseInt(req.params.id, 10);
+    const schemaResult = UploadGitPOAPCodesSchema.safeParse(req.body);
+    if (!schemaResult.success) {
+      logger.warn(
+        `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
+      );
+      return res.status(400).send({ issues: schemaResult.error.issues });
+    }
+    if (!req.file) {
+      const msg = 'Missing/invalid "codes" upload in request';
+      logger.warn(msg);
+      return res.status(400).send({ msg });
+    }
 
-  const gitpoap = await context.prisma.gitPOAP.update({
-    where: {
-      id,
-    },
-    data: {
-      status: GitPOAPStatus.APPROVED,
-    },
-  });
-  if (gitpoap === null) {
-    const msg = `There's GitPOAP with ID: ${id}`;
-    logger.debug(msg);
-    return res.status(404).send({ msg });
-  }
+    let codes;
+    try {
+      codes = req.file.buffer
+        .toString()
+        .trim()
+        .split('\n')
+        .map((line: string) => {
+          const index = line.lastIndexOf('/');
+          if (index === -1) {
+            const msg = `Expected uploaded codes in the form https://poap.xyz/claim/foobar, got: ${line}`;
+            logger.error(msg);
+            throw Error(msg);
+          }
+          return line.substr(index + 1);
+        });
+    } catch (err) {
+      const msg = `Failed to read uploaded file for codes: ${err}`;
+      logger.error(msg);
+      return res.status(500).send({ msg });
+    }
 
-  return res.status(200).send('UPDATED');
-});
+    const gitPOAPId = parseInt(req.body.id, 10);
+
+    await context.prisma.redeemCode.createMany({
+      data: codes.map((code: string) => {
+        return {
+          gitPOAPId,
+          code: code,
+        };
+      }),
+    });
+
+    return res.status(200).send('UPLOADED');
+  },
+);
