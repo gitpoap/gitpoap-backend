@@ -31,7 +31,6 @@ claimsRouter.post(
     logger.debug(`Access Token Payload: ${req.user}`);
 
     const schemaResult = ClaimGitPOAPSchema.safeParse(req.body);
-
     if (!schemaResult.success) {
       logger.warn(
         `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
@@ -179,7 +178,6 @@ claimsRouter.post('/create', jwtWithAdminOAuth(), async function (req, res) {
   logger.debug(`Body: ${JSON.stringify(req.body)}`);
 
   const schemaResult = CreateGitPOAPClaimsSchema.safeParse(req.body);
-
   if (!schemaResult.success) {
     logger.warn(
       `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,

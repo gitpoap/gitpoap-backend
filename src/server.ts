@@ -12,6 +12,7 @@ import { githubRouter } from './routes/github';
 import { gitpoapsRouter } from './routes/gitpoaps';
 import { profilesRouter } from './routes/profiles';
 import { projectsRouter } from './routes/projects';
+import { organizationsRouter } from './routes/organizations';
 import { CONTACTS_TABLE_NAME } from './dynamo';
 import { PORT } from './constants';
 import { getSchema } from './graphql/schema';
@@ -56,6 +57,7 @@ const main = async () => {
   app.use('/gitpoaps', gitpoapsRouter);
   app.use('/profiles', profilesRouter);
   app.use('/projects', projectsRouter);
+  app.use('/organizations', organizationsRouter);
 
   app.use(errorHandler);
 

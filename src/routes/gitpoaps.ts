@@ -17,7 +17,6 @@ gitpoapsRouter.post('/', jwtWithAdminOAuth(), upload.single('image'), async func
   logger.debug(`Body: ${JSON.stringify(req.body)}`);
 
   const schemaResult = CreateGitPOAPSchema.safeParse(req.body);
-
   if (!schemaResult.success) {
     logger.warn(
       `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,

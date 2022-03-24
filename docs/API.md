@@ -197,6 +197,27 @@ Data:
 }
 ```
 
+## Update Organization
+
+`POST /organizations`
+
+Data:
+
+```json
+{
+  "id": 4,
+  "data": {
+    "description": "we do stuff",
+    "url": null
+  }
+}
+```
+
+Note that `"data"` can accept multiple nullable fields to update.
+
+The (GitHub) authenticated user must be a member (not necessarily public)
+of the organization's info they are trying to update.
+
 ## Appendix
 
 ### Generating Signatures
