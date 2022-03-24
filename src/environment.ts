@@ -12,6 +12,7 @@ export const POAP_API_URL = env.get('POAP_API_URL').required().asString();
 export const POAP_AUTH_URL = env.get('POAP_AUTH_URL').required().asString();
 export const POAP_CLIENT_ID = env.get('POAP_CLIENT_ID').required().asString();
 export const POAP_CLIENT_SECRET = env.get('POAP_CLIENT_SECRET').required().asString();
+export const POAP_API_KEY = env.get('POAP_API_KEY').required().asString();
 
 export const INFURA_API_KEY = env.get('INFURA_API_KEY').asString();
 

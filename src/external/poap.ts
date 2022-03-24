@@ -1,7 +1,13 @@
 import fetch from 'cross-fetch';
 import { context } from '../context';
 import { DateTime } from 'luxon';
-import { POAP_AUTH_URL, POAP_API_URL, POAP_CLIENT_ID, POAP_CLIENT_SECRET } from '../environment';
+import {
+  POAP_AUTH_URL,
+  POAP_API_URL,
+  POAP_CLIENT_ID,
+  POAP_CLIENT_SECRET,
+  POAP_API_KEY,
+} from '../environment';
 import { createScopedLogger } from '../logging';
 import { createReadStream } from 'fs';
 import FormData from 'form-data';
@@ -81,6 +87,7 @@ async function generatePOAPHeaders(hasBody: boolean) {
 
   let base = {
     Authorization: `Bearer ${await retrievePOAPToken()}`,
+    'X-API-Key': POAP_API_KEY,
     Accept: 'application/json',
     Host: host,
   };
