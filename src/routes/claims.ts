@@ -2,18 +2,77 @@ import { ClaimGitPOAPSchema, CreateGitPOAPClaimsSchema } from '../schemas/claims
 import { Router } from 'express';
 import fetch from 'cross-fetch';
 import { context } from '../context';
-import { ClaimStatus, GitPOAPStatus } from '@prisma/client';
+import { ClaimStatus, GitPOAP, GitPOAPStatus } from '@prisma/client';
 import { resolveENS } from '../external/ens';
 import { isSignatureValid } from '../signatures';
 import jwt from 'express-jwt';
 import { jwtWithAdminOAuth } from '../middleware';
 import { AccessTokenPayload, AccessTokenPayloadWithOAuth } from '../types/tokens';
-import { claimPOAP, retrievePOAPEventInfo } from '../external/poap';
+import { claimPOAP, requestPOAPCodes, retrievePOAPEventInfo } from '../external/poap';
 import { getGithubUserById } from '../external/github';
 import { JWT_SECRET } from '../environment';
 import { createScopedLogger } from '../logging';
+import { MINIMUM_REMAINING_REDEEM_CODES, REDEEM_CODE_STEP_SIZE } from '../constants';
 
 export const claimsRouter = Router();
+
+// Ensure that we still have enough codes left for a GitPOAP after a claim
+async function ensureRedeemCodeThreshold(gitPOAP: GitPOAP) {
+  // If the distribution is not ongoing then we don't need to do anything
+  if (!gitPOAP.ongoing) {
+    return;
+  }
+
+  const logger = createScopedLogger('ensureRedeemCodeThreshold');
+
+  if (gitPOAP.status === GitPOAPStatus.REDEEM_REQUEST_PENDING) {
+    logger.info(`Redeem request is already pending for GitPOAP ID: ${gitPOAP.id}`);
+    return;
+  }
+
+  const codeCount = await context.prisma.redeemCode.count({
+    where: {
+      gitPOAPId: gitPOAP.id,
+    },
+  });
+
+  logger.debug(`GitPOAP ID ${gitPOAP.id} has ${codeCount} remaining redeem codes`);
+
+  if (codeCount < MINIMUM_REMAINING_REDEEM_CODES) {
+    await context.prisma.gitPOAP.update({
+      where: {
+        id: gitPOAP.id,
+      },
+      data: {
+        status: GitPOAPStatus.REDEEM_REQUEST_PENDING,
+      },
+    });
+
+    logger.info(`Requesting additional codes for GitPOAP ID: ${gitPOAP.id}`);
+
+    const poapResponse = await requestPOAPCodes(
+      gitPOAP.poapEventId,
+      gitPOAP.poapSecret,
+      REDEEM_CODE_STEP_SIZE,
+    );
+    if (poapResponse === null) {
+      // Move the GitPOAP back into ACCEPTED so that it will attempt
+      // to make another request after the next claim
+      await context.prisma.gitPOAP.update({
+        where: {
+          id: gitPOAP.id,
+        },
+        data: {
+          status: GitPOAPStatus.REDEEM_REQUEST_PENDING,
+        },
+      });
+
+      const msg = `Failed to request additional redeem codes for GitPOAP ID: ${gitPOAP.id}`;
+      logger.error(msg);
+      return;
+    }
+  }
+}
 
 claimsRouter.post(
   '/',
@@ -147,6 +206,11 @@ claimsRouter.post(
           poapTokenId: poapData.id,
         },
       });
+
+      // Ensure that we have the minimal number of codes if the GitPOAP
+      // is marked as ongoing. Note that we don't need to block on this
+      // since we don't depend on its result
+      ensureRedeemCodeThreshold(claim.gitPOAP);
     }
 
     if (invalidClaims.length > 0) {

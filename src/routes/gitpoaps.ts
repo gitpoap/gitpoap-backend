@@ -151,6 +151,16 @@ gitpoapsRouter.post(
       }),
     });
 
+    // Move the GitPOAP (back) into the APPROVED state
+    await context.prisma.gitPOAP.update({
+      where: {
+        id: gitPOAPId,
+      },
+      data: {
+        status: GitPOAPStatus.APPROVED,
+      },
+    });
+
     return res.status(200).send('UPLOADED');
   },
 );
