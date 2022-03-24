@@ -79,17 +79,17 @@ model Claim {
 }
 
 model GitPOAP {
-  id          Int       @id @default(autoincrement())
-  type        ClaimType @default(ANNUAL)
+  id          Int           @id @default(autoincrement())
+  type        ClaimType     @default(ANNUAL)
   year        Int
-  poapEventId Int       @unique
+  poapEventId Int           @unique
   repoId      Int
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  repo        Repo      @relation(fields: [repoId], references: [id])
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  repo        Repo          @relation(fields: [repoId], references: [id])
   claims      Claim[]
-  poapSecret  String    @db.VarChar(6)
-  approved    Boolean   @default(false)
+  poapSecret  String        @db.VarChar(6)
+  status      GitPOAPStatus @default(UNAPPROVED)
 }
 
 model AuthToken {
@@ -116,6 +116,12 @@ model Secret {
   key       String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+enum GitPOAPStatus {
+  UNAPPROVED
+  APPROVED
+  REDEEM_REQUEST_PENDING
 }
 
 enum ClaimStatus {
