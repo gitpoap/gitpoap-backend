@@ -76,6 +76,9 @@ export async function getGithubRepository(organization: string, name: string, gi
   return await makeGithubAPIRequest(`${GITHUB_API_URL}/repos/${organization}/${name}`, githubToken);
 }
 
-export async function getGithubOrganizationMembers(organization: string, githubToken: string) {
-  return await makeGithubAPIRequest(`${GITHUB_API_URL}/orgs/${organization}/members`, githubToken);
+export async function getGithubOrganizationAdmins(organization: string, githubToken: string) {
+  return await makeGithubAPIRequest(
+    `${GITHUB_API_URL}/orgs/${organization}/members?role=admin`,
+    githubToken,
+  );
 }
