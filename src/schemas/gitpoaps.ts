@@ -12,7 +12,7 @@ export const CreateGitPOAPSchema = z.object({
   year: z.string(),
   email: z.string(),
   numRequestedCodes: z.string(),
-  ongoing: z.boolean(),
+  ongoing: z.string(),
 });
 
 // Everything is a string since it came from multipart
