@@ -11,7 +11,7 @@ export const CreateGitPOAPSchema = z.object({
   eventUrl: z.string(),
   year: z.string(),
   email: z.string(),
-  requestedCodes: z.string(),
+  numRequestedCodes: z.string(),
   ongoing: z.boolean(),
 });
 

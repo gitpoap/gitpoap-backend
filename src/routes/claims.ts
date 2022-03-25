@@ -50,14 +50,19 @@ async function ensureRedeemCodeThreshold(gitPOAP: GitPOAP) {
 
     logger.info(`Requesting additional codes for GitPOAP ID: ${gitPOAP.id}`);
 
+    // Note that this function does not return any codes.
+    // Instead we need to wait for them to be sent to our email,
+    // so while waiting we marked the GitPOAP's status as REDEEM_REQUEST_PENDING
     const poapResponse = await requestPOAPCodes(
       gitPOAP.poapEventId,
       gitPOAP.poapSecret,
       REDEEM_CODE_STEP_SIZE,
     );
     if (poapResponse === null) {
-      // Move the GitPOAP back into ACCEPTED so that it will attempt
-      // to make another request after the next claim
+      // In this case, the request to POAP has failed for some reason, so we
+      // move the GitPOAP's state back into ACCEPTED so that it will attempt
+      // to make another request after the next claim (it will see we are
+      // below the threshold again
       await context.prisma.gitPOAP.update({
         where: {
           id: gitPOAP.id,
