@@ -87,7 +87,7 @@ gitpoapsRouter.post('/', jwtWithAdminOAuth(), upload.single('image'), async func
         },
       },
       poapSecret: secretCode,
-      ongoing: req.body.ongoing,
+      ongoing: req.body.ongoing === 'true',
     },
   });
 
