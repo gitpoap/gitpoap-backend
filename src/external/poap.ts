@@ -144,17 +144,19 @@ async function makePOAPRequest(url: string, method: string, body: string | null)
   return makeGenericPOAPRequest(url, method, headers, body);
 }
 
+// Note that this function does not return any codes.
+// Instead we need to wait for them to be sent to our email.
 export async function requestPOAPCodes(
   event_id: number,
   secret_code: string,
-  requested_codes: number,
+  num_requested_codes: number,
 ) {
   return await makePOAPRequest(
     `${POAP_API_URL}/redeem-requests`,
     'POST',
     JSON.stringify({
       event_id,
-      requested_codes,
+      requested_codes: num_requested_codes,
       secret_code,
       redeem_type: 'qr_code',
     }),
@@ -294,7 +296,7 @@ export async function createPOAPEvent(
   imageBuffer: Buffer,
   secret_code: string,
   email: string,
-  requested_codes: number,
+  num_requested_codes: number,
 ) {
   let form = new FormData();
 
@@ -312,7 +314,7 @@ export async function createPOAPEvent(
   form.append('secret_code', secret_code);
   form.append('event_template_id', 0);
   form.append('email', email);
-  form.append('requested_codes', requested_codes);
+  form.append('requested_codes', num_requested_codes);
   form.append('private_event', 'true');
   let headers = { ...form.getHeaders(), ...(await generatePOAPHeaders(false)) };
 
