@@ -177,7 +177,8 @@ for convenience):
   "year": 2022,
   "eventUrl": "https://github.com/gitpoap/gitpoap-backend",
   "email": "burz@gitpoap.io",
-  "requestedCodes": 10
+  "requestedCodes": 10,
+  "ongoing": false
 }
 ```
 
