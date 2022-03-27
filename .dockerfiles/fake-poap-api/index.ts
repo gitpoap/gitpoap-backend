@@ -287,7 +287,7 @@ app.post('/actions/claim-qr', async (req, res) => {
   const today = DateTime.now().toFormat('yyyy-MM-dd');
 
   const token = {
-    id: (nextTokenId++).toString(),
+    id: nextTokenId++,
     qr_hash: req.body.qr_hash,
     queue_uid: 'string',
     event_id: 1,

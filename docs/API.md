@@ -80,8 +80,8 @@ Also note that the `"signature"`'s `"data"` field should contain the signature c
 {
   "site": "gitpoap.io",
   "method": "POST /claims",
-  "claimIds": [4, 5],
-  "createdAt": 1647987506199
+  "createdAt": 1647987506199,
+  "claimIds": [4, 5]
 }
 ```
 
@@ -252,3 +252,6 @@ const signature = await web3Provider.getSigner().signMessage(
   }),
 );
 ```
+
+_Note that the signatures for the requests in this document should have the order of
+their keys in the same order as they appear here._
