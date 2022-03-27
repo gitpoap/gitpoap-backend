@@ -228,7 +228,7 @@ claimsRouter.post(
         },
         data: {
           status: ClaimStatus.CLAIMED,
-          poapTokenId: poapData.id,
+          poapTokenId: poapData.id.toString(),
         },
       });
 
