@@ -256,6 +256,11 @@ export async function retrieveUsersPOAPs(address: string) {
   return poapResponse;
 }
 
+// Helper function to clear a user's POAPs from the cache
+export async function clearUsersPOAPsCache(address: string) {
+  await context.redis.deleteKey(POAP_USER_TOKENS_CACHE_PREFIX, address);
+}
+
 export async function retrievePOAPInfo(poapTokenId: string) {
   const logger = createScopedLogger('retrievePOAPInfo');
 

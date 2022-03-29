@@ -8,7 +8,12 @@ import { isSignatureValid } from '../signatures';
 import jwt from 'express-jwt';
 import { jwtWithAdminOAuth } from '../middleware';
 import { AccessTokenPayload, AccessTokenPayloadWithOAuth } from '../types/tokens';
-import { redeemPOAP, requestPOAPCodes, retrievePOAPEventInfo } from '../external/poap';
+import {
+  clearUsersPOAPsCache,
+  redeemPOAP,
+  requestPOAPCodes,
+  retrievePOAPEventInfo,
+} from '../external/poap';
 import { getGithubUserById } from '../external/github';
 import { JWT_SECRET } from '../environment';
 import { createScopedLogger } from '../logging';
@@ -253,6 +258,8 @@ claimsRouter.post(
     logger.debug(
       `Completed request claiming IDs ${req.body.claimIds} for address ${req.body.address}`,
     );
+
+    clearUsersPOAPsCache(req.body.address);
 
     res.status(200).send({
       claimed: foundClaims,
