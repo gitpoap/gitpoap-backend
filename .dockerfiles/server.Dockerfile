@@ -17,4 +17,6 @@ COPY .dockerfiles/server.env .env
 
 RUN yarn build
 
+EXPOSE 3001 8080
+
 CMD ["./.dockerfiles/run-server.sh"]

@@ -66,3 +66,12 @@ services:
       - fake-poap-api
       - fake-poap-auth
       - server
+
+  grafana:
+    build:
+      context: .dockerfiles
+      dockerfile: grafana.Dockerfile
+    ports:
+      - '9091:9091'
+    depends_on:
+      - prometheus
