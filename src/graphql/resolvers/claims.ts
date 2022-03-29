@@ -5,6 +5,7 @@ import { POAPEvent } from '../../types/poap';
 import { retrievePOAPEventInfo } from '../../external/poap';
 import { createScopedLogger } from '../../logging';
 import { gqlRequestDurationSeconds } from '../../metrics';
+import { getLastMonthStartDatetime } from './util';
 
 @ObjectType()
 class FullClaimData {
@@ -17,6 +18,52 @@ class FullClaimData {
 
 @Resolver(of => Claim)
 export class CustomClaimResolver {
+  @Query(returns => Number)
+  async totalClaims(@Ctx() { prisma }: Context): Promise<Number> {
+    const logger = createScopedLogger('GQL totalClaims');
+
+    logger.info('Request for total numbr of Claims');
+
+    const endRequest = gqlRequestDurationSeconds.startTimer();
+
+    const result = await prisma.claim.count({
+      where: {
+        status: ClaimStatus.CLAIMED,
+      },
+    });
+
+    logger.debug('Completed request for total numbr of Claims');
+
+    endRequest({ request: 'totalClaims', success: 1 });
+
+    return result;
+  }
+
+  @Query(returns => Number)
+  async lastMonthClaims(@Ctx() { prisma }: Context): Promise<Number> {
+    const logger = createScopedLogger('GQL lastMonthClaims');
+
+    logger.info('Request for the count of Claims made in the last month');
+
+    const endRequest = gqlRequestDurationSeconds.startTimer();
+
+    const result = await prisma.claim.aggregate({
+      _count: {
+        id: true,
+      },
+      where: {
+        updatedAt: { gt: getLastMonthStartDatetime() },
+        status: ClaimStatus.CLAIMED,
+      },
+    });
+
+    logger.debug('Completed request for the count of Claims made in the last month');
+
+    endRequest({ request: 'lastMonthClaims', success: 1 });
+
+    return result._count.id;
+  }
+
   @Query(returns => [FullClaimData], { nullable: true })
   async userClaims(
     @Ctx() { prisma }: Context,

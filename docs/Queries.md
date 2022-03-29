@@ -13,6 +13,8 @@ The query to get the banner stats is as follows:
   lastMonthContributors
   totalGitPOAPs
   lastMonthGitPOAPs
+  totalClaims
+  lastMonthClaims
   totalRepos
   lastMonthRepos
 }
@@ -27,6 +29,8 @@ and returns data in the form:
     "lastMonthContributors": 4,
     "totalGitPOAPs": 3,
     "lastMonthGitPOAPs": 2,
+    "totalClaims": 9,
+    "lastMonthClaims": 9,
     "totalRepos": 3,
     "lastMonthRepos": 2
   }
