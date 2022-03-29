@@ -3,6 +3,7 @@ import { sign } from 'jsonwebtoken';
 import { JWT_EXP_TIME } from '../constants';
 import { JWT_SECRET } from '../environment';
 import { createScopedLogger } from '../logging';
+import { httpRequestDurationSeconds } from '../metrics';
 
 var router = Router();
 
@@ -11,11 +12,15 @@ router.get('/', function (req, res) {
 
   logger.info('Request to create a new JWT');
 
+  const endRequest = httpRequestDurationSeconds.startTimer();
+
   const token = sign({}, JWT_SECRET as string, {
     expiresIn: JWT_EXP_TIME,
   });
 
   logger.debug('Completed request to create a new JWT');
+
+  endRequest({ method: 'GET', path: '/jwt', status: 200 });
 
   return res.json({
     access_token: token,

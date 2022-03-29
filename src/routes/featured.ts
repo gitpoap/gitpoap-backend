@@ -5,6 +5,7 @@ import { resolveENS } from '../external/ens';
 import { isSignatureValid } from '../signatures';
 import { retrievePOAPInfo } from '../external/poap';
 import { createScopedLogger } from '../logging';
+import { httpRequestDurationSeconds } from '../metrics';
 
 export const featuredRouter = Router();
 
@@ -13,11 +14,14 @@ featuredRouter.put('/', async function (req, res) {
 
   logger.debug(`Body: ${JSON.stringify(req.body)}`);
 
+  const endRequest = httpRequestDurationSeconds.startTimer();
+
   const schemaResult = AddFeaturedSchema.safeParse(req.body);
   if (!schemaResult.success) {
     logger.warn(
       `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
     );
+    endRequest({ method: 'PUT', path: '/featured', status: 400 });
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
@@ -27,6 +31,7 @@ featuredRouter.put('/', async function (req, res) {
   const resolvedAddress = await resolveENS(req.body.address);
   if (resolvedAddress === null) {
     logger.warn('Request address is invalid');
+    endRequest({ method: 'PUT', path: '/featured', status: 400 });
     return res.status(400).send({ msg: `${req.body.address} is not a valid address` });
   }
 
@@ -36,6 +41,7 @@ featuredRouter.put('/', async function (req, res) {
     })
   ) {
     logger.warn('Request signature is invalid');
+    endRequest({ method: 'PUT', path: '/featured', status: 401 });
     return res.status(401).send({ msg: 'The signature is not valid for this address and data' });
   }
 
@@ -53,11 +59,13 @@ featuredRouter.put('/', async function (req, res) {
   const poapData = await retrievePOAPInfo(req.body.poapTokenId);
   if (poapData === null) {
     logger.error(`Failed to retrieve POAP data (from POAP API) for ID: ${req.body.poapTokenId}`);
+    endRequest({ method: 'PUT', path: '/featured', status: 400 });
     return res.status(400).send({ msg: "Couldn't retrieve info about the POAP from the POAP API" });
   }
 
   if (poapData.owner.toLowerCase() !== resolvedAddress.toLowerCase()) {
     logger.warn('Attempted to feature unowned POAP');
+    endRequest({ method: 'PUT', path: '/featured', status: 401 });
     return res.status(401).send({ msg: 'Users cannot feature POAPs they do not own' });
   }
 
@@ -77,6 +85,8 @@ featuredRouter.put('/', async function (req, res) {
 
   logger.debug(`Completed request from ${req.body.address} for POAP ID: ${req.body.poapTokenId}`);
 
+  endRequest({ method: 'PUT', path: '/featured', status: 200 });
+
   return res.status(200).send('ADDED');
 });
 
@@ -85,11 +95,14 @@ featuredRouter.delete('/:id', async function (req, res) {
 
   logger.debug(`Params: ${JSON.stringify(req.params)} Body: ${JSON.stringify(req.body)}`);
 
+  const endRequest = httpRequestDurationSeconds.startTimer();
+
   const schemaResult = RemoveFeaturedSchema.safeParse(req.body);
   if (!schemaResult.success) {
     logger.warn(
       `Missing/invalid body fields in request ${JSON.stringify(schemaResult.error.issues)}`,
     );
+    endRequest({ method: 'DELETE', path: '/featured', status: 400 });
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
@@ -99,6 +112,7 @@ featuredRouter.delete('/:id', async function (req, res) {
   const resolvedAddress = await resolveENS(req.body.address);
   if (resolvedAddress === null) {
     logger.warn('Request address is invalid');
+    endRequest({ method: 'DELETE', path: '/featured', status: 400 });
     return res.status(400).send({ msg: `${req.body.address} is not a valid address` });
   }
 
@@ -108,6 +122,7 @@ featuredRouter.delete('/:id', async function (req, res) {
     })
   ) {
     logger.warn('Request signature is invalid');
+    endRequest({ method: 'DELETE', path: '/featured', status: 401 });
     return res.status(401).send({ msg: 'The signature is not valid for this address and data' });
   }
 
@@ -118,6 +133,7 @@ featuredRouter.delete('/:id', async function (req, res) {
   });
   if (profile === null) {
     logger.warn(`No profile for address: ${req.body.address}`);
+    endRequest({ method: 'DELETE', path: '/featured', status: 404 });
     return res.status(404).send({ msg: `There is no profile for the address ${req.body.address}` });
   }
 
@@ -131,6 +147,8 @@ featuredRouter.delete('/:id', async function (req, res) {
   });
 
   logger.debug(`Completed request from ${req.body.address} for POAP ID: ${req.params.id}`);
+
+  endRequest({ method: 'DELETE', path: '/featured', status: 200 });
 
   return res.status(200).send('DELETED');
 });

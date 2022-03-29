@@ -4,6 +4,7 @@ import jwt from 'express-jwt';
 import { dynamoDB, SUGGESTIONS_TABLE_NAME } from '../dynamo';
 import { JWT_SECRET } from '../environment';
 import { createScopedLogger } from '../logging';
+import { httpRequestDurationSeconds } from '../metrics';
 
 type SuggestionFormData = {
   email: string;
@@ -26,8 +27,11 @@ suggestRouter.post(
 
     logger.debug(`Body: ${JSON.stringify(req.body)}`);
 
+    const endRequest = httpRequestDurationSeconds.startTimer();
+
     if (!req.user) {
       logger.warn('Token is invalid');
+      endRequest({ method: 'POST', path: '/suggest', status: 401 });
       return res.sendStatus(401);
     } else {
       logger.info(`Request from ${req.body.email} to make a suggestion`);
@@ -45,6 +49,8 @@ suggestRouter.post(
       await dynamoDB.send(new PutItemCommand(params));
 
       logger.debug(`Completed request from ${req.body.email} to make a suggestion`);
+
+      endRequest({ method: 'POST', path: '/suggest', status: 200 });
 
       res.sendStatus(200);
     }
