@@ -4,6 +4,7 @@ import { Context } from '../../context';
 import { POAPEvent } from '../../types/poap';
 import { retrievePOAPEventInfo } from '../../external/poap';
 import { createScopedLogger } from '../../logging';
+import { gqlRequestDurationSeconds } from '../../metrics';
 
 @ObjectType()
 class FullClaimData {
@@ -24,6 +25,8 @@ export class CustomClaimResolver {
     const logger = createScopedLogger('GQL userClaims');
 
     logger.info(`Request for the claims for githubId: ${githubId}`);
+
+    const endRequest = gqlRequestDurationSeconds.startTimer();
 
     const claims = await prisma.claim.findMany({
       where: {
@@ -50,6 +53,7 @@ export class CustomClaimResolver {
 
       if (eventData === null) {
         logger.error(`Failed to query event ${gitPOAP.poapEventId} data from POAP API`);
+        endRequest({ request: 'userClaims', success: 0 });
         return null;
       }
 
@@ -60,6 +64,8 @@ export class CustomClaimResolver {
     }
 
     logger.debug(`Completed request for the claims for githubId: ${githubId}`);
+
+    endRequest({ request: 'userClaims', success: 1 });
 
     return results;
   }

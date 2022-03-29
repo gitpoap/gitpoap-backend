@@ -54,6 +54,7 @@
     "minimist": "^1.2.5",
     "multer": "^1.4.4",
     "prisma": "^3.8.1",
+    "prom-client": "^14.0.1",
     "redis": "^4.0.4",
     "reflect-metadata": "^0.1.13",
     "short-uuid": "^4.2.0",
