@@ -179,7 +179,7 @@ githubRouter.post('/refresh', async function (req, res) {
     },
   });
 
-  logger.debug('Request to refresh AuthToken');
+  logger.debug('Completed request to refresh AuthToken');
 
   endRequest({ method: 'POST', path: '/github', status: 200 });
 

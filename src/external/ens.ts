@@ -1,5 +1,6 @@
 import { createScopedLogger } from '../logging';
 import { context } from '../context';
+import { ensRequestDurationSeconds } from '../metrics';
 
 const ENS_RESOLVE_CACHE_PREFIX = 'ens#resolve';
 
@@ -24,7 +25,12 @@ export async function resolveENS(address: string): Promise<string | null> {
   logger.debug(`ENS resolution of ${address} not in cache`);
 
   try {
+    const endRequest = ensRequestDurationSeconds.startTimer();
+
     const resolvedAddress = await context.provider.resolveName(address);
+
+    endRequest({ method: 'resolveName' });
+
     if (address !== resolvedAddress) {
       logger.debug(`Resolved ${address} to ${resolvedAddress}`);
       if (resolvedAddress === null) {

@@ -11,6 +11,8 @@ import {
 import { createScopedLogger } from '../logging';
 import { createReadStream } from 'fs';
 import FormData from 'form-data';
+import { poapRequestDurationSeconds } from '../metrics';
+import { URL } from 'url';
 
 // DB keys
 const POAP_DB_KEY_NAME = 'poap';
@@ -100,12 +102,14 @@ async function generatePOAPHeaders(hasBody: boolean) {
 }
 
 async function makeGenericPOAPRequest(
-  url: string,
+  path: string,
   method: string,
   headers: Record<string, string>,
   body: string | FormData | null,
 ) {
   const logger = createScopedLogger('makeGenericPOAPRequest');
+
+  const endRequest = poapRequestDurationSeconds.startTimer();
 
   let requestOptions;
   if (body !== null) {
@@ -122,18 +126,22 @@ async function makeGenericPOAPRequest(
   }
 
   try {
-    const poapResponse = await fetch(url, requestOptions);
+    const poapResponse = await fetch(new URL(path, POAP_API_URL).href, requestOptions);
 
     if (poapResponse.status >= 400) {
       logger.warn(
         `Bad response (${poapResponse.status}) from POAP API: ${await poapResponse.text()}`,
       );
+      endRequest({ method, path, success: 0 });
       return null;
     }
+
+    endRequest({ method, path, success: 1 });
 
     return await poapResponse.json();
   } catch (err) {
     logger.warn(`Error while calling POAP API: ${err}`);
+    endRequest({ method, path, success: 0 });
     return null;
   }
 }

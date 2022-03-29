@@ -2,6 +2,7 @@ import { createClient } from 'redis';
 import { REDIS_URL } from '../environment';
 import { readFileSync } from 'fs';
 import { join } from 'path';
+import { redisRequestDurationSeconds } from '../metrics';
 
 export type RedisClient = {
   connect: () => Promise<any>;
@@ -27,20 +28,34 @@ export function createRedisClient(): RedisClient {
       return await client.connect();
     },
     setValue: async (prefix: string, key: string, value: string, ttl?: number) => {
+      const endRequest = redisRequestDurationSeconds.startTimer();
       if (ttl) {
-        return await client.set(genKey(prefix, key), value, { EX: ttl });
+        const result = await client.set(genKey(prefix, key), value, { EX: ttl });
+        endRequest({ method: 'SET' });
+        return result;
       } else {
-        return await client.set(genKey(prefix, key), value);
+        const result = await client.set(genKey(prefix, key), value);
+        endRequest({ method: 'SET' });
+        return result;
       }
     },
     getValue: async (prefix: string, key: string) => {
-      return await client.get(genKey(prefix, key));
+      const endRequest = redisRequestDurationSeconds.startTimer();
+      const result = await client.get(genKey(prefix, key));
+      endRequest({ method: 'GET' });
+      return result;
     },
     deleteKey: async (prefix: string, key: string) => {
-      return await client.del(genKey(prefix, key));
+      const endRequest = redisRequestDurationSeconds.startTimer();
+      const result = await client.del(genKey(prefix, key));
+      endRequest({ method: 'DEL' });
+      return result;
     },
     deletePrefix: async (prefix: string) => {
-      return await client.eval(deleteScript, { arguments: [`${prefix}:*`] });
+      const endRequest = redisRequestDurationSeconds.startTimer();
+      const result = await client.eval(deleteScript, { arguments: [`${prefix}:*`] });
+      endRequest({ method: 'DEL PREFIX' });
+      return result;
     },
   };
 }
