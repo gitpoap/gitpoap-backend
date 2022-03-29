@@ -6,6 +6,7 @@ import { POAPEvent, POAPToken } from '../../types/poap';
 import { resolveENS } from '../../external/ens';
 import { retrievePOAPEventInfo, retrieveUsersPOAPs, retrievePOAPInfo } from '../../external/poap';
 import { createScopedLogger } from '../../logging';
+import { gqlRequestDurationSeconds } from '../../metrics';
 
 @ObjectType()
 class FullGitPOAPEventData {
@@ -105,6 +106,8 @@ export class CustomGitPOAPResolver {
 
     logger.info('Request for total number of GitPOAPs');
 
+    const endRequest = gqlRequestDurationSeconds.startTimer();
+
     const result = await prisma.gitPOAP.count({
       where: {
         NOT: {
@@ -115,6 +118,8 @@ export class CustomGitPOAPResolver {
 
     logger.debug('Completed request for total number of GitPOAPs');
 
+    endRequest({ request: 'totalGitPOAPs', success: 1 });
+
     return result;
   }
 
@@ -123,6 +128,8 @@ export class CustomGitPOAPResolver {
     const logger = createScopedLogger('GQL lastMonthGitPOAPs');
 
     logger.info('Request for the count of GitPOAPs created last month');
+
+    const endRequest = gqlRequestDurationSeconds.startTimer();
 
     const result = await prisma.gitPOAP.aggregate({
       _count: {
@@ -138,6 +145,8 @@ export class CustomGitPOAPResolver {
 
     logger.debug('Completed request for the count of GitPOAPs created last month');
 
+    endRequest({ request: 'lastMonthGitPOAPs', success: 1 });
+
     return result._count.id;
   }
 
@@ -150,21 +159,27 @@ export class CustomGitPOAPResolver {
 
     logger.info(`Request for info about GitPOAP ${id}`);
 
+    const endRequest = gqlRequestDurationSeconds.startTimer();
+
     const gitPOAP = await prisma.gitPOAP.findUnique({
       where: { id },
     });
     if (gitPOAP === null) {
       logger.warn(`Failed to find GitPOAP with id: ${id}`);
+      endRequest({ request: 'gitPOAPEvent', success: 0 });
       return null;
     }
 
     const event = await retrievePOAPEventInfo(gitPOAP.poapEventId);
     if (event === null) {
       logger.error(`Failed to query event ${gitPOAP.poapEventId} data from POAP API`);
+      endRequest({ request: 'gitPOAPEvent', success: 0 });
       return null;
     }
 
     logger.debug(`Completed request for info about GitPOAP ${id}`);
+
+    endRequest({ request: 'gitPOAPEvent', success: 1 });
 
     return { gitPOAP, event };
   }
@@ -183,6 +198,8 @@ export class CustomGitPOAPResolver {
       `Request for POAPs for address ${address} using sort ${sort}, with ${perPage} results per page and page ${page}`,
     );
 
+    const endRequest = gqlRequestDurationSeconds.startTimer();
+
     switch (sort) {
       case 'date':
         break;
@@ -190,10 +207,12 @@ export class CustomGitPOAPResolver {
         break;
       default:
         logger.warn(`Unknown value provided for sort: ${sort}`);
+        endRequest({ request: 'userPOAPs', success: 0 });
         return null;
     }
     if ((page === null || perPage === null) && page !== perPage) {
       logger.warn('"page" and "perPage" must be specified together');
+      endRequest({ request: 'userPOAPs', success: 0 });
       return null;
     }
 
@@ -201,12 +220,14 @@ export class CustomGitPOAPResolver {
     const resolvedAddress = await resolveENS(address);
     if (resolvedAddress === null) {
       logger.warn('The address provided is invalid');
+      endRequest({ request: 'userPOAPs', success: 0 });
       return null;
     }
 
     const poaps = await retrieveUsersPOAPs(resolvedAddress);
     if (poaps === null) {
       logger.error(`Failed to query POAPs from POAP API for address: ${resolvedAddress}`);
+      endRequest({ request: 'userPOAPs', success: 0 });
       return null;
     }
 
@@ -280,6 +301,8 @@ export class CustomGitPOAPResolver {
       `Completed request for POAPs for address ${address} using sort ${sort}, with ${perPage} results per page and page ${page}`,
     );
 
+    endRequest({ request: 'userPOAPs', success: 1 });
+
     if (page) {
       const index = (page - 1) * <number>perPage;
       return {
@@ -307,6 +330,8 @@ export class CustomGitPOAPResolver {
 
     logger.info(`Request for ${count} most claimed GitPOAPs`);
 
+    const endRequest = gqlRequestDurationSeconds.startTimer();
+
     type ResultType = GitPOAP & {
       claimsCount: number;
     };
@@ -328,6 +353,7 @@ export class CustomGitPOAPResolver {
       const event = await retrievePOAPEventInfo(gitPOAP.poapEventId);
       if (event === null) {
         logger.error(`Failed to query event ${gitPOAP.poapEventId} data from POAP API`);
+        endRequest({ request: 'mostClaimedGitPOAPs', success: 0 });
         return null;
       }
 
@@ -335,6 +361,8 @@ export class CustomGitPOAPResolver {
     }
 
     logger.debug(`Completed request for ${count} most claimed GitPOAPs`);
+
+    endRequest({ request: 'mostClaimedGitPOAPs', success: 1 });
 
     return finalResults;
   }
@@ -348,10 +376,13 @@ export class CustomGitPOAPResolver {
 
     logger.info(`Request for the featured POAPs for address: ${address}`);
 
+    const endRequest = gqlRequestDurationSeconds.startTimer();
+
     // Resolve ENS if provided
     const resolvedAddress = await resolveENS(address);
     if (resolvedAddress === null) {
       logger.warn('The address provided is invalid');
+      endRequest({ request: 'profileFeaturedPOAPs', success: 0 });
       return null;
     }
 
@@ -372,6 +403,7 @@ export class CustomGitPOAPResolver {
       const poapData = await retrievePOAPInfo(poap.poapTokenId);
       if (poapData === null) {
         logger.error(`Failed to query POAP ${poap.poapTokenId} data from POAP API`);
+        endRequest({ request: 'profileFeaturedPOAPs', success: 0 });
         return null;
       }
 
@@ -393,6 +425,8 @@ export class CustomGitPOAPResolver {
 
     logger.debug(`Completed request for the featured POAPs for address: ${address}`);
 
+    endRequest({ request: 'profileFeaturedPOAPs', success: 1 });
+
     return results;
   }
 
@@ -410,8 +444,11 @@ export class CustomGitPOAPResolver {
       `Request for holders of GitPOAP ${gitPOAPId} using sort ${sort}, with ${perPage} results per page and page ${page}`,
     );
 
+    const endRequest = gqlRequestDurationSeconds.startTimer();
+
     if ((page === null || perPage === null) && page !== perPage) {
       logger.warn('"page" and "perPage" must be specified together');
+      endRequest({ request: 'gitPOAPHolders', success: 0 });
       return null;
     }
 
@@ -472,6 +509,7 @@ export class CustomGitPOAPResolver {
         break;
       default:
         logger.warn(`Unknown value provided for sort: ${sort}`);
+        endRequest({ request: 'gitPOAPHolders', success: 0 });
         return null;
     }
 
@@ -501,6 +539,8 @@ export class CustomGitPOAPResolver {
     logger.debug(
       `Completed request for holders of GitPOAP ${gitPOAPId} using sort ${sort}, with ${perPage} results per page and page ${page}`,
     );
+
+    endRequest({ request: 'gitPOAPHolders', success: 1 });
 
     return holders;
   }

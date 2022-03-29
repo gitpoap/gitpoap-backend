@@ -3,6 +3,7 @@ import { FeaturedPOAP, Profile } from '@generated/type-graphql';
 import { Context } from '../../context';
 import { resolveENS } from '../../external/ens';
 import { createScopedLogger } from '../../logging';
+import { gqlRequestDurationSeconds } from '../../metrics';
 
 @ObjectType()
 class NullableProfile {
@@ -51,9 +52,12 @@ export class CustomProfileResolver {
 
     logger.info(`Request data for address: ${address}`);
 
+    const endRequest = gqlRequestDurationSeconds.startTimer();
+
     // Resolve ENS if provided
     const resolvedAddress = await resolveENS(address);
     if (resolvedAddress === null) {
+      endRequest({ request: 'profileData', success: 0 });
       return null;
     }
 
@@ -85,6 +89,8 @@ export class CustomProfileResolver {
     }
 
     logger.debug(`Completed request data for address: ${address}`);
+
+    endRequest({ request: 'profileData', success: 1 });
 
     return result;
   }

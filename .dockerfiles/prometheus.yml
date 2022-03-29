@@ -10,4 +10,5 @@ scrape_configs:
     metrics_path: /metrics
     static_configs:
       - targets:
+          - 'server:8080'
           - 'prometheus:9090'

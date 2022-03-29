@@ -22,6 +22,7 @@ import { errorHandler } from './middleware';
 import { NODE_ENV, JWT_SECRET, AWS_PROFILE } from './environment';
 import { createScopedLogger, updateLogLevel } from './logging';
 import minimist from 'minimist';
+import { startMetricsServer } from './metrics';
 
 const main = async () => {
   const logger = createScopedLogger('main');
@@ -69,6 +70,8 @@ const main = async () => {
     logger.debug(`Contacts table:    ${CONTACTS_TABLE_NAME}`);
     logger.debug(`Using AWS Profile: ${AWS_PROFILE}`);
   });
+
+  startMetricsServer();
 };
 
 main();

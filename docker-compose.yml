@@ -19,13 +19,6 @@ services:
     ports:
       - '6379:6379'
 
-  prometheus:
-    build:
-      context: .
-      dockerfile: .dockerfiles/prometheus.Dockerfile
-    ports:
-      - '9090:9090'
-
   fake-poap-auth:
     build:
       context: .
@@ -51,6 +44,7 @@ services:
       dockerfile: .dockerfiles/server.Dockerfile
     ports:
       - '3001:3001'
+      - '8080:8080'
     depends_on:
       - db
       - redis
@@ -59,3 +53,16 @@ services:
     environment:
       - POAP_CLIENT_ID=a good client id
       - POAP_CLIENT_SECRET=super secret!
+
+  prometheus:
+    build:
+      context: .
+      dockerfile: .dockerfiles/prometheus.Dockerfile
+    ports:
+      - '9090:9090'
+    depends_on:
+      - db
+      - redis
+      - fake-poap-api
+      - fake-poap-auth
+      - server

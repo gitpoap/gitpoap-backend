@@ -3,6 +3,7 @@ import { Profile, User } from '@generated/type-graphql';
 import { Context } from '../../context';
 import { resolveENS } from '../../external/ens';
 import { createScopedLogger } from '../../logging';
+import { gqlRequestDurationSeconds } from '../../metrics';
 
 @ObjectType()
 class ProfileWithENS {
@@ -36,8 +37,11 @@ export class CustomSearchResolver {
 
     logger.info(`Request to search for "${text}"`);
 
+    const endRequest = gqlRequestDurationSeconds.startTimer();
+
     if (text.length < 2) {
       logger.info('Skipping search for single character');
+      endRequest({ request: 'search', success: 1 });
       return {
         usersByGithubHandle: [],
         profilesByName: [],
@@ -79,6 +83,8 @@ export class CustomSearchResolver {
     }
 
     logger.debug(`Completed request to search for "${text}"`);
+
+    endRequest({ request: 'search', success: 1 });
 
     return {
       usersByGithubHandle,
