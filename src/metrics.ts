@@ -35,7 +35,7 @@ export function startMetricsServer() {
 
 export const httpRequestDurationSeconds = new Histogram({
   name: 'http_request_duration_microseconds',
-  help: 'Duration of HTTP requests in microseconds',
+  help: 'Duration of HTTP requests in seconds',
   labelNames: ['method', 'path', 'status'],
 });
 register.registerMetric(httpRequestDurationSeconds);
@@ -46,3 +46,31 @@ export const gqlRequestDurationSeconds = new Histogram({
   labelNames: ['request', 'success'],
 });
 register.registerMetric(gqlRequestDurationSeconds);
+
+export const poapRequestDurationSeconds = new Histogram({
+  name: 'poap_request_duration_seconds',
+  help: 'Duration of POAP API requests in seconds',
+  labelNames: ['method', 'path', 'success'],
+});
+register.registerMetric(poapRequestDurationSeconds);
+
+export const ensRequestDurationSeconds = new Histogram({
+  name: 'ens_request_duration_seconds',
+  help: 'Duration of ENS requests in seconds',
+  labelNames: ['method'],
+});
+register.registerMetric(ensRequestDurationSeconds);
+
+export const githubRequestDurationSeconds = new Histogram({
+  name: 'github_request_duration_seconds',
+  help: 'Duration of GitHub API requests in seconds',
+  labelNames: ['method', 'path', 'success'],
+});
+register.registerMetric(githubRequestDurationSeconds);
+
+export const redisRequestDurationSeconds = new Histogram({
+  name: 'redis_request_duration_seconds',
+  help: 'Duration of redis requests in seconds',
+  labelNames: ['method'],
+});
+register.registerMetric(redisRequestDurationSeconds);

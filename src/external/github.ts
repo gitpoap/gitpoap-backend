@@ -7,6 +7,8 @@ import {
   GITHUB_APP_REDIRECT_URL,
 } from '../environment';
 import { createScopedLogger } from '../logging';
+import { githubRequestDurationSeconds } from '../metrics';
+import { URL } from 'url';
 
 export async function requestGithubOAuthToken(code: string) {
   const logger = createScopedLogger('requestGithubOAuthToken');
@@ -38,11 +40,13 @@ export async function requestGithubOAuthToken(code: string) {
   return tokenJson.access_token;
 }
 
-async function makeGithubAPIRequest(url: string, githubToken: string) {
+async function makeGithubAPIRequest(path: string, githubToken: string) {
   const logger = createScopedLogger('makeGithubAPIRequest');
 
+  const endRequest = githubRequestDurationSeconds.startTimer();
+
   try {
-    const githubResponse = await fetch(url, {
+    const githubResponse = await fetch(new URL(path, GITHUB_API_URL).href, {
       method: 'GET',
       headers: {
         Authorization: `token ${githubToken}`,
@@ -54,31 +58,32 @@ async function makeGithubAPIRequest(url: string, githubToken: string) {
       logger.warn(
         `Bad response (${githubResponse.status}) from GitHub: ${await githubResponse.text()}`,
       );
+      endRequest({ method: 'GET', path, success: 0 });
       return null;
     }
+
+    endRequest({ method: 'GET', path, success: 1 });
 
     return await githubResponse.json();
   } catch (err) {
     logger.warn(`Error while calling GitHub: ${err}`);
+    endRequest({ method: 'GET', path, success: 0 });
     return null;
   }
 }
 
 export async function getGithubCurrentUserInfo(githubToken: string) {
-  return await makeGithubAPIRequest(`${GITHUB_API_URL}/user`, githubToken);
+  return await makeGithubAPIRequest(`/user`, githubToken);
 }
 
 export async function getGithubUserById(githubId: number, githubToken: string) {
-  return await makeGithubAPIRequest(`${GITHUB_API_URL}/user/${githubId}`, githubToken);
+  return await makeGithubAPIRequest(`/user/${githubId}`, githubToken);
 }
 
 export async function getGithubRepository(organization: string, name: string, githubToken: string) {
-  return await makeGithubAPIRequest(`${GITHUB_API_URL}/repos/${organization}/${name}`, githubToken);
+  return await makeGithubAPIRequest(`/repos/${organization}/${name}`, githubToken);
 }
 
 export async function getGithubOrganizationAdmins(organization: string, githubToken: string) {
-  return await makeGithubAPIRequest(
-    `${GITHUB_API_URL}/orgs/${organization}/members?role=admin`,
-    githubToken,
-  );
+  return await makeGithubAPIRequest(`/orgs/${organization}/members?role=admin`, githubToken);
 }
