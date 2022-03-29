@@ -7,6 +7,7 @@ import { jwtWithAdminOAuth } from '../middleware';
 import short from 'short-uuid';
 import multer from 'multer';
 import { GitPOAPStatus } from '@generated/type-graphql';
+import { httpRequestDurationSeconds } from '../metrics';
 
 export const gitpoapsRouter = Router();
 
@@ -17,16 +18,20 @@ gitpoapsRouter.post('/', jwtWithAdminOAuth(), upload.single('image'), async func
 
   logger.debug(`Body: ${JSON.stringify(req.body)}`);
 
+  const endRequest = httpRequestDurationSeconds.startTimer();
+
   const schemaResult = CreateGitPOAPSchema.safeParse(req.body);
   if (!schemaResult.success) {
     logger.warn(
       `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
     );
+    endRequest({ method: 'POST', path: '/gitpoaps', status: 400 });
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
   if (!req.file) {
     const msg = 'Missing/invalid "image" upload in request';
     logger.warn(msg);
+    endRequest({ method: 'POST', path: '/gitpoaps', status: 400 });
     return res.status(400).send({ msg });
   }
 
@@ -46,6 +51,7 @@ gitpoapsRouter.post('/', jwtWithAdminOAuth(), upload.single('image'), async func
 
   if (!repo) {
     logger.warn("Repo hasn't been added to GitPOAP");
+    endRequest({ method: 'POST', path: '/gitpoaps', status: 404 });
     return res.status(404).send({
       message: `There is no repo with id: ${githubRepoId}`,
     });
@@ -72,6 +78,7 @@ gitpoapsRouter.post('/', jwtWithAdminOAuth(), upload.single('image'), async func
   );
   if (poapInfo == null) {
     logger.error('Failed to create event via POAP API');
+    endRequest({ method: 'POST', path: '/gitpoaps', status: 500 });
     return res.status(500).send({ msg: 'Failed to create POAP via API' });
   }
 
@@ -95,6 +102,8 @@ gitpoapsRouter.post('/', jwtWithAdminOAuth(), upload.single('image'), async func
     `Completed request to create a new GitPOAP "${req.body.name}" for repo ${githubRepoId}`,
   );
 
+  endRequest({ method: 'POST', path: '/gitpoaps', status: 201 });
+
   return res.status(201).send('CREATED');
 });
 
@@ -107,16 +116,20 @@ gitpoapsRouter.post(
 
     logger.debug(`Body: ${JSON.stringify(req.body)}`);
 
+    const endRequest = httpRequestDurationSeconds.startTimer();
+
     const schemaResult = UploadGitPOAPCodesSchema.safeParse(req.body);
     if (!schemaResult.success) {
       logger.warn(
         `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
       );
+      endRequest({ method: 'POST', path: '/gitpoaps/codes', status: 400 });
       return res.status(400).send({ issues: schemaResult.error.issues });
     }
     if (!req.file) {
       const msg = 'Missing/invalid "codes" upload in request';
       logger.warn(msg);
+      endRequest({ method: 'POST', path: '/gitpoaps/codes', status: 400 });
       return res.status(400).send({ msg });
     }
 
@@ -138,6 +151,7 @@ gitpoapsRouter.post(
     } catch (err) {
       const msg = `Failed to read uploaded file for codes: ${err}`;
       logger.error(msg);
+      endRequest({ method: 'POST', path: '/gitpoaps/codes', status: 500 });
       return res.status(500).send({ msg });
     }
 
@@ -161,6 +175,8 @@ gitpoapsRouter.post(
         status: GitPOAPStatus.APPROVED,
       },
     });
+
+    endRequest({ method: 'POST', path: '/gitpoaps/codes', status: 200 });
 
     return res.status(200).send('UPLOADED');
   },

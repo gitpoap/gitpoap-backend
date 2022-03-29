@@ -5,6 +5,7 @@ import { getGithubOrganizationAdmins } from '../external/github';
 import { UpdateOrganizationSchema } from '../schemas/organizations';
 import { context } from '../context';
 import { AccessTokenPayloadWithOAuth } from '../types/tokens';
+import { httpRequestDurationSeconds } from '../metrics';
 
 export const organizationsRouter = Router();
 
@@ -13,11 +14,14 @@ organizationsRouter.post('/', jwtWithOAuth(), async function (req, res) {
 
   logger.debug(`Body: ${JSON.stringify(req.body)}`);
 
+  const endRequest = httpRequestDurationSeconds.startTimer();
+
   const schemaResult = UpdateOrganizationSchema.safeParse(req.body);
   if (!schemaResult.success) {
     logger.warn(
       `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
     );
+    endRequest({ method: 'POST', path: '/organizations', status: 400 });
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
@@ -34,6 +38,7 @@ organizationsRouter.post('/', jwtWithOAuth(), async function (req, res) {
   if (organization === null) {
     const msg = `Organization with id ${req.body.id} not found`;
     logger.warn(msg);
+    endRequest({ method: 'POST', path: '/organizations', status: 404 });
     return res.status(404).send({ msg });
   }
 
@@ -52,6 +57,7 @@ organizationsRouter.post('/', jwtWithOAuth(), async function (req, res) {
     logger.warn(
       `Non-member (GitHub handle: ${accessToken.githubHandle} of repo ${organization.name} tried to update its data`,
     );
+    endRequest({ method: 'POST', path: '/organizations', status: 401 });
     return res.status(401).send({ msg: `You are not a member of ${organization.name}` });
   }
 
@@ -63,6 +69,8 @@ organizationsRouter.post('/', jwtWithOAuth(), async function (req, res) {
   });
 
   logger.debug(`Completed request to update organization id ${req.body.id}'s info`);
+
+  endRequest({ method: 'POST', path: '/organizations', status: 200 });
 
   return res.status(200).send('UPDATED');
 });

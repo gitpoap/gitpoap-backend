@@ -4,6 +4,7 @@ import jwt from 'express-jwt';
 import { dynamoDB, CONTACTS_TABLE_NAME } from '../dynamo';
 import { JWT_SECRET } from '../environment';
 import { createScopedLogger } from '../logging';
+import { httpRequestDurationSeconds } from '../metrics';
 
 export const subscribeRouter = Router();
 
@@ -15,8 +16,11 @@ subscribeRouter.post(
 
     logger.debug(`Body: ${JSON.stringify(req.body)}`);
 
+    const endRequest = httpRequestDurationSeconds.startTimer();
+
     if (!req.user) {
       logger.warn('Token is invalid');
+      endRequest({ method: 'POST', path: '/subscribe', status: 401 });
       return res.sendStatus(401);
     } else {
       logger.info(`Request to subscribe ${req.body.email}`);
@@ -31,6 +35,8 @@ subscribeRouter.post(
       await dynamoDB.send(new PutItemCommand(params));
 
       logger.debug(`Completed request to subscribe ${req.body.email}`);
+
+      endRequest({ method: 'POST', path: '/subscribe', status: 200 });
 
       res.sendStatus(200);
     }

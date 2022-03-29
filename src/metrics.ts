@@ -36,6 +36,7 @@ export function startMetricsServer() {
 export const httpRequestDurationSeconds = new Histogram({
   name: 'http_request_duration_microseconds',
   help: 'Duration of HTTP requests in microseconds',
+  labelNames: ['method', 'path', 'status'],
 });
 register.registerMetric(httpRequestDurationSeconds);
 
