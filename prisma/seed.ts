@@ -54,8 +54,8 @@ async function main() {
   const org5 = await OrganizationFactory.createOrganization(1555326, 'burz');
 
   /* Create Repos */
-  const repo1 = await RepoFactory.createRepo('GitPOAP Frontend', 1, org4.id);
-  const repo2 = await RepoFactory.createRepo('GitPOAP Backend', 2, org4.id);
+  const repo1 = await RepoFactory.createRepo('gitpoap-fe', 1, org4.id);
+  const repo2 = await RepoFactory.createRepo('gitpoap-backend', 2, org4.id);
   const repo7 = await RepoFactory.createRepo('repo7', 7, org2.id);
   const repo34 = await RepoFactory.createRepo('repo34', 34, org1.id);
   const repo568 = await RepoFactory.createRepo('repo568', 568, org3.id);

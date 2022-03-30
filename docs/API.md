@@ -236,6 +236,21 @@ we can upload it to this endpoint via `multipart/form-data` with two input field
 Note that this endpoint requires that the (GitHub) authenticated user be an admin of GitPOAP,
 as defined by [`ADMIN_GITHUB_IDS` at `src/constants.ts`](https://github.com/gitpoap/gitpoap-backend/blob/main/src/constants.ts).
 
+## Check if a POAP is a GitPOAP
+
+`GET /gitpoaps/poap-id/:id`
+
+To check whether or not a POAP with `:id` is a GitPOAP or not. If not it will return a 404 status,
+but if found it will return specific extra metadata like:
+
+```JSON
+{
+  "year": 2020,
+  "organization": "gitpoap",
+  "repository": "gitpoap-backend"
+}
+```
+
 ## Appendix
 
 ### Generating Signatures
