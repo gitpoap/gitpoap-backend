@@ -13,7 +13,6 @@ import { CustomGitPOAPResolver } from './resolvers/gitpoaps';
 import { CustomProfileResolver } from './resolvers/profiles';
 import { CustomRepoResolver } from './resolvers/repos';
 import { CustomSearchResolver } from './resolvers/search';
-import { CustomUserResolver } from './resolvers/users';
 
 const allResolvers: NonEmptyArray<Function> = [
   // Generated resolvers
@@ -31,7 +30,6 @@ const allResolvers: NonEmptyArray<Function> = [
   CustomProfileResolver,
   CustomRepoResolver,
   CustomSearchResolver,
-  CustomUserResolver,
 ];
 
 export const getSchema = buildSchema({

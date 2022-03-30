@@ -4,6 +4,7 @@ import { Context } from '../../context';
 import { resolveENS } from '../../external/ens';
 import { createScopedLogger } from '../../logging';
 import { gqlRequestDurationSeconds } from '../../metrics';
+import { getLastMonthStartDatetime } from './util';
 
 @ObjectType()
 class NullableProfile {
@@ -52,6 +53,51 @@ class ProfileWithClaimsCount {
 
 @Resolver(of => Profile)
 export class CustomProfileResolver {
+  @Query(returns => Number)
+  async totalContributors(@Ctx() { prisma }: Context): Promise<Number> {
+    const logger = createScopedLogger('GQL totalContributors');
+
+    logger.info('Request for total contributors');
+
+    const endRequest = gqlRequestDurationSeconds.startTimer();
+
+    const result: { count: number }[] = await prisma.$queryRaw`
+      SELECT COUNT(DISTINCT c.address)
+      FROM "Claim" AS c
+      WHERE c.address IS NOT NULL
+        AND c.status = ${ClaimStatus.CLAIMED}
+    `;
+
+    logger.debug('Completed request for total contributors');
+
+    endRequest({ request: 'totalContributors', success: 1 });
+
+    return result[0].count;
+  }
+
+  @Query(returns => Number)
+  async lastMonthContributors(@Ctx() { prisma }: Context): Promise<Number> {
+    const logger = createScopedLogger('GQL lastMonthContributors');
+
+    logger.info("Request for last month's contributors");
+
+    const endRequest = gqlRequestDurationSeconds.startTimer();
+
+    const result: { count: number }[] = await prisma.$queryRaw`
+      SELECT COUNT(DISTINCT c.address)
+      FROM "Claim" AS c
+      WHERE c.address IS NOT NULL
+        AND c.status = ${ClaimStatus.CLAIMED}
+        AND c."updatedAt" > ${getLastMonthStartDatetime()}
+    `;
+
+    logger.debug("Completed request for last month's contributors");
+
+    endRequest({ request: 'lastMonthContributors', success: 1 });
+
+    return result[0].count;
+  }
+
   @Query(returns => NullableProfile, { nullable: true })
   async profileData(
     @Ctx() { prisma }: Context,
