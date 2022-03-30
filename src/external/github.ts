@@ -43,7 +43,7 @@ export async function requestGithubOAuthToken(code: string) {
 async function makeGithubAPIRequest(path: string, githubToken: string) {
   const logger = createScopedLogger('makeGithubAPIRequest');
 
-  const endRequest = githubRequestDurationSeconds.startTimer();
+  const endTimer = githubRequestDurationSeconds.startTimer('GET', path);
 
   try {
     const githubResponse = await fetch(new URL(path, GITHUB_API_URL).href, {
@@ -58,16 +58,16 @@ async function makeGithubAPIRequest(path: string, githubToken: string) {
       logger.warn(
         `Bad response (${githubResponse.status}) from GitHub: ${await githubResponse.text()}`,
       );
-      endRequest({ method: 'GET', path, success: 0 });
+      endTimer({ success: 0 });
       return null;
     }
 
-    endRequest({ method: 'GET', path, success: 1 });
+    endTimer({ success: 1 });
 
     return await githubResponse.json();
   } catch (err) {
     logger.warn(`Error while calling GitHub: ${err}`);
-    endRequest({ method: 'GET', path, success: 0 });
+    endTimer({ success: 0 });
     return null;
   }
 }

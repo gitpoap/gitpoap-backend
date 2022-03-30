@@ -88,11 +88,11 @@ claimsRouter.post(
 
     logger.debug(`Body: ${JSON.stringify(req.body)}`);
 
-    const endRequest = httpRequestDurationSeconds.startTimer();
+    const endTimer = httpRequestDurationSeconds.startTimer('POST', '/claims');
 
     if (!req.user) {
       logger.warn('No access token provided');
-      endRequest({ method: 'POST', path: '/claims', status: 401 });
+      endTimer({ status: 401 });
       return res.status(401).send({ message: 'Invalid or missing Access Token' });
     }
 
@@ -103,7 +103,7 @@ claimsRouter.post(
       logger.warn(
         `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
       );
-      endRequest({ method: 'POST', path: '/claims', status: 400 });
+      endTimer({ status: 400 });
       return res.status(400).send({ issues: schemaResult.error.issues });
     }
 
@@ -113,7 +113,7 @@ claimsRouter.post(
     const resolvedAddress = await resolveENS(req.body.address);
     if (resolvedAddress === null) {
       logger.warn('Request address is invalid');
-      endRequest({ method: 'POST', path: '/claims', status: 400 });
+      endTimer({ status: 400 });
       return res.status(400).send({ msg: `${req.body.address} is not a valid address` });
     }
 
@@ -123,7 +123,7 @@ claimsRouter.post(
       })
     ) {
       logger.warn('Request signature is invalid');
-      endRequest({ method: 'POST', path: '/claims', status: 401 });
+      endTimer({ status: 401 });
       return res.status(401).send({ msg: 'The signature is not valid for this address and data' });
     }
 
@@ -261,7 +261,7 @@ claimsRouter.post(
       `Completed request claiming IDs ${req.body.claimIds} for address ${req.body.address}`,
     );
 
-    endRequest({ method: 'POST', path: '/claims', status: 200 });
+    endTimer({ status: 200 });
 
     res.status(200).send({
       claimed: foundClaims,
@@ -275,14 +275,14 @@ claimsRouter.post('/create', jwtWithAdminOAuth(), async function (req, res) {
 
   logger.debug(`Body: ${JSON.stringify(req.body)}`);
 
-  const endRequest = httpRequestDurationSeconds.startTimer();
+  const endTimer = httpRequestDurationSeconds.startTimer('POST', '/claims/create');
 
   const schemaResult = CreateGitPOAPClaimsSchema.safeParse(req.body);
   if (!schemaResult.success) {
     logger.warn(
       `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
     );
-    endRequest({ method: 'POST', path: '/claims/create', status: 400 });
+    endTimer({ status: 400 });
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
@@ -297,13 +297,13 @@ claimsRouter.post('/create', jwtWithAdminOAuth(), async function (req, res) {
   });
   if (gitPOAPData === null) {
     logger.warn(`GitPOAP ID ${req.body.gitPOAPId} not found`);
-    endRequest({ method: 'POST', path: '/claims/create', status: 404 });
+    endTimer({ status: 404 });
     return res.status(404).send({ msg: `There is not GitPOAP with ID: ${req.body.gitPOAPId}` });
   }
   if (gitPOAPData.status === GitPOAPStatus.UNAPPROVED) {
     const msg = `GitPOAP ID ${req.body.gitPOAPId} has not been approved yet`;
     logger.warn(msg);
-    endRequest({ method: 'POST', path: '/claims/create', status: 400 });
+    endTimer({ status: 400 });
     return res.status(400).send({ msg });
   }
 
@@ -350,7 +350,7 @@ claimsRouter.post('/create', jwtWithAdminOAuth(), async function (req, res) {
   }
 
   if (notFound.length > 0) {
-    endRequest({ method: 'POST', path: '/claims/create', status: 400 });
+    endTimer({ status: 400 });
     return res.status(400).send({
       msg: 'Some of the githubIds were not found',
       ids: notFound,
@@ -361,7 +361,7 @@ claimsRouter.post('/create', jwtWithAdminOAuth(), async function (req, res) {
     `Completed request to create ${req.body.recipientGithubIds.length} claims for GitPOAP Id: ${req.body.gitPOAPId}`,
   );
 
-  endRequest({ method: 'POST', path: '/claims/create', status: 200 });
+  endTimer({ status: 200 });
 
   return res.status(200).send('CREATED');
 });

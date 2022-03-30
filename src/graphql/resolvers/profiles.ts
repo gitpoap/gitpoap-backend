@@ -59,7 +59,7 @@ export class CustomProfileResolver {
 
     logger.info('Request for total contributors');
 
-    const endRequest = gqlRequestDurationSeconds.startTimer();
+    const endTimer = gqlRequestDurationSeconds.startTimer('totalContributors');
 
     const result: { count: number }[] = await prisma.$queryRaw`
       SELECT COUNT(DISTINCT c.address)
@@ -70,7 +70,7 @@ export class CustomProfileResolver {
 
     logger.debug('Completed request for total contributors');
 
-    endRequest({ request: 'totalContributors', success: 1 });
+    endTimer({ success: 1 });
 
     return result[0].count;
   }
@@ -81,7 +81,7 @@ export class CustomProfileResolver {
 
     logger.info("Request for last month's contributors");
 
-    const endRequest = gqlRequestDurationSeconds.startTimer();
+    const endTimer = gqlRequestDurationSeconds.startTimer('lastMonthContributors');
 
     const result: { count: number }[] = await prisma.$queryRaw`
       SELECT COUNT(DISTINCT c.address)
@@ -93,7 +93,7 @@ export class CustomProfileResolver {
 
     logger.debug("Completed request for last month's contributors");
 
-    endRequest({ request: 'lastMonthContributors', success: 1 });
+    endTimer({ success: 1 });
 
     return result[0].count;
   }
@@ -107,12 +107,12 @@ export class CustomProfileResolver {
 
     logger.info(`Request data for address: ${address}`);
 
-    const endRequest = gqlRequestDurationSeconds.startTimer();
+    const endTimer = gqlRequestDurationSeconds.startTimer('profileData');
 
     // Resolve ENS if provided
     const resolvedAddress = await resolveENS(address);
     if (resolvedAddress === null) {
-      endRequest({ request: 'profileData', success: 0 });
+      endTimer({ success: 0 });
       return null;
     }
 
@@ -145,7 +145,7 @@ export class CustomProfileResolver {
 
     logger.debug(`Completed request data for address: ${address}`);
 
-    endRequest({ request: 'profileData', success: 1 });
+    endTimer({ success: 1 });
 
     return result;
   }
@@ -159,7 +159,7 @@ export class CustomProfileResolver {
 
     logger.info(`Request for ${count} most honored contributors`);
 
-    const endRequest = gqlRequestDurationSeconds.startTimer();
+    const endTimer = gqlRequestDurationSeconds.startTimer('mostHonoredContributors');
 
     type ResultType = Profile & {
       claimsCount: Number;
@@ -185,7 +185,7 @@ export class CustomProfileResolver {
 
     logger.debug(`Completed request for ${count} most honored contributors`);
 
-    endRequest({ request: 'mostHonoredContributors', success: 1 });
+    endTimer({ success: 1 });
 
     return finalResults;
   }

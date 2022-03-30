@@ -109,7 +109,7 @@ async function makeGenericPOAPRequest(
 ) {
   const logger = createScopedLogger('makeGenericPOAPRequest');
 
-  const endRequest = poapRequestDurationSeconds.startTimer();
+  const endTimer = poapRequestDurationSeconds.startTimer(method, path);
 
   let requestOptions;
   if (body !== null) {
@@ -132,16 +132,16 @@ async function makeGenericPOAPRequest(
       logger.warn(
         `Bad response (${poapResponse.status}) from POAP API: ${await poapResponse.text()}`,
       );
-      endRequest({ method, path, success: 0 });
+      endTimer({ success: 0 });
       return null;
     }
 
-    endRequest({ method, path, success: 1 });
+    endTimer({ success: 1 });
 
     return await poapResponse.json();
   } catch (err) {
     logger.warn(`Error while calling POAP API: ${err}`);
-    endRequest({ method, path, success: 0 });
+    endTimer({ success: 0 });
     return null;
   }
 }

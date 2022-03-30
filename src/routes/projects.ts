@@ -15,14 +15,14 @@ projectsRouter.post('/', jwtWithOAuth(), async function (req, res) {
 
   logger.debug(`Body: ${JSON.stringify(req.body)}`);
 
-  const endRequest = httpRequestDurationSeconds.startTimer();
+  const endTimer = httpRequestDurationSeconds.startTimer('POST', '/projects');
 
   const schemaResult = AddProjectSchema.safeParse(req.body);
   if (!schemaResult.success) {
     logger.warn(
       `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
     );
-    endRequest({ method: 'POST', path: '/projects', status: 400 });
+    endTimer({ status: 400 });
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
@@ -35,7 +35,7 @@ projectsRouter.post('/', jwtWithOAuth(), async function (req, res) {
   );
   if (repoInfo === null) {
     logger.warn(`Couldn't find ${req.body.organization}/${req.body.repository} on GitHub`);
-    endRequest({ method: 'POST', path: '/projects', status: 400 });
+    endTimer({ status: 400 });
     return res.status(400).send({
       message: 'Failed to lookup repository on GitHub',
     });
@@ -62,7 +62,7 @@ projectsRouter.post('/', jwtWithOAuth(), async function (req, res) {
 
   if (repo) {
     logger.warn(`${req.body.organization}/${repoInfo.name} already exists`);
-    endRequest({ method: 'POST', path: '/projects', status: 200 });
+    endTimer({ status: 200 });
     return res.status(200).send('ALREADY EXISTS');
   }
 
@@ -76,7 +76,7 @@ projectsRouter.post('/', jwtWithOAuth(), async function (req, res) {
 
   logger.debug(`Completed request to add ${req.body.organization}/${req.body.repository}`);
 
-  endRequest({ method: 'POST', path: '/projects', status: 201 });
+  endTimer({ status: 201 });
 
   return res.status(201).send('CREATED');
 });

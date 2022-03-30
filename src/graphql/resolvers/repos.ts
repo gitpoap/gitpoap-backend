@@ -13,13 +13,13 @@ export class CustomRepoResolver {
 
     logger.info('Request for total number of repos');
 
-    const endRequest = gqlRequestDurationSeconds.startTimer();
+    const endTimer = gqlRequestDurationSeconds.startTimer('totalRepos');
 
     const result = await prisma.repo.count();
 
     logger.debug('Completed request for total number of repos');
 
-    endRequest({ request: 'totalRepos', success: 1 });
+    endTimer({ success: 1 });
 
     return result;
   }
@@ -30,7 +30,7 @@ export class CustomRepoResolver {
 
     logger.info("Request for count of last month's new repos");
 
-    const endRequest = gqlRequestDurationSeconds.startTimer();
+    const endTimer = gqlRequestDurationSeconds.startTimer('lastMonthRepos');
 
     const result = await prisma.repo.aggregate({
       _count: {
@@ -43,7 +43,7 @@ export class CustomRepoResolver {
 
     logger.debug("Completed request for count of last month's new repos");
 
-    endRequest({ request: 'lastMonthRepos', success: 1 });
+    endTimer({ success: 1 });
 
     return result._count.id;
   }
@@ -57,7 +57,7 @@ export class CustomRepoResolver {
 
     logger.info(`Request for the ${count} most recently added projects`);
 
-    const endRequest = gqlRequestDurationSeconds.startTimer();
+    const endTimer = gqlRequestDurationSeconds.startTimer('recentlyAddedProjects');
 
     const results = await prisma.repo.findMany({
       orderBy: {
@@ -71,7 +71,7 @@ export class CustomRepoResolver {
 
     logger.debug(`Completed request for the ${count} most recently added projects`);
 
-    endRequest({ request: 'recentlyAddedProjects', success: 1 });
+    endTimer({ success: 1 });
 
     return results;
   }

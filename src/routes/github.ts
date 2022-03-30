@@ -28,14 +28,14 @@ githubRouter.post('/', async function (req, res) {
 
   logger.debug(`Body: ${JSON.stringify(req.body)}`);
 
-  const endRequest = httpRequestDurationSeconds.startTimer();
+  const endTimer = httpRequestDurationSeconds.startTimer('POST', '/github');
 
   const schemaResult = RequestAccessTokenSchema.safeParse(req.body);
   if (!schemaResult.success) {
     logger.warn(
       `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
     );
-    endRequest({ method: 'POST', path: '/github', status: 400 });
+    endTimer({ status: 400 });
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
@@ -54,7 +54,7 @@ githubRouter.post('/', async function (req, res) {
     githubToken = await requestGithubOAuthToken(code);
   } catch (err) {
     logger.error(`Failed to request OAuth token with code: ${err}`);
-    endRequest({ method: 'POST', path: '/github', status: 400 });
+    endTimer({ status: 400 });
     return res.status(400).send({
       message: 'A server error has occurred - GitHub access token exchange',
       error: JSON.parse(err as string),
@@ -64,7 +64,7 @@ githubRouter.post('/', async function (req, res) {
   const githubUser = await getGithubCurrentUserInfo(githubToken);
   if (githubUser === null) {
     logger.error('Failed to retrieve data about logged in user');
-    endRequest({ method: 'POST', path: '/github', status: 400 });
+    endTimer({ status: 400 });
     return res.status(400).send({
       message: 'A server error has occurred - GitHub current user',
     });
@@ -97,7 +97,7 @@ githubRouter.post('/', async function (req, res) {
 
   logger.debug('Completed a GitHub login request');
 
-  endRequest({ method: 'POST', path: '/github', status: 200 });
+  endTimer({ status: 200 });
 
   return res.status(200).json({
     accessToken: generateAccessToken(authToken.id, user.githubId, user.githubHandle),
@@ -110,14 +110,14 @@ githubRouter.post('/refresh', async function (req, res) {
 
   logger.debug(`Body: ${JSON.stringify(req.body)}`);
 
-  const endRequest = httpRequestDurationSeconds.startTimer();
+  const endTimer = httpRequestDurationSeconds.startTimer('POST', '/github/refresh');
 
   const schemaResult = RefreshAccessTokenSchema.safeParse(req.body);
   if (!schemaResult.success) {
     logger.warn(
       `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
     );
-    endRequest({ method: 'POST', path: '/github', status: 400 });
+    endTimer({ status: 400 });
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
@@ -129,7 +129,7 @@ githubRouter.post('/refresh', async function (req, res) {
     payload = <RefreshTokenPayload>verify(token, JWT_SECRET);
   } catch (err) {
     logger.warn('The refresh token is invalid');
-    endRequest({ method: 'POST', path: '/github', status: 401 });
+    endTimer({ status: 401 });
     return res.status(401).send({ message: 'The refresh token is invalid' });
   }
 
@@ -148,7 +148,7 @@ githubRouter.post('/refresh', async function (req, res) {
 
   if (authToken === null) {
     logger.warn('The refresh token is invalid');
-    endRequest({ method: 'POST', path: '/github', status: 401 });
+    endTimer({ status: 401 });
     return res.status(401).send({ message: 'The refresh token is invalid' });
   }
 
@@ -164,7 +164,7 @@ githubRouter.post('/refresh', async function (req, res) {
       },
     });
 
-    endRequest({ method: 'POST', path: '/github', status: 401 });
+    endTimer({ status: 401 });
 
     return res.status(401).send({ message: 'The refresh token has already been used' });
   }
@@ -181,7 +181,7 @@ githubRouter.post('/refresh', async function (req, res) {
 
   logger.debug('Completed request to refresh AuthToken');
 
-  endRequest({ method: 'POST', path: '/github', status: 200 });
+  endTimer({ status: 200 });
 
   return res.status(200).json({
     accessToken: generateAccessToken(authToken.id, payload.githubId, authToken.user.githubHandle),

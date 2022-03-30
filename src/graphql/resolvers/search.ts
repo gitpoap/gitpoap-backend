@@ -37,11 +37,11 @@ export class CustomSearchResolver {
 
     logger.info(`Request to search for "${text}"`);
 
-    const endRequest = gqlRequestDurationSeconds.startTimer();
+    const endTimer = gqlRequestDurationSeconds.startTimer('search');
 
     if (text.length < 2) {
       logger.info('Skipping search for single character');
-      endRequest({ request: 'search', success: 1 });
+      endTimer({ success: 1 });
       return {
         usersByGithubHandle: [],
         profilesByName: [],
@@ -84,7 +84,7 @@ export class CustomSearchResolver {
 
     logger.debug(`Completed request to search for "${text}"`);
 
-    endRequest({ request: 'search', success: 1 });
+    endTimer({ success: 1 });
 
     return {
       usersByGithubHandle,
