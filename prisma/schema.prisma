@@ -55,13 +55,13 @@ model Organization {
 }
 
 model Repo {
-  id             Int           @id @default(autoincrement())
-  name           String        @db.VarChar(50)
-  githubRepoId   Int           @unique
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  id             Int          @id @default(autoincrement())
+  name           String       @db.VarChar(50)
+  githubRepoId   Int          @unique
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
   organizationId Int
-  organization   Organization? @relation(fields: [organizationId], references: [id])
+  organization   Organization @relation(fields: [organizationId], references: [id])
   gitPOAPs       GitPOAP[]
 }
 
