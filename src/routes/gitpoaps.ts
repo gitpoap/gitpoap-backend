@@ -107,6 +107,49 @@ gitpoapsRouter.post('/', jwtWithAdminOAuth(), upload.single('image'), async func
   return res.status(201).send('CREATED');
 });
 
+gitpoapsRouter.get('/poap-id/:id', async function (req, res) {
+  const logger = createScopedLogger('GET /gitpoaps/poap-id/:id');
+
+  logger.debug(`Params: ${JSON.stringify(req.params)}`);
+
+  const endRequest = httpRequestDurationSeconds.startTimer();
+
+  logger.info(`Request to validate if POAP ID ${req.params.id} is a GitPOAP`);
+
+  const claimData = await context.prisma.claim.findUnique({
+    where: {
+      poapTokenId: req.params.id,
+    },
+    include: {
+      gitPOAP: {
+        include: {
+          repo: {
+            include: {
+              organization: true,
+            },
+          },
+        },
+      },
+    },
+  });
+  if (claimData === null) {
+    const msg = `There's no GitPOAP claimed with POAP ID: ${req.params.id}`;
+    logger.info(msg);
+    endRequest({ method: 'GET', path: '/gitpoaps/poap-id/:id', status: 404 });
+    return res.status(404).send({ msg });
+  }
+
+  const data = {
+    year: claimData.gitPOAP.year,
+    organization: claimData.gitPOAP.repo.organization.name,
+    repository: claimData.gitPOAP.repo.name,
+  };
+
+  logger.debug(`Completed request to validate if POAP ID ${req.params.id} is a GitPOAP`);
+
+  return res.status(200).send(data);
+});
+
 gitpoapsRouter.post(
   '/codes',
   jwtWithAdminOAuth(),
