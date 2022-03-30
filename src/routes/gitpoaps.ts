@@ -107,8 +107,8 @@ gitpoapsRouter.post('/', jwtWithAdminOAuth(), upload.single('image'), async func
   return res.status(201).send('CREATED');
 });
 
-gitpoapsRouter.get('/poap-id/:id', async function (req, res) {
-  const logger = createScopedLogger('GET /gitpoaps/poap-id/:id');
+gitpoapsRouter.get('/poap-token-id/:id', async function (req, res) {
+  const logger = createScopedLogger('GET /gitpoaps/poap-token-id/:id');
 
   logger.debug(`Params: ${JSON.stringify(req.params)}`);
 

@@ -238,7 +238,7 @@ as defined by [`ADMIN_GITHUB_IDS` at `src/constants.ts`](https://github.com/gitp
 
 ## Check if a POAP is a GitPOAP
 
-`GET /gitpoaps/poap-id/:id`
+`GET /gitpoaps/poap-token-id/:id`
 
 To check whether or not a POAP with `:id` is a GitPOAP or not. If not it will return a 404 status,
 but if found it will return specific extra metadata like:
