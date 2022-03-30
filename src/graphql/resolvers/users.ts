@@ -5,15 +5,6 @@ import { Context } from '../../context';
 import { createScopedLogger } from '../../logging';
 import { gqlRequestDurationSeconds } from '../../metrics';
 
-@ObjectType()
-class UserWithClaimsCount {
-  @Field(() => User)
-  user: User;
-
-  @Field()
-  claimsCount: Number;
-}
-
 @Resolver(of => User)
 export class CustomUserResolver {
   @Query(returns => Number)
@@ -55,45 +46,5 @@ export class CustomUserResolver {
     endRequest({ request: 'lastMonthContributors', success: 1 });
 
     return result._count.id;
-  }
-
-  @Query(returns => [UserWithClaimsCount])
-  async mostHonoredContributors(
-    @Ctx() { prisma }: Context,
-    @Arg('count', { defaultValue: 10 }) count: Number,
-  ): Promise<UserWithClaimsCount[]> {
-    const logger = createScopedLogger('GQL mostHonoredContributors');
-
-    logger.info(`Request for ${count} most honored contributors`);
-
-    const endRequest = gqlRequestDurationSeconds.startTimer();
-
-    type ResultType = User & {
-      claimsCount: Number;
-    };
-
-    const results: ResultType[] = await prisma.$queryRaw`
-      SELECT u.*, COUNT(c.id) AS "claimsCount"
-      FROM "User" AS u
-      JOIN "Claim" AS c ON c."userId" = u.id
-      WHERE c.status = ${ClaimStatus.CLAIMED}
-      GROUP BY u.id
-      ORDER BY "claimsCount" DESC
-      LIMIT ${count}
-    `;
-
-    let finalResults = [];
-
-    for (const result of results) {
-      const { claimsCount, ...user } = result;
-
-      finalResults.push({ user, claimsCount });
-    }
-
-    logger.debug(`Completed request for ${count} most honored contributors`);
-
-    endRequest({ request: 'mostHonoredContributors', success: 1 });
-
-    return finalResults;
   }
 }

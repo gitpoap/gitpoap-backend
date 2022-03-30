@@ -1,5 +1,5 @@
 import { Arg, Ctx, Field, ObjectType, Resolver, Query } from 'type-graphql';
-import { FeaturedPOAP, Profile } from '@generated/type-graphql';
+import { ClaimStatus, FeaturedPOAP, Profile } from '@generated/type-graphql';
 import { Context } from '../../context';
 import { resolveENS } from '../../external/ens';
 import { createScopedLogger } from '../../logging';
@@ -39,6 +39,15 @@ class NullableProfile {
 
   @Field(() => [FeaturedPOAP])
   featuredPOAPs: FeaturedPOAP[];
+}
+
+@ObjectType()
+class ProfileWithClaimsCount {
+  @Field(() => Profile)
+  profile: Profile;
+
+  @Field()
+  claimsCount: Number;
 }
 
 @Resolver(of => Profile)
@@ -93,5 +102,45 @@ export class CustomProfileResolver {
     endRequest({ request: 'profileData', success: 1 });
 
     return result;
+  }
+
+  @Query(returns => [ProfileWithClaimsCount])
+  async mostHonoredContributors(
+    @Ctx() { prisma }: Context,
+    @Arg('count', { defaultValue: 10 }) count: Number,
+  ): Promise<ProfileWithClaimsCount[]> {
+    const logger = createScopedLogger('GQL mostHonoredContributors');
+
+    logger.info(`Request for ${count} most honored contributors`);
+
+    const endRequest = gqlRequestDurationSeconds.startTimer();
+
+    type ResultType = Profile & {
+      claimsCount: Number;
+    };
+
+    const results: ResultType[] = await prisma.$queryRaw`
+      SELECT p.*, COUNT(c.id) AS "claimsCount"
+      FROM "Profile" AS p
+      JOIN "Claim" AS c ON c.address = p.address
+      WHERE c.status = ${ClaimStatus.CLAIMED}
+      GROUP BY p.id
+      ORDER BY "claimsCount" DESC
+      LIMIT ${count}
+    `;
+
+    let finalResults = [];
+
+    for (const result of results) {
+      const { claimsCount, ...profile } = result;
+
+      finalResults.push({ profile, claimsCount });
+    }
+
+    logger.debug(`Completed request for ${count} most honored contributors`);
+
+    endRequest({ request: 'mostHonoredContributors', success: 1 });
+
+    return finalResults;
   }
 }

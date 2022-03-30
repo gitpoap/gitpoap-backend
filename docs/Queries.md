@@ -43,10 +43,9 @@ The query to get the most honored contributors is as follows:
 
 ```graphql
 {
-  mostHonoredContributors(count: 10) {
-    user {
-      id
-      githubHandle
+  mostHonoredContributors(count: 2) {
+    profile {
+      address
     }
     claimsCount
   }
@@ -60,11 +59,16 @@ and returns data in the form:
   "data": {
     "mostHonoredContributors": [
       {
-        "user": {
-          "id": 2,
-          "githubHandle": "colfaxs"
+        "profile": {
+          "address": "0xae32d159bb3abfcadfabe7abb461c2ab4805596d"
         },
-        "claimsCount": 1
+        "claimsCount": 4
+      },
+      {
+        "profile": {
+          "address": "0xae95f7e7fb2fcf86148ef832faed2752ae5a358a"
+        },
+        "claimsCount": 3
       }
     ]
   }
