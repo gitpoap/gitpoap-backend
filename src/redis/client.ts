@@ -28,33 +28,32 @@ export function createRedisClient(): RedisClient {
       return await client.connect();
     },
     setValue: async (prefix: string, key: string, value: string, ttl?: number) => {
-      const endRequest = redisRequestDurationSeconds.startTimer();
+      const endTimer = redisRequestDurationSeconds.startTimer('SET');
+      let result;
       if (ttl) {
-        const result = await client.set(genKey(prefix, key), value, { EX: ttl });
-        endRequest({ method: 'SET' });
-        return result;
+        result = await client.set(genKey(prefix, key), value, { EX: ttl });
       } else {
-        const result = await client.set(genKey(prefix, key), value);
-        endRequest({ method: 'SET' });
-        return result;
+        result = await client.set(genKey(prefix, key), value);
       }
+      endTimer();
+      return result;
     },
     getValue: async (prefix: string, key: string) => {
-      const endRequest = redisRequestDurationSeconds.startTimer();
+      const endTimer = redisRequestDurationSeconds.startTimer('GET');
       const result = await client.get(genKey(prefix, key));
-      endRequest({ method: 'GET' });
+      endTimer();
       return result;
     },
     deleteKey: async (prefix: string, key: string) => {
-      const endRequest = redisRequestDurationSeconds.startTimer();
+      const endTimer = redisRequestDurationSeconds.startTimer('DEL');
       const result = await client.del(genKey(prefix, key));
-      endRequest({ method: 'DEL' });
+      endTimer();
       return result;
     },
     deletePrefix: async (prefix: string) => {
-      const endRequest = redisRequestDurationSeconds.startTimer();
+      const endTimer = redisRequestDurationSeconds.startTimer('DEL PREFIX');
       const result = await client.eval(deleteScript, { arguments: [`${prefix}:*`] });
-      endRequest({ method: 'DEL PREFIX' });
+      endTimer();
       return result;
     },
   };

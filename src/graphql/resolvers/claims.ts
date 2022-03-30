@@ -24,7 +24,7 @@ export class CustomClaimResolver {
 
     logger.info('Request for total numbr of Claims');
 
-    const endRequest = gqlRequestDurationSeconds.startTimer();
+    const endTimer = gqlRequestDurationSeconds.startTimer('totalClaims');
 
     const result = await prisma.claim.count({
       where: {
@@ -34,7 +34,7 @@ export class CustomClaimResolver {
 
     logger.debug('Completed request for total numbr of Claims');
 
-    endRequest({ request: 'totalClaims', success: 1 });
+    endTimer({ success: 1 });
 
     return result;
   }
@@ -45,7 +45,7 @@ export class CustomClaimResolver {
 
     logger.info('Request for the count of Claims made in the last month');
 
-    const endRequest = gqlRequestDurationSeconds.startTimer();
+    const endTimer = gqlRequestDurationSeconds.startTimer('lastMonthClaims');
 
     const result = await prisma.claim.aggregate({
       _count: {
@@ -59,7 +59,7 @@ export class CustomClaimResolver {
 
     logger.debug('Completed request for the count of Claims made in the last month');
 
-    endRequest({ request: 'lastMonthClaims', success: 1 });
+    endTimer({ success: 1 });
 
     return result._count.id;
   }
@@ -73,7 +73,7 @@ export class CustomClaimResolver {
 
     logger.info(`Request for the claims for githubId: ${githubId}`);
 
-    const endRequest = gqlRequestDurationSeconds.startTimer();
+    const endTimer = gqlRequestDurationSeconds.startTimer('userClaims');
 
     const claims = await prisma.claim.findMany({
       where: {
@@ -100,7 +100,7 @@ export class CustomClaimResolver {
 
       if (eventData === null) {
         logger.error(`Failed to query event ${gitPOAP.poapEventId} data from POAP API`);
-        endRequest({ request: 'userClaims', success: 0 });
+        endTimer({ success: 0 });
         return null;
       }
 
@@ -112,7 +112,7 @@ export class CustomClaimResolver {
 
     logger.debug(`Completed request for the claims for githubId: ${githubId}`);
 
-    endRequest({ request: 'userClaims', success: 1 });
+    endTimer({ success: 1 });
 
     return results;
   }

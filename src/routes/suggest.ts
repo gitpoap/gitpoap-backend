@@ -27,11 +27,11 @@ suggestRouter.post(
 
     logger.debug(`Body: ${JSON.stringify(req.body)}`);
 
-    const endRequest = httpRequestDurationSeconds.startTimer();
+    const endTimer = httpRequestDurationSeconds.startTimer('POST', '/suggest');
 
     if (!req.user) {
       logger.warn('Token is invalid');
-      endRequest({ method: 'POST', path: '/suggest', status: 401 });
+      endTimer({ status: 401 });
       return res.sendStatus(401);
     } else {
       logger.info(`Request from ${req.body.email} to make a suggestion`);
@@ -50,7 +50,7 @@ suggestRouter.post(
 
       logger.debug(`Completed request from ${req.body.email} to make a suggestion`);
 
-      endRequest({ method: 'POST', path: '/suggest', status: 200 });
+      endTimer({ status: 200 });
 
       res.sendStatus(200);
     }

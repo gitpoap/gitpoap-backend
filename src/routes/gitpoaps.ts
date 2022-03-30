@@ -18,20 +18,20 @@ gitpoapsRouter.post('/', jwtWithAdminOAuth(), upload.single('image'), async func
 
   logger.debug(`Body: ${JSON.stringify(req.body)}`);
 
-  const endRequest = httpRequestDurationSeconds.startTimer();
+  const endTimer = httpRequestDurationSeconds.startTimer('POST', '/gitpoaps');
 
   const schemaResult = CreateGitPOAPSchema.safeParse(req.body);
   if (!schemaResult.success) {
     logger.warn(
       `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
     );
-    endRequest({ method: 'POST', path: '/gitpoaps', status: 400 });
+    endTimer({ status: 400 });
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
   if (!req.file) {
     const msg = 'Missing/invalid "image" upload in request';
     logger.warn(msg);
-    endRequest({ method: 'POST', path: '/gitpoaps', status: 400 });
+    endTimer({ status: 400 });
     return res.status(400).send({ msg });
   }
 
@@ -51,7 +51,7 @@ gitpoapsRouter.post('/', jwtWithAdminOAuth(), upload.single('image'), async func
 
   if (!repo) {
     logger.warn("Repo hasn't been added to GitPOAP");
-    endRequest({ method: 'POST', path: '/gitpoaps', status: 404 });
+    endTimer({ status: 404 });
     return res.status(404).send({
       message: `There is no repo with id: ${githubRepoId}`,
     });
@@ -78,7 +78,7 @@ gitpoapsRouter.post('/', jwtWithAdminOAuth(), upload.single('image'), async func
   );
   if (poapInfo == null) {
     logger.error('Failed to create event via POAP API');
-    endRequest({ method: 'POST', path: '/gitpoaps', status: 500 });
+    endTimer({ status: 500 });
     return res.status(500).send({ msg: 'Failed to create POAP via API' });
   }
 
@@ -102,7 +102,7 @@ gitpoapsRouter.post('/', jwtWithAdminOAuth(), upload.single('image'), async func
     `Completed request to create a new GitPOAP "${req.body.name}" for repo ${githubRepoId}`,
   );
 
-  endRequest({ method: 'POST', path: '/gitpoaps', status: 201 });
+  endTimer({ status: 201 });
 
   return res.status(201).send('CREATED');
 });
@@ -112,7 +112,7 @@ gitpoapsRouter.get('/poap-token-id/:id', async function (req, res) {
 
   logger.debug(`Params: ${JSON.stringify(req.params)}`);
 
-  const endRequest = httpRequestDurationSeconds.startTimer();
+  const endTimer = httpRequestDurationSeconds.startTimer('GET', '/gitpoaps/poap-token-id/:id');
 
   logger.info(`Request to validate if POAP ID ${req.params.id} is a GitPOAP`);
 
@@ -135,7 +135,7 @@ gitpoapsRouter.get('/poap-token-id/:id', async function (req, res) {
   if (claimData === null) {
     const msg = `There's no GitPOAP claimed with POAP ID: ${req.params.id}`;
     logger.info(msg);
-    endRequest({ method: 'GET', path: '/gitpoaps/poap-id/:id', status: 404 });
+    endTimer({ status: 404 });
     return res.status(404).send({ msg });
   }
 
@@ -146,6 +146,8 @@ gitpoapsRouter.get('/poap-token-id/:id', async function (req, res) {
   };
 
   logger.debug(`Completed request to validate if POAP ID ${req.params.id} is a GitPOAP`);
+
+  endTimer({ status: 200 });
 
   return res.status(200).send(data);
 });
@@ -159,20 +161,20 @@ gitpoapsRouter.post(
 
     logger.debug(`Body: ${JSON.stringify(req.body)}`);
 
-    const endRequest = httpRequestDurationSeconds.startTimer();
+    const endTimer = httpRequestDurationSeconds.startTimer('POST', '/gitpoaps/codes');
 
     const schemaResult = UploadGitPOAPCodesSchema.safeParse(req.body);
     if (!schemaResult.success) {
       logger.warn(
         `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
       );
-      endRequest({ method: 'POST', path: '/gitpoaps/codes', status: 400 });
+      endTimer({ status: 400 });
       return res.status(400).send({ issues: schemaResult.error.issues });
     }
     if (!req.file) {
       const msg = 'Missing/invalid "codes" upload in request';
       logger.warn(msg);
-      endRequest({ method: 'POST', path: '/gitpoaps/codes', status: 400 });
+      endTimer({ status: 400 });
       return res.status(400).send({ msg });
     }
 
@@ -194,7 +196,7 @@ gitpoapsRouter.post(
     } catch (err) {
       const msg = `Failed to read uploaded file for codes: ${err}`;
       logger.error(msg);
-      endRequest({ method: 'POST', path: '/gitpoaps/codes', status: 500 });
+      endTimer({ status: 500 });
       return res.status(500).send({ msg });
     }
 
@@ -219,7 +221,7 @@ gitpoapsRouter.post(
       },
     });
 
-    endRequest({ method: 'POST', path: '/gitpoaps/codes', status: 200 });
+    endTimer({ status: 200 });
 
     return res.status(200).send('UPLOADED');
   },

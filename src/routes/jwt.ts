@@ -12,7 +12,7 @@ router.get('/', function (req, res) {
 
   logger.info('Request to create a new JWT');
 
-  const endRequest = httpRequestDurationSeconds.startTimer();
+  const endTimer = httpRequestDurationSeconds.startTimer('GET', '/jwt');
 
   const token = sign({}, JWT_SECRET as string, {
     expiresIn: JWT_EXP_TIME,
@@ -20,7 +20,7 @@ router.get('/', function (req, res) {
 
   logger.debug('Completed request to create a new JWT');
 
-  endRequest({ method: 'GET', path: '/jwt', status: 200 });
+  endTimer({ status: 200 });
 
   return res.json({
     access_token: token,

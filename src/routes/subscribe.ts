@@ -16,11 +16,11 @@ subscribeRouter.post(
 
     logger.debug(`Body: ${JSON.stringify(req.body)}`);
 
-    const endRequest = httpRequestDurationSeconds.startTimer();
+    const endTimer = httpRequestDurationSeconds.startTimer('POST', '/subscribe');
 
     if (!req.user) {
       logger.warn('Token is invalid');
-      endRequest({ method: 'POST', path: '/subscribe', status: 401 });
+      endTimer({ status: 401 });
       return res.sendStatus(401);
     } else {
       logger.info(`Request to subscribe ${req.body.email}`);
@@ -36,7 +36,7 @@ subscribeRouter.post(
 
       logger.debug(`Completed request to subscribe ${req.body.email}`);
 
-      endRequest({ method: 'POST', path: '/subscribe', status: 200 });
+      endTimer({ status: 200 });
 
       res.sendStatus(200);
     }

@@ -25,11 +25,11 @@ export async function resolveENS(address: string): Promise<string | null> {
   logger.debug(`ENS resolution of ${address} not in cache`);
 
   try {
-    const endRequest = ensRequestDurationSeconds.startTimer();
+    const endTimer = ensRequestDurationSeconds.startTimer('resolveName');
 
     const resolvedAddress = await context.provider.resolveName(address);
 
-    endRequest({ method: 'resolveName' });
+    endTimer();
 
     if (address !== resolvedAddress) {
       logger.debug(`Resolved ${address} to ${resolvedAddress}`);
