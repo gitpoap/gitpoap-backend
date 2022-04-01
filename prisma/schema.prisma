@@ -70,6 +70,7 @@ model Claim {
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   status      ClaimStatus @default(UNCLAIMED)
+  qrHash      String?     @db.VarChar(10)
   poapTokenId String?     @unique @db.VarChar(255)
   address     String?     @db.VarChar(255)
   gitPOAPId   Int
@@ -138,6 +139,7 @@ enum GitPOAPStatus {
 enum ClaimStatus {
   UNCLAIMED
   PENDING
+  MINTING
   CLAIMED
 }
 

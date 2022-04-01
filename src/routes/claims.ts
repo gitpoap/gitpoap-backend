@@ -8,7 +8,7 @@ import { isSignatureValid } from '../signatures';
 import jwt from 'express-jwt';
 import { jwtWithAdminOAuth } from '../middleware';
 import { AccessTokenPayload, AccessTokenPayloadWithOAuth } from '../types/tokens';
-import { redeemPOAP, requestPOAPCodes, retrievePOAPEventInfo } from '../external/poap';
+import { retrieveClaimInfo, redeemPOAP, requestPOAPCodes, retrievePOAPEventInfo } from '../external/poap';
 import { getGithubUserById } from '../external/github';
 import { JWT_SECRET } from '../environment';
 import { createScopedLogger } from '../logging';
@@ -80,6 +80,52 @@ async function ensureRedeemCodeThreshold(gitPOAP: GitPOAP) {
   }
 }
 
+async function runClaimsPostProcessing(claimIds: number[], qrHashes: string[]) {
+  const logger = createScopedLogger('runClaimsPostProcessing');
+
+  while (claimIds.length > 0) {
+    logger.info(`Waiting for ${claimIds.length} claim transactions to process`);
+
+    // Wait for 5 seconds
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+
+    for (let i = 0; i < claimIds.length; ++i) {
+      const poapData = await retrieveClaimInfo(qrHashes[i]);
+      if (poapData === null) {
+        logger.error(`Failed to retrieve claim info for Claim ID: ${claimIds[i]}`);
+        claimIds.splice(i, i);
+        qrHashes.splice(i, i);
+        break;
+      }
+
+      if (poapData.tx_status === 'passed') {
+        if (!('token' in poapData.result)) {
+          logger.error("No 'token' field in POAP response for Claim after tx_status='passed'");
+          claimIds.splice(i, i);
+          qrHashes.splice(i, i);
+          break;
+        }
+
+        // Set the new poapTokenId now that the TX is finalized
+        await context.prisma.claim.update({
+          where: {
+            id: claimIds[i],
+          },
+          data: {
+            status: ClaimStatus.CLAIMED,
+            poapTokenId: poapData.result.token.toString(),
+          },
+        });
+
+        claimIds.splice(i, i);
+        qrHashes.splice(i, i);
+      }
+    }
+  }
+
+  logger.info('Finished claims post processing');
+}
+
 claimsRouter.post(
   '/',
   jwt({ secret: JWT_SECRET as string, algorithms: ['HS256'] }),
@@ -128,7 +174,8 @@ claimsRouter.post(
     }
 
     let foundClaims: number[] = [];
-    let invalidClaims = [];
+    let qrHashes: string[] = [];
+    let invalidClaims: { claimId: number, reason: string } = [];
 
     for (const claimId of req.body.claimIds) {
       const claim = await context.prisma.claim.findUnique({
@@ -227,6 +274,7 @@ claimsRouter.post(
         continue;
       }
       foundClaims.push(claimId);
+      qrHashes.push(poapData.qr_hash);
 
       // Mark that the POAP has been claimed
       await context.prisma.claim.update({
@@ -234,8 +282,8 @@ claimsRouter.post(
           id: claimId,
         },
         data: {
-          status: ClaimStatus.CLAIMED,
-          poapTokenId: poapData.id.toString(),
+          status: ClaimStatus.MINTING,
+          qrHash: poapData.qr_hash,
         },
       });
 
@@ -267,6 +315,8 @@ claimsRouter.post(
       claimed: foundClaims,
       invalid: [],
     });
+
+    await runClaimsPostProcessing(foundClaims, qrHashes);
   },
 );
 

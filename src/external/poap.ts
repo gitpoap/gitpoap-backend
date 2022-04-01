@@ -171,25 +171,19 @@ export async function requestPOAPCodes(
   );
 }
 
-async function getMintSecret(qr_hash: string) {
-  const poapResponse = await makePOAPRequest(
+export async function retrieveClaimInfo(qr_hash: string) {
+  return await makePOAPRequest(
     `${POAP_API_URL}/actions/claim-qr?qr_hash=${qr_hash}`,
     'GET',
     null,
   );
-
-  if (poapResponse === null) {
-    return null;
-  }
-
-  return poapResponse.secret;
 }
 
 export async function redeemPOAP(address: string, qr_hash: string) {
   const logger = createScopedLogger('redeemPOAP');
 
-  const secret = await getMintSecret(qr_hash);
-  if (secret === null) {
+  const claimInfo = await retrieveClaimInfo(qr_hash);
+  if (claimInfo === null) {
     logger.error(`Failed to retrieve minting secret for qr_hash: ${qr_hash}`);
     return null;
   }
@@ -200,7 +194,7 @@ export async function redeemPOAP(address: string, qr_hash: string) {
     JSON.stringify({
       address,
       qr_hash,
-      secret,
+      secret: claimInfo.secret,
     }),
   );
 }
