@@ -89,20 +89,24 @@ async function runClaimsPostProcessing(claimIds: number[], qrHashes: string[]) {
     // Wait for 5 seconds
     await new Promise((resolve) => setTimeout(resolve, 5000));
 
+    // Helper function to remove a claim from postprocessing
+    const removeAtIndex = (i) => {
+      claimIds.splice(i, 1);
+      qrHashes.splice(i, 1);
+    };
+
     for (let i = 0; i < claimIds.length; ++i) {
       const poapData = await retrieveClaimInfo(qrHashes[i]);
       if (poapData === null) {
         logger.error(`Failed to retrieve claim info for Claim ID: ${claimIds[i]}`);
-        claimIds.splice(i, i);
-        qrHashes.splice(i, i);
+        removeAtIndex(i);
         break;
       }
 
       if (poapData.tx_status === 'passed') {
         if (!('token' in poapData.result)) {
           logger.error("No 'token' field in POAP response for Claim after tx_status='passed'");
-          claimIds.splice(i, i);
-          qrHashes.splice(i, i);
+          removeAtIndex(i);
           break;
         }
 
@@ -117,8 +121,7 @@ async function runClaimsPostProcessing(claimIds: number[], qrHashes: string[]) {
           },
         });
 
-        claimIds.splice(i, i);
-        qrHashes.splice(i, i);
+        removeAtIndex(i);
       }
     }
   }
