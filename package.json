@@ -4,9 +4,10 @@
   "main": "server.ts",
   "license": "MIT",
   "scripts": {
-    "build": "tsc --project ./",
+    "copy-files": "cp src/redis/deletePrefix.lua dist/src/redis/deletePrefix.lua",
+    "build": "tsc --project ./ && yarn copy-files",
     "dev": "ts-node-dev --transpile-only --respawn --exit-child --watch ./src/ ./src/server.ts",
-    "start": "node -r dotenv/config ./dist/server.js",
+    "start": "node -r dotenv/config ./dist/src/server.js",
     "postinstall": "npx prisma generate"
   },
   "devDependencies": {
