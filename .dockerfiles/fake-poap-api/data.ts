@@ -149,3 +149,83 @@ export const event29009: POAPEvent = {
   expiry_date: '18-Mar-2022',
   supply: 6,
 };
+
+export const event36568: POAPEvent = {
+  id: 36568,
+  fancy_id: "gitpoap-bug-bash-test-1-2022",
+  name: "GitPOAP Bug Bash - Test 1",
+  event_url: "https://gitpoap.io",
+  image_url: "https://assets.poap.xyz/gitpoap-bug-bash-test-1-2022-logo-1648760515405.png",
+  country: "",
+  city: "",
+  description: "This POAP commemorates the pre-launch bug bash organized by the GitPOAP team to test whether the platform is working as expected using real POAPs. (1)",
+  year: 2022,
+  start_date: "30-Mar-2022",
+  end_date: "30-Jun-2022",
+  expiry_date: "30-Jul-2022",
+  supply: 6,
+};
+
+export const event36569: POAPEvent = {
+  id: 36569,
+  fancy_id: "gitpoap-bug-bash-test-2-2022",
+  name: "GitPOAP Bug Bash - Test 2",
+  event_url: "https://gitpoap.io",
+  image_url: "https://assets.poap.xyz/gitpoap-bug-bash-test-2-2022-logo-1648760566987.png",
+  country: "",
+  city: "",
+  description: "This POAP commemorates the pre-launch bug bash organized by the GitPOAP team to test whether the platform is working as expected using real POAPs. (2)",
+  year: 2022,
+  start_date: "30-Mar-2022",
+  end_date: "30-Jun-2022",
+  expiry_date: "30-Jul-2022",
+  supply: 6,
+};
+
+export const event36570: POAPEvent = {
+  id: 36570,
+  fancy_id: "gitpoap-bug-bash-test-3-2022",
+  name: "GitPOAP Bug Bash - Test 3",
+  event_url: "https://gitpoap.io",
+  image_url: "https://assets.poap.xyz/gitpoap-bug-bash-test-3-2022-logo-1648760569627.png",
+  country: "",
+  city: "",
+  description: "This POAP commemorates the pre-launch bug bash organized by the GitPOAP team to test whether the platform is working as expected using real POAPs. (3)",
+  year: 2022,
+  start_date: "30-Mar-2022",
+  end_date: "30-Jun-2022",
+  expiry_date: "30-Jul-2022",
+  supply: 6,
+};
+
+export const event36571: POAPEvent = {
+  id: 36571,
+  fancy_id: "gitpoap-bug-bash-test-4-2022",
+  name: "GitPOAP Bug Bash - Test 4",
+  event_url: "https://gitpoap.io",
+  image_url: "https://assets.poap.xyz/gitpoap-bug-bash-test-4-2022-logo-1648760572852.png",
+  country: "",
+  city: "",
+  description: "This POAP commemorates the pre-launch bug bash organized by the GitPOAP team to test whether the platform is working as expected using real POAPs. (4)",
+  year: 2022,
+  start_date: "30-Mar-2022",
+  end_date: "30-Jun-2022",
+  expiry_date: "30-Jul-2022",
+  supply: 6,
+};
+
+export const event36572: POAPEvent = {
+  id: 36572,
+  fancy_id: "gitpoap-bug-bash-test-5-2022",
+  name: "GitPOAP Bug Bash - Test 5",
+  event_url: "https://gitpoap.io",
+  image_url: "https://assets.poap.xyz/gitpoap-bug-bash-test-5-2022-logo-1648760575985.png",
+  country: "",
+  city: "",
+  description: "This POAP commemorates the pre-launch bug bash organized by the GitPOAP team to test whether the platform is working as expected using real POAPs. (5)",
+  year: 2022,
+  start_date: "30-Mar-2022",
+  end_date: "30-Jun-2022",
+  expiry_date: "30-Jul-2022",
+  supply: 6,
+};

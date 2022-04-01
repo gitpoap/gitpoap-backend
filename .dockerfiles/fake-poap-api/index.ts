@@ -39,6 +39,11 @@ let eventsCache: Record<string, any> = {
   25149: events.event25149,
   19375: events.event19375,
   29009: events.event29009,
+  36568: events.event36568,
+  36569: events.event36569,
+  36570: events.event36570,
+  36571: events.event36571,
+  36572: events.event36572,
 };
 let nextEventId = 900000;
 
@@ -269,6 +274,51 @@ const ClaimQRSchema = z.object({
   secret: z.string(),
 });
 
+let qrHashMap: Record<string, { tokenId: number, minted: DateTime }> = {};
+
+app.get('/actions/claim-qr', async (req, res) => {
+  logger.info(`Received a GET /actions/claim-qr request with query: ${JSON.stringify(req.query)}`);
+
+  res.setHeader('Content-Type', 'application/json');
+
+  if (req.query.qr_hash === undefined) {
+    return res.status(400).send({ msg: 'Missing "qr_hash" param' });
+  }
+
+  const data: Record<string, any> = {
+    id: 12328325,
+    qr_hash: req.query.qr_hash,
+    tx_hash: '0xf43a6db2e1cc16480180376bd6a245b8e705021eec67bb684b08cf0981be968a',
+    event_id: 1,
+    beneficiary: '0xD8f20eE2E12bA1599bf8389909760277aeDd26F1',
+    user_input: '0xD8f20eE2E12bA1599bf8389909760277aeDd26F1',
+    signer: '0xC87ea77298b3e82F3c36Fb42b1624300d8A1D649',
+    claimed: true,
+    claimed_date: '2022-04-01T17:48:40.161Z',
+    created_date: '2022-03-31T21:22:30.860Z',
+    is_active: true,
+    secret: '4ce3b20148b98df65b5c6e2db89ce9eb4f5802b81b86cea651b9c1b853d3fd25',
+    event: events.event1,
+    event_template: null,
+    tx_status: 'pending',
+    delegated_mint: false,
+    delegated_signed_message: '',
+    result: null
+  };
+
+  if ((req.query.qr_hash as string) in qrHashMap) {
+    const info = qrHashMap[req.query.qr_hash as string];
+
+    // We can mark complete after 15 seconds
+    if (info.minted.plus({ seconds: 15 }) < DateTime.now()) {
+      data.tx_status = 'passed';
+      data.result = { token: info.tokenId };
+    }
+  }
+
+  res.end(JSON.stringify(data));
+});
+
 app.post('/actions/claim-qr', async (req, res) => {
   logger.info('Received POST /actions/claim-qr request');
 
@@ -287,7 +337,8 @@ app.post('/actions/claim-qr', async (req, res) => {
   const today = DateTime.now().toFormat('yyyy-MM-dd');
 
   const token = {
-    id: nextTokenId++,
+    // Add a constant that frontend can't figure out
+    id: 700000 + nextTokenId,
     qr_hash: req.body.qr_hash,
     queue_uid: 'string',
     event_id: 1,
@@ -303,7 +354,11 @@ app.post('/actions/claim-qr', async (req, res) => {
     delegated_signed_message: 'string',
   };
 
-  tokensCache[token.id] = token;
+  tokensCache[nextTokenId] = token;
+
+  qrHashMap[req.body.qr_hash] = { tokenId: nextTokenId, minted: DateTime.now() };
+
+  ++nextTokenId;
 
   res.end(JSON.stringify(token));
 });
