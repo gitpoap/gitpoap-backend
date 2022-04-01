@@ -86,6 +86,8 @@ let tokensCache: Record<string, any> = {
 };
 let nextTokenId = 100000000;
 
+let qrHashMap: Record<string, { tokenId: number, minted: DateTime }> = {};
+
 app.use(express.json());
 
 async function validateAuth(req: express.Request) {
@@ -273,8 +275,6 @@ const ClaimQRSchema = z.object({
   qr_hash: z.string(),
   secret: z.string(),
 });
-
-let qrHashMap: Record<string, { tokenId: number, minted: DateTime }> = {};
 
 app.get('/actions/claim-qr', async (req, res) => {
   logger.info(`Received a GET /actions/claim-qr request with query: ${JSON.stringify(req.query)}`);
