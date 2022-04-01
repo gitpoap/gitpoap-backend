@@ -3,15 +3,6 @@ phases:
   install:
     commands:
       - 'yarn install'
-      - 'npx prisma migrate deploy'
   build:
     commands:
-      - 'yarn run build'
-artifacts:
-  type: zip
-  files:
-    - package.json
-    - yarn.json
-    - 'dist/**/*'
-    - README.md
-    - Procfile
+      - 'yarn build'
