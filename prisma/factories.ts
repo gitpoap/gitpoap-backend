@@ -8,6 +8,7 @@ import {
   Claim,
   Profile,
   FeaturedPOAP,
+  RedeemCode,
 } from '@prisma/client';
 import { prisma } from './seed';
 
@@ -173,4 +174,40 @@ export class ProfileFactory {
   };
 }
 
-// export class FeaturedPOAPFac
+export class RedeemCodeFactory {
+  static createRedeemCode = async (code: string, gitPOAPId: number): Promise<RedeemCode> => {
+    const redeemCode = await prisma.redeemCode.create({
+      data: <Prisma.RedeemCodeCreateInput>{
+        code,
+        gitPOAP: {
+          connect: {
+            id: gitPOAPId,
+          },
+        },
+      },
+    });
+    console.log(`Creating redeemCode with id: ${redeemCode.id}`);
+
+    return redeemCode;
+  };
+
+  static addRedeemCodes = async (codes: string[], gitPOAPId: number): Promise<RedeemCode[]> => {
+    const redeemCodes = await Promise.all(
+      codes.map(code =>
+        prisma.redeemCode.create({
+          data: <Prisma.RedeemCodeCreateInput>{
+            code,
+            gitPOAP: {
+              connect: {
+                id: gitPOAPId,
+              },
+            },
+          },
+        }),
+      ),
+    );
+    console.log(`Creating redeemCodes with ids: ${redeemCodes.map(c => c.id).join(', ')}`);
+
+    return redeemCodes;
+  };
+}
