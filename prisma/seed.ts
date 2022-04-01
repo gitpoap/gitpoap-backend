@@ -9,6 +9,7 @@ import {
   GitPOAPFactory,
   ProfileFactory,
   FeaturedPOAPFactory,
+  RedeemCodeFactory,
 } from './factories';
 
 export const prisma = new PrismaClient();
@@ -20,6 +21,7 @@ const ADDRESSES = {
   anthony2: '0x206e554084BEeC98e08043397be63C5132Cc01A1'.toLowerCase(),
   colfax: '0x56d389C4E07A48d429035532402301310B8143A0'.toLowerCase(),
   vitalik: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'.toLowerCase(),
+  aldo: '0x02738d122e0970aAf8DEADf0c6A217a1923E1e99'.toLowerCase(),
 };
 
 const GH_HANDLES = {
@@ -27,6 +29,7 @@ const GH_HANDLES = {
   anthony: 'burz',
   colfax: 'colfax23',
   vitalik: 'vbuterin',
+  aldo: 'aldolamb',
 };
 
 async function main() {
@@ -37,6 +40,7 @@ async function main() {
   const colfax = await UserFactory.createUser(2, GH_HANDLES.colfax);
   const jay = await UserFactory.createUser(8076957, GH_HANDLES.jay);
   const anthony = await UserFactory.createUser(1555326, GH_HANDLES.anthony);
+  const aldo = await UserFactory.createUser(16078, GH_HANDLES.aldo);
   const johnz = await UserFactory.createUser(5, 'johnz');
   const anthony2 = await UserFactory.createUser(6, 'burzzzzz');
 
@@ -51,11 +55,11 @@ async function main() {
     'gitpoap',
     'http://gitpoap.io',
   );
-  const org5 = await OrganizationFactory.createOrganization(1555326, 'burz');
+  const org5 = await OrganizationFactory.createOrganization(1555326, 'burz labz');
 
   /* Create Repos */
-  const repo1 = await RepoFactory.createRepo('gitpoap-fe', 1, org4.id);
-  const repo2 = await RepoFactory.createRepo('gitpoap-backend', 2, org4.id);
+  const gitpoapFeRepo = await RepoFactory.createRepo('gitpoap-fe', 439490658, org4.id); // real id
+  const gitpoapBackendRepo = await RepoFactory.createRepo('gitpoap-backend', 416584564, org4.id); // real id
   const repo7 = await RepoFactory.createRepo('repo7', 7, org2.id);
   const repo34 = await RepoFactory.createRepo('repo34', 34, org1.id);
   const repo568 = await RepoFactory.createRepo('repo568', 568, org3.id);
@@ -66,11 +70,25 @@ async function main() {
   const gitpoap2 = await GitPOAPFactory.createGitPOAP(2024, 2, repo7.id, '123456', GitPOAPStatus.APPROVED);
   const gitpoap3 = await GitPOAPFactory.createGitPOAP(2015, 3, repo568.id, '234567', GitPOAPStatus.APPROVED);
   // For GitPOAP FE Repo ~ Using generic GitPOAP related POAP for now ~ eventID: 19375
-  const gitpoap4 = await GitPOAPFactory.createGitPOAP(2020, 19375, repo1.id, '345678', GitPOAPStatus.APPROVED);
+  const gitpoap4 = await GitPOAPFactory.createGitPOAP(2020, 19375, gitpoapFeRepo.id, '345678', GitPOAPStatus.APPROVED);
   // For GitPOAP BE Repo ~ Using GitPOAP Strategy Meeting POAP for now ~ eventID: 29009
-  const gitpoap5 = await GitPOAPFactory.createGitPOAP(2020, 29009, repo2.id, '456789', GitPOAPStatus.APPROVED);
+  const gitpoap5 = await GitPOAPFactory.createGitPOAP(2020, 29009, gitpoapBackendRepo.id, '456789', GitPOAPStatus.APPROVED);
   // For burz/dopex repo ~ eventID: 34634
   const gitpoap6 = await GitPOAPFactory.createGitPOAP(2022, 34634, repoDopex.id, '304374');
+
+  // For the gitpoaps created for the bug bash -~- March 2022
+  const gitpoap7 = await GitPOAPFactory.createGitPOAP(2022, 36568, gitpoapFeRepo.id, '669250', GitPOAPStatus.APPROVED);
+  const gitpoap8 = await GitPOAPFactory.createGitPOAP(2022, 36569, gitpoapFeRepo.id, '102513', GitPOAPStatus.APPROVED);
+  const gitpoap9 = await GitPOAPFactory.createGitPOAP(2022, 36570, gitpoapBackendRepo.id, '929862', GitPOAPStatus.APPROVED);
+  const gitpoap10 = await GitPOAPFactory.createGitPOAP(2022, 36571, gitpoapBackendRepo.id, '252134', GitPOAPStatus.APPROVED);
+  const gitpoap11 = await GitPOAPFactory.createGitPOAP(2022, 36572, gitpoapBackendRepo.id, '613740', GitPOAPStatus.APPROVED);
+
+  /* Add codes */
+  await RedeemCodeFactory.addRedeemCodes(['6j8wda', 'tqaq9y', 'd4tdh0', 'o9uorf', 'eeyewe', '09wqld', 'tsl7wt', 'i52wvt', 'mshofb', 'v9cbcd'], gitpoap8.id);
+  await RedeemCodeFactory.addRedeemCodes(['7s4dn3', 'q9237f', 'd0e21q', 'qzaj5c', 'ozy2c9', 'p7yqjo', 'cgsevm', 'hou5kq', 'j6sxom', '058qv8'], gitpoap9.id);
+  await RedeemCodeFactory.addRedeemCodes(['plw7uf', 'rea9f5', '1etkax', 'l4uulx', '8hnrqa', '2mfo3x', 'me3qfx', 's8znfh', 'gelwgm', 'ebafk6'], gitpoap10.id);
+  await RedeemCodeFactory.addRedeemCodes(['492wr5', 'zzxoaa', 'fnc0cn', 'hrir8p', 'v1258v', 'i7lt58', 'erxgdb', 'za5od3', 'v8a1wg', 'uazjii'], gitpoap11.id);
+  await RedeemCodeFactory.addRedeemCodes(['hh3zf2', 'ivnnil', 'wylm9j', 'c8i5qj', '8inyd8', 'xyrepl', 'q4564p', 'aienlq', 'ohgtbi', 'qtr3ju'], gitpoap11.id);
 
   /* Create Claims */
   // GitPOAP 1
@@ -104,6 +122,32 @@ async function main() {
   const claim20 = await ClaimFactory.createClaim(gitpoap5.id, vitalik.id);
   const claim21 = await ClaimFactory.createClaim(gitpoap5.id, anthony2.id, ClaimStatus.CLAIMED, ADDRESSES.anthony2, '123456789');
 
+  // GitPOAPs 7, 8, 9, 10, 11, 12 - GitPOAP BugBash Repos
+  const claim7A = await ClaimFactory.createClaim(gitpoap7.id, jay.id);
+  const claim7B = await ClaimFactory.createClaim(gitpoap7.id, anthony.id);
+  const claim7C = await ClaimFactory.createClaim(gitpoap7.id, colfax.id);
+  const claim7D = await ClaimFactory.createClaim(gitpoap7.id, aldo.id);
+
+  const claim8A = await ClaimFactory.createClaim(gitpoap8.id, jay.id);
+  const claim8B = await ClaimFactory.createClaim(gitpoap8.id, anthony.id);
+  const claim8C = await ClaimFactory.createClaim(gitpoap8.id, colfax.id);
+  const claim8D = await ClaimFactory.createClaim(gitpoap8.id, aldo.id);
+
+  const claim9A = await ClaimFactory.createClaim(gitpoap9.id, jay.id);
+  const claim9B = await ClaimFactory.createClaim(gitpoap9.id, anthony.id);
+  const claim9C = await ClaimFactory.createClaim(gitpoap9.id, colfax.id);
+  const claim9D = await ClaimFactory.createClaim(gitpoap9.id, aldo.id);
+
+  const claim10A = await ClaimFactory.createClaim(gitpoap10.id, jay.id);
+  const claim10B = await ClaimFactory.createClaim(gitpoap10.id, anthony.id);
+  const claim10C = await ClaimFactory.createClaim(gitpoap10.id, colfax.id);
+  const claim10D = await ClaimFactory.createClaim(gitpoap10.id, aldo.id);
+
+  const claim11A = await ClaimFactory.createClaim(gitpoap11.id, jay.id);
+  const claim11B = await ClaimFactory.createClaim(gitpoap11.id, anthony.id);
+  const claim11C = await ClaimFactory.createClaim(gitpoap11.id, colfax.id);
+  const claim11D = await ClaimFactory.createClaim(gitpoap11.id, aldo.id);
+
   /* Create Profiles */
   const profile1 = await ProfileFactory.createProfile(ADDRESSES.colfax, 'I like brisket.');
   const profile2 = await ProfileFactory.createProfile('0x89dab21047e6de0e77deee5f4f286d72be50b942', 'I like bbq.');
@@ -111,6 +155,7 @@ async function main() {
   const profile4 = await ProfileFactory.createProfile(ADDRESSES.anthony, 'I am addicted to POAPs', 'Anthony Burzillo');
   const profile5 = await ProfileFactory.createProfile(ADDRESSES.anthony2, 'I am not real');
   const profile6 = await ProfileFactory.createProfile(ADDRESSES.vitalik, 'I like unicorns');
+  const profile7 = await ProfileFactory.createProfile(ADDRESSES.aldo, 'I like surfing', 'Aldo Lamberti');
 
   /* Create Featured POAPs */
   const featured1 = await FeaturedPOAPFactory.createFeaturedPOAP(claim14.poapTokenId!, profileJay.id); // Featured GitPOAP
