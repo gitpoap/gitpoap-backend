@@ -386,18 +386,30 @@ export class CustomGitPOAPResolver {
       return null;
     }
 
-    const poaps = await prisma.featuredPOAP.findMany({
-      where: {
-        profile: {
-          address: resolvedAddress.toLowerCase(),
-        },
-      },
-    });
-
     let results: UserFeaturedPOAPs = {
       gitPOAPs: [],
       poaps: [],
     };
+
+    const profile = await prisma.profile.findUnique({
+      where: {
+        address: resolvedAddress.toLowerCase(),
+      },
+      select: {
+        id: true,
+      },
+    });
+    if (profile === null) {
+      logger.debug("Completed request early for unknown profile's featured POAPs")
+      endTimer({ success: 1 });
+      return results;
+    }
+
+    const poaps = await prisma.featuredPOAP.findMany({
+      where: {
+        profileId: profile.id,
+      },
+    });
 
     for (const poap of poaps) {
       const poapData = await retrievePOAPInfo(poap.poapTokenId);

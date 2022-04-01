@@ -274,6 +274,8 @@ export async function retrievePOAPInfo(poapTokenId: string) {
 
   if (cacheResponse !== null) {
     logger.debug(`Found POAP token ${poapTokenId} info in cache`);
+
+    return JSON.parse(cacheResponse);
   }
 
   logger.debug(`POAP token ${poapTokenId} info not in cache`);
