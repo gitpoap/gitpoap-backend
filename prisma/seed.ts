@@ -51,7 +51,7 @@ async function main() {
   const org4 = await OrganizationFactory.createOrganization(
     1,
     'gitpoap',
-    'An open source and non-custodial liquidity protocol for earning interest on deposits and borrowing assets.',
+    'A recognition platform for recognizing and rewarding your contributors through POAPs.',
     'gitpoap',
     'http://gitpoap.io',
   );
