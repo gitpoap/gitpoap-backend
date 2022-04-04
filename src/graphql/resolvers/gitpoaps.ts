@@ -234,7 +234,7 @@ export class CustomGitPOAPResolver {
     const claims = await prisma.claim.findMany({
       where: {
         address: resolvedAddress.toLowerCase(),
-        status: ClaimStatus.CLAIMED,
+        status: ClaimStatus.CLAIMED || ClaimStatus.MINTING,
       },
     });
 
@@ -400,7 +400,7 @@ export class CustomGitPOAPResolver {
       },
     });
     if (profile === null) {
-      logger.debug("Completed request early for unknown profile's featured POAPs")
+      logger.debug("Completed request early for unknown profile's featured POAPs");
       endTimer({ success: 1 });
       return results;
     }
