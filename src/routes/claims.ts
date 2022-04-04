@@ -144,8 +144,6 @@ claimsRouter.post(
       return res.status(401).send({ message: 'Invalid or missing Access Token' });
     }
 
-    logger.debug(`Access Token Payload: ${req.user}`);
-
     const schemaResult = ClaimGitPOAPSchema.safeParse(req.body);
     if (!schemaResult.success) {
       logger.warn(
