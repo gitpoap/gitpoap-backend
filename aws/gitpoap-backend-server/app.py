@@ -3,11 +3,11 @@ import os
 
 import aws_cdk as cdk
 
-from gitpoap_backend_server.gitpoap_backend_server_stack import GitpoapBackendServerStack
+from gitpoap_backend.gitpoap_backend_stack import GitpoapBackendStack
 
 
 app = cdk.App()
-GitpoapBackendServerStack(app, "GitpoapBackendServerStack",
+GitpoapBackendStack(app, "GitpoapBackendStack",
     # If you don't specify 'env', this stack will be environment-agnostic.
     # Account/Region-dependent features and context lookups will not work,
     # but a single synthesized template can be deployed anywhere.
