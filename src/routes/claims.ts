@@ -1,6 +1,5 @@
 import { ClaimGitPOAPSchema, CreateGitPOAPClaimsSchema } from '../schemas/claims';
 import { Router } from 'express';
-import fetch from 'cross-fetch';
 import { context } from '../context';
 import { ClaimStatus, GitPOAP, GitPOAPStatus } from '@prisma/client';
 import { resolveENS } from '../external/ens';
@@ -8,7 +7,7 @@ import { isSignatureValid } from '../signatures';
 import jwt from 'express-jwt';
 import { jwtWithAdminOAuth } from '../middleware';
 import { AccessTokenPayload, AccessTokenPayloadWithOAuth } from '../types/tokens';
-import { retrieveClaimInfo, redeemPOAP, requestPOAPCodes, retrievePOAPEventInfo } from '../external/poap';
+import { retrieveClaimInfo, redeemPOAP, requestPOAPCodes } from '../external/poap';
 import { getGithubUserById } from '../external/github';
 import { JWT_SECRET } from '../environment';
 import { createScopedLogger } from '../logging';
@@ -87,10 +86,10 @@ async function runClaimsPostProcessing(claimIds: number[], qrHashes: string[]) {
     logger.info(`Waiting for ${claimIds.length} claim transactions to process`);
 
     // Wait for 5 seconds
-    await new Promise((resolve) => setTimeout(resolve, 5000));
+    await new Promise(resolve => setTimeout(resolve, 5000));
 
     // Helper function to remove a claim from postprocessing
-    const removeAtIndex = (i) => {
+    const removeAtIndex = (i: number) => {
       claimIds.splice(i, 1);
       qrHashes.splice(i, 1);
     };
@@ -178,7 +177,7 @@ claimsRouter.post(
 
     let foundClaims: number[] = [];
     let qrHashes: string[] = [];
-    let invalidClaims: { claimId: number, reason: string } = [];
+    let invalidClaims: { claimId: number; reason: string }[] = [];
 
     for (const claimId of req.body.claimIds) {
       const claim = await context.prisma.claim.findUnique({
