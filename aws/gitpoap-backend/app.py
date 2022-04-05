@@ -11,6 +11,7 @@ from aws_cdk import (
   aws_logs as logs,
   aws_memorydb as memorydb,
   aws_rds as rds,
+  aws_elasticloadbalancingv2 as elbv2,
 )
 from constructs import Construct
 import secrets
@@ -95,16 +96,15 @@ class GitpoapRedisStack(Stack):
     redis_acl = redis_acl_stack.redis_acl
 
     redis_cluster = memorydb.CfnCluster(self, 'gitpoap-redis-cluster',
-      cluster_name='gitpoap-redis-cluster',
       acl_name=redis_acl.acl_name,
+      cluster_name='gitpoap-redis-cluster',
+      node_type='db.t4g.medium',
       auto_minor_version_upgrade=True,
       engine_version='6.2',
-      node_type='db.t4g.medium',
       num_replicas_per_shard=1,
       num_shards=1,
       security_group_ids=[redis_securitygroup.security_group_id],
       snapshot_retention_limit=3,
-      tls_enabled=True,
       subnet_group_name=redis_subnet_group.subnet_group_name,
     )
 
@@ -208,6 +208,10 @@ class GitpoapBackendStack(Stack):
     container = task_definition.add_container("gitpoap-backend-server",
       image=ecs.ContainerImage.from_registry("amazon/amazon-ecs-sample"),
     )
+    container.add_port_mappings(
+      ecs.PortMapping(container_port=3001, host_port=3001),
+      ecs.PortMapping(container_port=8080, host_port=8080),
+    )
 
     backend_securitygroup = ec2.SecurityGroup(self, 'gitpoap-backend-security-group',
       vpc=vpc,
@@ -253,6 +257,23 @@ class GitpoapBackendStack(Stack):
       cluster=cluster,
       desired_count=2,
       service_name="gitpoap-backend-server-service",
+    )
+
+    load_balancer = elbv2.ApplicationLoadBalancer(self, 'gitpoap-backend-load-balancer',
+      security_group=self.backend_client_securitygroup,
+      vpc=vpc,
+      internet_facing=True,
+      load_balancer_name='gitpoap-backend-load-balancer',
+    )
+    listener = load_balancer.add_listener('gitpoap-backend-load-balancer-listener',
+      port=80,
+    )
+    listener.add_targets('gitpoap-backend-load-balancer-listener-targets',
+      port=80,
+      targets=[service.load_balancer_target(
+        container_name='gitpoap-backend-server',
+        container_port=3001,
+      )],
     )
 
 app = cdk.App()
