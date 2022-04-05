@@ -44,7 +44,7 @@
         },
         {
           "name": "GITHUB_APP_REDIRECT_URL",
-          "value": "https://gitpoap.io/login"
+          "value": "https://gitpoap-fe-main.vercel.app/login"
         }
       ],
       "environmentFiles": [
