@@ -1,5 +1,7 @@
 # gitpoap-backend
 
+[![Deploy to Amazon ECS (PROD)](https://github.com/gitpoap/gitpoap-backend/actions/workflows/deploy-gitpoap-backend-server.yml/badge.svg)](https://github.com/gitpoap/gitpoap-backend/actions/workflows/deploy-gitpoap-backend-server.yml)
+
 ## Running Locally with docker-compose
 
 Example `.env`:
