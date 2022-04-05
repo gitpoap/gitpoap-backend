@@ -32,7 +32,12 @@ subscribeRouter.post(
           timestamp: { S: new Date().toISOString() },
         },
       };
-      await dynamoDB.send(new PutItemCommand(params));
+
+      try {
+        await dynamoDB.send(new PutItemCommand(params));
+      } catch (err) {
+        logger.warn(`Got error from dynamo DB send: ${err}`);
+      }
 
       logger.debug(`Completed request to subscribe ${req.body.email}`);
 
