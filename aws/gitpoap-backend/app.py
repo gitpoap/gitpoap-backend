@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import os
 
 import aws_cdk as cdk
 from aws_cdk import (
@@ -7,16 +6,16 @@ from aws_cdk import (
   aws_ec2 as ec2,
   aws_ecr as ecr,
   aws_ecs as ecs,
+  aws_elasticloadbalancingv2 as elbv2,
   aws_iam as iam,
   aws_logs as logs,
   aws_memorydb as memorydb,
   aws_rds as rds,
-  aws_elasticloadbalancingv2 as elbv2,
 )
 from constructs import Construct
-import secrets
-import os.path
 import json
+import os.path
+import secrets
 
 PASSWORD_LENGTH = 53
 
@@ -34,11 +33,19 @@ def generate_and_save_passwords():
     with open(file, 'r') as f:
       return json.load(f)
 
-class GitpoapRedisACLStack(Stack):
+class GitpoapVPCStack(Stack):
   def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
     super().__init__(scope, construct_id, **kwargs)
 
-    redis_user = memorydb.CfnUser(self, 'gitpoap-redis-user',
+    self.vpc = ec2.Vpc(self, "gitpoap-backend-vpc",
+      max_azs=3,
+    )
+
+class GitpoapRedisUserStack(Stack):
+  def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
+    super().__init__(scope, construct_id, **kwargs)
+
+    self.redis_user = memorydb.CfnUser(self, 'gitpoap-redis-user',
       user_name='gitpoap-redis-user',
       access_string='on ~* &* +@all',
       authentication_mode={
@@ -47,18 +54,16 @@ class GitpoapRedisACLStack(Stack):
       },
     )
 
+class GitpoapRedisACLStack(Stack):
+  def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
+    super().__init__(scope, construct_id, **kwargs)
+
+    redis_user = redis_user_stack.redis_user
+
     self.redis_acl = memorydb.CfnACL(self, 'gitpoap-redis-acl',
       acl_name='gitpoap-redis-acl',
       user_names=[redis_user.user_name],
     )
-
-class GitpoapVPCStack(Stack):
-  def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
-    super().__init__(scope, construct_id, **kwargs)
-
-    self.vpc = ec2.Vpc(self,
-                       "gitpoap-backend-vpc",
-                       max_azs=3)
 
 class GitpoapRedisStack(Stack):
   def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
@@ -167,7 +172,7 @@ class GitpoapDBStack(Stack):
       subnet_group=db_subnet_group, 
     )
 
-class GitpoapBackendStack(Stack):
+class GitpoapServerStack(Stack):
   def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
     super().__init__(scope, construct_id, **kwargs)
 
@@ -242,16 +247,14 @@ class GitpoapBackendStack(Stack):
       connection=ec2.Port.all_tcp(),
     )
 
-    redis_client_securitygroup = redis_stack.redis_client_securitygroup
-    db_client_securitygroup = db_stack.db_client_securitygroup
-
     # Create the ECS Service
     service = ecs.FargateService(self, "gitpoap-backend-server-service",
       task_definition=task_definition,
       security_groups=[
         backend_securitygroup,
-        redis_client_securitygroup,
-        db_client_securitygroup,
+        # Can't be done here due to circular dependencies
+        #self.redis_client_securitygroup,
+        #self.db_client_securitygroup,
       ],
       vpc_subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE_WITH_NAT),
       cluster=cluster,
@@ -280,14 +283,16 @@ app = cdk.App()
 
 passwords = generate_and_save_passwords()
 
-redis_acl_stack = GitpoapRedisACLStack(app, "RedisACLStack")
+vpc_stack = GitpoapVPCStack(app, "gitpoap-backend-vpc-stack")
 
-vpc_stack = GitpoapVPCStack(app, 'VPCStack')
+redis_user_stack = GitpoapRedisUserStack(app, "gitpoap-backend-redis-user-stack")
 
-redis_stack = GitpoapRedisStack(app, 'RedisStack')
+redis_acl_stack = GitpoapRedisACLStack(app, "gitpoap-backend-redis-acl-stack")
 
-db_stack = GitpoapDBStack(app, 'DBStack')
+redis_stack = GitpoapRedisStack(app, "gitpoap-backend-redis-stack")
 
-GitpoapBackendStack(app, "GitpoapBackendStack")
+db_stack = GitpoapDBStack(app, "gitpoap-backend-db-stack")
+
+server_stack = GitpoapServerStack(app, "gitpoap-backend-server-stack")
 
 app.synth()
