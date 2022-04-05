@@ -60,6 +60,7 @@
     "prom-client": "^14.0.1",
     "redis": "^4.0.4",
     "reflect-metadata": "^0.1.13",
+    "segfault-handler": "^1.3.0",
     "short-uuid": "^4.2.0",
     "type-graphql": "^1.1.1",
     "typegraphql-prisma": "^0.18.4",
