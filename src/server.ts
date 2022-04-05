@@ -18,6 +18,7 @@ import { PORT } from './constants';
 import { getSchema } from './graphql/schema';
 import { context } from './context';
 import { graphqlHTTP } from 'express-graphql';
+import { registerHandler } from 'segfault-handler';
 import { errorHandler } from './middleware';
 import { NODE_ENV, JWT_SECRET, AWS_PROFILE } from './environment';
 import { createScopedLogger, updateLogLevel } from './logging';
@@ -26,6 +27,13 @@ import { startMetricsServer } from './metrics';
 
 const main = async () => {
   const logger = createScopedLogger('main');
+
+  registerHandler('crash.log', (signal, address, stack) => {
+    logger.error(`Received ${signal} at ${address}`);
+    for (const line of stack) {
+      logger.error(line);
+    }
+  });
 
   const argv = minimist(process.argv.slice(2));
 
