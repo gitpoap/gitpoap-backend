@@ -23,7 +23,6 @@ def generate_and_save_passwords():
   file = './gitpoap-passwords.json'
   if not os.path.isfile(file):
     data = {
-      'redis_password': secrets.token_urlsafe(PASSWORD_LENGTH),
       'db_password': secrets.token_urlsafe(PASSWORD_LENGTH),
     }
     with open(file, 'w') as f:
@@ -39,30 +38,6 @@ class GitpoapVPCStack(Stack):
 
     self.vpc = ec2.Vpc(self, "gitpoap-backend-vpc",
       max_azs=3,
-    )
-
-class GitpoapRedisUserStack(Stack):
-  def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
-    super().__init__(scope, construct_id, **kwargs)
-
-    self.redis_user = memorydb.CfnUser(self, 'gitpoap-redis-user',
-      user_name='gitpoap-redis-user',
-      access_string='on ~* &* +@all',
-      authentication_mode={
-        'Type': 'password',
-        'Passwords': [passwords['redis_password']],
-      },
-    )
-
-class GitpoapRedisACLStack(Stack):
-  def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
-    super().__init__(scope, construct_id, **kwargs)
-
-    redis_user = redis_user_stack.redis_user
-
-    self.redis_acl = memorydb.CfnACL(self, 'gitpoap-redis-acl',
-      acl_name='gitpoap-redis-acl',
-      user_names=[redis_user.user_name],
     )
 
 class GitpoapRedisStack(Stack):
@@ -98,10 +73,11 @@ class GitpoapRedisStack(Stack):
       subnet_group_name='gitpoap-redis-subnet-group',
     )
 
-    redis_acl = redis_acl_stack.redis_acl
+    #redis_acl = redis_acl_stack.redis_acl
 
     redis_cluster = memorydb.CfnCluster(self, 'gitpoap-redis-cluster',
-      acl_name=redis_acl.acl_name,
+      #acl_name=redis_acl.acl_name,
+      acl_name='open-access',
       cluster_name='gitpoap-redis-cluster',
       node_type='db.t4g.medium',
       auto_minor_version_upgrade=True,
@@ -279,14 +255,17 @@ class GitpoapServerStack(Stack):
       connection=ec2.Port.all_tcp(),
     )
 
+    #redis_client_securitygroup = redis_stack.redis_client_securitygroup
+    #db_client_securitygroup = db_stack.db_client_securitygroup
+
     # Create the ECS Service
     service = ecs.FargateService(self, "gitpoap-backend-server-service",
       task_definition=task_definition,
       security_groups=[
         backend_securitygroup,
         # Can't be done here due to circular dependencies
-        #self.redis_client_securitygroup,
-        #self.db_client_securitygroup,
+        # redis_client_securitygroup,
+        # db_client_securitygroup,
       ],
       vpc_subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE_WITH_NAT),
       cluster=cluster,
@@ -301,10 +280,18 @@ class GitpoapServerStack(Stack):
       load_balancer_name='gitpoap-backend-load-balancer',
     )
     listener = load_balancer.add_listener('gitpoap-backend-load-balancer-listener',
-      port=80,
+      certificates=[
+        elbv2.ListenerCertificate.from_arn(
+          'arn:aws:acm:us-east-2:510113809275:certificate/d077bbf2-ffb3-4e13-b094-5ef51e1ec128'
+        ),
+      ],
+      port=443,
+      protocol=elbv2.ApplicationProtocol.HTTPS,
     )
+    # Redirect HTTP to HTTPS
+    load_balancer.add_redirect()
     listener.add_targets('gitpoap-backend-load-balancer-listener-targets',
-      port=80,
+      protocol=elbv2.ApplicationProtocol.HTTP,
       targets=[service.load_balancer_target(
         container_name='gitpoap-backend-server',
         container_port=3001,
@@ -317,14 +304,14 @@ passwords = generate_and_save_passwords()
 
 vpc_stack = GitpoapVPCStack(app, "gitpoap-backend-vpc-stack")
 
-redis_user_stack = GitpoapRedisUserStack(app, "gitpoap-backend-redis-user-stack")
-
-redis_acl_stack = GitpoapRedisACLStack(app, "gitpoap-backend-redis-acl-stack")
-
 redis_stack = GitpoapRedisStack(app, "gitpoap-backend-redis-stack")
+redis_stack.add_dependency(vpc_stack)
 
 db_stack = GitpoapDBStack(app, "gitpoap-backend-db-stack")
+db_stack.add_dependency(vpc_stack)
 
 server_stack = GitpoapServerStack(app, "gitpoap-backend-server-stack")
+server_stack.add_dependency(redis_stack)
+server_stack.add_dependency(db_stack)
 
 app.synth()
