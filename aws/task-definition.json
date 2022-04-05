@@ -74,6 +74,6 @@
   "cpu": "256",
   "executionRoleArn": "arn:aws:iam::510113809275:role/gitpoap-backend-server-execution-role",
   "family": "gitpoap-backend-server-task-definition",
-  "taskRoleArn": "",
+  "taskRoleArn": "arn:aws:iam::510113809275:role/gitpoap-backend-contacts-suggestions-dynamodb",
   "placementConstraints": []
 }
