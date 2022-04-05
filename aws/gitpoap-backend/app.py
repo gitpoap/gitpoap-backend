@@ -206,6 +206,37 @@ class GitpoapServerStack(Stack):
         "logs:PutLogEvents"
       ],
     ))
+    execution_role.add_to_policy(iam.PolicyStatement(
+      effect=iam.Effect.ALLOW,
+      resources=[
+        "arn:aws:s3:::gitpoap-secrets/gitpoap-backend-external-secrets.env",
+        "arn:aws:s3:::gitpoap-secrets/gitpoap-backend-aws-secrets.env",
+      ],
+      actions=[
+        "s3:GetObject",
+      ],
+    ))
+    execution_role.add_to_policy(iam.PolicyStatement(
+      effect=iam.Effect.ALLOW,
+      resources=[
+        "arn:aws:s3:::gitpoap-secrets",
+      ],
+      actions=[
+        "s3:GetBucketLocation",
+      ],
+    ))
+    execution_role.add_to_policy(iam.PolicyStatement(
+      effect=iam.Effect.ALLOW,
+      resources=[
+        "arn:aws:logs:*:*:*"
+      ],
+      actions=[
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents",
+        "logs:DescribeLogStreams"
+      ],
+    ))
     task_definition = ecs.FargateTaskDefinition(self, "gitpoap-backend-server-task-definition",
       execution_role=execution_role,
       family="gitpoap-backend-server-task-definition",

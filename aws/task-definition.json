@@ -56,7 +56,16 @@
           "value": "arn:aws:s3:::gitpoap-secrets/gitpoap-backend-aws-secrets.env",
           "type": "s3"
         }
-      ]
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "gitpoap-backend-server-container",
+          "awslogs-region": "us-east-2",
+          "awslogs-create-group": "true",
+          "awslogs-stream-prefix": "gitpoap-backend-server"
+        }
+      }
     }
   ],
   "volumes": [],
