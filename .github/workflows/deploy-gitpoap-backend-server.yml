@@ -13,7 +13,7 @@ env:
   ECR_REPOSITORY: gitpoap-backend-server-repository
   ECS_SERVICE: gitpoap-backend-server-service
   ECS_CLUSTER: gitpoap-backend-server-cluster
-  ECS_TASK_DEFINITION: ecs/task-definition.json
+  ECS_TASK_DEFINITION: aws/task-definition.json
   CONTAINER_NAME: gitpoap-backend-server
 
 jobs:
