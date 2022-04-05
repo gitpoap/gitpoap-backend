@@ -111,6 +111,7 @@ class GitpoapRedisStack(Stack):
       security_group_ids=[redis_securitygroup.security_group_id],
       snapshot_retention_limit=3,
       subnet_group_name=redis_subnet_group.subnet_group_name,
+      tls_enabled=False,
     )
 
 class GitpoapDBStack(Stack):
