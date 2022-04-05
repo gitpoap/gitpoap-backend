@@ -319,7 +319,7 @@ export async function createPOAPEvent(
   form.append('event_template_id', 0);
   form.append('email', email);
   form.append('requested_codes', num_requested_codes);
-  form.append('private_event', 'true');
+  form.append('private_event', 'false');
   let headers = { ...form.getHeaders(), ...(await generatePOAPHeaders(false)) };
 
   return await makeGenericPOAPRequest(`${POAP_API_URL}/events`, 'POST', headers, form);
