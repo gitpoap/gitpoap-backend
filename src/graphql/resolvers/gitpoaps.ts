@@ -27,6 +27,15 @@ class FullClaimedGitPOAPData {
 }
 
 @ObjectType()
+class MintingGitPOAPData {
+  @Field(() => Claim)
+  claim: Claim;
+
+  @Field(() => POAPEvent)
+  event: POAPEvent;
+}
+
+@ObjectType()
 class UserPOAPs {
   @Field()
   totalGitPOAPs: number;
@@ -36,6 +45,9 @@ class UserPOAPs {
 
   @Field(() => [FullClaimedGitPOAPData])
   gitPOAPs: FullClaimedGitPOAPData[];
+
+  @Field(() => [MintingGitPOAPData])
+  mintingGitPOAPs: MintingGitPOAPData[];
 
   @Field(() => [POAPToken])
   poaps: POAPToken[];
@@ -234,7 +246,10 @@ export class CustomGitPOAPResolver {
     const claims = await prisma.claim.findMany({
       where: {
         address: resolvedAddress.toLowerCase(),
-        status: ClaimStatus.CLAIMED || ClaimStatus.MINTING,
+        status: { in: [ClaimStatus.CLAIMED, ClaimStatus.MINTING] },
+      },
+      include: {
+        gitPOAP: true,
       },
     });
 
@@ -257,6 +272,20 @@ export class CustomGitPOAPResolver {
         });
       } else {
         poapsOnly.push(poap);
+      }
+    }
+
+    const mintingClaims: Claim[] = claims.filter(claim => claim.status === ClaimStatus.MINTING);
+    let mintingGitPOAPs = [];
+    for (const claim of mintingClaims) {
+      if (claim.gitPOAP?.poapEventId) {
+        const event = await retrievePOAPEventInfo(claim.gitPOAP.poapEventId);
+        if (event !== null) {
+          mintingGitPOAPs.push({
+            claim,
+            event,
+          });
+        }
       }
     }
 
@@ -309,6 +338,7 @@ export class CustomGitPOAPResolver {
         totalGitPOAPs: gitPOAPsOnly.length,
         totalPOAPs: poapsOnly.length,
         gitPOAPs: gitPOAPsOnly.slice(index, index + <number>perPage),
+        mintingGitPOAPs: mintingGitPOAPs.slice(index, index + <number>perPage),
         poaps: poapsOnly.slice(index, index + <number>perPage),
       };
     } else {
@@ -316,6 +346,7 @@ export class CustomGitPOAPResolver {
         totalGitPOAPs: gitPOAPsOnly.length,
         totalPOAPs: poapsOnly.length,
         gitPOAPs: gitPOAPsOnly,
+        mintingGitPOAPs: mintingGitPOAPs,
         poaps: poapsOnly,
       };
     }
