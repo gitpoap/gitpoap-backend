@@ -11,3 +11,4 @@ cdk.out
 
 # Secret output
 gitpoap-passwords.json
+gitpoap-staging-passwords.json
