@@ -3,8 +3,8 @@
   "inferenceAccelerators": [],
   "containerDefinitions": [
     {
-      "name": "gitpoap-backend-server",
-      "image": "gitpoap-backend-server-repository:00000",
+      "name": "gitpoap-backend{{ task_definition_tag }}-server",
+      "image": "gitpoap-backend{{ task_definition_tag }}-server-repository:00000",
       "resourceRequirements": null,
       "essential": true,
       "portMappings": [
@@ -24,7 +24,7 @@
         },
         {
           "name": "NODE_ENV",
-          "value": "production"
+          "value": "{{ deploy_environment }}"
         },
         {
           "name": "POAP_API_URL",
@@ -44,7 +44,7 @@
         },
         {
           "name": "GITHUB_APP_REDIRECT_URL",
-          "value": "https://gitpoap.io/login"
+          "value": "{{ login_redirect_url }}"
         }
       ],
       "environmentFiles": [
@@ -53,17 +53,17 @@
           "type": "s3"
         },
         {
-          "value": "arn:aws:s3:::gitpoap-secrets/gitpoap-backend-aws-secrets.env",
+          "value": "arn:aws:s3:::gitpoap-secrets/gitpoap-backend{{ task_definition_tag }}-aws-secrets.env",
           "type": "s3"
         }
       ],
       "logConfiguration": {
         "logDriver": "awslogs",
         "options": {
-          "awslogs-group": "gitpoap-backend-server-container",
-          "awslogs-region": "us-east-2",
+          "awslogs-group": "gitpoap-backend{{ task_definition_tag }}-server-container",
+          "awslogs-region": "{{ aws_region }}",
           "awslogs-create-group": "true",
-          "awslogs-stream-prefix": "gitpoap-backend-server"
+          "awslogs-stream-prefix": "gitpoap-backend{{ task_definition_tag }}-server"
         }
       }
     }
@@ -72,8 +72,8 @@
   "networkMode": "awsvpc",
   "memory": "512",
   "cpu": "256",
-  "executionRoleArn": "arn:aws:iam::510113809275:role/gitpoap-backend-server-execution-role",
-  "family": "gitpoap-backend-server-task-definition",
-  "taskRoleArn": "arn:aws:iam::510113809275:role/gitpoap-backend-server-task-definition",
+  "executionRoleArn": "arn:aws:iam::510113809275:role/gitpoap-backend{{ task_definition_tag }}-server-execution-role",
+  "family": "gitpoap-backend{{ task_definition_tag }}-server-task-definition",
+  "taskRoleArn": "arn:aws:iam::510113809275:role/gitpoap-backend{{ task_definition_tag }}-server-task-definition",
   "placementConstraints": []
 }
