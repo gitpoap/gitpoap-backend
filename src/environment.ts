@@ -1,7 +1,5 @@
 import env from 'env-var';
 
-console.log(process.env);
-
 export const JWT_SECRET = env.get('JWT_SECRET').required().asString();
 
 export const NODE_ENV = env.get('NODE_ENV').required().asString();
