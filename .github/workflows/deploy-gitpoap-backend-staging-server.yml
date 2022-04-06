@@ -1,0 +1,24 @@
+# This workflow will build and push a new container image to Amazon ECR,
+# and then will deploy a new task definition to Amazon ECS, when there is a push to the main branch.
+
+name: Deploy to Amazon ECS (STAGING)
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  call-deploy-workflow:
+    uses: ./.github/workflows/reusable-deploy-backend-server.yml
+    with:
+      ECR_REPOSITORY: gitpoap-backend-staging-server-repository
+      ECS_SERVICE: gitpoap-backend-staging-server-service
+      ECS_CLUSTER: gitpoap-backend-staging-server-cluster
+      CONTAINER_NAME: gitpoap-backend-staging-server
+      deploy_environment: staging
+      task_definition_tag: '-staging'
+      login_redirect_url: https://gitpoap-fe-staging.vercel.app/login
+    secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
