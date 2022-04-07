@@ -278,7 +278,7 @@ export class CustomGitPOAPResolver {
     const mintingClaims: Claim[] = claims.filter(claim => claim.status === ClaimStatus.MINTING);
     let mintingGitPOAPs = [];
     for (const claim of mintingClaims) {
-      if (claim.gitPOAP?.poapEventId) {
+      if (claim.gitPOAP) {
         const event = await retrievePOAPEventInfo(claim.gitPOAP.poapEventId);
         if (event !== null) {
           mintingGitPOAPs.push({
