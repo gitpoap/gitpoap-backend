@@ -287,6 +287,17 @@ claimsRouter.post(
         },
       });
 
+      // Ensure that a profile exists for the address
+      await context.prisma.profile.upsert({
+        where: {
+          address: resolvedAddress.toLowerCase(),
+        },
+        update: {},
+        create: {
+          address: resolvedAddress.toLowerCase(),
+        },
+      });
+
       // Ensure that we have the minimal number of codes if the GitPOAP
       // is marked as ongoing. Note that we don't need to block on this
       // since we don't depend on its result
