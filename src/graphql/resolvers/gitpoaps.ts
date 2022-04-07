@@ -340,6 +340,7 @@ export class CustomGitPOAPResolver {
       SELECT g.*, COUNT(c.id) AS "claimsCount"
       FROM "GitPOAP" AS g
       JOIN "Claim" AS c ON c."gitPOAPId" = g.id
+      WHERE c."status" = 'CLAIMED' OR c."status" = 'MINTING'
       GROUP BY g.id
       ORDER BY "claimsCount" DESC
       LIMIT ${count}
