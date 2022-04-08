@@ -137,14 +137,18 @@ featuredRouter.delete('/:id', async function (req, res) {
     return res.status(404).send({ msg: `There is no profile for the address ${req.body.address}` });
   }
 
-  await context.prisma.featuredPOAP.delete({
-    where: {
-      poapTokenId_profileId: {
-        poapTokenId: req.params.id,
-        profileId: profile.id,
+  try {
+    await context.prisma.featuredPOAP.delete({
+      where: {
+        poapTokenId_profileId: {
+          poapTokenId: req.params.id,
+          profileId: profile.id,
+        },
       },
-    },
-  });
+    });
+  } catch (err) {
+    logger.warn(`Tried to delete a FeaturedPOAP that was already deleted: ${err}`);
+  }
 
   logger.debug(`Completed request from ${req.body.address} for POAP ID: ${req.params.id}`);
 
