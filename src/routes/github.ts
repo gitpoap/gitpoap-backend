@@ -158,11 +158,15 @@ githubRouter.post('/refresh', async function (req, res) {
   if (payload.generation !== authToken.generation) {
     logger.warn(`GitHub user ${authToken.githubId} had a refresh token reused.`);
 
-    await context.prisma.authToken.delete({
-      where: {
-        id: authToken.id,
-      },
-    });
+    try {
+      await context.prisma.authToken.delete({
+        where: {
+          id: authToken.id,
+        },
+      });
+    } catch (err) {
+      logger.warn(`Tried to delete an AuthToken that was already deleted: ${err}`);
+    }
 
     endTimer({ status: 401 });
 

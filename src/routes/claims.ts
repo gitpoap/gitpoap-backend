@@ -225,11 +225,15 @@ claimsRouter.post(
         invalidClaims.push({ claimId: claimId, reason: msg });
         continue;
       }
-      await context.prisma.redeemCode.delete({
-        where: {
-          id: redeemCode.id,
-        },
-      });
+      try {
+        await context.prisma.redeemCode.delete({
+          where: {
+            id: redeemCode.id,
+          },
+        });
+      } catch (err) {
+        logger.error(`Tried to delete a RedeemCode that was already deleted: ${err}`);
+      }
 
       // Mark that we are processing the claim
       await context.prisma.claim.update({
