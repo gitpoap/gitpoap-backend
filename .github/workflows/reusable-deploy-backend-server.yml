@@ -75,10 +75,10 @@ jobs:
 
       - name: Create task-definition.json for this stage
         run: |
-          jinja -D task_definition_tag "${{ task_definition_tag }}" \
+          jinja -D task_definition_tag "${{ inputs.task_definition_tag }}" \
             -D aws_region ${{ env.AWS_REGION }} \
-            -D deploy_environment ${{ deploy_environment }} \
-            -D login_redirect_url ${{ login_redirect_url }} \
+            -D deploy_environment ${{ inputs.deploy_environment }} \
+            -D login_redirect_url ${{ inputs.login_redirect_url }} \
             aws/task-definition.json.j2 > aws/task-definition.json
 
       - name: Fill in the new image ID in the Amazon ECS task definition
