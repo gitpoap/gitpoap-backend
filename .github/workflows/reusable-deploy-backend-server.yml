@@ -75,7 +75,7 @@ jobs:
 
       - name: Create task-definition.json for this stage
         run: |
-          jinja -D task_definition_tag "${{ inputs.task_definition_tag }}" \
+          jinja -D task_definition_tag '${{ inputs.task_definition_tag }}' \
             -D aws_region ${{ env.AWS_REGION }} \
             -D deploy_environment ${{ inputs.deploy_environment }} \
             -D login_redirect_url ${{ inputs.login_redirect_url }} \
