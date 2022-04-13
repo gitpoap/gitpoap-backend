@@ -1,20 +1,39 @@
 import winston from 'winston';
+import { NODE_ENV } from './environment';
+
+const baseFormat = winston.format.combine(
+  winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+  winston.format.errors({ stack: true }),
+  // Pad the levels and uppercase before they are colored
+  winston.format((info, opts) => {
+    info.level = info.level.toUpperCase().padStart(5);
+    return info;
+  })(),
+);
+
+// We want to make sure we aren't colorizing the logs that will
+// be ingested by CloudWatch/etc
+let colorFormat;
+switch (NODE_ENV) {
+  case 'production':
+  case 'staging':
+    colorFormat = baseFormat;
+    break;
+  default:
+    colorFormat = winston.format.combine(baseFormat, winston.format.colorize());
+    break;
+}
+
+const format = winston.format.combine(
+  colorFormat,
+  winston.format.printf(({ level, message, timestamp }) => {
+    return `${timestamp} [gitpoap-backend] ${level}: ${message}`;
+  }),
+);
 
 const logger = winston.createLogger({
   level: 'info',
-  format: winston.format.combine(
-    winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-    winston.format.errors({ stack: true }),
-    // Pad the levels and uppercase before they are colored
-    winston.format((info, opts) => {
-      info.level = info.level.toUpperCase().padStart(5);
-      return info;
-    })(),
-    winston.format.colorize(),
-    winston.format.printf(({ level, message, timestamp }) => {
-      return `${timestamp} [gitpoap-backend] ${level}: ${message}`;
-    }),
-  ),
+  format: format,
   transports: [new winston.transports.Console()],
   exceptionHandlers: [new winston.transports.Console()],
   rejectionHandlers: [new winston.transports.Console()],
