@@ -90,9 +90,9 @@ The query to get an address's (or an ENS's) POAPs and GitPOAPs is as follows:
           repo {
             name
           }
-          status
-          poapTokenId
         }
+        status
+        poapTokenId
       }
       event {
         name
@@ -125,9 +125,9 @@ and returns data in the form:
               "repo": {
                 "name": "repo34"
               }
-              "status": "COMPLETED",
-              "poapTokenId": "thunderdome"
-            }
+            },
+            "status": "COMPLETED",
+            "poapTokenId": "thunderdome"
           },
           "event": {
             "name": "Welcome to the Thunderdome",
