@@ -90,14 +90,13 @@ The query to get an address's (or an ENS's) POAPs and GitPOAPs is as follows:
           repo {
             name
           }
+          status
+          poapTokenId
         }
       }
-      poap {
-        event {
-          name
-          image_url
-        }
-        tokenId
+      event {
+        name
+        image_url
       }
     }
     poaps {
@@ -126,14 +125,13 @@ and returns data in the form:
               "repo": {
                 "name": "repo34"
               }
+              "status": "COMPLETED",
+              "poapTokenId": "thunderdome"
             }
           },
-          "poap": {
-            "event": {
-              "name": "Welcome to the Thunderdome",
-              "image_url": "https://avatars.githubusercontent.com/u/1555326?v=4"
-            },
-            "tokenId": "thunderdome"
+          "event": {
+            "name": "Welcome to the Thunderdome",
+            "image_url": "https://avatars.githubusercontent.com/u/1555326?v=4"
           }
         }
       ],
