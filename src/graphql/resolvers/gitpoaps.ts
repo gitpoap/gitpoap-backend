@@ -18,16 +18,7 @@ class FullGitPOAPEventData {
 }
 
 @ObjectType()
-class FullClaimedGitPOAPData {
-  @Field(() => Claim)
-  claim: Claim;
-
-  @Field(() => POAPToken)
-  poap: POAPToken;
-}
-
-@ObjectType()
-class MintingGitPOAPData {
+class UserGitPOAPData {
   @Field(() => Claim)
   claim: Claim;
 
@@ -43,11 +34,8 @@ class UserPOAPs {
   @Field()
   totalPOAPs: number;
 
-  @Field(() => [FullClaimedGitPOAPData])
-  gitPOAPs: FullClaimedGitPOAPData[];
-
-  @Field(() => [MintingGitPOAPData])
-  mintingGitPOAPs: MintingGitPOAPData[];
+  @Field(() => [UserGitPOAPData])
+  gitPOAPs: UserGitPOAPData[];
 
   @Field(() => [POAPToken])
   poaps: POAPToken[];
@@ -66,9 +54,18 @@ class GitPOAPWithClaimsCount {
 }
 
 @ObjectType()
+class UserFeaturedGitPOAPData {
+  @Field(() => Claim)
+  claim: Claim;
+
+  @Field(() => POAPToken)
+  poap: POAPToken;
+}
+
+@ObjectType()
 class UserFeaturedPOAPs {
-  @Field(() => [FullClaimedGitPOAPData])
-  gitPOAPs: FullClaimedGitPOAPData[];
+  @Field(() => [UserFeaturedGitPOAPData])
+  gitPOAPs: UserFeaturedGitPOAPData[];
 
   @Field(() => [POAPToken])
   poaps: POAPToken[];
@@ -253,39 +250,39 @@ export class CustomGitPOAPResolver {
       },
     });
 
+    let gitPOAPsOnly = [];
     let foundPOAPIds: Record<string, Claim> = {};
     for (const claim of claims) {
       if (claim.poapTokenId === null) {
-        logger.warn(`Found a null poapTokenId, but the Claim ID ${claim.id} has status CLAIMED`);
-        continue;
+        if (claim.status !== ClaimStatus.MINTING) {
+          logger.error(`Found a null poapTokenId, but the Claim ID ${claim.id} has status CLAIMED`);
+        } else {
+          const event = await retrievePOAPEventInfo(claim.gitPOAP.poapEventId);
+          if (event === null) {
+            logger.error(
+              `Failed to look up poapEventId: ${claim.gitPOAP.poapEventId} on GitPOAP: ${claim.gitPOAP.id}`,
+            );
+            continue;
+          }
+          gitPOAPsOnly.push({
+            claim,
+            event,
+          });
+        }
+      } else {
+        foundPOAPIds[claim.poapTokenId] = claim;
       }
-      foundPOAPIds[claim.poapTokenId] = claim;
     }
 
-    let gitPOAPsOnly = [];
     let poapsOnly = [];
     for (const poap of poaps) {
       if (foundPOAPIds.hasOwnProperty(poap.tokenId)) {
         gitPOAPsOnly.push({
           claim: foundPOAPIds[poap.tokenId],
-          poap: poap,
+          event: poap.event,
         });
       } else {
         poapsOnly.push(poap);
-      }
-    }
-
-    const mintingClaims: Claim[] = claims.filter(claim => claim.status === ClaimStatus.MINTING);
-    let mintingGitPOAPs = [];
-    for (const claim of mintingClaims) {
-      if (claim.gitPOAP) {
-        const event = await retrievePOAPEventInfo(claim.gitPOAP.poapEventId);
-        if (event !== null) {
-          mintingGitPOAPs.push({
-            claim,
-            event,
-          });
-        }
       }
     }
 
@@ -319,7 +316,7 @@ export class CustomGitPOAPResolver {
     } else {
       // === 'alphabetical'
       gitPOAPsOnly.sort((left, right) => {
-        return left.poap.event.name.localeCompare(right.poap.event.name);
+        return left.event.name.localeCompare(right.event.name);
       });
       poapsOnly.sort((left, right) => {
         return left.event.name.localeCompare(right.event.name);
@@ -338,7 +335,6 @@ export class CustomGitPOAPResolver {
         totalGitPOAPs: gitPOAPsOnly.length,
         totalPOAPs: poapsOnly.length,
         gitPOAPs: gitPOAPsOnly.slice(index, index + <number>perPage),
-        mintingGitPOAPs: mintingGitPOAPs.slice(index, index + <number>perPage),
         poaps: poapsOnly.slice(index, index + <number>perPage),
       };
     } else {
@@ -346,7 +342,6 @@ export class CustomGitPOAPResolver {
         totalGitPOAPs: gitPOAPsOnly.length,
         totalPOAPs: poapsOnly.length,
         gitPOAPs: gitPOAPsOnly,
-        mintingGitPOAPs: mintingGitPOAPs,
         poaps: poapsOnly,
       };
     }
