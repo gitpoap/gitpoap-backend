@@ -8,6 +8,8 @@ import short from 'short-uuid';
 import multer from 'multer';
 import { GitPOAPStatus } from '@generated/type-graphql';
 import { httpRequestDurationSeconds } from '../metrics';
+import { upsertProjectById } from '../lib/projects';
+import { AccessTokenPayloadWithOAuth } from '../types/tokens';
 
 export const gitpoapsRouter = Router();
 
@@ -40,14 +42,10 @@ gitpoapsRouter.post('/', jwtWithAdminOAuth(), upload.single('image'), async func
   logger.info(`Request to create a new GitPOAP "${req.body.name}" for repo ${githubRepoId}`);
 
   // Lookup the stored info about the repo provided
-  const repo = await context.prisma.repo.findUnique({
-    where: {
-      githubRepoId,
-    },
-    include: {
-      organization: true,
-    },
-  });
+  const repo = await upsertProjectById(
+    githubRepoId,
+    (<AccessTokenPayloadWithOAuth>req.user).githubOAuthToken,
+  );
 
   if (!repo) {
     logger.warn("Repo hasn't been added to GitPOAP");

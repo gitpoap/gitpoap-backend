@@ -1,12 +1,11 @@
 import { AddProjectSchema } from '../schemas/projects';
 import { Router } from 'express';
 import fetch from 'cross-fetch';
-import { context } from '../context';
-import { getGithubRepository } from '../external/github';
 import { AccessTokenPayloadWithOAuth } from '../types/tokens';
 import { jwtWithOAuth } from '../middleware';
 import { createScopedLogger } from '../logging';
 import { httpRequestDurationSeconds } from '../metrics';
+import { upsertProject } from '../lib/projects';
 
 export const projectsRouter = Router();
 
@@ -26,53 +25,16 @@ projectsRouter.post('/', jwtWithOAuth(), async function (req, res) {
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
-  logger.info(`Request to add ${req.body.organization}/${req.body.repository}`);
-
-  const repoInfo = await getGithubRepository(
+  const repoResult = await upsertProject(
     req.body.organization,
     req.body.repository,
     (<AccessTokenPayloadWithOAuth>req.user).githubOAuthToken,
   );
-  if (repoInfo === null) {
-    logger.warn(`Couldn't find ${req.body.organization}/${req.body.repository} on GitHub`);
-    endTimer({ status: 400 });
-    return res.status(400).send({
-      message: 'Failed to lookup repository on GitHub',
-    });
+
+  if (repoResult === null) {
+    endTimer({ status: 404 });
+    return res.status(404).send('Repository does not exist on GitHub');
   }
-
-  // Add the org if it doesn't already exist
-  const org = await context.prisma.organization.upsert({
-    where: {
-      githubOrgId: repoInfo.owner.id,
-    },
-    update: {},
-    create: {
-      githubOrgId: repoInfo.owner.id,
-      name: repoInfo.owner.login,
-    },
-  });
-
-  // Check to see if we've already created the repo
-  const repo = await context.prisma.repo.findUnique({
-    where: {
-      githubRepoId: repoInfo.id,
-    },
-  });
-
-  if (repo) {
-    logger.warn(`${req.body.organization}/${repoInfo.name} already exists`);
-    endTimer({ status: 200 });
-    return res.status(200).send('ALREADY EXISTS');
-  }
-
-  await context.prisma.repo.create({
-    data: {
-      githubRepoId: repoInfo.id,
-      name: repoInfo.name,
-      organizationId: org.id,
-    },
-  });
 
   logger.debug(`Completed request to add ${req.body.organization}/${req.body.repository}`);
 
