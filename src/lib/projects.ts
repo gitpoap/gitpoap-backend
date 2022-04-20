@@ -1,9 +1,13 @@
 import { Repo } from '@generated/type-graphql';
 import { context } from '../context';
 import { createScopedLogger } from '../logging';
-import { getGithubRepository, getGithubRepositoryById } from '../external/github';
+import {
+  GithubRepoResponse,
+  getGithubRepository,
+  getGithubRepositoryById,
+} from '../external/github';
 
-async function upsertProjectHelper(repoInfo: Record<string, any>): Promise<Repo> {
+async function upsertProjectHelper(repoInfo: GithubRepoResponse): Promise<Repo> {
   // Add the org if it doesn't already exist
   const org = await context.prisma.organization.upsert({
     where: {
