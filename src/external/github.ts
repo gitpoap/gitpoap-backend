@@ -80,11 +80,27 @@ export async function getGithubUserById(githubId: number, githubToken: string) {
   return await makeGithubAPIRequest(`/user/${githubId}`, githubToken);
 }
 
-export async function getGithubRepository(organization: string, name: string, githubToken: string) {
+export type GithubRepoResponse = {
+  id: number;
+  name: string;
+  owner: {
+    id: number;
+    login: string;
+  };
+};
+
+export async function getGithubRepository(
+  organization: string,
+  name: string,
+  githubToken: string,
+): Promise<GithubRepoResponse> {
   return await makeGithubAPIRequest(`/repos/${organization}/${name}`, githubToken);
 }
 
-export async function getGithubRepositoryById(repoId: number, githubToken: string) {
+export async function getGithubRepositoryById(
+  repoId: number,
+  githubToken: string,
+): Promise<GithubRepoResponse> {
   return await makeGithubAPIRequest(`/repositories/${repoId}`, githubToken);
 }
 
