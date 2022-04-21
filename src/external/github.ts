@@ -76,6 +76,10 @@ export async function getGithubCurrentUserInfo(githubToken: string) {
   return await makeGithubAPIRequest(`/user`, githubToken);
 }
 
+export async function getGithubUser(githubHandle: string, githubToken: string) {
+  return await makeGithubAPIRequest(`/users/${githubHandle}`, githubToken);
+}
+
 export async function getGithubUserById(githubId: number, githubToken: string) {
   return await makeGithubAPIRequest(`/user/${githubId}`, githubToken);
 }
@@ -104,6 +108,17 @@ export async function getGithubRepositoryById(
   return await makeGithubAPIRequest(`/repositories/${repoId}`, githubToken);
 }
 
+export async function isOrganizationAUser(githubHandle: string, githubToken: string) {
+  const response = await getGithubUser(githubHandle, githubToken);
+
+  return response.type === 'User';
+}
+
 export async function getGithubOrganizationAdmins(organization: string, githubToken: string) {
-  return await makeGithubAPIRequest(`/orgs/${organization}/members?role=admin`, githubToken);
+  if (await isOrganizationAUser(organization, githubToken)) {
+    // If the organization is actually a user, only allow that user to update the org info
+    return [{ login: organization }];
+  } else {
+    return await makeGithubAPIRequest(`/orgs/${organization}/members?role=admin`, githubToken);
+  }
 }
