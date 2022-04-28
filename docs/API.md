@@ -197,9 +197,14 @@ Data:
 ```json
 {
   "gitPOAPId": 6,
-  "recipientGithubIds": [1555326]
+  "recipientGithubIds": [1555326],
+  "lastPRMergedAt": 1647987506199
 }
 ```
+
+Note that `"lastPRMergedAt"` should contain the time (in UNIX milliseconds time format -- like that returned by `Date.now()`)
+of when the last PR in this set of contributors was merged. This will force an update of the `lastPRMergedAt` field in the
+DB column for this GitPOAP.
 
 ## Update Organization
 
