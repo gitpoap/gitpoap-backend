@@ -49,11 +49,7 @@ organizationsRouter.post('/', jwtWithOAuth(), async function (req, res) {
     organization.name,
     accessToken.githubOAuthToken,
   );
-  if (
-    !members
-      .map((m: Record<string, { login: string }>) => m.login)
-      .includes(accessToken.githubHandle)
-  ) {
+  if (!members.map((m: { login: string }) => m.login).includes(accessToken.githubHandle)) {
     logger.warn(
       `Non-member (GitHub handle: ${accessToken.githubHandle} of repo ${organization.name} tried to update its data`,
     );
