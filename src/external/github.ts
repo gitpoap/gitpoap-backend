@@ -125,3 +125,16 @@ export async function getGithubOrganizationAdmins(
     return await makeGithubAPIRequest(`/orgs/${organization}/members?role=admin`, githubToken);
   }
 }
+
+export async function getRepositoryPulls(
+  org: string,
+  repo: string,
+  perPage: number,
+  page: number,
+  githubToken: string,
+) {
+  return await makeGithubAPIRequest(
+    `/repos/${org}/${repo}/pulls?state=closed&sort=updated&per_page=${perPage}&page=${page}`,
+    githubToken,
+  );
+}

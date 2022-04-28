@@ -10,4 +10,5 @@ export const ClaimGitPOAPSchema = z.object({
 export const CreateGitPOAPClaimsSchema = z.object({
   gitPOAPId: z.number(),
   recipientGithubIds: z.array(z.number()).nonempty(),
+  lastPRUpdatedAt: z.number(),
 });

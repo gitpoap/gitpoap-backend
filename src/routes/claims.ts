@@ -13,6 +13,7 @@ import { JWT_SECRET } from '../environment';
 import { createScopedLogger } from '../logging';
 import { MINIMUM_REMAINING_REDEEM_CODES, REDEEM_CODE_STEP_SIZE } from '../constants';
 import { httpRequestDurationSeconds } from '../metrics';
+import { DateTime } from 'luxon';
 
 export const claimsRouter = Router();
 
@@ -413,6 +414,15 @@ claimsRouter.post('/create', jwtWithAdminOAuth(), async function (req, res) {
       },
     });
   }
+
+  await context.prisma.gitPOAP.update({
+    where: {
+      id: req.body.gitPOAPId,
+    },
+    data: {
+      lastPRUpdatedAt: DateTime.fromSeconds(req.body.lastPRUpdatedAt / 1000.0).toJSDate(),
+    },
+  });
 
   if (notFound.length > 0) {
     endTimer({ status: 400 });

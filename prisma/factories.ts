@@ -110,6 +110,7 @@ export class GitPOAPFactory {
     repoId: number,
     poapSecret: string,
     status?: GitPOAPStatus,
+    ongoing?: boolean,
   ): Promise<GitPOAP> => {
     const gitPOAP = await prisma.gitPOAP.create({
       data: <Prisma.GitPOAPCreateInput>{
@@ -117,6 +118,7 @@ export class GitPOAPFactory {
         poapEventId,
         poapSecret,
         status,
+        ongoing,
         repo: {
           connect: {
             id: repoId,

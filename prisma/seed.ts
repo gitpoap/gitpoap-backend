@@ -56,6 +56,7 @@ async function main() {
     'http://gitpoap.io',
   );
   const org5 = await OrganizationFactory.createOrganization(1555326, 'burz labz');
+  const org6 = await OrganizationFactory.createOrganization(81711181, 'stake-house');
 
   /* Create Repos */
   const gitpoapFeRepo = await RepoFactory.createRepo('gitpoap-fe', 439490658, org4.id); // real id
@@ -64,6 +65,7 @@ async function main() {
   const repo34 = await RepoFactory.createRepo('repo34', 34, org1.id);
   const repo568 = await RepoFactory.createRepo('repo568', 568, org3.id);
   const repoDopex = await RepoFactory.createRepo('dopex', 127534193, org5.id);
+  const repoWagyuInstaller = await RepoFactory.createRepo('wagyu-installer', 336862756, org6.id);
 
   /* Create GitPOAPs */
   const gitpoap1 = await GitPOAPFactory.createGitPOAP(2022, 1, repo34.id, '012345', GitPOAPStatus.APPROVED);
@@ -82,6 +84,8 @@ async function main() {
   const gitpoap9 = await GitPOAPFactory.createGitPOAP(2022, 36570, gitpoapBackendRepo.id, '929862', GitPOAPStatus.APPROVED);
   const gitpoap10 = await GitPOAPFactory.createGitPOAP(2022, 36571, gitpoapBackendRepo.id, '252134', GitPOAPStatus.APPROVED);
   const gitpoap11 = await GitPOAPFactory.createGitPOAP(2022, 36572, gitpoapBackendRepo.id, '613740', GitPOAPStatus.APPROVED);
+  // Not the real POAP secret!
+  const gitpoap12 = await GitPOAPFactory.createGitPOAP(2022, 37428, repoWagyuInstaller.id, '324324', GitPOAPStatus.UNAPPROVED, true);
 
   /* Add codes */
   await RedeemCodeFactory.addRedeemCodes(['6j8wda', 'tqaq9y', 'd4tdh0', 'o9uorf', 'eeyewe', '09wqld', 'tsl7wt', 'i52wvt', 'mshofb', 'v9cbcd'], gitpoap7.id);
