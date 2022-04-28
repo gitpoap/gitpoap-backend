@@ -114,7 +114,10 @@ export async function isOrganizationAUser(githubHandle: string, githubToken: str
   return response.type === 'User';
 }
 
-export async function getGithubOrganizationAdmins(organization: string, githubToken: string) {
+export async function getGithubOrganizationAdmins(
+  organization: string,
+  githubToken: string,
+): Promise<[{ login: string }]> {
   if (await isOrganizationAUser(organization, githubToken)) {
     // If the organization is actually a user, only allow that user to update the org info
     return [{ login: organization }];
