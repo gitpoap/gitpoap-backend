@@ -70,6 +70,8 @@ model Claim {
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   status      ClaimStatus @default(UNCLAIMED)
+  // Hide qrHash from generated resolvers
+  /// @TypeGraphQL.omit(output: true, input: true)
   qrHash      String?     @db.VarChar(10)
   poapTokenId String?     @unique @db.VarChar(255)
   address     String?     @db.VarChar(255)
@@ -89,6 +91,8 @@ model GitPOAP {
   updatedAt   DateTime      @updatedAt
   repo        Repo          @relation(fields: [repoId], references: [id])
   claims      Claim[]
+  // Hide poapSecret from generated resolvers
+  /// @TypeGraphQL.omit(output: true, input: true)
   poapSecret  String        @db.VarChar(6)
   status      GitPOAPStatus @default(UNAPPROVED)
   // If a GitPOAP is marked as ongoing then the backend will automatically
