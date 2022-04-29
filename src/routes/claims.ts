@@ -14,6 +14,7 @@ import { createScopedLogger } from '../logging';
 import { MINIMUM_REMAINING_REDEEM_CODES, REDEEM_CODE_STEP_SIZE } from '../constants';
 import { httpRequestDurationSeconds } from '../metrics';
 import { DateTime } from 'luxon';
+import { sleep } from '../lib/sleep';
 
 export const claimsRouter = Router();
 
@@ -87,7 +88,7 @@ async function runClaimsPostProcessing(claimIds: number[], qrHashes: string[]) {
     logger.info(`Waiting for ${claimIds.length} claim transactions to process`);
 
     // Wait for 5 seconds
-    await new Promise(resolve => setTimeout(resolve, 5000));
+    await sleep(5);
 
     // Helper function to remove a claim from postprocessing
     const removeAtIndex = (i: number) => {

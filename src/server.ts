@@ -14,7 +14,7 @@ import { profilesRouter } from './routes/profiles';
 import { projectsRouter } from './routes/projects';
 import { organizationsRouter } from './routes/organizations';
 import { CONTACTS_TABLE_NAME } from './dynamo';
-import { PORT } from './constants';
+import { ONGOING_ISSUANCE_CHECK_FREQUENCY_MINUTES, PORT } from './constants';
 import { getSchema } from './graphql/schema';
 import { context } from './context';
 import { graphqlHTTP } from 'express-graphql';
@@ -24,6 +24,7 @@ import { NODE_ENV, JWT_SECRET, AWS_PROFILE } from './environment';
 import { createScopedLogger, updateLogLevel } from './logging';
 import minimist from 'minimist';
 import { startMetricsServer } from './metrics';
+import { tryToRunOngoingIssuanceUpdater } from './lib/ongoing';
 
 const main = async () => {
   const logger = createScopedLogger('main');
@@ -80,6 +81,14 @@ const main = async () => {
   });
 
   startMetricsServer();
+
+  // Set the ongoing issuance backend process to run
+  const MILLISECONDS_PER_MINUTE = 60 * 1000;
+  await tryToRunOngoingIssuanceUpdater();
+  setInterval(
+    tryToRunOngoingIssuanceUpdater,
+    ONGOING_ISSUANCE_CHECK_FREQUENCY_MINUTES * MILLISECONDS_PER_MINUTE,
+  );
 };
 
 main();

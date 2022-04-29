@@ -14,3 +14,7 @@ export const ADMIN_GITHUB_IDS = [
 export const MINIMUM_REMAINING_REDEEM_CODES = 15;
 // The number of new claims to request
 export const REDEEM_CODE_STEP_SIZE = 50;
+
+// How often do we check if we can run the ongoing issuance background
+// process per instance?
+export const ONGOING_ISSUANCE_CHECK_FREQUENCY_MINUTES = 30;
