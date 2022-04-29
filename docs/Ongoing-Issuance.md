@@ -16,13 +16,19 @@ in the GitHub Repositories API, but we can for `"updated_at"`.)
 
 The process every time (every 12 hours) the ongoing issuance process is run will then be:
 
-1. Query the GitHub API for closed PRs sorted by `updated` time, via the endpoint:
+1. Each instance of the backend server individually tries to start the process every 30 minutes. If an
+   individual instance sees that it has been more than 12 hours since the last time the process was run
+   (by checking the `ongoing-issuance` row in the `BatchTiming` table in the DB) then it will update that
+   row and proceed onto the next step.
+2. Query the GitHub API (authenticating as the OAuth App itself) for closed PRs sorted by `updated` time,
+   via the endpoint:
    ```
    https://api.github.com/repos/OWNER/REPO/pulls?state=closed&sort=updated&per_page=100&page=PAGE_NUM
    ```
    Note that we should stop asking for additional pages after the final item in the page is before
    `lastPRUpdatedAt`.
-2. Collect any PRs that were newly merged after `lastPRUpdatedAt`.
-3. For each PR, create a new claim for the GitHub user so long as they do not already have a claim for that
+3. Collect any PRs that were newly merged after `lastPRUpdatedAt`.
+4. For each PR, create a new claim for the GitHub user so long as they do not already have a claim for that
    year.
-4. Update the `lastPRUpdatedAt` to the most recently merged PR.
+5. Update the `lastPRUpdatedAt` to the most recently merged PR.
+6. Repeat the steps 2-5 for all remaining GitPOAPs that are marked as `ongoing`.
