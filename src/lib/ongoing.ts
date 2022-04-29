@@ -1,14 +1,15 @@
 import { GitPOAP, Organization, Repo } from '@generated/type-graphql';
 import { context } from '../context';
 import { createScopedLogger } from '../logging';
-import { getRepositoryPulls } from '../external/github';
+import { getRepositoryPullsAsAdmin } from '../external/github';
 import { DateTime } from 'luxon';
+import { sleep } from './sleep';
 
 const PULL_STEP_SIZE = 100;
 
 type GitPOAPReturnType = GitPOAP & { repo: Repo & { organization: Organization } };
 
-export async function checkForNewContributions(gitPOAP: GitPOAPReturnType, githubToken: string) {
+export async function checkForNewContributions(gitPOAP: GitPOAPReturnType) {
   const logger = createScopedLogger('checkForNewContributions');
 
   logger.info(
@@ -19,12 +20,11 @@ export async function checkForNewContributions(gitPOAP: GitPOAPReturnType, githu
   let processing = true;
   let lastUpdatedAt = null;
   while (processing) {
-    const pulls = await getRepositoryPulls(
+    const pulls = await getRepositoryPullsAsAdmin(
       gitPOAP.repo.organization.name,
       gitPOAP.repo.name,
       PULL_STEP_SIZE,
       page,
-      githubToken,
     );
     if (pulls === null) {
       logger.error(`Failed to run ongoing issuance process for GitPOAP id: ${gitPOAP.id}`);
@@ -120,7 +120,9 @@ export async function checkForNewContributions(gitPOAP: GitPOAPReturnType, githu
   );
 }
 
-export async function runOngoingIssuanceUpdater(githubToken: string) {
+const DELAY_BETWEEN_ONGOING_ISSUANCE_CHECKS_SECONDS = 60;
+
+async function runOngoingIssuanceUpdater() {
   const logger = createScopedLogger('runOngoingIssuanceUpdater');
 
   logger.info('Running the ongoing issuance updater process');
@@ -141,8 +143,62 @@ export async function runOngoingIssuanceUpdater(githubToken: string) {
   logger.info(`Found ${gitPOAPs.length} ongoing GitPOAPs that need to be checked`);
 
   for (const gitPOAP of gitPOAPs) {
-    await checkForNewContributions(gitPOAP, githubToken);
+    await checkForNewContributions(gitPOAP);
+
+    // Wait for a bit so we don't get rate limited
+    await sleep(DELAY_BETWEEN_ONGOING_ISSUANCE_CHECKS_SECONDS);
   }
 
   logger.debug('Finished running the ongoing issuance updater process');
+}
+
+const ONGOING_ISSUANCE_BATCH_TIMING_KEY = 'ongoing-issuance';
+const ONGOING_ISSUANCE_DELAY_HOURS = 12;
+
+// Try to run ongoing issuance updater if there has been enough time elapsed since
+// any instance last ran it
+export async function tryToRunOngoingIssuanceUpdater() {
+  const logger = createScopedLogger('tryToRunOngoingIssuanceUpdater');
+
+  logger.info('Attempting to run the ongoing issuance updater');
+
+  try {
+    const batchTiming = await context.prisma.batchTiming.findUnique({
+      where: {
+        name: ONGOING_ISSUANCE_BATCH_TIMING_KEY,
+      },
+    });
+
+    if (batchTiming !== null) {
+      const lastRun = DateTime.fromJSDate(batchTiming.lastRun);
+
+      // If not enough time has elapsed since the last run, skip the run
+      if (lastRun.plus({ hours: ONGOING_ISSUANCE_DELAY_HOURS }) > DateTime.now()) {
+        logger.debug('Not enough time has elapsed since the last run');
+        return;
+      }
+    }
+
+    // Update the last time ran to now (we do this first so the other instance
+    // also doesn't start this process)
+    const now = DateTime.now().toJSDate();
+    await context.prisma.batchTiming.upsert({
+      where: {
+        name: ONGOING_ISSUANCE_BATCH_TIMING_KEY,
+      },
+      update: {
+        lastRun: now,
+      },
+      create: {
+        name: ONGOING_ISSUANCE_BATCH_TIMING_KEY,
+        lastRun: now,
+      },
+    });
+
+    await runOngoingIssuanceUpdater();
+
+    logger.debug('Finished running the ongoing issuance updater');
+  } catch (err) {
+    logger.error(`Failed to run ongoing issuance updater: ${err}`);
+  }
 }

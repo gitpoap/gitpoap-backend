@@ -142,6 +142,15 @@ model RedeemCode {
   code      String
 }
 
+// Model for coordinating batch processing accross nodes
+model BatchTiming {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  lastRun   DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 enum GitPOAPStatus {
   UNAPPROVED
   APPROVED
