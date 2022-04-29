@@ -142,11 +142,17 @@ async function runOngoingIssuanceUpdater() {
 
   logger.info(`Found ${gitPOAPs.length} ongoing GitPOAPs that need to be checked`);
 
-  for (const gitPOAP of gitPOAPs) {
-    await checkForNewContributions(gitPOAP);
+  for (let i = 0; i < gitPOAPs.length; ++i) {
+    if (i > 0) {
+      logger.debug(
+        `Waiting ${DELAY_BETWEEN_ONGOING_ISSUANCE_CHECKS_SECONDS} seconds before checking the next GitPOAP`,
+      );
 
-    // Wait for a bit so we don't get rate limited
-    await sleep(DELAY_BETWEEN_ONGOING_ISSUANCE_CHECKS_SECONDS);
+      // Wait for a bit so we don't get rate limited
+      await sleep(DELAY_BETWEEN_ONGOING_ISSUANCE_CHECKS_SECONDS);
+    }
+
+    await checkForNewContributions(gitPOAPs[i]);
   }
 
   logger.debug('Finished running the ongoing issuance updater process');
