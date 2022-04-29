@@ -40,16 +40,20 @@ export async function requestGithubOAuthToken(code: string) {
   return tokenJson.access_token;
 }
 
-async function makeGithubAPIRequest(path: string, githubToken: string) {
-  const logger = createScopedLogger('makeGithubAPIRequest');
+async function makeGithubAPIRequestInternal(path: string, authorization: string) {
+  const logger = createScopedLogger('makeGithubAPIRequestInternal');
 
   const endTimer = githubRequestDurationSeconds.startTimer('GET', path);
+
+  logger.debug(
+    `Making a Github request via the ${authorization.substr(0, authorization.indexOf(' '))} method`,
+  );
 
   try {
     const githubResponse = await fetch(new URL(path, GITHUB_API_URL).href, {
       method: 'GET',
       headers: {
-        Authorization: `token ${githubToken}`,
+        Authorization: authorization,
         Accept: 'application/json',
       },
     });
@@ -70,6 +74,19 @@ async function makeGithubAPIRequest(path: string, githubToken: string) {
     endTimer({ success: 0 });
     return null;
   }
+}
+
+async function makeGithubAPIRequest(path: string, githubToken: string) {
+  return await makeGithubAPIRequestInternal(path, `token ${githubToken}`);
+}
+
+// This should only be used for our background processes
+async function makeAdminGithubAPIRequest(path: string) {
+  const basicAuthString = Buffer.from(
+    `${GITHUB_APP_CLIENT_ID}:${GITHUB_APP_CLIENT_SECRET}`,
+  ).toString('base64');
+
+  return await makeGithubAPIRequestInternal(path, `Basic ${basicAuthString}`);
 }
 
 export async function getGithubCurrentUserInfo(githubToken: string) {
@@ -126,15 +143,14 @@ export async function getGithubOrganizationAdmins(
   }
 }
 
-export async function getRepositoryPulls(
+// This should only be used for our background processes
+export async function getRepositoryPullsAsAdmin(
   org: string,
   repo: string,
   perPage: number,
   page: number,
-  githubToken: string,
 ) {
-  return await makeGithubAPIRequest(
+  return await makeAdminGithubAPIRequest(
     `/repos/${org}/${repo}/pulls?state=closed&sort=updated&per_page=${perPage}&page=${page}`,
-    githubToken,
   );
 }
