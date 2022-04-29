@@ -416,15 +416,6 @@ claimsRouter.post('/create', jwtWithAdminOAuth(), async function (req, res) {
     });
   }
 
-  await context.prisma.gitPOAP.update({
-    where: {
-      id: req.body.gitPOAPId,
-    },
-    data: {
-      lastPRUpdatedAt: DateTime.fromSeconds(req.body.lastPRUpdatedAt / 1000.0).toJSDate(),
-    },
-  });
-
   if (notFound.length > 0) {
     endTimer({ status: 400 });
     return res.status(400).send({
