@@ -156,6 +156,7 @@ export class ProfileFactory {
     address: string,
     bio: string,
     name?: string,
+    githubHandle?: string,
     twitterHandle?: string,
     personalSiteUrl?: string,
   ): Promise<Profile> => {
@@ -164,6 +165,7 @@ export class ProfileFactory {
         address,
         bio,
         name,
+        githubHandle,
         twitterHandle,
         personalSiteUrl,
       },
