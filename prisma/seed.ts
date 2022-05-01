@@ -151,7 +151,7 @@ async function main() {
   /* Create Profiles */
   const profile1 = await ProfileFactory.createProfile(ADDRESSES.colfax, 'I like brisket.');
   const profile2 = await ProfileFactory.createProfile('0x89dab21047e6de0e77deee5f4f286d72be50b942', 'I like bbq.');
-  const profileJay = await ProfileFactory.createProfile(ADDRESSES.jay, 'I like factorio.', 'Jay PB', '0xpeebeejay', 'https://s.jay.gg');
+  const profileJay = await ProfileFactory.createProfile(ADDRESSES.jay, 'I like factorio.', 'Jay PB', '0xpeebeejay', 'jaypb1', 'https://s.jay.gg');
   const profile4 = await ProfileFactory.createProfile(ADDRESSES.anthony, 'I am addicted to POAPs', 'Anthony Burzillo');
   const profile5 = await ProfileFactory.createProfile(ADDRESSES.anthony2, 'I am not real');
   const profile6 = await ProfileFactory.createProfile(ADDRESSES.vitalik, 'I like unicorns');
