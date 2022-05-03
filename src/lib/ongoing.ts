@@ -5,7 +5,20 @@ import { getRepositoryPullsAsAdmin } from '../external/github';
 import { DateTime } from 'luxon';
 import { sleep } from './sleep';
 
+// The number of pull requests to request in a single page (currently the maximum number)
 const PULL_STEP_SIZE = 100;
+
+// The name of the row in the BatchTiming table used for ongoing issuance
+const ONGOING_ISSUANCE_BATCH_TIMING_KEY = 'ongoing-issuance';
+
+// The amount of hours to wait before checking for new contributions
+const ONGOING_ISSUANCE_DELAY_HOURS = 12;
+
+// The amount of minutes to wait in between the checks for separate projects.
+// Currently we don't expect to be rate limited by GitHub for this background
+// process, but this is good to have in place as we add more projects that
+// require ongoing checks
+const DELAY_BETWEEN_ONGOING_ISSUANCE_CHECKS_SECONDS = 60;
 
 type GitPOAPReturnType = GitPOAP & { repo: Repo & { organization: Organization } };
 
@@ -17,9 +30,9 @@ export async function checkForNewContributions(gitPOAP: GitPOAPReturnType) {
   );
 
   let page = 1;
-  let processing = true;
+  let isProcessing = true;
   let lastUpdatedAt = null;
-  while (processing) {
+  while (isProcessing) {
     const pulls = await getRepositoryPullsAsAdmin(
       gitPOAP.repo.organization.name,
       gitPOAP.repo.name,
@@ -48,7 +61,7 @@ export async function checkForNewContributions(gitPOAP: GitPOAPReturnType) {
 
       // Stop if we've already handled this PR
       if (mergedAt < DateTime.fromJSDate(gitPOAP.lastPRUpdatedAt)) {
-        processing = false;
+        isProcessing = false;
         break;
       }
 
@@ -101,7 +114,7 @@ export async function checkForNewContributions(gitPOAP: GitPOAPReturnType) {
     }
 
     ++page;
-    processing = pulls.length === PULL_STEP_SIZE;
+    isProcessing = pulls.length === PULL_STEP_SIZE;
   }
 
   if (lastUpdatedAt !== null) {
@@ -119,8 +132,6 @@ export async function checkForNewContributions(gitPOAP: GitPOAPReturnType) {
     `Finished checking for new contributions to ${gitPOAP.repo.organization.name}/${gitPOAP.repo.name}`,
   );
 }
-
-const DELAY_BETWEEN_ONGOING_ISSUANCE_CHECKS_SECONDS = 60;
 
 async function runOngoingIssuanceUpdater() {
   const logger = createScopedLogger('runOngoingIssuanceUpdater');
@@ -157,9 +168,6 @@ async function runOngoingIssuanceUpdater() {
 
   logger.debug('Finished running the ongoing issuance updater process');
 }
-
-const ONGOING_ISSUANCE_BATCH_TIMING_KEY = 'ongoing-issuance';
-const ONGOING_ISSUANCE_DELAY_HOURS = 12;
 
 // Try to run ongoing issuance updater if there has been enough time elapsed since
 // any instance last ran it
