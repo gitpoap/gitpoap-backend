@@ -129,3 +129,35 @@ export const redisRequestDurationSeconds = {
     };
   },
 };
+
+export const _ongoingIssuanceProjectDurationSeconds = new Histogram({
+  name: 'ongoing_issuance_project_duration_seconds',
+  help: 'Duration of the ongoing issuance batch process for a single project',
+  labelNames: ['stage', 'project', 'success'],
+});
+register.registerMetric(_ongoingIssuanceProjectDurationSeconds);
+export const ongoingIssuanceProjectDurationSeconds = {
+  startTimer: (project: string) => {
+    const endTimer = _ongoingIssuanceProjectDurationSeconds.startTimer();
+
+    return (values: { success: number }) => {
+      endTimer({ stage: NODE_ENV, project, ...values });
+    };
+  },
+};
+
+export const _overallOngoingIssuanceDurationSeconds = new Histogram({
+  name: 'overall_ongoing_issuance_duration_seconds',
+  help: 'Duration of the overall ongoing issuance batch process',
+  labelNames: ['stage', 'processed_count'],
+});
+register.registerMetric(_overallOngoingIssuanceDurationSeconds);
+export const overallOngoingIssuanceDurationSeconds = {
+  startTimer: () => {
+    const endTimer = _overallOngoingIssuanceDurationSeconds.startTimer();
+
+    return (values: { processed_count: number }) => {
+      endTimer({ stage: NODE_ENV, ...values });
+    };
+  },
+};
