@@ -142,7 +142,7 @@ model RedeemCode {
   code      String
 }
 
-// Model for coordinating batch processing accross nodes
+// Model for coordinating batch processing across nodes
 model BatchTiming {
   id        Int      @id @default(autoincrement())
   name      String   @unique

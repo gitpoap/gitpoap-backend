@@ -18,3 +18,7 @@ export const REDEEM_CODE_STEP_SIZE = 50;
 // How often do we check if we can run the ongoing issuance background
 // process per instance?
 export const ONGOING_ISSUANCE_CHECK_FREQUENCY_MINUTES = 30;
+
+export const MILLISECONDS_PER_SECOND = 1000;
+export const SECONDS_PER_MINUTE = 60;
+export const MILLISECONDS_PER_MINUTE = SECONDS_PER_MINUTE * MILLISECONDS_PER_SECOND;
