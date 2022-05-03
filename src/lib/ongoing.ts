@@ -4,6 +4,10 @@ import { createScopedLogger } from '../logging';
 import { getRepositoryPullsAsAdmin } from '../external/github';
 import { DateTime } from 'luxon';
 import { sleep } from './sleep';
+import {
+  ongoingIssuanceProjectDurationSeconds,
+  overallOngoingIssuanceDurationSeconds,
+} from '../metrics';
 
 // The number of pull requests to request in a single page (currently the maximum number)
 const PULL_STEP_SIZE = 100;
@@ -25,9 +29,10 @@ type GitPOAPReturnType = GitPOAP & { repo: Repo & { organization: Organization }
 export async function checkForNewContributions(gitPOAP: GitPOAPReturnType) {
   const logger = createScopedLogger('checkForNewContributions');
 
-  logger.info(
-    `Checking for new contributions to ${gitPOAP.repo.organization.name}/${gitPOAP.repo.name}`,
-  );
+  const project = `${gitPOAP.repo.organization.name}/${gitPOAP.repo.name}`;
+  logger.info(`Checking for new contributions to ${project}`);
+
+  const endTimer = ongoingIssuanceProjectDurationSeconds.startTimer(project);
 
   let page = 1;
   let isProcessing = true;
@@ -41,6 +46,7 @@ export async function checkForNewContributions(gitPOAP: GitPOAPReturnType) {
     );
     if (pulls === null) {
       logger.error(`Failed to run ongoing issuance process for GitPOAP id: ${gitPOAP.id}`);
+      endTimer({ success: 0 });
       return;
     }
 
@@ -68,6 +74,7 @@ export async function checkForNewContributions(gitPOAP: GitPOAPReturnType) {
       // Log an error if we haven't figured out what to do in the new years
       if (mergedAt.year > gitPOAP.year) {
         logger.error(`Found a merged PR for GitPOAP ID ${gitPOAP.id} for a new year`);
+        endTimer({ success: 0 });
         return;
         // Don't handle previous years
       } else if (mergedAt.year < gitPOAP.year) {
@@ -128,6 +135,8 @@ export async function checkForNewContributions(gitPOAP: GitPOAPReturnType) {
     });
   }
 
+  endTimer({ success: 1 });
+
   logger.debug(
     `Finished checking for new contributions to ${gitPOAP.repo.organization.name}/${gitPOAP.repo.name}`,
   );
@@ -137,6 +146,8 @@ async function runOngoingIssuanceUpdater() {
   const logger = createScopedLogger('runOngoingIssuanceUpdater');
 
   logger.info('Running the ongoing issuance updater process');
+
+  const endTimer = overallOngoingIssuanceDurationSeconds.startTimer();
 
   const gitPOAPs: GitPOAPReturnType[] = await context.prisma.gitPOAP.findMany({
     where: {
@@ -165,6 +176,8 @@ async function runOngoingIssuanceUpdater() {
 
     await checkForNewContributions(gitPOAPs[i]);
   }
+
+  endTimer({ processed_count: gitPOAPs.length });
 
   logger.debug('Finished running the ongoing issuance updater process');
 }
