@@ -1,0 +1,11 @@
+{
+  "name": "db-migrator",
+  "version": "1.0.0",
+  "description": "CI/CD DB Migrator in AWS",
+  "author": "burz <burz@gitpoap.io>",
+  "license": "All Rights Reserved",
+  "private": true,
+  "dependencies": {
+    "prisma": "^3.13.0"
+  }
+}
