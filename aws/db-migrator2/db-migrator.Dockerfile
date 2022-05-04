@@ -1,13 +1,8 @@
-FROM node:16.13.1
-
-WORKDIR /usr/src/db-migrator
+FROM public.ecr.aws/lambda/nodejs:14
 
 RUN apt update && apt install git
 
-# Update npm to silence some warnings in output
-RUN npm install -g npm@8.9.0
-
-COPY run-migrations.sh ./
+COPY run-migrations.sh ${LAMBDA_TASK_ROOT}
 
 # Should be specified for the run step
 ENV GITHUB_OAUTH_TOKEN foobar
