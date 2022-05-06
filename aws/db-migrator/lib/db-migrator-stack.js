@@ -1,5 +1,4 @@
-const { Stack, Duration } = require('aws-cdk-lib');
-const { BashExecFunction } = require('cdk-lambda-bash');
+const { aws_lambda: lambda, aws_logs: logs, Stack } = require('aws-cdk-lib');
 const path = require('path');
 
 class DbMigratorStack extends Stack {
@@ -12,12 +11,12 @@ class DbMigratorStack extends Stack {
   constructor(scope, id, props) {
     super(scope, id, props);
 
-    const fn = new BashExecFunction(this, 'BashDemo', {
-      script: path.join(__dirname, '../demo.sh'),
-      dockerfile: path.join(__dirname, '../Dockerfile'),
+    const fn = new lambda.DockerImageFunction(this, 'BashDemoFunction', {
+      code: lambda.DockerImageCode.fromImageAsset(path.join(__dirname, '..'), {
+        file: 'Dockerfile',
+      }),
+      logRetention: logs.RetentionDays.ONE_DAY,
     });
-
-    fn.run();
   }
 }
 
