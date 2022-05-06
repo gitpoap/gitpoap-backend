@@ -12,15 +12,9 @@ class DbMigratorStack extends Stack {
   constructor(scope, id, props) {
     super(scope, id, props);
 
-    // The code that defines your stack goes here
-
-    // example resource
-    // const queue = new sqs.Queue(this, 'DbMigratorQueue', {
-    //   visibilityTimeout: Duration.seconds(300)
-    // });
-
     const fn = new BashExecFunction(this, 'BashDemo', {
       script: path.join(__dirname, '../demo.sh'),
+      dockerfile: path.join(__dirname, '../Dockerfile'),
     });
 
     fn.run();
