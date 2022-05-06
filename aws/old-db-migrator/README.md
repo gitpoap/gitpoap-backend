@@ -1,12 +1,18 @@
-# Welcome to your CDK JavaScript project
+# db-migrator
 
-This is a blank project for JavaScript development with CDK.
+This folder holds the code used in the AWS Lambda function that we use
+in our CI/CD pipeline to run DB migrations.
 
-The `cdk.json` file tells the CDK Toolkit how to execute your app. The build step is not required when using JavaScript.
+## Local Testing
 
-## Useful commands
+To test locally, spin up the DB in the typical way in `docker-compose` like
+```sh
+docker-compose up --build --force-recreate -V db
+```
+and then you can run the `db-migrator` lambda like:
+```sh
+docker build -f db-migrator.Dockerfile . -t db-migrator && \
+  docker run --network host -e GITHUB_OAUTH_TOKEN=<YOUR_GITHUB_OAUTH_TOKEN_WITH_REPO_ACCESS> db-migrator
+```
 
-* `npm run test`         perform the jest unit tests
-* `cdk deploy`           deploy this stack to your default AWS account/region
-* `cdk diff`             compare deployed stack with current state
-* `cdk synth`            emits the synthesized CloudFormation template
+## Uploading to AWS Lambda
