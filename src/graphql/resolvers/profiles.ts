@@ -33,6 +33,9 @@ class NullableProfile {
   profileImageUrl: string | null;
 
   @Field(() => String, { nullable: true })
+  githubHandle: string | null;
+
+  @Field(() => String, { nullable: true })
   twitterHandle: string | null;
 
   @Field(() => String, { nullable: true })
@@ -137,6 +140,7 @@ export class CustomProfileResolver {
         bannerImageUrl: null,
         name: null,
         profileImageUrl: null,
+        githubHandle: null,
         twitterHandle: null,
         personalSiteUrl: null,
         featuredPOAPs: [],
