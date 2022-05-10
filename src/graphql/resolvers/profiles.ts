@@ -43,7 +43,7 @@ class NullableProfile {
 }
 
 @ObjectType()
-class ProfileWithClaimsCount {
+export class ProfileWithClaimsCount {
   @Field(() => Profile)
   profile: Profile;
 
