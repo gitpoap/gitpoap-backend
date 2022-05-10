@@ -5,6 +5,7 @@ import { resolveENS } from '../../external/ens';
 import { createScopedLogger } from '../../logging';
 import { gqlRequestDurationSeconds } from '../../metrics';
 import { getLastMonthStartDatetime } from './util';
+import { Prisma } from '@prisma/client';
 
 @ObjectType()
 class NullableProfile {
@@ -154,6 +155,7 @@ export class CustomProfileResolver {
   async mostHonoredContributors(
     @Ctx() { prisma }: Context,
     @Arg('count', { defaultValue: 10 }) count: Number,
+    @Arg('repoId', { defaultValue: null }) repoId?: number,
   ): Promise<ProfileWithClaimsCount[]> {
     const logger = createScopedLogger('GQL mostHonoredContributors');
 
@@ -169,7 +171,9 @@ export class CustomProfileResolver {
       SELECT p.*, COUNT(c.id) AS "claimsCount"
       FROM "Profile" AS p
       JOIN "Claim" AS c ON c.address = p.address
+      ${repoId ? Prisma.sql`JOIN "GitPOAP" AS gp ON gp.id = c."gitPOAPId"` : Prisma.empty}
       WHERE c.status = ${ClaimStatus.CLAIMED}
+      ${repoId ? Prisma.sql`AND gp."repoId" = ${repoId}` : Prisma.empty}
       GROUP BY p.id
       ORDER BY "claimsCount" DESC
       LIMIT ${count}
