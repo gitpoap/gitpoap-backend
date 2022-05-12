@@ -4,4 +4,3 @@ dist/
 .env
 notes
 prisma/dbml
-schema.gql
