@@ -8,7 +8,8 @@
     "build": "tsc --project ./ && yarn copy-files",
     "dev": "ts-node-dev --transpile-only --respawn --exit-child --watch ./src/ ./src/server.ts",
     "start": "node -r dotenv/config ./dist/src/server.js",
-    "postinstall": "npx prisma generate"
+    "postinstall": "npx prisma generate",
+    "gql:build-schema": "npx prisma generate; ts-node-dev ./scripts/build-gql-schema.ts"
   },
   "devDependencies": {
     "@types/cors": "^2.8.12",
