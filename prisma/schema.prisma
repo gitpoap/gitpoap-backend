@@ -25,7 +25,7 @@ model User {
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
   claims       Claim[]
-  // Hide poapSecret from generated resolvers
+  // Hide user.authTokens from generated resolvers
   /// @TypeGraphQL.omit(output: true, input: true)
   authTokens   AuthToken[]
 }
