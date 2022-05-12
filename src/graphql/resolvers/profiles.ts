@@ -43,7 +43,7 @@ class NullableProfile {
 }
 
 @ObjectType()
-export class ProfileWithClaimsCount {
+class ProfileWithClaimsCount {
   @Field(() => Profile)
   profile: Profile;
 
@@ -184,6 +184,49 @@ export class CustomProfileResolver {
     }
 
     logger.debug(`Completed request for ${count} most honored contributors`);
+
+    endTimer({ success: 1 });
+
+    return finalResults;
+  }
+
+  @Query(returns => [ProfileWithClaimsCount])
+  async repoMostHonoredContributors(
+    @Ctx() { prisma }: Context,
+    @Arg('count', { defaultValue: 10 }) count: Number,
+    @Arg('repoId') repoId: number,
+  ): Promise<ProfileWithClaimsCount[]> {
+    const logger = createScopedLogger('GQL repoMostHonoredContributors');
+
+    logger.info(`Request for repo ${repoId}'s ${count} most honored contributors `);
+
+    const endTimer = gqlRequestDurationSeconds.startTimer('repoMostHonoredContributors');
+
+    type ResultType = Profile & {
+      claimsCount: Number;
+    };
+
+    const results: ResultType[] = await prisma.$queryRaw`
+      SELECT p.*, COUNT(c.id) AS "claimsCount"
+      FROM "Profile" AS p
+      JOIN "Claim" AS c ON c.address = p.address
+      JOIN "GitPOAP" AS gp ON gp.id = c."gitPOAPId"
+      WHERE c.status = ${ClaimStatus.CLAIMED}
+      AND gp."repoId" = ${repoId}
+      GROUP BY p.id
+      ORDER BY "claimsCount" DESC
+      LIMIT ${count}
+    `;
+
+    let finalResults = [];
+
+    for (const result of results) {
+      const { claimsCount, ...profile } = result;
+
+      finalResults.push({ profile, claimsCount });
+    }
+
+    logger.debug(`Completed request for repo ${repoId}'s ${count} most honored contributors`);
 
     endTimer({ success: 1 });
 
