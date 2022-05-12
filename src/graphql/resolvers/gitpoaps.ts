@@ -42,6 +42,24 @@ class UserPOAPs {
 }
 
 @ObjectType()
+class RepoGitPOAPData {
+  @Field(() => GitPOAP)
+  gitPOAP: GitPOAP;
+
+  @Field(() => POAPEvent)
+  event: POAPEvent;
+}
+
+@ObjectType()
+class RepoGitPOAPs {
+  @Field()
+  totalGitPOAPs: number;
+
+  @Field(() => [RepoGitPOAPData])
+  gitPOAPs: RepoGitPOAPData[];
+}
+
+@ObjectType()
 class GitPOAPWithClaimsCount {
   @Field(() => GitPOAP)
   gitPOAP: GitPOAP;
@@ -343,6 +361,102 @@ export class CustomGitPOAPResolver {
         totalPOAPs: poapsOnly.length,
         gitPOAPs: gitPOAPsOnly,
         poaps: poapsOnly,
+      };
+    }
+  }
+
+  @Query(returns => RepoGitPOAPs, { nullable: true })
+  async repoGitPOAPs(
+    @Ctx() { prisma }: Context,
+    @Arg('repoId') repoId: number,
+    @Arg('sort', { defaultValue: 'date' }) sort: string,
+    @Arg('perPage', { defaultValue: null }) perPage?: number,
+    @Arg('page', { defaultValue: null }) page?: number,
+  ): Promise<RepoGitPOAPs | null> {
+    const logger = createScopedLogger('GQL repoGitPOAPs');
+
+    logger.info(
+      `Request for POAPs for repoId ${repoId} using sort ${sort}, with ${perPage} results per page and page ${page}`,
+    );
+
+    const endTimer = gqlRequestDurationSeconds.startTimer('repoGitPOAPs');
+
+    switch (sort) {
+      case 'date':
+        break;
+      case 'alphabetical':
+        break;
+      default:
+        logger.warn(`Unknown value provided for sort: ${sort}`);
+        endTimer({ success: 0 });
+        return null;
+    }
+    if ((page === null || perPage === null) && page !== perPage) {
+      logger.warn('"page" and "perPage" must be specified together');
+      endTimer({ success: 0 });
+      return null;
+    }
+
+    const gitPOAPs = await prisma.gitPOAP.findMany({
+      where: {
+        repoId: repoId,
+      },
+    });
+
+    let gitPOAPsOnly = [];
+    for (const gitPOAP of gitPOAPs) {
+      const event = await retrievePOAPEventInfo(gitPOAP.poapEventId);
+      if (event === null) {
+        logger.error(
+          `Failed to look up poapEventId: ${gitPOAP.poapEventId} on GitPOAP: ${gitPOAP.id}`,
+        );
+        continue;
+      }
+      gitPOAPsOnly.push({
+        gitPOAP,
+        event,
+      });
+    }
+
+    if (sort === 'date') {
+      // Sort so that most recently claimed comes first
+      gitPOAPsOnly.sort((left, right) => {
+        // Note that we create claim placeholders before they are
+        // actually initiated by the user so the claim time is
+        // the updatedAt time
+        const leftDate = new Date(left.gitPOAP.updatedAt);
+        const rightDate = new Date(right.gitPOAP.updatedAt);
+        if (leftDate < rightDate) {
+          return 1;
+        }
+        if (leftDate > rightDate) {
+          return -1;
+        }
+        return 0;
+      });
+    } else {
+      // === 'alphabetical'
+      gitPOAPsOnly.sort((left, right) => {
+        return left.event.name.localeCompare(right.event.name);
+      });
+    }
+
+    logger.debug(
+      `Completed request for POAPs for repoId ${repoId} using sort ${sort}, with ${perPage} results per page and page ${page}`,
+    );
+
+    endTimer({ success: 1 });
+
+    if (page) {
+      const index = (page - 1) * <number>perPage;
+      return {
+        totalGitPOAPs: gitPOAPsOnly.length,
+        gitPOAPs: gitPOAPsOnly.slice(index, index + <number>perPage),
+      };
+    } else {
+      return {
+        totalGitPOAPs: gitPOAPsOnly.length,
+        gitPOAPs: gitPOAPsOnly,
       };
     }
   }
