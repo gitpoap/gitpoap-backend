@@ -403,7 +403,7 @@ export class CustomGitPOAPResolver {
       },
     });
 
-    let gitPOAPsOnly = [];
+    let gitPOAPsWithEvents = [];
     for (const gitPOAP of gitPOAPs) {
       const event = await retrievePOAPEventInfo(gitPOAP.poapEventId);
       if (event === null) {
@@ -412,7 +412,7 @@ export class CustomGitPOAPResolver {
         );
         continue;
       }
-      gitPOAPsOnly.push({
+      gitPOAPsWithEvents.push({
         gitPOAP,
         event,
       });
@@ -420,7 +420,7 @@ export class CustomGitPOAPResolver {
 
     if (sort === 'date') {
       // Sort so that most recently claimed comes first
-      gitPOAPsOnly.sort((left, right) => {
+      gitPOAPsWithEvents.sort((left, right) => {
         // Note that we create claim placeholders before they are
         // actually initiated by the user so the claim time is
         // the updatedAt time
@@ -436,7 +436,7 @@ export class CustomGitPOAPResolver {
       });
     } else {
       // === 'alphabetical'
-      gitPOAPsOnly.sort((left, right) => {
+      gitPOAPsWithEvents.sort((left, right) => {
         return left.event.name.localeCompare(right.event.name);
       });
     }
@@ -450,13 +450,13 @@ export class CustomGitPOAPResolver {
     if (page) {
       const index = (page - 1) * <number>perPage;
       return {
-        totalGitPOAPs: gitPOAPsOnly.length,
-        gitPOAPs: gitPOAPsOnly.slice(index, index + <number>perPage),
+        totalGitPOAPs: gitPOAPsWithEvents.length,
+        gitPOAPs: gitPOAPsWithEvents.slice(index, index + <number>perPage),
       };
     } else {
       return {
-        totalGitPOAPs: gitPOAPsOnly.length,
-        gitPOAPs: gitPOAPsOnly,
+        totalGitPOAPs: gitPOAPsWithEvents.length,
+        gitPOAPs: gitPOAPsWithEvents,
       };
     }
   }
