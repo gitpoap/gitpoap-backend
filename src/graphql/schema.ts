@@ -39,6 +39,7 @@ import {
 } from '@generated/type-graphql';
 import { CustomClaimResolver } from './resolvers/claims';
 import { CustomGitPOAPResolver } from './resolvers/gitpoaps';
+import { CustomOrganizationResolver } from './resolvers/organizations';
 import { CustomProfileResolver } from './resolvers/profiles';
 import { CustomRepoResolver } from './resolvers/repos';
 import { CustomSearchResolver } from './resolvers/search';
@@ -83,6 +84,7 @@ const allResolvers: NonEmptyArray<Function> = [
   /* ~~ Custom resolvers ~~ */
   CustomClaimResolver,
   CustomGitPOAPResolver,
+  CustomOrganizationResolver,
   CustomProfileResolver,
   CustomRepoResolver,
   CustomSearchResolver,
