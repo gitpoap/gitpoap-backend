@@ -1,5 +1,5 @@
 import { Arg, Ctx, Resolver, Query } from 'type-graphql';
-import { Repo } from '@generated/type-graphql';
+import { Repo, RepoOrderByWithRelationInput } from '@generated/type-graphql';
 import { getLastMonthStartDatetime } from './util';
 import { Context } from '../../context';
 import { createScopedLogger } from '../../logging';
@@ -70,6 +70,75 @@ export class CustomRepoResolver {
     });
 
     logger.debug(`Completed request for the ${count} most recently added projects`);
+
+    endTimer({ success: 1 });
+
+    return results;
+  }
+
+  @Query(returns => [Repo], { nullable: true })
+  async allRepos(
+    @Ctx() { prisma }: Context,
+    @Arg('sort', { defaultValue: 'alphabetical' }) sort: string,
+    @Arg('order', { defaultValue: 'desc' }) order?: 'asc' | 'desc',
+    @Arg('perPage', { defaultValue: null }) perPage?: number,
+    @Arg('page', { defaultValue: null }) page?: number,
+  ): Promise<Repo[] | null> {
+    const logger = createScopedLogger('GQL allRepos');
+
+    logger.info(
+      `Request for all repos using sort ${sort}, order ${order}, with ${perPage} results per page and page ${page}`,
+    );
+
+    const endTimer = gqlRequestDurationSeconds.startTimer('allRepos');
+
+    let orderBy: RepoOrderByWithRelationInput;
+    switch (sort) {
+      case 'alphabetical':
+        orderBy = {
+          name: order,
+        };
+        break;
+      case 'date':
+        orderBy = {
+          updatedAt: order,
+        };
+        break;
+      case 'gitpoap-count':
+        orderBy = {
+          gitPOAPs: {
+            _count: order,
+          },
+        };
+        break;
+      case 'organization':
+        orderBy = {
+          organization: {
+            name: order,
+          },
+        };
+        break;
+      default:
+        logger.warn(`Unknown value provided for sort: ${sort}`);
+        endTimer({ success: 0 });
+        return null;
+    }
+
+    if ((page === null || perPage === null) && page !== perPage) {
+      logger.warn('"page" and "perPage" must be specified together');
+      endTimer({ success: 0 });
+      return null;
+    }
+
+    const results = await prisma.repo.findMany({
+      orderBy,
+      skip: page ? (page - 1) * <number>perPage : undefined,
+      take: perPage ?? undefined,
+    });
+
+    logger.info(
+      `Request for all repos using sort ${sort}, with ${perPage} results per page and page ${page}`,
+    );
 
     endTimer({ success: 1 });
 
