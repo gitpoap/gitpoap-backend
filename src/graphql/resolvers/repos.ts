@@ -137,7 +137,7 @@ export class CustomRepoResolver {
     });
 
     logger.info(
-      `Request for all repos using sort ${sort}, with ${perPage} results per page and page ${page}`,
+      `Request for all repos using sort ${sort}, order ${order}, with ${perPage} results per page and page ${page}`,
     );
 
     endTimer({ success: 1 });
