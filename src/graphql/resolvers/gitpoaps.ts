@@ -42,21 +42,12 @@ class UserPOAPs {
 }
 
 @ObjectType()
-class RepoGitPOAPData {
-  @Field(() => GitPOAP)
-  gitPOAP: GitPOAP;
-
-  @Field(() => POAPEvent)
-  event: POAPEvent;
-}
-
-@ObjectType()
 class RepoGitPOAPs {
   @Field()
   totalGitPOAPs: number;
 
-  @Field(() => [RepoGitPOAPData])
-  gitPOAPs: RepoGitPOAPData[];
+  @Field(() => [FullGitPOAPEventData])
+  gitPOAPs: FullGitPOAPEventData[];
 }
 
 @ObjectType()
