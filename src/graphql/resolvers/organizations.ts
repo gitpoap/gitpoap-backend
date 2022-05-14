@@ -10,14 +10,13 @@ export class CustomOrganizationResolver {
   async allOrganizations(
     @Ctx() { prisma }: Context,
     @Arg('sort', { defaultValue: 'alphabetical' }) sort: string,
-    @Arg('order', { defaultValue: 'desc' }) order?: 'asc' | 'desc',
     @Arg('perPage', { defaultValue: null }) perPage?: number,
     @Arg('page', { defaultValue: null }) page?: number,
   ): Promise<Organization[] | null> {
     const logger = createScopedLogger('GQL allOrganizations');
 
     logger.info(
-      `Request for all organizations using sort ${sort}, order ${order}, with ${perPage} results per page and page ${page}`,
+      `Request for all organizations using sort ${sort}, with ${perPage} results per page and page ${page}`,
     );
 
     const endTimer = gqlRequestDurationSeconds.startTimer('allOrganizations');
@@ -26,12 +25,12 @@ export class CustomOrganizationResolver {
     switch (sort) {
       case 'alphabetical':
         orderBy = {
-          name: order,
+          name: 'asc',
         };
         break;
       case 'date':
         orderBy = {
-          updatedAt: order,
+          updatedAt: 'desc',
         };
         break;
       default:
@@ -53,7 +52,7 @@ export class CustomOrganizationResolver {
     });
 
     logger.info(
-      `Request for all organizations using sort ${sort}, order ${order}, with ${perPage} results per page and page ${page}`,
+      `Request for all organizations using sort ${sort}, with ${perPage} results per page and page ${page}`,
     );
 
     endTimer({ success: 1 });

@@ -356,6 +356,55 @@ that returns data like:
 }
 ```
 
+## All Organizations
+
+To retrieve a list of all organizations, we can run a query like:
+
+```graphql
+{
+  allOrganizations(sort: "date", page: 1, perPage: 1) {
+    id
+    name
+    githubOrgId
+    description
+    twitterHandle
+    url
+    repos {
+      id
+    }
+  }
+}
+```
+
+That returns data like:
+
+```json
+{
+  "data": {
+    "allOrganizations": [
+      {
+        "id": 5,
+        "name": "burz labz",
+        "githubOrgId": 1555326,
+        "description": null,
+        "twitterHandle": null,
+        "url": null,
+        "repos": [
+          {
+            "id": 6
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+Note that `page` and `perPage` are optional but must be specified. The options for `sort` are:
+
+- `"date"` (default): sort the organizations by the date they were created (descending)
+- `"alphabetical"`: sort the organizations name (ascending)
+
 ## Profile Data
 
 To retrieve the profile data for an address, we can run a query like:
