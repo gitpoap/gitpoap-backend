@@ -80,14 +80,13 @@ export class CustomRepoResolver {
   async allRepos(
     @Ctx() { prisma }: Context,
     @Arg('sort', { defaultValue: 'alphabetical' }) sort: string,
-    @Arg('order', { defaultValue: 'desc' }) order?: 'asc' | 'desc',
     @Arg('perPage', { defaultValue: null }) perPage?: number,
     @Arg('page', { defaultValue: null }) page?: number,
   ): Promise<Repo[] | null> {
     const logger = createScopedLogger('GQL allRepos');
 
     logger.info(
-      `Request for all repos using sort ${sort}, order ${order}, with ${perPage} results per page and page ${page}`,
+      `Request for all repos using sort ${sort}, with ${perPage} results per page and page ${page}`,
     );
 
     const endTimer = gqlRequestDurationSeconds.startTimer('allRepos');
@@ -96,25 +95,25 @@ export class CustomRepoResolver {
     switch (sort) {
       case 'alphabetical':
         orderBy = {
-          name: order,
+          name: 'asc',
         };
         break;
       case 'date':
         orderBy = {
-          updatedAt: order,
+          updatedAt: 'desc',
         };
         break;
       case 'gitpoap-count':
         orderBy = {
           gitPOAPs: {
-            _count: order,
+            _count: 'desc',
           },
         };
         break;
       case 'organization':
         orderBy = {
           organization: {
-            name: order,
+            name: 'asc',
           },
         };
         break;
@@ -137,7 +136,7 @@ export class CustomRepoResolver {
     });
 
     logger.info(
-      `Request for all repos using sort ${sort}, order ${order}, with ${perPage} results per page and page ${page}`,
+      `Request for all repos using sort ${sort}, with ${perPage} results per page and page ${page}`,
     );
 
     endTimer({ success: 1 });
