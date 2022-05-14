@@ -75,6 +75,44 @@ and returns data in the form:
 }
 ```
 
+## Repo Most Honored Contributors
+
+The query to get a repo's most honored contributors is as follows:
+
+```graphql
+{
+  repoMostHonoredContributors(count: 2, repoId: 1) {
+    profile {
+      address
+    }
+    claimsCount
+  }
+}
+```
+
+and returns data in the form:
+
+```json
+{
+  "data": {
+    "repoMostHonoredContributors": [
+      {
+        "profile": {
+          "address": "0xae32d159bb3abfcadfabe7abb461c2ab4805596d"
+        },
+        "claimsCount": 4
+      },
+      {
+        "profile": {
+          "address": "0xae95f7e7fb2fcf86148ef832faed2752ae5a358a"
+        },
+        "claimsCount": 3
+      }
+    ]
+  }
+}
+```
+
 ## Address's POAPs and GitPOAPs
 
 The query to get an address's (or an ENS's) POAPs and GitPOAPs is as follows:
@@ -219,6 +257,112 @@ returns something like:
             "name": "You've met Burz!"
           },
           "created": "2022-02-01"
+        }
+      ]
+    }
+  }
+}
+```
+
+## Repo GitPOAPs
+
+The query to get a repo's GitPOAPs is as follows:
+
+```graphql
+{
+  repoGitPOAPs(repoId: 1) {
+    totalGitPOAPs
+    gitPOAPs {
+      gitPOAP {
+        repo {
+          name
+        }
+      }
+      event {
+        name
+        image_url
+      }
+    }
+  }
+}
+```
+
+and returns data in the form:
+
+```json
+{
+  "data": {
+    "repoGitPOAPs": {
+      "totalGitPOAPs": 1,
+      "gitPOAPs": [
+        {
+          "gitPOAP": {
+            "repo": {
+              "name": "repo34"
+            }
+          }
+          "event": {
+            "name": "Welcome to the Thunderdome",
+            "image_url": "https://avatars.githubusercontent.com/u/1555326?v=4"
+          }
+        }
+      ]
+    }
+  }
+}
+```
+
+Additionally, a sort can be specified of either (default) `sort: "date"` (descending) or `sort: "alphabetical"` (ascending),
+and the data can be paged by specifying `page: 1` and `perPage: 2` for example:
+
+```graphql
+{
+  repoGitPOAPs(repoId: 1, sort: "alphabetical", page: 1, perPage: 2) {
+    totalGitPOAPs
+    gitPOAPs {
+      gitPOAP {
+        repo {
+          name
+        }
+      }
+      event {
+        name
+        image_url
+      }
+    }
+  }
+}
+```
+
+returns something like:
+
+```json
+{
+  "data": {
+    "repoGitPOAPs": {
+      "totalGitPOAPs": 3,
+      "gitPOAPs": [
+        {
+          "gitPOAP": {
+            "repo": {
+              "name": "gitpoap-fe"
+            }
+          },
+          "event": {
+            "name": "GitPOAP Bug Bash - Test 1",
+            "image_url": "https://assets.poap.xyz/gitpoap-bug-bash-test-1-2022-logo-1648760515405.png"
+          }
+        },
+        {
+          "gitPOAP": {
+            "repo": {
+              "name": "gitpoap-fe"
+            }
+          },
+          "event": {
+            "name": "GitPOAP Bug Bash - Test 2",
+            "image_url": "https://assets.poap.xyz/gitpoap-bug-bash-test-2-2022-logo-1648760566987.png"
+          }
         }
       ]
     }
