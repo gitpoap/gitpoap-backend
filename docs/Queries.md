@@ -475,6 +475,59 @@ that returns data like:
 }
 ```
 
+## All Repos
+
+To retrieve a list of all organizations, we can run a query like:
+
+```graphql
+{
+  allRepos(sort: "date", page: 1, perPage: 1) {
+    id
+    name
+    githubRepoId
+    organization {
+      id
+      name
+    }
+    gitPOAPs {
+      poapEventId
+    }
+  }
+}
+```
+
+That returns data like:
+
+```json
+{
+  "data": {
+    "allRepos": [
+      {
+        "id": 6,
+        "name": "dopex",
+        "githubRepoId": 127534193,
+        "organization": {
+          "id": 5,
+          "name": "burz labz"
+        },
+        "gitPOAPs": [
+          {
+            "poapEventId": 34634
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+Note that `page` and `perPage` are optional but must be specified. The options for `sort` are:
+
+- `"alphabetical"` (default): sort the repo's name (ascending)
+- `"date"`: sort by the date of creation (descending)
+- `"gitpoap-count"`: sort by the number of gitPOAPs (descending)
+- `"organization"`: sort by the name of the organization this repo belongs to (ascending)
+
 ## String Searching
 
 To search by a string (could be a name, address, or ENS name), we can run a query like:

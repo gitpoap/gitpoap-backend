@@ -610,6 +610,7 @@ type ProfileWithENS {
 }
 
 type Query {
+  allRepos(page: Float = null, perPage: Float = null, sort: String = "alphabetical"): [Repo!]
   claim(where: ClaimWhereUniqueInput!): Claim
   claims(
     cursor: ClaimWhereUniqueInput
