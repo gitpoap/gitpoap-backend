@@ -270,7 +270,7 @@ The query to get a repo's GitPOAPs is as follows:
 
 ```graphql
 {
-  repoGitPOAPs(repoId: 1) {
+  repoGitPOAPs(repoId: 1, sort: "alphabetical", page: 1, perPage: 2) {
     totalGitPOAPs
     gitPOAPs {
       gitPOAP {
@@ -312,63 +312,10 @@ and returns data in the form:
 }
 ```
 
-Additionally, a sort can be specified of either (default) `sort: "date"` (descending) or `sort: "alphabetical"` (ascending),
-and the data can be paged by specifying `page: 1` and `perPage: 2` for example:
+Note that `page` and `perPage` are optional but must be specified. The options for `sort` are:
 
-```graphql
-{
-  repoGitPOAPs(repoId: 1, sort: "alphabetical", page: 1, perPage: 2) {
-    totalGitPOAPs
-    gitPOAPs {
-      gitPOAP {
-        repo {
-          name
-        }
-      }
-      event {
-        name
-        image_url
-      }
-    }
-  }
-}
-```
-
-returns something like:
-
-```json
-{
-  "data": {
-    "repoGitPOAPs": {
-      "totalGitPOAPs": 3,
-      "gitPOAPs": [
-        {
-          "gitPOAP": {
-            "repo": {
-              "name": "gitpoap-fe"
-            }
-          },
-          "event": {
-            "name": "GitPOAP Bug Bash - Test 1",
-            "image_url": "https://assets.poap.xyz/gitpoap-bug-bash-test-1-2022-logo-1648760515405.png"
-          }
-        },
-        {
-          "gitPOAP": {
-            "repo": {
-              "name": "gitpoap-fe"
-            }
-          },
-          "event": {
-            "name": "GitPOAP Bug Bash - Test 2",
-            "image_url": "https://assets.poap.xyz/gitpoap-bug-bash-test-2-2022-logo-1648760566987.png"
-          }
-        }
-      ]
-    }
-  }
-}
-```
+- `"date"` (default): sort the time they claimed the GitPOAP (descending)
+- `"alphabetical"`: sort by the name of the GitPOAP (ascending)
 
 ## User's Open Claims
 
