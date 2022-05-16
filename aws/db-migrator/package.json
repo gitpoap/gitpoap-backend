@@ -10,11 +10,11 @@
     "test": "jest"
   },
   "devDependencies": {
-    "aws-cdk": "2.18.0",
+    "aws-cdk": "^2.24.1",
     "jest": "^26.4.2"
   },
   "dependencies": {
-    "aws-cdk-lib": "2.18.0",
+    "aws-cdk-lib": "^2.24.1",
     "constructs": "^10.0.0"
   }
 }
