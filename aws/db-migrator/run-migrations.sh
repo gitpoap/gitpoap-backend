@@ -2,30 +2,46 @@
 
 set -e
 
-if [ -z ${GITHUB_OAUTH_TOKEN+x} ]; then
-  echo 'Required ENV variable GITHUB_OAUTH_TOKEN is not set'
+log() {
+  >&2 echo "$1"
+}
+
+if [ -z ${DATABASE_URL+x} ]; then
+  log 'Required ENV variable DATABASE_URL is not set'
   exit 1
 fi
 
-if [ -z ${DATABASE_URL+x} ]; then
-  echo 'Required ENV variable DATABASE_URL is not set'
-  exit 2
-fi
+log 'DB-MIGRATOR: Creating WORKDIR...'
 
-echo DB-MIGRATOR: Cloning gitpoap-backend...
+WORKDIR=$(mktemp -d)
 
-git clone "https://${GITHUB_OAUTH_TOKEN}@github.com/gitpoap/gitpoap-backend.git"
+log 'DB-MIGRATOR: Moving repository...'
 
-cd gitpoap-backend
+cp -r /var/repos/gitpoap-backend $WORKDIR
 
-echo DB-MIGRATOR: Installing node dependencies...
+log 'DB-MIGRATOR: Pulling gitpoap-backend...'
 
-yarn
+cd $WORKDIR/gitpoap-backend
+git pull 1>&2
 
-echo DB-MIGRATOR: Running deployment...
+log 'DB-MIGRATOR: installing yarn packages...'
 
-npx prisma migrate deploy
+# Disable postinstall step for prisma generate
+jq "del(.scripts.postinstall)" package.json > package.new.json
+mv package.new.json package.json
 
-echo DB-MIGRATOR: Finished running migrations successfully
+mkdir -p /tmp/npm /tmp/yarn/cache /tmp/yarn/global /tmp/fake-home
+export HOME=/tmp/fake-home
+yarn 1>&2
+
+log 'DB-MIGRATOR: Running deployment...'
+
+npx prisma migrate deploy 1>&2
+
+log 'DB-MIGRATOR: Finished running migrations successfully'
+
+cd ~
+
+rm -rf $WORKDIR
 
 exit 0

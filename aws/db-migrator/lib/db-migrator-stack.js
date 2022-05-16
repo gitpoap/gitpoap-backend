@@ -1,4 +1,4 @@
-const { aws_ec2: ec2, aws_lambda: lambda, aws_logs: logs, Stack } = require('aws-cdk-lib');
+const { aws_ec2: ec2, aws_lambda: lambda, aws_logs: logs, Duration, Size, Stack, StorageUnit } = require('aws-cdk-lib');
 const path = require('path');
 
 const VPC_ID = process.env.VPC_ID;
@@ -22,11 +22,18 @@ if (!GITHUB_OAUTH_TOKEN) {
   process.exit(3);
 }
 
+const REPO_BRANCH = process.env.REPO_BRANCH;
+
+if (!REPO_BRANCH) {
+  console.log('Required ENV variable REPO_BRANCH is not set');
+  process.exit(4);
+}
+
 const DATABASE_URL = process.env.DATABASE_URL;
 
 if (!DATABASE_URL) {
   console.log('Required ENV variable DATABASE_URL is not set');
-  process.exit(4);
+  process.exit(5);
 }
 
 const STAGE_TAG = process.env.STAGE_TAG || '';
@@ -34,6 +41,7 @@ const STAGE_TAG = process.env.STAGE_TAG || '';
 console.log(`VPC_ID = "${VPC_ID}"`);
 console.log(`SECURITY_GROUP_ID = "${SECURITY_GROUP_ID}"`);
 console.log(`STAGE_TAG = "${STAGE_TAG}"`);
+console.log(`REPO_BRANCH = "${REPO_BRANCH}"`);
 
 class DbMigratorStack extends Stack {
   /**
@@ -60,14 +68,20 @@ class DbMigratorStack extends Stack {
       functionName: lambdaName,
       code: lambda.DockerImageCode.fromImageAsset(path.join(__dirname, '..'), {
         file: 'Dockerfile',
+        buildArgs: {
+          GITHUB_OAUTH_TOKEN,
+          REPO_BRANCH,
+        },
       }),
       vpc: vpc,
       securityGroup: sg,
       logRetention: logs.RetentionDays.ONE_DAY,
       environment: {
-        GITHUB_OAUTH_TOKEN,
         DATABASE_URL,
       },
+      ephemeralStorageSize: Size.gibibytes(5),
+      timeout: Duration.minutes(15), // Max timeout
+      memorySize: 1000,
     });
   }
 }
