@@ -155,6 +155,69 @@ input EnumGitPOAPStatusFilter {
   notIn: [GitPOAPStatus!]
 }
 
+type Event {
+  _count: EventCount
+  createdAt: DateTime!
+  description: String
+  endDate: DateTime!
+  githubHandle: String
+  id: Int!
+  imageUrl: String
+  location: String!
+  name: String!
+  organization: String!
+  siteUrl: String
+  startDate: DateTime!
+  twitterHandle: String
+  updatedAt: DateTime!
+}
+
+type EventCount {
+  GitPOAP: Int!
+}
+
+input EventOrderByWithRelationInput {
+  GitPOAP: GitPOAPOrderByRelationAggregateInput
+  createdAt: SortOrder
+  description: SortOrder
+  endDate: SortOrder
+  githubHandle: SortOrder
+  id: SortOrder
+  imageUrl: SortOrder
+  location: SortOrder
+  name: SortOrder
+  organization: SortOrder
+  siteUrl: SortOrder
+  startDate: SortOrder
+  twitterHandle: SortOrder
+  updatedAt: SortOrder
+}
+
+input EventRelationFilter {
+  is: EventWhereInput
+  isNot: EventWhereInput
+}
+
+input EventWhereInput {
+  AND: [EventWhereInput!]
+  GitPOAP: GitPOAPListRelationFilter
+  NOT: [EventWhereInput!]
+  OR: [EventWhereInput!]
+  createdAt: DateTimeFilter
+  description: StringNullableFilter
+  endDate: DateTimeFilter
+  githubHandle: StringNullableFilter
+  id: IntFilter
+  imageUrl: StringNullableFilter
+  location: StringFilter
+  name: StringFilter
+  organization: StringFilter
+  siteUrl: StringNullableFilter
+  startDate: DateTimeFilter
+  twitterHandle: StringNullableFilter
+  updatedAt: DateTimeFilter
+}
+
 type FeaturedPOAP {
   id: Int!
   poapTokenId: String!
@@ -227,6 +290,8 @@ type GitPOAP {
     where: ClaimWhereInput
   ): [Claim!]!
   createdAt: DateTime!
+  event: Event
+  eventId: Int
   id: Int!
   lastPRUpdatedAt: DateTime!
   ongoing: Boolean!
@@ -265,6 +330,8 @@ input GitPOAPOrderByRelationAggregateInput {
 input GitPOAPOrderByWithRelationInput {
   claims: ClaimOrderByRelationAggregateInput
   createdAt: SortOrder
+  event: EventOrderByWithRelationInput
+  eventId: SortOrder
   id: SortOrder
   lastPRUpdatedAt: SortOrder
   ongoing: SortOrder
@@ -285,6 +352,7 @@ input GitPOAPRelationFilter {
 
 enum GitPOAPScalarFieldEnum {
   createdAt
+  eventId
   id
   lastPRUpdatedAt
   ongoing
@@ -309,6 +377,8 @@ input GitPOAPWhereInput {
   OR: [GitPOAPWhereInput!]
   claims: ClaimListRelationFilter
   createdAt: DateTimeFilter
+  event: EventRelationFilter
+  eventId: IntNullableFilter
   id: IntFilter
   lastPRUpdatedAt: DateTimeFilter
   ongoing: BoolFilter

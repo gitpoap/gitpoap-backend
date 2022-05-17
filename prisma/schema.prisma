@@ -113,6 +113,8 @@ model GitPOAP {
   // are initially uploaded
   lastPRUpdatedAt DateTime      @default(dbgenerated("date_trunc('year', now())"))
   redeemCodes     RedeemCode[]
+  eventId         Int?
+  event           Event?        @relation(fields: [eventId], references: [id])
 }
 
 model AuthToken {
@@ -173,6 +175,23 @@ model GithubPullRequest {
   Claim            Claim[]
 
   @@unique([repoId, githubPullNumber])
+}
+
+model Event {
+  id            Int       @id @default(autoincrement())
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  startDate     DateTime
+  endDate       DateTime
+  name          String    @db.VarChar(255)
+  organization  String    @db.VarChar(255)
+  description   String?
+  location      String    @db.VarChar(255)
+  imageUrl      String?   @db.VarChar(255)
+  githubHandle  String?   @db.VarChar(255)
+  twitterHandle String?   @db.VarChar(255)
+  siteUrl       String?   @db.VarChar(255)
+  GitPOAP       GitPOAP[]
 }
 
 enum GitPOAPStatus {
