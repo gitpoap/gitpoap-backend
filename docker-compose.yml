@@ -54,6 +54,17 @@ services:
       - POAP_CLIENT_ID=a good client id
       - POAP_CLIENT_SECRET=super secret!
 
+  public-api-server:
+    build:
+      context: .
+      dockerfile: .dockerfiles/public-api-server.Dockerfile
+    ports:
+      - '3122:3122'
+      - '8081:8080'
+    depends_on:
+      - db
+      - server
+
   prometheus:
     build:
       context: .
@@ -61,11 +72,8 @@ services:
     ports:
       - '9090:9090'
     depends_on:
-      - db
-      - redis
-      - fake-poap-api
-      - fake-poap-auth
       - server
+      - public-api-server
 
   grafana:
     build:

@@ -1,4 +1,6 @@
 export const PORT = 3001;
+export const PUBLIC_API_PORT = 3122;
+
 export const JWT_EXP_TIME = 60 * 10;
 export const SIGNATURE_TTL_MINUTES = 1;
 
