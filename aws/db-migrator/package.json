@@ -2,7 +2,7 @@
   "name": "db-migrator",
   "version": "0.1.0",
   "scripts": {
-    "build": "tsc --project ./",
+    "build": "npx tsc --project ./",
     "check": "npx cdk synth",
     "deploy": "npx cdk deploy"
   },

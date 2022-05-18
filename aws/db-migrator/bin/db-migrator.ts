@@ -1,10 +1,12 @@
-import cdk from 'aws-cdk-lib';
+#!/usr/bin/env node
+
+import { App } from 'aws-cdk-lib';
 import { DbMigratorStack } from '../lib/db-migrator-stack';
 
 const stackName =
   process.env.STAGE_TAG === '-staging' ? 'DbMigratorStagingStack' : 'DbMigratorStack';
 
-const app = new cdk.App();
+const app = new App();
 
 new DbMigratorStack(app, stackName, {
   /* If you don't specify 'env', this stack will be environment-agnostic.
