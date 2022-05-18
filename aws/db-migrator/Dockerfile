@@ -35,6 +35,7 @@ RUN echo -e "cache-folder /tmp/yarn/cache\nglobal-folder /tmp/yarn/global" > /us
 
 ARG GITHUB_OAUTH_TOKEN
 ARG REPO_BRANCH
+ENV REPO_BRANCH=${REPO_BRANCH}
 
 RUN mkdir /var/repos
 WORKDIR /var/repos

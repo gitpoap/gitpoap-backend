@@ -22,7 +22,11 @@ cp -r /var/repos/gitpoap-backend $WORKDIR
 log 'DB-MIGRATOR: Pulling gitpoap-backend...'
 
 cd $WORKDIR/gitpoap-backend
-git pull 1>&2
+
+# Ensure that we are tracking the branch from origin even
+# if it's diverged for some reason (for instance a rebase)
+git fetch origin $REPO_BRANCH 1>&2
+git reset --hard "origin/$REPO_BRANCH" 1>&2
 
 log 'DB-MIGRATOR: installing yarn packages...'
 
