@@ -53,7 +53,7 @@ githubRouter.post('/', async function (req, res) {
   try {
     githubToken = await requestGithubOAuthToken(code);
   } catch (err) {
-    logger.error(`Failed to request OAuth token with code: ${err}`);
+    logger.warn(`Failed to request OAuth token with code: ${err}`);
     endTimer({ status: 400 });
     return res.status(400).send({
       message: 'A server error has occurred - GitHub access token exchange',
