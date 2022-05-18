@@ -1,16 +1,8 @@
 {
-  "app": "node bin/db-migrator.js",
+  "app": "tsc --project ./ && node dist/bin/db-migrator.js",
   "watch": {
     "include": ["**"],
-    "exclude": [
-      "README.md",
-      "cdk*.json",
-      "jest.config.js",
-      "package*.json",
-      "yarn.lock",
-      "node_modules",
-      "test"
-    ]
+    "exclude": ["README.md", "cdk*.json", "package*.json", "yarn.lock", "node_modules"]
   },
   "context": {
     "@aws-cdk/aws-apigateway:usagePlanKeyOrderInsensitiveId": true,
