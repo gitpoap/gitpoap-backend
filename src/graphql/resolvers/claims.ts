@@ -22,7 +22,7 @@ export class CustomClaimResolver {
   async totalClaims(@Ctx() { prisma }: Context): Promise<Number> {
     const logger = createScopedLogger('GQL totalClaims');
 
-    logger.info('Request for total numbr of Claims');
+    logger.info('Request for total number of Claims');
 
     const endTimer = gqlRequestDurationSeconds.startTimer('totalClaims');
 
@@ -32,7 +32,7 @@ export class CustomClaimResolver {
       },
     });
 
-    logger.debug('Completed request for total numbr of Claims');
+    logger.debug('Completed request for total number of Claims');
 
     endTimer({ success: 1 });
 
