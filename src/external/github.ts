@@ -151,6 +151,6 @@ export async function getRepositoryPullsAsAdmin(
   page: number,
 ) {
   return await makeAdminGithubAPIRequest(
-    `/repos/${org}/${repo}/pulls?state=closed&sort=updated&per_page=${perPage}&page=${page}`,
+    `/repos/${org}/${repo}/pulls?state=closed&sort=updated&direction=desc&per_page=${perPage}&page=${page}`,
   );
 }
