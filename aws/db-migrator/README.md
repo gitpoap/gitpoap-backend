@@ -1,12 +1,18 @@
-# Welcome to your CDK JavaScript project
+# db-migrator lambda
 
-This is a blank project for JavaScript development with CDK.
+This includes the code for setting up the db-migrator lambdas
+on AWS that we use to run our migrations in CI/CD.
 
-The `cdk.json` file tells the CDK Toolkit how to execute your app. The build step is not required when using JavaScript.
+To set up the lambda or to rebuild and redeploy, the following ENV variables must be used:
 
-## Useful commands
+Name | Description
+-----|------------
+`VPC_ID` | The ID of the VPC for the stage (Production or Staging)
+`SECURITY_GROUP_ID` | The ID of the Security Group for the stage's `db-client` Security Group
+`GITHUB_OAUTH_TOKEN` | A token with read-access to this repository
+`REPO_BRANCH` | The branch of the this repository the lambda will check out before migrating
+`DATABASE_URL` | A URL for the database of that stage
+`STAGE_TAG` | `""` for Production or `"-staging"` for staging
 
-* `npm run test`         perform the jest unit tests
-* `cdk deploy`           deploy this stack to your default AWS account/region
-* `cdk diff`             compare deployed stack with current state
-* `cdk synth`            emits the synthesized CloudFormation template
+Then one can run `yarn run check` to check what will be produced after the lambda is deployed
+or `yarn run deploy` to redeploy the lambda.
