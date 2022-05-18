@@ -1,12 +1,56 @@
-import { Arg, Ctx, Resolver, Query } from 'type-graphql';
-import { Repo, RepoOrderByWithRelationInput } from '@generated/type-graphql';
+import { Arg, Ctx, Field, ObjectType, Resolver, Query } from 'type-graphql';
+import { Claim, ClaimStatus, Repo, RepoOrderByWithRelationInput } from '@generated/type-graphql';
 import { getLastMonthStartDatetime } from './util';
 import { Context } from '../../context';
 import { createScopedLogger } from '../../logging';
 import { gqlRequestDurationSeconds } from '../../metrics';
 
+@ObjectType()
+class RepoData extends Repo {
+  @Field()
+  contributorsCount?: Number;
+}
+
 @Resolver(of => Repo)
 export class CustomRepoResolver {
+  @Query(returns => RepoData, { nullable: true })
+  async repoData(
+    @Ctx() { prisma }: Context,
+    @Arg('repoId') repoId: number,
+  ): Promise<RepoData | null> {
+    const logger = createScopedLogger('GQL repoData');
+
+    logger.info(`Request data for repo: ${repoId}`);
+
+    const endTimer = gqlRequestDurationSeconds.startTimer('repoData');
+
+    let result: RepoData | null = await prisma.repo.findUnique({
+      where: {
+        id: repoId,
+      },
+    });
+
+    if (result) {
+      let contributorsCount: [{ count: number }] = await prisma.$queryRaw`
+        SELECT COUNT (DISTINCT(c."userId"))
+        FROM "Repo" AS r
+        INNER JOIN "GitPOAP" AS gp
+        ON r.id = gp."repoId"
+        INNER JOIN "Claim" AS c
+        ON gp.id = c."gitPOAPId"
+        WHERE r.id = ${repoId}
+      `;
+
+      result.contributorsCount = contributorsCount[0].count;
+    }
+
+    logger.debug(`Completed request data for repo: ${repoId}`);
+
+    endTimer({ success: 1 });
+
+    return result;
+  }
+
   @Query(returns => Number)
   async totalRepos(@Ctx() { prisma }: Context): Promise<Number> {
     const logger = createScopedLogger('GQL totalRepos');
