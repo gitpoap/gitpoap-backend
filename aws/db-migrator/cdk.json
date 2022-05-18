@@ -1,5 +1,5 @@
 {
-  "app": "tsc --project ./ && node dist/bin/db-migrator.js",
+  "app": "npx ts-node bin/db-migrator.ts",
   "watch": {
     "include": ["**"],
     "exclude": ["README.md", "cdk*.json", "package*.json", "yarn.lock", "node_modules"]
