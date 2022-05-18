@@ -190,12 +190,26 @@ type FullGitPOAPEventData {
 
 type GitPOAP {
   _count: GitPOAPCount
-  claims(cursor: ClaimWhereUniqueInput, distinct: [ClaimScalarFieldEnum!], orderBy: [ClaimOrderByWithRelationInput!], skip: Int, take: Int, where: ClaimWhereInput): [Claim!]!
+  claims(
+    cursor: ClaimWhereUniqueInput
+    distinct: [ClaimScalarFieldEnum!]
+    orderBy: [ClaimOrderByWithRelationInput!]
+    skip: Int
+    take: Int
+    where: ClaimWhereInput
+  ): [Claim!]!
   createdAt: DateTime!
   id: Int!
   ongoing: Boolean!
   poapEventId: Int!
-  redeemCodes(cursor: RedeemCodeWhereUniqueInput, distinct: [RedeemCodeScalarFieldEnum!], orderBy: [RedeemCodeOrderByWithRelationInput!], skip: Int, take: Int, where: RedeemCodeWhereInput): [RedeemCode!]!
+  redeemCodes(
+    cursor: RedeemCodeWhereUniqueInput
+    distinct: [RedeemCodeScalarFieldEnum!]
+    orderBy: [RedeemCodeOrderByWithRelationInput!]
+    skip: Int
+    take: Int
+    where: RedeemCodeWhereInput
+  ): [RedeemCode!]!
   repo: Repo!
   repoId: Int!
   status: GitPOAPStatus!
@@ -396,6 +410,7 @@ type NullableProfile {
   bio: String
   createdAt: DateTime
   featuredPOAPs: [FeaturedPOAP!]!
+  githubHandle: String
   id: Float
   name: String
   personalSiteUrl: String
@@ -411,7 +426,14 @@ type Organization {
   githubOrgId: Int!
   id: Int!
   name: String!
-  repos(cursor: RepoWhereUniqueInput, distinct: [RepoScalarFieldEnum!], orderBy: [RepoOrderByWithRelationInput!], skip: Int, take: Int, where: RepoWhereInput): [Repo!]!
+  repos(
+    cursor: RepoWhereUniqueInput
+    distinct: [RepoScalarFieldEnum!]
+    orderBy: [RepoOrderByWithRelationInput!]
+    skip: Int
+    take: Int
+    where: RepoWhereInput
+  ): [Repo!]!
   twitterHandle: String
   updatedAt: DateTime!
   url: String
@@ -499,7 +521,15 @@ type Profile {
   bannerImageUrl: String
   bio: String
   createdAt: DateTime!
-  featuredPOAPs(cursor: FeaturedPOAPWhereUniqueInput, distinct: [FeaturedPOAPScalarFieldEnum!], orderBy: [FeaturedPOAPOrderByWithRelationInput!], skip: Int, take: Int, where: FeaturedPOAPWhereInput): [FeaturedPOAP!]!
+  featuredPOAPs(
+    cursor: FeaturedPOAPWhereUniqueInput
+    distinct: [FeaturedPOAPScalarFieldEnum!]
+    orderBy: [FeaturedPOAPOrderByWithRelationInput!]
+    skip: Int
+    take: Int
+    where: FeaturedPOAPWhereInput
+  ): [FeaturedPOAP!]!
+  githubHandle: String
   id: Int!
   name: String
   personalSiteUrl: String
@@ -518,6 +548,7 @@ input ProfileOrderByWithRelationInput {
   bio: SortOrder
   createdAt: SortOrder
   featuredPOAPs: FeaturedPOAPOrderByRelationAggregateInput
+  githubHandle: SortOrder
   id: SortOrder
   name: SortOrder
   personalSiteUrl: SortOrder
@@ -536,6 +567,7 @@ enum ProfileScalarFieldEnum {
   bannerImageUrl
   bio
   createdAt
+  githubHandle
   id
   name
   personalSiteUrl
@@ -553,6 +585,7 @@ input ProfileWhereInput {
   bio: StringNullableFilter
   createdAt: DateTimeFilter
   featuredPOAPs: FeaturedPOAPListRelationFilter
+  githubHandle: StringNullableFilter
   id: IntFilter
   name: StringNullableFilter
   personalSiteUrl: StringNullableFilter
@@ -578,20 +611,95 @@ type ProfileWithENS {
 
 type Query {
   claim(where: ClaimWhereUniqueInput!): Claim
-  claims(cursor: ClaimWhereUniqueInput, distinct: [ClaimScalarFieldEnum!], orderBy: [ClaimOrderByWithRelationInput!], skip: Int, take: Int, where: ClaimWhereInput): [Claim!]!
+  claims(
+    cursor: ClaimWhereUniqueInput
+    distinct: [ClaimScalarFieldEnum!]
+    orderBy: [ClaimOrderByWithRelationInput!]
+    skip: Int
+    take: Int
+    where: ClaimWhereInput
+  ): [Claim!]!
   featuredPOAP(where: FeaturedPOAPWhereUniqueInput!): FeaturedPOAP
-  featuredPOAPS(cursor: FeaturedPOAPWhereUniqueInput, distinct: [FeaturedPOAPScalarFieldEnum!], orderBy: [FeaturedPOAPOrderByWithRelationInput!], skip: Int, take: Int, where: FeaturedPOAPWhereInput): [FeaturedPOAP!]!
-  findFirstClaim(cursor: ClaimWhereUniqueInput, distinct: [ClaimScalarFieldEnum!], orderBy: [ClaimOrderByWithRelationInput!], skip: Int, take: Int, where: ClaimWhereInput): Claim
-  findFirstFeaturedPOAP(cursor: FeaturedPOAPWhereUniqueInput, distinct: [FeaturedPOAPScalarFieldEnum!], orderBy: [FeaturedPOAPOrderByWithRelationInput!], skip: Int, take: Int, where: FeaturedPOAPWhereInput): FeaturedPOAP
-  findFirstGitPOAP(cursor: GitPOAPWhereUniqueInput, distinct: [GitPOAPScalarFieldEnum!], orderBy: [GitPOAPOrderByWithRelationInput!], skip: Int, take: Int, where: GitPOAPWhereInput): GitPOAP
-  findFirstOrganization(cursor: OrganizationWhereUniqueInput, distinct: [OrganizationScalarFieldEnum!], orderBy: [OrganizationOrderByWithRelationInput!], skip: Int, take: Int, where: OrganizationWhereInput): Organization
-  findFirstProfile(cursor: ProfileWhereUniqueInput, distinct: [ProfileScalarFieldEnum!], orderBy: [ProfileOrderByWithRelationInput!], skip: Int, take: Int, where: ProfileWhereInput): Profile
-  findFirstRepo(cursor: RepoWhereUniqueInput, distinct: [RepoScalarFieldEnum!], orderBy: [RepoOrderByWithRelationInput!], skip: Int, take: Int, where: RepoWhereInput): Repo
-  findFirstUser(cursor: UserWhereUniqueInput, distinct: [UserScalarFieldEnum!], orderBy: [UserOrderByWithRelationInput!], skip: Int, take: Int, where: UserWhereInput): User
+  featuredPOAPS(
+    cursor: FeaturedPOAPWhereUniqueInput
+    distinct: [FeaturedPOAPScalarFieldEnum!]
+    orderBy: [FeaturedPOAPOrderByWithRelationInput!]
+    skip: Int
+    take: Int
+    where: FeaturedPOAPWhereInput
+  ): [FeaturedPOAP!]!
+  findFirstClaim(
+    cursor: ClaimWhereUniqueInput
+    distinct: [ClaimScalarFieldEnum!]
+    orderBy: [ClaimOrderByWithRelationInput!]
+    skip: Int
+    take: Int
+    where: ClaimWhereInput
+  ): Claim
+  findFirstFeaturedPOAP(
+    cursor: FeaturedPOAPWhereUniqueInput
+    distinct: [FeaturedPOAPScalarFieldEnum!]
+    orderBy: [FeaturedPOAPOrderByWithRelationInput!]
+    skip: Int
+    take: Int
+    where: FeaturedPOAPWhereInput
+  ): FeaturedPOAP
+  findFirstGitPOAP(
+    cursor: GitPOAPWhereUniqueInput
+    distinct: [GitPOAPScalarFieldEnum!]
+    orderBy: [GitPOAPOrderByWithRelationInput!]
+    skip: Int
+    take: Int
+    where: GitPOAPWhereInput
+  ): GitPOAP
+  findFirstOrganization(
+    cursor: OrganizationWhereUniqueInput
+    distinct: [OrganizationScalarFieldEnum!]
+    orderBy: [OrganizationOrderByWithRelationInput!]
+    skip: Int
+    take: Int
+    where: OrganizationWhereInput
+  ): Organization
+  findFirstProfile(
+    cursor: ProfileWhereUniqueInput
+    distinct: [ProfileScalarFieldEnum!]
+    orderBy: [ProfileOrderByWithRelationInput!]
+    skip: Int
+    take: Int
+    where: ProfileWhereInput
+  ): Profile
+  findFirstRepo(
+    cursor: RepoWhereUniqueInput
+    distinct: [RepoScalarFieldEnum!]
+    orderBy: [RepoOrderByWithRelationInput!]
+    skip: Int
+    take: Int
+    where: RepoWhereInput
+  ): Repo
+  findFirstUser(
+    cursor: UserWhereUniqueInput
+    distinct: [UserScalarFieldEnum!]
+    orderBy: [UserOrderByWithRelationInput!]
+    skip: Int
+    take: Int
+    where: UserWhereInput
+  ): User
   gitPOAP(where: GitPOAPWhereUniqueInput!): GitPOAP
   gitPOAPEvent(id: Float!): FullGitPOAPEventData
-  gitPOAPHolders(gitPOAPId: Float!, page: Float = null, perPage: Float = null, sort: String = "claim-date"): Holders
-  gitPOAPS(cursor: GitPOAPWhereUniqueInput, distinct: [GitPOAPScalarFieldEnum!], orderBy: [GitPOAPOrderByWithRelationInput!], skip: Int, take: Int, where: GitPOAPWhereInput): [GitPOAP!]!
+  gitPOAPHolders(
+    gitPOAPId: Float!
+    page: Float = null
+    perPage: Float = null
+    sort: String = "claim-date"
+  ): Holders
+  gitPOAPS(
+    cursor: GitPOAPWhereUniqueInput
+    distinct: [GitPOAPScalarFieldEnum!]
+    orderBy: [GitPOAPOrderByWithRelationInput!]
+    skip: Int
+    take: Int
+    where: GitPOAPWhereInput
+  ): [GitPOAP!]!
   lastMonthClaims: Float!
   lastMonthContributors: Float!
   lastMonthGitPOAPs: Float!
@@ -599,14 +707,42 @@ type Query {
   mostClaimedGitPOAPs(count: Float = 10): [GitPOAPWithClaimsCount!]
   mostHonoredContributors(count: Float = 10): [ProfileWithClaimsCount!]!
   organization(where: OrganizationWhereUniqueInput!): Organization
-  organizations(cursor: OrganizationWhereUniqueInput, distinct: [OrganizationScalarFieldEnum!], orderBy: [OrganizationOrderByWithRelationInput!], skip: Int, take: Int, where: OrganizationWhereInput): [Organization!]!
+  organizations(
+    cursor: OrganizationWhereUniqueInput
+    distinct: [OrganizationScalarFieldEnum!]
+    orderBy: [OrganizationOrderByWithRelationInput!]
+    skip: Int
+    take: Int
+    where: OrganizationWhereInput
+  ): [Organization!]!
   profile(where: ProfileWhereUniqueInput!): Profile
   profileData(address: String!): NullableProfile
   profileFeaturedPOAPs(address: String!): UserFeaturedPOAPs
-  profiles(cursor: ProfileWhereUniqueInput, distinct: [ProfileScalarFieldEnum!], orderBy: [ProfileOrderByWithRelationInput!], skip: Int, take: Int, where: ProfileWhereInput): [Profile!]!
+  profiles(
+    cursor: ProfileWhereUniqueInput
+    distinct: [ProfileScalarFieldEnum!]
+    orderBy: [ProfileOrderByWithRelationInput!]
+    skip: Int
+    take: Int
+    where: ProfileWhereInput
+  ): [Profile!]!
   recentlyAddedProjects(count: Float = 10): [Repo!]!
   repo(where: RepoWhereUniqueInput!): Repo
-  repos(cursor: RepoWhereUniqueInput, distinct: [RepoScalarFieldEnum!], orderBy: [RepoOrderByWithRelationInput!], skip: Int, take: Int, where: RepoWhereInput): [Repo!]!
+  repoGitPOAPs(
+    page: Float = null
+    perPage: Float = null
+    repoId: Float!
+    sort: String = "date"
+  ): RepoGitPOAPs
+  repoMostHonoredContributors(count: Float = 10, repoId: Float!): [ProfileWithClaimsCount!]!
+  repos(
+    cursor: RepoWhereUniqueInput
+    distinct: [RepoScalarFieldEnum!]
+    orderBy: [RepoOrderByWithRelationInput!]
+    skip: Int
+    take: Int
+    where: RepoWhereInput
+  ): [Repo!]!
   search(text: String!): SearchResults!
   totalClaims: Float!
   totalContributors: Float!
@@ -614,8 +750,20 @@ type Query {
   totalRepos: Float!
   user(where: UserWhereUniqueInput!): User
   userClaims(githubId: Float!): [FullClaimData!]
-  userPOAPs(address: String!, page: Float = null, perPage: Float = null, sort: String = "date"): UserPOAPs
-  users(cursor: UserWhereUniqueInput, distinct: [UserScalarFieldEnum!], orderBy: [UserOrderByWithRelationInput!], skip: Int, take: Int, where: UserWhereInput): [User!]!
+  userPOAPs(
+    address: String!
+    page: Float = null
+    perPage: Float = null
+    sort: String = "date"
+  ): UserPOAPs
+  users(
+    cursor: UserWhereUniqueInput
+    distinct: [UserScalarFieldEnum!]
+    orderBy: [UserOrderByWithRelationInput!]
+    skip: Int
+    take: Int
+    where: UserWhereInput
+  ): [User!]!
 }
 
 enum QueryMode {
@@ -669,7 +817,14 @@ input RedeemCodeWhereUniqueInput {
 type Repo {
   _count: RepoCount
   createdAt: DateTime!
-  gitPOAPs(cursor: GitPOAPWhereUniqueInput, distinct: [GitPOAPScalarFieldEnum!], orderBy: [GitPOAPOrderByWithRelationInput!], skip: Int, take: Int, where: GitPOAPWhereInput): [GitPOAP!]!
+  gitPOAPs(
+    cursor: GitPOAPWhereUniqueInput
+    distinct: [GitPOAPScalarFieldEnum!]
+    orderBy: [GitPOAPOrderByWithRelationInput!]
+    skip: Int
+    take: Int
+    where: GitPOAPWhereInput
+  ): [GitPOAP!]!
   githubRepoId: Int!
   id: Int!
   name: String!
@@ -680,6 +835,16 @@ type Repo {
 
 type RepoCount {
   gitPOAPs: Int!
+}
+
+type RepoGitPOAPData {
+  event: POAPEvent!
+  gitPOAP: GitPOAP!
+}
+
+type RepoGitPOAPs {
+  gitPOAPs: [RepoGitPOAPData!]!
+  totalGitPOAPs: Float!
 }
 
 input RepoListRelationFilter {
@@ -780,7 +945,14 @@ input StringNullableFilter {
 
 type User {
   _count: UserCount
-  claims(cursor: ClaimWhereUniqueInput, distinct: [ClaimScalarFieldEnum!], orderBy: [ClaimOrderByWithRelationInput!], skip: Int, take: Int, where: ClaimWhereInput): [Claim!]!
+  claims(
+    cursor: ClaimWhereUniqueInput
+    distinct: [ClaimScalarFieldEnum!]
+    orderBy: [ClaimOrderByWithRelationInput!]
+    skip: Int
+    take: Int
+    where: ClaimWhereInput
+  ): [Claim!]!
   createdAt: DateTime!
   githubHandle: String!
   githubId: Int!
