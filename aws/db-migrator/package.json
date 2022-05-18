@@ -1,17 +1,14 @@
 {
   "name": "db-migrator",
   "version": "0.1.0",
-  "bin": {
-    "db-migrator": "bin/db-migrator.js"
-  },
   "scripts": {
-    "build": "echo \"The build step is not required when using JavaScript!\" && exit 0",
-    "cdk": "cdk",
-    "test": "jest"
+    "build": "tsc --project ./",
+    "check": "npx cdk synth",
+    "deploy": "npx cdk deploy"
   },
   "devDependencies": {
     "aws-cdk": "^2.24.1",
-    "jest": "^26.4.2"
+    "typescript": "^4.6.4"
   },
   "dependencies": {
     "aws-cdk-lib": "^2.24.1",
