@@ -1,5 +1,5 @@
 import { Arg, Ctx, Field, ObjectType, Resolver, Query } from 'type-graphql';
-import { Claim, ClaimStatus, Repo, RepoOrderByWithRelationInput } from '@generated/type-graphql';
+import { ClaimStatus, Repo, RepoOrderByWithRelationInput } from '@generated/type-graphql';
 import { getLastMonthStartDatetime } from './util';
 import { Context } from '../../context';
 import { createScopedLogger } from '../../logging';
@@ -39,6 +39,7 @@ export class CustomRepoResolver {
         INNER JOIN "Claim" AS c
         ON gp.id = c."gitPOAPId"
         WHERE r.id = ${repoId}
+        AND c.status = ${ClaimStatus.CLAIMED}
       `;
 
       result.contributorsCount = contributorsCount[0].count;
