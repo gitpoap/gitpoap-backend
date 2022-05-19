@@ -812,3 +812,49 @@ that returns data like:
   }
 }
 ```
+
+## Repo Data
+
+To retrieve info about a Repo including its contributor count, we can run a query like:
+
+```graphql
+{
+  repoData(repoId: 5) {
+    id
+    name
+    contributorCount
+  }
+}
+```
+
+that returns data like:
+
+```json
+{
+  "data": {
+    "repoData": {
+      "id": 5,
+      "name": "some-repo",
+      "contributorCount": 4
+    }
+  }
+}
+```
+
+## Repo Star Count
+
+To retrieve the number of stars on a repo we can run a query like:
+
+```graphql
+  repoStarCount(repoId: 54)
+```
+
+that returns data like:
+
+```json
+{
+  "data": {
+    "repoStarCount": 5
+  }
+}
+```

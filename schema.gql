@@ -21,6 +21,11 @@ type Claim {
   userId: Int!
 }
 
+input ClaimGitPOAPIdUserIdCompoundUniqueInput {
+  gitPOAPId: Int!
+  userId: Int!
+}
+
 input ClaimListRelationFilter {
   every: ClaimWhereInput
   none: ClaimWhereInput
@@ -86,6 +91,7 @@ input ClaimWhereInput {
 }
 
 input ClaimWhereUniqueInput {
+  gitPOAPId_userId: ClaimGitPOAPIdUserIdCompoundUniqueInput
   id: Int
   poapTokenId: String
 }
@@ -200,6 +206,7 @@ type GitPOAP {
   ): [Claim!]!
   createdAt: DateTime!
   id: Int!
+  lastPRUpdatedAt: DateTime!
   ongoing: Boolean!
   poapEventId: Int!
   redeemCodes(
@@ -237,6 +244,7 @@ input GitPOAPOrderByWithRelationInput {
   claims: ClaimOrderByRelationAggregateInput
   createdAt: SortOrder
   id: SortOrder
+  lastPRUpdatedAt: SortOrder
   ongoing: SortOrder
   poapEventId: SortOrder
   redeemCodes: RedeemCodeOrderByRelationAggregateInput
@@ -256,6 +264,7 @@ input GitPOAPRelationFilter {
 enum GitPOAPScalarFieldEnum {
   createdAt
   id
+  lastPRUpdatedAt
   ongoing
   poapEventId
   poapSecret
@@ -279,6 +288,7 @@ input GitPOAPWhereInput {
   claims: ClaimListRelationFilter
   createdAt: DateTimeFilter
   id: IntFilter
+  lastPRUpdatedAt: DateTimeFilter
   ongoing: BoolFilter
   poapEventId: IntFilter
   redeemCodes: RedeemCodeListRelationFilter
@@ -729,6 +739,7 @@ type Query {
   ): [Profile!]!
   recentlyAddedProjects(count: Float = 10): [Repo!]!
   repo(where: RepoWhereUniqueInput!): Repo
+  repoData(repoId: Float!): RepoData
   repoGitPOAPs(
     page: Float = null
     perPage: Float = null
@@ -736,6 +747,7 @@ type Query {
     sort: String = "date"
   ): RepoGitPOAPs
   repoMostHonoredContributors(count: Float = 10, repoId: Float!): [ProfileWithClaimsCount!]!
+  repoStarCount(repoId: Float!): Float!
   repos(
     cursor: RepoWhereUniqueInput
     distinct: [RepoScalarFieldEnum!]
@@ -838,13 +850,28 @@ type RepoCount {
   gitPOAPs: Int!
 }
 
-type RepoGitPOAPData {
-  event: POAPEvent!
-  gitPOAP: GitPOAP!
+type RepoData {
+  _count: RepoCount
+  contributorCount: Float!
+  createdAt: DateTime!
+  gitPOAPs(
+    cursor: GitPOAPWhereUniqueInput
+    distinct: [GitPOAPScalarFieldEnum!]
+    orderBy: [GitPOAPOrderByWithRelationInput!]
+    skip: Int
+    take: Int
+    where: GitPOAPWhereInput
+  ): [GitPOAP!]!
+  githubRepoId: Int!
+  id: Int!
+  name: String!
+  organization: Organization!
+  organizationId: Int!
+  updatedAt: DateTime!
 }
 
 type RepoGitPOAPs {
-  gitPOAPs: [RepoGitPOAPData!]!
+  gitPOAPs: [FullGitPOAPEventData!]!
   totalGitPOAPs: Float!
 }
 

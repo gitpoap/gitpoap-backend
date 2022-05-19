@@ -4,11 +4,12 @@ import { getLastMonthStartDatetime } from './util';
 import { Context } from '../../context';
 import { createScopedLogger } from '../../logging';
 import { gqlRequestDurationSeconds } from '../../metrics';
+import { getGithubRepositoryStarCount } from '../../external/github';
 
 @ObjectType()
 class RepoData extends Repo {
   @Field()
-  contributorsCount?: Number;
+  contributorCount: number;
 }
 
 @Resolver(of => Repo)
@@ -24,7 +25,7 @@ export class CustomRepoResolver {
 
     const endTimer = gqlRequestDurationSeconds.startTimer('repoData');
 
-    let result = await prisma.$queryRaw<RepoData[]>`
+    const results = await prisma.$queryRaw<RepoData[]>`
       SELECT r.*, COUNT(c.id) AS "contributorCount"
       FROM "Repo" as r
       INNER JOIN "GitPOAP" AS g ON g."repoId" = r.id
@@ -33,7 +34,7 @@ export class CustomRepoResolver {
       GROUP BY r.id
     `;
 
-    if (result.length === 0) {
+    if (results.length === 0) {
       logger.warn(`Failed to find repo with id: ${repoId}`);
       endTimer({ success: 0 });
       return null;
@@ -43,7 +44,39 @@ export class CustomRepoResolver {
 
     endTimer({ success: 1 });
 
-    return result[0];
+    return results[0];
+  }
+
+  @Query(returns => Number)
+  async repoStarCount(
+    @Ctx() { prisma }: Context,
+    @Arg('repoId') repoId: number,
+  ): Promise<Number | null> {
+    const logger = createScopedLogger('GQL repoStarCount');
+
+    logger.info(`Request for star count of repo id: ${repoId}`);
+
+    const endTimer = gqlRequestDurationSeconds.startTimer('repoStarCount');
+
+    const repo = await prisma.repo.findUnique({
+      where: { id: repoId },
+      select: { githubRepoId: true },
+    });
+
+    if (repo === null) {
+      logger.warn(`Failed to find repo with id: ${repoId}`);
+      endTimer({ success: 0 });
+      return null;
+    }
+
+    // This returns 0 if there's an error or repo doesn't exist
+    const result = await getGithubRepositoryStarCount(repo.githubRepoId);
+
+    logger.debug(`Completed request for star count of repo id: ${repoId}`);
+
+    endTimer({ success: 1 });
+
+    return result;
   }
 
   @Query(returns => Number)
