@@ -24,32 +24,26 @@ export class CustomRepoResolver {
 
     const endTimer = gqlRequestDurationSeconds.startTimer('repoData');
 
-    let result: RepoData | null = await prisma.repo.findUnique({
-      where: {
-        id: repoId,
-      },
-    });
+    let result = await prisma.$queryRaw<RepoData[]>`
+      SELECT r.*, COUNT(c.id) AS "contributorCount"
+      FROM "Repo" as r
+      INNER JOIN "GitPOAP" AS g ON g."repoId" = r.id
+      INNER JOIN "Claim" AS c ON c."gitPOAPId" = g.id
+      WHERE r.id = ${repoId} AND c.status = ${ClaimStatus.CLAIMED}
+      GROUP BY r.id
+    `;
 
-    if (result) {
-      let contributorsCount: [{ count: number }] = await prisma.$queryRaw`
-        SELECT COUNT (DISTINCT(c."userId"))
-        FROM "Repo" AS r
-        INNER JOIN "GitPOAP" AS gp
-        ON r.id = gp."repoId"
-        INNER JOIN "Claim" AS c
-        ON gp.id = c."gitPOAPId"
-        WHERE r.id = ${repoId}
-        AND c.status = ${ClaimStatus.CLAIMED}
-      `;
-
-      result.contributorsCount = contributorsCount[0].count;
+    if (result.length === 0) {
+      logger.warn(`Failed to find repo with id: ${repoId}`);
+      endTimer({ success: 0 });
+      return null;
     }
 
     logger.debug(`Completed request data for repo: ${repoId}`);
 
     endTimer({ success: 1 });
 
-    return result;
+    return result[0];
   }
 
   @Query(returns => Number)
