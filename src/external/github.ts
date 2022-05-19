@@ -9,6 +9,8 @@ import {
 import { createScopedLogger } from '../logging';
 import { githubRequestDurationSeconds } from '../metrics';
 import { URL } from 'url';
+import { context } from '../context';
+import { SECONDS_PER_HOUR } from '../constants';
 
 export async function requestGithubOAuthToken(code: string) {
   const logger = createScopedLogger('requestGithubOAuthToken');
@@ -108,6 +110,7 @@ export type GithubRepoResponse = {
     id: number;
     login: string;
   };
+  stargazers_count: number;
 };
 
 export async function getGithubRepository(
@@ -123,6 +126,52 @@ export async function getGithubRepositoryById(
   githubToken: string,
 ): Promise<GithubRepoResponse> {
   return await makeGithubAPIRequest(`/repositories/${repoId}`, githubToken);
+}
+
+async function getGithubRepositoryByIdAsAdmin(repoId: number): Promise<GithubRepoResponse> {
+  return await makeAdminGithubAPIRequest(`/repositories/${repoId}`);
+}
+
+async function getGithubRepositoryStarCountAsAdmin(repoId: number): Promise<number> {
+  const githubResponse = await getGithubRepositoryByIdAsAdmin(repoId);
+
+  if (githubResponse === null) {
+    // If the something went wrong just return 0
+    return 0;
+  }
+
+  return githubResponse.stargazers_count;
+}
+
+const GITHUB_STARS_COUNT_CACHE_PREFIX = 'github#stars';
+const GITHUB_STARS_COUNT_CACHE_TTL = 6 * SECONDS_PER_HOUR; // 6 hours
+
+export async function getGithubRepositoryStarCount(repoId: number): Promise<number> {
+  const logger = createScopedLogger('getGithubRepositoryStarCount');
+
+  const cacheResponse = await context.redis.getValue(
+    GITHUB_STARS_COUNT_CACHE_PREFIX,
+    repoId.toString(),
+  );
+
+  if (cacheResponse !== null) {
+    logger.debug(`Found GitHub stars count for githubRepoId ${repoId} in cache`);
+
+    return parseInt(cacheResponse, 10);
+  }
+
+  logger.debug(`GitHub stars count for githubRepoId ${repoId} not in cache`);
+
+  const starsCount = await getGithubRepositoryStarCountAsAdmin(repoId);
+
+  context.redis.setValue(
+    GITHUB_STARS_COUNT_CACHE_PREFIX,
+    repoId.toString(),
+    starsCount.toString(),
+    GITHUB_STARS_COUNT_CACHE_TTL,
+  );
+
+  return starsCount;
 }
 
 export async function isOrganizationAUser(githubHandle: string, githubToken: string) {
@@ -144,7 +193,7 @@ export async function getGithubOrganizationAdmins(
 }
 
 // This should only be used for our background processes
-export async function getRepositoryPullsAsAdmin(
+export async function getGithubRepositoryPullsAsAdmin(
   org: string,
   repo: string,
   perPage: number,
