@@ -1,7 +1,7 @@
 import { GitPOAP, Organization, Repo } from '@generated/type-graphql';
 import { context } from '../context';
 import { createScopedLogger } from '../logging';
-import { getRepositoryPullsAsAdmin } from '../external/github';
+import { getGithubRepositoryPullsAsAdmin } from '../external/github';
 import { DateTime } from 'luxon';
 import { sleep } from './sleep';
 import {
@@ -38,7 +38,7 @@ export async function checkForNewContributions(gitPOAP: GitPOAPReturnType) {
   let isProcessing = true;
   let lastUpdatedAt = null;
   while (isProcessing) {
-    const pulls = await getRepositoryPullsAsAdmin(
+    const pulls = await getGithubRepositoryPullsAsAdmin(
       gitPOAP.repo.organization.name,
       gitPOAP.repo.name,
       PULL_STEP_SIZE,
