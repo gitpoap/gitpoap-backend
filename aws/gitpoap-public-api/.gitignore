@@ -1,0 +1,14 @@
+*.swp
+package-lock.json
+__pycache__
+.pytest_cache
+.venv
+*.egg-info
+
+# CDK asset staging directory
+.cdk.staging
+cdk.out
+
+# Secret output
+gitpoap-passwords.json
+gitpoap-staging-passwords.json
