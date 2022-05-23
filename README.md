@@ -6,6 +6,8 @@
 
 Example `.env`:
 ```sh
+APP_NAME=gitpoap-backend
+
 JWT_SECRET=yoyo
 
 AWS_PROFILE=docker-agent
