@@ -1,0 +1,99 @@
+# This workflow will build and push a new container image to Amazon ECR,
+# and then will deploy a new task definition to Amazon ECS, when there is a push to the main branch.
+
+name: Resuable Deployer for GitPOAP Public API
+
+on:
+  workflow_call:
+    inputs:
+      ECR_REPOSITORY:
+        required: true
+        type: string
+      ECS_SERVICE:
+        required: true
+        type: string
+      ECS_CLUSTER:
+        required: true
+        type: string
+      CONTAINER_NAME:
+        required: true
+        type: string
+      deploy_environment:
+        required: true
+        type: string
+      task_definition_tag:
+        required: true
+        type: string
+    secrets:
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+
+env:
+  AWS_REGION: us-east-2
+
+jobs:
+  deploy:
+    name: Deploy ${{ inputs.deploy_environment }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.deploy_environment }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          # Build a docker container and
+          # push it to ECR so that it can
+          # be deployed to ECS.
+          docker build -t $ECR_REGISTRY/${{ inputs.ECR_REPOSITORY }}:$IMAGE_TAG -f aws/public-api-server.Dockerfile .
+          docker push $ECR_REGISTRY/${{ inputs.ECR_REPOSITORY }}:$IMAGE_TAG
+          echo "::set-output name=image::$ECR_REGISTRY/${{ inputs.ECR_REPOSITORY }}:$IMAGE_TAG"
+
+      - name: Install jinja-cli
+        run: pip3 install jinja-cli
+
+      - name: Create task-definition.json for this stage
+        run: |
+          cat > defs.json <<EOF
+          {
+            "task_definition_tag": "${{ inputs.task_definition_tag }}",
+            "aws_region": "${{ env.AWS_REGION }}",
+            "deploy_environment": "${{ inputs.deploy_environment }}",
+            "login_redirect_url": "${{ inputs.login_redirect_url }}"
+          }
+          EOF
+          jinja -d defs.json aws/public-api-server.task-definition.json.j2 > aws/public-api-server.task-definition.json
+
+      - name: Fill in the new image ID in the Amazon ECS task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: aws/public-api-server.task-definition.json
+          container-name: ${{ inputs.CONTAINER_NAME }}
+          image: ${{ steps.build-image.outputs.image }}
+
+      - name: Deploy Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ inputs.ECS_SERVICE }}
+          cluster: ${{ inputs.ECS_CLUSTER }}
+          wait-for-service-stability: true
