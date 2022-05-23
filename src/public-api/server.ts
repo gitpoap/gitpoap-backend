@@ -2,11 +2,11 @@ require('dotenv').config();
 
 import express from 'express';
 import cors from 'cors';
-import { createScopedLogger, updateLogLevel } from './logging';
+import { createScopedLogger, updateLogLevel } from '../logging';
 import { registerHandler } from 'segfault-handler';
 import minimist from 'minimist';
 import { errorHandler } from '../middleware';
-import { startMetricsServer } from './metrics';
+import { startMetricsServer } from '../metrics';
 import { NODE_ENV } from '../environment';
 import {
   PUBLIC_API_PORT,

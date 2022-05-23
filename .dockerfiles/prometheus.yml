@@ -11,4 +11,5 @@ scrape_configs:
     static_configs:
       - targets:
           - 'server:8080'
+          - 'public-api-server:8081'
           - 'prometheus:9090'
