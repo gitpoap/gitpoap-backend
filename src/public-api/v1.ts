@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { context } from '../context';
-import { httpRequestDurationSeconds } from './metrics';
-import { createScopedLogger } from './logging';
+import { httpRequestDurationSeconds } from '../metrics';
+import { createScopedLogger } from '../logging';
 
 export const v1Router = Router();
 

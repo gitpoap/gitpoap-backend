@@ -2,13 +2,13 @@ import { collectDefaultMetrics, Histogram, Registry } from 'prom-client';
 import { createServer, IncomingMessage } from 'http';
 import { createScopedLogger } from './logging';
 import { parse } from 'url';
-import { NODE_ENV } from './environment';
+import { APP_NAME, NODE_ENV } from './environment';
 
 const METRICS_PORT = 8080;
 
 const register = new Registry();
 
-register.setDefaultLabels({ app: 'gitpoap-backend' });
+register.setDefaultLabels({ app: APP_NAME });
 
 collectDefaultMetrics({ register });
 
