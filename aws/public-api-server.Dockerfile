@@ -14,6 +14,6 @@ COPY ./ ./
 
 RUN yarn build
 
-EXPOSE 3001 8080
+EXPOSE 3122 8080
 
 CMD ["yarn", "start-api"]
