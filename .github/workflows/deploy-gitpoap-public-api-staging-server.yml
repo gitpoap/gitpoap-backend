@@ -1,7 +1,7 @@
 # This workflow will build and push a new container image to Amazon ECR,
 # and then will deploy a new task definition to Amazon ECS, when there is a push to the develop branch.
 
-name: Deploy Backend to Amazon ECS (STAGING)
+name: Deploy Public API to Amazon ECS (STAGING)
 
 on:
   push:
@@ -10,15 +10,14 @@ on:
 
 jobs:
   call-deploy-workflow:
-    uses: ./.github/workflows/reusable-deploy-backend-server.yml
+    uses: ./.github/workflows/reusable-deploy-public-api-server.yml
     with:
-      ECR_REPOSITORY: gitpoap-backend-staging-server-repository
-      ECS_SERVICE: gitpoap-backend-staging-server-service
-      ECS_CLUSTER: gitpoap-backend-staging-server-cluster
-      CONTAINER_NAME: gitpoap-backend-staging-server
+      ECR_REPOSITORY: gitpoap-public-api-staging-server-repository
+      ECS_SERVICE: gitpoap-public-api-staging-server-service
+      ECS_CLUSTER: gitpoap-public-api-staging-server-cluster
+      CONTAINER_NAME: gitpoap-public-api-staging-server
       deploy_environment: staging
       task_definition_tag: '-staging'
-      login_redirect_url: https://brisket.gitpoap.io/login
     secrets:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
