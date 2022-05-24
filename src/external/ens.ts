@@ -83,6 +83,8 @@ export async function resolveAddress(address: string): Promise<string | null> {
     return null;
   }
 
+  logger.debug(`Resolving ENS name for ${address}`);
+
   const [cachedResponse, isFresh] = await Promise.all([
     context.redis.getValue(ENS_REVERSE_RESOLVE_CACHE_PREFIX, address),
     context.redis.getValue(ENS_REVERSE_RESOLVE_CACHE_IS_FRESH_PREFIX, address),
@@ -113,7 +115,9 @@ async function lookupAddress(address: string): Promise<string | null> {
     const resolvedName = await context.provider.lookupAddress(address);
     endTimer();
 
-    if (resolvedName === null) {
+    if (resolvedName !== null) {
+      logger.debug(`Resolved ${address} to ${resolvedName}`);
+    } else {
       logger.debug(`${address} is not associated with an ENS name`);
     }
 
