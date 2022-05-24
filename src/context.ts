@@ -14,7 +14,13 @@ const prisma = new PrismaClient();
 
 let apiObj = undefined;
 if (INFURA_API_KEY) {
-  apiObj = { infura: INFURA_API_KEY };
+  apiObj = {
+    infura: INFURA_API_KEY,
+    etherscan: '-',
+    alchemy: '-',
+    pocket: '-',
+    ankr: '-',
+  };
 }
 const provider = getDefaultProvider('homestead', apiObj);
 
