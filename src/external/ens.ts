@@ -60,3 +60,81 @@ export async function resolveENS(ensName: string): Promise<string | null> {
     return null;
   }
 }
+
+const ENS_REVERSE_RESOLVE_CACHE_IS_FRESH_PREFIX = 'ens#reverseResolve/fresh';
+// Purposely less than the TTL for the reverse resolve ENS cache
+const ENS_REVERSE_RESOLVE_CACHE_IS_FRESH_TTL = 1 * SECONDS_PER_DAY;
+
+const ENS_REVERSE_RESOLVE_CACHE_PREFIX = 'ens#reverseResolve';
+const ENS_REVERSE_RESOLVE_CACHE_TTL = 5 * SECONDS_PER_DAY;
+
+/**
+ * ENS Reverse Resolution - Resolve an ETH address to an ENS name
+ *
+ * @param address - the ETH address to resolve
+ * @returns the resolved ENS name associated with the ETH address or null
+ */
+export async function resolveAddress(address: string): Promise<string | null> {
+  const logger = createScopedLogger('resolveAddress');
+
+  if (!isAddress(address)) {
+    logger.debug(`Skipping lookup since ${address} is not a valid address`);
+
+    return null;
+  }
+
+  const [cachedResponse, isFresh] = await Promise.all([
+    context.redis.getValue(ENS_REVERSE_RESOLVE_CACHE_PREFIX, address),
+    context.redis.getValue(ENS_REVERSE_RESOLVE_CACHE_IS_FRESH_PREFIX, address),
+  ]);
+
+  if (cachedResponse) {
+    logger.debug(`Found ENS resolution of ${address} in cache`);
+
+    /* Simulate stale-while-revalidate cache behavior */
+    if (!isFresh) {
+      /* Do not await this, as we don't want to block the caller */
+      lookupAddress(address);
+    }
+
+    return cachedResponse;
+  }
+
+  const resolvedName = await lookupAddress(address);
+
+  return resolvedName;
+}
+
+async function lookupAddress(address: string): Promise<string | null> {
+  const logger = createScopedLogger('lookupAddress');
+
+  try {
+    const endTimer = ensRequestDurationSeconds.startTimer('lookupAddress');
+    const resolvedName = await context.provider.lookupAddress(address);
+    endTimer();
+
+    if (resolvedName === null) {
+      logger.debug(`${address} is not associated with an ENS name`);
+    }
+
+    context.redis.setValue(
+      ENS_REVERSE_RESOLVE_CACHE_IS_FRESH_PREFIX,
+      address,
+      'true',
+      ENS_REVERSE_RESOLVE_CACHE_IS_FRESH_TTL,
+    );
+
+    /* Cache resolvedName regardless of whether it's null or not */
+    context.redis.setValue(
+      ENS_REVERSE_RESOLVE_CACHE_PREFIX,
+      address,
+      resolvedName ?? '',
+      ENS_REVERSE_RESOLVE_CACHE_TTL,
+    );
+
+    return resolvedName;
+  } catch (err) {
+    logger.warn(`Got error from ethers.lookupAddress: ${err}`);
+    return null;
+  }
+}
