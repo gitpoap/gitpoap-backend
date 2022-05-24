@@ -131,6 +131,14 @@ export class CustomProfileResolver {
       },
     });
 
+    /*
+     * Saves us from having to resolve the ENS name from an address again ~ it's implied
+     * that the ENS name was successfully resolved earlier.
+     */
+    const ensName = addressOrEns.endsWith('.eth')
+      ? addressOrEns
+      : await resolveAddress(resolvedAddress);
+
     if (result === null) {
       logger.debug(`Profile for ${addressOrEns} not created yet, returning blank profile.`);
       endTimer({ success: 1 });
@@ -138,7 +146,7 @@ export class CustomProfileResolver {
       return {
         id: null,
         address: resolvedAddress,
-        ensName: null,
+        ensName: ensName,
         createdAt: null,
         updatedAt: null,
         bio: null,
@@ -151,10 +159,6 @@ export class CustomProfileResolver {
         featuredPOAPs: [],
       };
     }
-
-    const ensName = addressOrEns.endsWith('.eth')
-      ? addressOrEns
-      : await resolveAddress(resolvedAddress);
 
     const resultWithEns: NullableProfile = {
       ...result,
