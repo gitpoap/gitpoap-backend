@@ -405,6 +405,7 @@ type NullableProfile {
   bannerImageUrl: String
   bio: String
   createdAt: DateTime
+  ensName: String
   featuredPOAPs: [FeaturedPOAP!]!
   githubHandle: String
   id: Float
