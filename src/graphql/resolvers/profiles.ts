@@ -1,7 +1,7 @@
 import { Arg, Ctx, Field, ObjectType, Resolver, Query } from 'type-graphql';
 import { ClaimStatus, FeaturedPOAP, Profile } from '@generated/type-graphql';
 import { Context } from '../../context';
-import { resolveENS } from '../../external/ens';
+import { resolveENS, resolveAddress } from '../../external/ens';
 import { createScopedLogger } from '../../logging';
 import { gqlRequestDurationSeconds } from '../../metrics';
 import { getLastMonthStartDatetime } from './util';
@@ -13,6 +13,9 @@ class NullableProfile {
 
   @Field()
   address: string;
+
+  @Field(() => String, { nullable: true })
+  ensName: string | null;
 
   @Field(() => Date, { nullable: true })
   createdAt: Date | null;
@@ -104,22 +107,22 @@ export class CustomProfileResolver {
   @Query(returns => NullableProfile, { nullable: true })
   async profileData(
     @Ctx() { prisma }: Context,
-    @Arg('address') address: string,
+    @Arg('address') addressOrEns: string,
   ): Promise<NullableProfile | null> {
     const logger = createScopedLogger('GQL profileData');
 
-    logger.info(`Request data for address: ${address}`);
+    logger.info(`Request data for address: ${addressOrEns}`);
 
     const endTimer = gqlRequestDurationSeconds.startTimer('profileData');
 
     // Resolve ENS if provided
-    const resolvedAddress = await resolveENS(address);
+    const resolvedAddress = await resolveENS(addressOrEns);
     if (resolvedAddress === null) {
       endTimer({ success: 0 });
       return null;
     }
 
-    let result: NullableProfile | null = await prisma.profile.findUnique({
+    let result = await prisma.profile.findUnique({
       where: {
         address: resolvedAddress.toLowerCase(),
       },
@@ -129,11 +132,13 @@ export class CustomProfileResolver {
     });
 
     if (result === null) {
-      logger.debug(`Profile for ${address} not created yet, returning blank profile.`);
+      logger.debug(`Profile for ${addressOrEns} not created yet, returning blank profile.`);
+      endTimer({ success: 1 });
 
-      result = {
+      return {
         id: null,
         address: resolvedAddress,
+        ensName: null,
         createdAt: null,
         updatedAt: null,
         bio: null,
@@ -147,11 +152,19 @@ export class CustomProfileResolver {
       };
     }
 
-    logger.debug(`Completed request data for address: ${address}`);
+    const ensName = addressOrEns.endsWith('.eth')
+      ? addressOrEns
+      : await resolveAddress(resolvedAddress);
 
+    const resultWithEns: NullableProfile = {
+      ...result,
+      ensName,
+    };
+
+    logger.debug(`Completed request for profile data for address: ${addressOrEns}`);
     endTimer({ success: 1 });
 
-    return result;
+    return resultWithEns;
   }
 
   @Query(returns => [ProfileWithClaimsCount])
