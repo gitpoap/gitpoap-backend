@@ -19,15 +19,16 @@ datasource db {
 }
 
 model User {
-  id           Int         @id @default(autoincrement())
-  githubId     Int         @unique
-  githubHandle String      @db.VarChar(255)
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
-  claims       Claim[]
+  id                Int                 @id @default(autoincrement())
+  githubId          Int                 @unique
+  githubHandle      String              @db.VarChar(255)
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  claims            Claim[]
   // Hide user.authTokens from generated resolvers
   /// @TypeGraphQL.omit(output: true, input: true)
-  authTokens   AuthToken[]
+  authTokens        AuthToken[]
+  GithubPullRequest GithubPullRequest[]
 }
 
 model Profile {
@@ -58,30 +59,34 @@ model Organization {
 }
 
 model Repo {
-  id             Int          @id @default(autoincrement())
-  name           String       @db.VarChar(50)
-  githubRepoId   Int          @unique
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
-  organizationId Int
-  organization   Organization @relation(fields: [organizationId], references: [id])
-  gitPOAPs       GitPOAP[]
+  id                Int                 @id @default(autoincrement())
+  name              String              @db.VarChar(50)
+  githubRepoId      Int                 @unique
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  organizationId    Int
+  organization      Organization        @relation(fields: [organizationId], references: [id])
+  gitPOAPs          GitPOAP[]
+  GithubPullRequest GithubPullRequest[]
 }
 
 model Claim {
-  id          Int         @id @default(autoincrement())
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  status      ClaimStatus @default(UNCLAIMED)
+  id                  Int                @id @default(autoincrement())
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  status              ClaimStatus        @default(UNCLAIMED)
   // Hide qrHash from generated resolvers
   /// @TypeGraphQL.omit(output: true, input: true)
-  qrHash      String?     @db.VarChar(10)
-  poapTokenId String?     @unique @db.VarChar(255)
-  address     String?     @db.VarChar(255)
-  gitPOAPId   Int
-  gitPOAP     GitPOAP     @relation(fields: [gitPOAPId], references: [id])
-  userId      Int
-  user        User        @relation(fields: [userId], references: [id])
+  qrHash              String?            @db.VarChar(10)
+  poapTokenId         String?            @unique @db.VarChar(255)
+  address             String?            @db.VarChar(255)
+  gitPOAPId           Int
+  gitPOAP             GitPOAP            @relation(fields: [gitPOAPId], references: [id])
+  userId              Int
+  user                User               @relation(fields: [userId], references: [id])
+  // Note that not all Claims have pull request they were earned in (e.g. Hackathon GitPOAPs)
+  pullRequestEarnedId Int?
+  pullRequestEarned   GithubPullRequest? @relation(fields: [pullRequestEarnedId], references: [id])
 
   @@unique([gitPOAPId, userId])
 }
@@ -149,6 +154,22 @@ model BatchTiming {
   lastRun   DateTime
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model GithubPullRequest {
+  id               Int      @id @default(autoincrement())
+  // Note that the following two fields are named in relation
+  // to an instance of GithubPullRequest
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  githubPullNumber Int
+  githubTitle      String
+  githubMergedAt   DateTime
+  repoId           Int
+  repo             Repo     @relation(fields: [repoId], references: [id])
+  userId           Int
+  user             User     @relation(fields: [userId], references: [id])
+  Claim            Claim[]
 }
 
 enum GitPOAPStatus {
