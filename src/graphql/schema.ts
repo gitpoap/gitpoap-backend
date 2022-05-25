@@ -37,7 +37,7 @@ import {
   FindUniqueFeaturedPOAPResolver,
   FindFirstFeaturedPOAPResolver,
   FindManyFeaturedPOAPResolver,
-  /* Auto-generated FeaturedPOAP Resolvers */
+  /* Auto-generated GithubPullRequest Resolvers */
   FindUniqueGithubPullRequestResolver,
   FindFirstGithubPullRequestResolver,
   FindManyGithubPullRequestResolver,
@@ -87,7 +87,7 @@ const allResolvers: NonEmptyArray<Function> = [
   FindUniqueFeaturedPOAPResolver,
   FindFirstFeaturedPOAPResolver,
   FindManyFeaturedPOAPResolver,
-  /* Auto-generated FeaturedPOAP READ Resolvers */
+  /* Auto-generated GithubPullRequest READ Resolvers */
   FindUniqueGithubPullRequestResolver,
   FindFirstGithubPullRequestResolver,
   FindManyGithubPullRequestResolver,
