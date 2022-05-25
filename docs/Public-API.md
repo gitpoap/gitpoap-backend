@@ -46,3 +46,25 @@ And in the case that it is not a GitPOAP project contribution level:
   "isGitPOAP": false
 }
 ```
+
+### `GET /v1/address/:address/gitpoaps`
+
+This endpoint allows users to query for some address's (either and ETH or ENS
+address) GitPOAPs. This returns data like:
+
+```json
+[
+  {
+    "gitPoapId": 34,
+    "poapTokenId": "2432",
+    "poapEventId": 343,
+    "name": "GitPOAP: gitpoap-docs Level 2 Contributor 2022",
+    "year": 2022,
+    "description": "You've made at least 5 contributions to the gitpoap-docs project in 2022!",
+    "imageUrl": "https://assets.poap.xyz/gitpoap-2022-devconnect-hackathon-gitpoap-team-contributor-2022-logo-1650466033470.png",
+    "repository": "gitpoap/gitpoap-docs",
+    "earnedAt": "2022-04-25",
+    "createdAt": "2022-05-22"
+  }
+]
+```

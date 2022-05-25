@@ -1,6 +1,7 @@
 require('dotenv').config();
 
 import express from 'express';
+import 'reflect-metadata';
 import cors from 'cors';
 import { createScopedLogger, updateLogLevel } from '../logging';
 import { registerHandler } from 'segfault-handler';
@@ -15,6 +16,7 @@ import {
 } from '../constants';
 import rateLimit from 'express-rate-limit';
 import { v1Router } from './v1';
+import { context } from '../context';
 
 const main = async () => {
   const logger = createScopedLogger('main');
@@ -31,6 +33,9 @@ const main = async () => {
   logger.info(`Command line args: ${JSON.stringify(argv)}`);
 
   updateLogLevel(argv['level']);
+
+  await context.redis.connect();
+  logger.info('Connected to redis');
 
   const app = express();
 
