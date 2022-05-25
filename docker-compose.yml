@@ -63,6 +63,12 @@ services:
       - '8081:8080'
     depends_on:
       - db
+      - redis
+      - fake-poap-api
+      - fake-poap-auth
+    environment:
+      - POAP_CLIENT_ID=a good client id
+      - POAP_CLIENT_SECRET=super secret!
 
   prometheus:
     build:
