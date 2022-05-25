@@ -37,11 +37,17 @@ if VPC_ID is None:
   print('VPC_ID must be specified in the ENV')
   sys.exit(2)
 
-SECURITY_GROUP_ID = os.getenv('SECURITY_GROUP_ID')
+DB_CLIENT_SECURITY_GROUP_ID = os.getenv('DB_CLIENT_SECURITY_GROUP_ID')
 
-if SECURITY_GROUP_ID is None:
-  print('SECURITY_GROUP_ID must be specified in the ENV')
+if DB_CLIENT_SECURITY_GROUP_ID is None:
+  print('DB_CLIENT_SECURITY_GROUP_ID must be specified in the ENV')
   sys.exit(3)
+
+REDIS_CLIENT_SECURITY_GROUP_ID = os.getenv('REDIS_CLIENT_SECURITY_GROUP_ID')
+
+if REDIS_CLIENT_SECURITY_GROUP_ID is None:
+  print('REDIS_CLIENT_SECURITY_GROUP_ID must be specified in the ENV')
+  sys.exit(4)
 
 class GitpoapPublicAPIServerStack(Stack):
   def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
@@ -151,7 +157,13 @@ class GitpoapPublicAPIServerStack(Stack):
     db_client_securitygroup = ec2.SecurityGroup.from_security_group_id(
       self,
       f'gitpoap{STAGE_TAG}-db-client-security-group',
-      SECURITY_GROUP_ID,
+      DB_CLIENT_SECURITY_GROUP_ID,
+    )
+
+    redis_client_securitygroup = ec2.SecurityGroup.from_security_group_id(
+      self,
+      f'gitpoap{STAGE_TAG}-redis-client-security-group',
+      REDIS_CLIENT_SECURITY_GROUP_ID,
     )
 
     # Create the ECS Service
@@ -160,6 +172,7 @@ class GitpoapPublicAPIServerStack(Stack):
       security_groups=[
         backend_securitygroup,
         db_client_securitygroup,
+        redis_client_securitygroup,
       ],
       vpc_subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE_WITH_NAT),
       cluster=cluster,
