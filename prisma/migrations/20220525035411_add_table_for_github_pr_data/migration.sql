@@ -18,6 +18,9 @@ CREATE TABLE "GithubPullRequest" (
     CONSTRAINT "GithubPullRequest_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateIndex
+CREATE UNIQUE INDEX "GithubPullRequest_repoId_githubPullNumber_key" ON "GithubPullRequest"("repoId", "githubPullNumber");
+
 -- AddForeignKey
 ALTER TABLE "Claim" ADD CONSTRAINT "Claim_pullRequestEarnedId_fkey" FOREIGN KEY ("pullRequestEarnedId") REFERENCES "GithubPullRequest"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
