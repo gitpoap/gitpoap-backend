@@ -73,6 +73,8 @@ gitpoapsRouter.post('/', jwtWithAdminOAuth(), upload.single('image'), async func
     secretCode,
     req.body.email,
     req.body.numRequestedCodes,
+    req.body.city, // optional
+    req.body.country, // optional
   );
   if (poapInfo == null) {
     logger.error('Failed to create event via POAP API');
