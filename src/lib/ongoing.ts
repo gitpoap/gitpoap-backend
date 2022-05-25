@@ -24,7 +24,16 @@ const ONGOING_ISSUANCE_DELAY_HOURS = 12;
 // require ongoing checks
 const DELAY_BETWEEN_ONGOING_ISSUANCE_CHECKS_SECONDS = 60;
 
-type GitPOAPReturnType = GitPOAP & { repo: Repo & { organization: Organization } };
+type GitPOAPReturnType = {
+  id: number;
+  year: number;
+  lastPRUpdatedAt: Date;
+  repo: {
+    id: number;
+    name: string;
+    organization: { name: string };
+  };
+};
 
 export async function checkForNewContributions(gitPOAP: GitPOAPReturnType) {
   const logger = createScopedLogger('checkForNewContributions');
@@ -58,32 +67,22 @@ export async function checkForNewContributions(gitPOAP: GitPOAPReturnType) {
         continue;
       }
 
+      const updatedAt = new Date(pull.updated_at);
+
       // Save the first updatedAt value
       if (lastUpdatedAt === null) {
-        lastUpdatedAt = new Date(pull.updated_at);
+        lastUpdatedAt = updatedAt;
       }
 
-      const mergedAt = DateTime.fromISO(pull.merged_at);
-
       // Stop if we've already handled this PR
-      if (mergedAt < DateTime.fromJSDate(gitPOAP.lastPRUpdatedAt)) {
+      if (updatedAt < gitPOAP.lastPRUpdatedAt) {
         isProcessing = false;
         break;
       }
 
-      // Log an error if we haven't figured out what to do in the new years
-      if (mergedAt.year > gitPOAP.year) {
-        logger.error(`Found a merged PR for GitPOAP ID ${gitPOAP.id} for a new year`);
-        endTimer({ success: 0 });
-        return;
-        // Don't handle previous years
-      } else if (mergedAt.year < gitPOAP.year) {
-        continue;
-      }
-
       logger.info(`Creating a claim for ${pull.user.login} if it doesn't exist`);
 
-      // Create the User and Claim if they don't exist
+      // Create the User, GithubPullRequest, and Claim if they don't exist
       const user = await context.prisma.user.upsert({
         where: {
           githubId: pull.user.id,
@@ -96,6 +95,46 @@ export async function checkForNewContributions(gitPOAP: GitPOAPReturnType) {
           githubHandle: pull.user.login,
         },
       });
+
+      const githubPullRequest = await context.prisma.githubPullRequest.upsert({
+        where: {
+          repoId_githubPullNumber: {
+            repoId: gitPOAP.repo.id,
+            githubPullNumber: pull.number,
+          },
+        },
+        // Assume only the title can change for now
+        update: {
+          githubTitle: pull.title,
+        },
+        create: {
+          githubPullNumber: pull.number,
+          githubTitle: pull.title,
+          githubMergedAt: new Date(pull.merged_at),
+          repo: {
+            connect: {
+              id: gitPOAP.repo.id,
+            },
+          },
+          user: {
+            connect: {
+              id: user.id,
+            },
+          },
+        },
+      });
+
+      const mergedAt = DateTime.fromISO(pull.merged_at);
+
+      // Log an error if we haven't figured out what to do in the new years
+      if (mergedAt.year > gitPOAP.year) {
+        logger.error(`Found a merged PR for GitPOAP ID ${gitPOAP.id} for a new year`);
+        endTimer({ success: 0 });
+        return;
+        // Don't handle previous years (note we still handle an updated title)
+      } else if (mergedAt.year < gitPOAP.year) {
+        continue;
+      }
 
       await context.prisma.claim.upsert({
         where: {
@@ -114,6 +153,11 @@ export async function checkForNewContributions(gitPOAP: GitPOAPReturnType) {
           user: {
             connect: {
               id: user.id,
+            },
+          },
+          pullRequestEarned: {
+            connect: {
+              id: githubPullRequest.id,
             },
           },
         },
@@ -153,10 +197,19 @@ async function runOngoingIssuanceUpdater() {
     where: {
       ongoing: true,
     },
-    include: {
+    select: {
+      id: true,
+      year: true,
+      lastPRUpdatedAt: true,
       repo: {
-        include: {
-          organization: true,
+        select: {
+          id: true,
+          name: true,
+          organization: {
+            select: {
+              name: true,
+            },
+          },
         },
       },
     },

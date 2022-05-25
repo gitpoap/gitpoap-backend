@@ -170,6 +170,8 @@ model GithubPullRequest {
   userId           Int
   user             User     @relation(fields: [userId], references: [id])
   Claim            Claim[]
+
+  @@unique([repoId, githubPullNumber])
 }
 
 enum GitPOAPStatus {
