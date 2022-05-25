@@ -172,11 +172,7 @@ export async function requestPOAPCodes(
 }
 
 export async function retrieveClaimInfo(qr_hash: string) {
-  return await makePOAPRequest(
-    `${POAP_API_URL}/actions/claim-qr?qr_hash=${qr_hash}`,
-    'GET',
-    null,
-  );
+  return await makePOAPRequest(`${POAP_API_URL}/actions/claim-qr?qr_hash=${qr_hash}`, 'GET', null);
 }
 
 export async function redeemPOAP(address: string, qr_hash: string) {
@@ -301,13 +297,15 @@ export async function createPOAPEvent(
   secret_code: string,
   email: string,
   num_requested_codes: number,
+  city?: string,
+  country?: string,
 ) {
   let form = new FormData();
 
   form.append('name', name);
   form.append('description', description);
-  form.append('city', '');
-  form.append('country', '');
+  form.append('city', city ?? '');
+  form.append('country', country ?? '');
   form.append('start_date', start_date);
   form.append('end_date', end_date);
   form.append('expiry_date', expiry_date);
