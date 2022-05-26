@@ -8,6 +8,7 @@ export const ADMIN_GITHUB_IDS = [
   914240, // colfax23
   8076957, // jaypb1
   1555326, // burz
+  23272494, // kayleen / nixorokish
 ];
 
 // The minimum number of redeem codes we need to maintain

@@ -373,6 +373,11 @@ input GithubPullRequestRelationFilter {
   isNot: GithubPullRequestWhereInput
 }
 
+input GithubPullRequestRepoIdGithubPullNumberCompoundUniqueInput {
+  githubPullNumber: Int!
+  repoId: Int!
+}
+
 enum GithubPullRequestScalarFieldEnum {
   createdAt
   githubMergedAt
@@ -403,6 +408,7 @@ input GithubPullRequestWhereInput {
 
 input GithubPullRequestWhereUniqueInput {
   id: Int
+  repoId_githubPullNumber: GithubPullRequestRepoIdGithubPullNumberCompoundUniqueInput
 }
 
 type Holder {
