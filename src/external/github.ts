@@ -198,8 +198,9 @@ export async function getGithubRepositoryPullsAsAdmin(
   repo: string,
   perPage: number,
   page: number,
+  direction: 'asc' | 'desc',
 ) {
   return await makeAdminGithubAPIRequest(
-    `/repos/${org}/${repo}/pulls?state=closed&sort=updated&direction=desc&per_page=${perPage}&page=${page}`,
+    `/repos/${org}/${repo}/pulls?state=closed&sort=updated&direction=${direction}&per_page=${perPage}&page=${page}`,
   );
 }
