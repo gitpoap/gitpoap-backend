@@ -52,6 +52,7 @@ export async function checkForNewContributions(gitPOAP: GitPOAPReturnType) {
       gitPOAP.repo.name,
       PULL_STEP_SIZE,
       page,
+      'desc',
     );
     if (pulls === null) {
       logger.error(`Failed to run ongoing issuance process for GitPOAP id: ${gitPOAP.id}`);

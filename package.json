@@ -11,7 +11,8 @@
     "start": "node -r dotenv/config ./dist/src/server.js",
     "start-api": "node -r dotenv/config ./dist/src/public-api/server.js",
     "postinstall": "npx prisma generate",
-    "gql:build-schema": "npx prisma generate; ts-node-dev ./scripts/build-gql-schema.ts"
+    "gql:build-schema": "npx prisma generate; ts-node-dev ./scripts/build-gql-schema.ts",
+    "pr-backload": "APP_NAME=pr-backload ts-node-dev ./scripts/backloadPRData.ts"
   },
   "devDependencies": {
     "@types/cors": "^2.8.12",
