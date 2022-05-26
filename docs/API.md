@@ -178,7 +178,9 @@ for convenience):
   "eventUrl": "https://github.com/gitpoap/gitpoap-backend",
   "email": "burz@gitpoap.io",
   "numRequestedCodes": 10,
-  "ongoing": false
+  "ongoing": false,
+  "city": "London", // optional
+  "country": "UK" // optional
 }
 ```
 
