@@ -5,6 +5,9 @@ import { backloadGithubPullRequestData } from '../src/lib/pullRequests';
 import { createScopedLogger, updateLogLevel } from '../src/logging';
 import minimist from 'minimist';
 import { context } from '../src/context';
+import { sleep } from '../src/lib/sleep';
+
+const BACKLOADER_DELAY_BETWEEN_PROJECTS_SECONDS = 30;
 
 const main = async () => {
   const logger = createScopedLogger('main');
@@ -21,8 +24,16 @@ const main = async () => {
     },
   });
 
-  for (const repo of repos) {
-    await backloadGithubPullRequestData(repo.id);
+  for (let i = 0; i < repos.length; ++i) {
+    if (i !== 0) {
+      logger.info(
+        `Waiting ${BACKLOADER_DELAY_BETWEEN_PROJECTS_SECONDS} seconds before backloading next project`,
+      );
+
+      await sleep(BACKLOADER_DELAY_BETWEEN_PROJECTS_SECONDS);
+    }
+
+    await backloadGithubPullRequestData(repos[i].id);
   }
 };
 
