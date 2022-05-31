@@ -17,13 +17,12 @@ async function generateGitPOAPMap(repoId: number): Promise<GitPOAPMap> {
     },
   });
 
-  let gitPOAPMap: GitPOAPMap = {};
-
-  for (const gitPOAP of gitPOAPs) {
-    gitPOAPMap[gitPOAP.year.toString()] = gitPOAP.id;
-  }
-
-  return gitPOAPMap;
+  return gitPOAPs.reduce((gitPOAPMap, currentGitPOAP) => {
+    return {
+      ...gitPOAPMap,
+      [currentGitPOAP.year.toString()]: currentGitPOAP.id,
+    };
+  }, {} as GitPOAPMap);
 }
 
 async function getRepoInfo(repoId: number) {
