@@ -414,6 +414,7 @@ type GithubPullRequest {
   ): [Claim!]!
   _count: GithubPullRequestCount
   createdAt: DateTime!
+  githubMergeCommitSha: String!
   githubMergedAt: DateTime!
   githubPullNumber: Int!
   githubTitle: String!
@@ -442,6 +443,7 @@ input GithubPullRequestOrderByRelationAggregateInput {
 input GithubPullRequestOrderByWithRelationInput {
   Claim: ClaimOrderByRelationAggregateInput
   createdAt: SortOrder
+  githubMergeCommitSha: SortOrder
   githubMergedAt: SortOrder
   githubPullNumber: SortOrder
   githubTitle: SortOrder
@@ -465,6 +467,7 @@ input GithubPullRequestRepoIdGithubPullNumberCompoundUniqueInput {
 
 enum GithubPullRequestScalarFieldEnum {
   createdAt
+  githubMergeCommitSha
   githubMergedAt
   githubPullNumber
   githubTitle
@@ -480,6 +483,7 @@ input GithubPullRequestWhereInput {
   NOT: [GithubPullRequestWhereInput!]
   OR: [GithubPullRequestWhereInput!]
   createdAt: DateTimeFilter
+  githubMergeCommitSha: StringFilter
   githubMergedAt: DateTimeFilter
   githubPullNumber: IntFilter
   githubTitle: StringFilter

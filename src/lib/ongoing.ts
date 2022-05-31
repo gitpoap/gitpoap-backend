@@ -112,6 +112,7 @@ export async function checkForNewContributions(gitPOAP: GitPOAPReturnType) {
           githubPullNumber: pull.number,
           githubTitle: pull.title,
           githubMergedAt: new Date(pull.merged_at),
+          githubMergeCommitSha: pull.merge_commit_sha,
           repo: {
             connect: {
               id: gitPOAP.repo.id,
