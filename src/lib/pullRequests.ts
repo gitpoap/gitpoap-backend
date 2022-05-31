@@ -1,6 +1,7 @@
 import { createScopedLogger } from '../logging';
 import { context } from '../context';
 import { GithubPullRequestData, getGithubRepositoryPullsAsAdmin } from '../external/github';
+import { pullRequestBackloadDurationSeconds } from '../metrics';
 
 type GitPOAPMap = Record<string, number>;
 
@@ -124,6 +125,8 @@ const BACKFILL_PRS_PER_REQUEST = 100; // the max
 export async function backloadGithubPullRequestData(repoId: number) {
   const logger = createScopedLogger('backloadGithubPullRequestData');
 
+  const endTimer = pullRequestBackloadDurationSeconds.startTimer();
+
   const repoInfo = await getRepoInfo(repoId);
 
   if (repoInfo === null) {
@@ -164,6 +167,8 @@ export async function backloadGithubPullRequestData(repoId: number) {
     // Handle all the PRs individually
     await Promise.all(prData.map(pr => backloadGithubPullRequest(repoId, gitPOAPMap, pr)));
   }
+
+  endTimer();
 
   logger.debug(
     `Finished backloading the historical PR data for repo ID: ${repoId} (${repoInfo.organization.name}/${repoInfo.name})`,
