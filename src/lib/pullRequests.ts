@@ -80,7 +80,9 @@ async function backloadGithubPullRequest(
       },
     },
     update: {
+      githubMergedAt: mergedAt,
       githubTitle: pr.title,
+      githubMergeCommitSha: pr.merge_commit_sha,
     },
     create: {
       githubPullNumber: pr.number,
