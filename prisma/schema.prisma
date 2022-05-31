@@ -74,6 +74,7 @@ model Claim {
   id                  Int                @id @default(autoincrement())
   createdAt           DateTime           @default(now())
   updatedAt           DateTime           @updatedAt
+  claimedAt           DateTime?
   status              ClaimStatus        @default(UNCLAIMED)
   // Hide qrHash from generated resolvers
   /// @TypeGraphQL.omit(output: true, input: true)
