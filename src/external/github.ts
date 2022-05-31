@@ -192,6 +192,18 @@ export async function getGithubOrganizationAdmins(
   }
 }
 
+export type GithubPullRequestData = {
+  number: number;
+  title: string;
+  user: {
+    id: number;
+    login: string;
+  };
+  merged_at: string;
+  updated_at: string;
+  merge_commit_sha: string;
+};
+
 // This should only be used for our background processes
 export async function getGithubRepositoryPullsAsAdmin(
   org: string,
@@ -199,7 +211,7 @@ export async function getGithubRepositoryPullsAsAdmin(
   perPage: number,
   page: number,
   direction: 'asc' | 'desc',
-) {
+): Promise<GithubPullRequestData[]> {
   return await makeAdminGithubAPIRequest(
     `/repos/${org}/${repo}/pulls?state=closed&sort=updated&direction=${direction}&per_page=${perPage}&page=${page}`,
   );

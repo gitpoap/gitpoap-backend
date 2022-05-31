@@ -1,6 +1,6 @@
 import { createScopedLogger } from '../logging';
 import { context } from '../context';
-import { getGithubRepositoryPullsAsAdmin } from '../external/github';
+import { GithubPullRequestData, getGithubRepositoryPullsAsAdmin } from '../external/github';
 
 type GitPOAPMap = Record<string, number>;
 
@@ -40,16 +40,6 @@ async function getRepoInfo(repoId: number) {
     },
   });
 }
-
-type GithubPullRequestData = {
-  merged_at: string;
-  number: number;
-  title: string;
-  user: {
-    id: number;
-    login: string;
-  };
-};
 
 async function backloadGithubPullRequest(
   repoId: number,
@@ -95,6 +85,7 @@ async function backloadGithubPullRequest(
       githubPullNumber: pr.number,
       githubTitle: pr.title,
       githubMergedAt: mergedAt,
+      githubMergeCommitSha: pr.merge_commit_sha,
       repo: {
         connect: {
           id: repoId,

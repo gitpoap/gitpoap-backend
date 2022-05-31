@@ -160,19 +160,20 @@ model BatchTiming {
 }
 
 model GithubPullRequest {
-  id               Int      @id @default(autoincrement())
+  id                   Int      @id @default(autoincrement())
   // Note that the following two fields are named in relation
   // to an instance of GithubPullRequest
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  githubPullNumber Int
-  githubTitle      String
-  githubMergedAt   DateTime
-  repoId           Int
-  repo             Repo     @relation(fields: [repoId], references: [id])
-  userId           Int
-  user             User     @relation(fields: [userId], references: [id])
-  Claim            Claim[]
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  githubPullNumber     Int
+  githubTitle          String
+  githubMergedAt       DateTime
+  githubMergeCommitSha String   @db.VarChar(41)
+  repoId               Int
+  repo                 Repo     @relation(fields: [repoId], references: [id])
+  userId               Int
+  user                 User     @relation(fields: [userId], references: [id])
+  Claim                Claim[]
 
   @@unique([repoId, githubPullNumber])
 }
