@@ -15,6 +15,7 @@ import { MINIMUM_REMAINING_REDEEM_CODES, REDEEM_CODE_STEP_SIZE } from '../consta
 import { httpRequestDurationSeconds } from '../metrics';
 import { DateTime } from 'luxon';
 import { sleep } from '../lib/sleep';
+import { backloadGithubPullRequestData } from '../lib/pullRequests';
 
 export const claimsRouter = Router();
 
@@ -431,5 +432,8 @@ claimsRouter.post('/create', jwtWithAdminOAuth(), async function (req, res) {
 
   endTimer({ status: 200 });
 
-  return res.status(200).send('CREATED');
+  res.status(200).send('CREATED');
+
+  // Run the backloader in the background
+  backloadGithubPullRequestData(gitPOAPData.repoId);
 });

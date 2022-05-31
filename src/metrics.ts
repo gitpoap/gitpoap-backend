@@ -161,3 +161,19 @@ export const overallOngoingIssuanceDurationSeconds = {
     };
   },
 };
+
+export const _pullRequestBackloadDurationSeconds = new Histogram({
+  name: 'pull_request_backload_duration_seconds',
+  help: 'Duration of the pull request backload process',
+  labelNames: ['stage'],
+});
+register.registerMetric(_pullRequestBackloadDurationSeconds);
+export const pullRequestBackloadDurationSeconds = {
+  startTimer: () => {
+    const endTimer = _pullRequestBackloadDurationSeconds.startTimer();
+
+    return () => {
+      endTimer({ stage: NODE_ENV });
+    };
+  },
+};
