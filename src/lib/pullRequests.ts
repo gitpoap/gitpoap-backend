@@ -155,7 +155,7 @@ export async function backloadGithubPullRequestData(repoId: number) {
     );
 
     if (prData === null) {
-      logger.error(`Failed to request page ${page} of the PR data from GitHub`);
+      logger.error(`Failed to request page ${page - 1} of the PR data from GitHub`);
       return;
     }
 
