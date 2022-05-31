@@ -10,6 +10,7 @@ input BoolFilter {
 
 type Claim {
   address: String
+  claimedAt: DateTime
   createdAt: DateTime!
   gitPOAP: GitPOAP!
   gitPOAPId: Int!
@@ -40,6 +41,7 @@ input ClaimOrderByRelationAggregateInput {
 
 input ClaimOrderByWithRelationInput {
   address: SortOrder
+  claimedAt: SortOrder
   createdAt: SortOrder
   gitPOAP: GitPOAPOrderByWithRelationInput
   gitPOAPId: SortOrder
@@ -55,6 +57,7 @@ input ClaimOrderByWithRelationInput {
 
 enum ClaimScalarFieldEnum {
   address
+  claimedAt
   createdAt
   gitPOAPId
   id
@@ -84,6 +87,7 @@ input ClaimWhereInput {
   NOT: [ClaimWhereInput!]
   OR: [ClaimWhereInput!]
   address: StringNullableFilter
+  claimedAt: DateTimeNullableFilter
   createdAt: DateTimeFilter
   gitPOAP: GitPOAPRelationFilter
   gitPOAPId: IntFilter
@@ -116,6 +120,17 @@ input DateTimeFilter {
   lt: DateTime
   lte: DateTime
   not: NestedDateTimeFilter
+  notIn: [DateTime!]
+}
+
+input DateTimeNullableFilter {
+  equals: DateTime
+  gt: DateTime
+  gte: DateTime
+  in: [DateTime!]
+  lt: DateTime
+  lte: DateTime
+  not: NestedDateTimeNullableFilter
   notIn: [DateTime!]
 }
 
@@ -462,6 +477,17 @@ input NestedDateTimeFilter {
   lt: DateTime
   lte: DateTime
   not: NestedDateTimeFilter
+  notIn: [DateTime!]
+}
+
+input NestedDateTimeNullableFilter {
+  equals: DateTime
+  gt: DateTime
+  gte: DateTime
+  in: [DateTime!]
+  lt: DateTime
+  lte: DateTime
+  not: NestedDateTimeNullableFilter
   notIn: [DateTime!]
 }
 

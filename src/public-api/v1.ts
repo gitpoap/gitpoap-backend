@@ -99,6 +99,7 @@ v1Router.get('/address/:address/gitpoaps', async function (req, res) {
     },
     select: {
       createdAt: true,
+      claimedAt: true,
       poapTokenId: true,
       pullRequestEarned: true,
       gitPOAP: {
@@ -129,7 +130,7 @@ v1Router.get('/address/:address/gitpoaps', async function (req, res) {
     imageUrl: string;
     repository: string;
     earnedAt: string;
-    createdAt: string;
+    claimedAt: string;
   };
 
   let results: ResultType[] = [];
@@ -158,7 +159,7 @@ v1Router.get('/address/:address/gitpoaps', async function (req, res) {
       imageUrl: poapData.event.image_url,
       repository: `${claim.gitPOAP.repo.organization.name}/${claim.gitPOAP.repo.name}`,
       earnedAt: DateTime.fromJSDate(earnedAt).toFormat('yyyy-MM-dd'),
-      createdAt: poapData.created,
+      claimedAt: DateTime.fromJSDate(<Date>claim.claimedAt).toFormat('yyyy-MM-dd'),
     });
   }
 
