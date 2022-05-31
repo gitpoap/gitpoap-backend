@@ -64,7 +64,7 @@ address) GitPOAPs. This returns data like:
     "imageUrl": "https://assets.poap.xyz/gitpoap-2022-devconnect-hackathon-gitpoap-team-contributor-2022-logo-1650466033470.png",
     "repository": "gitpoap/gitpoap-docs",
     "earnedAt": "2022-04-25",
-    "createdAt": "2022-05-22"
+    "claimedAt": "2022-05-22"
   }
 ]
 ```
