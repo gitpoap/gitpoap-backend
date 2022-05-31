@@ -25,4 +25,6 @@ GRANT SELECT ON "Organization" TO <Your-User>;
 GRANT SELECT ON "Profile" TO <Your-User>;
 GRANT SELECT ON "Repo" TO <Your-User>;
 GRANT SELECT ON "User" TO <Your-User>;
+-- We need to expose Secret so the public API can interface with POAP
+GRANT SELECT ON "Secret" TO <Your-User>;
 ```
