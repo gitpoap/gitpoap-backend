@@ -96,35 +96,35 @@ async function main() {
 
   /* Create Claims */
   // GitPOAP 1
-  const claim1 = await ClaimFactory.createClaim(gitpoap1.id, vitalik.id, ClaimStatus.CLAIMED, ADDRESSES.test1, 'thunderdome');
-  const claim2 = await ClaimFactory.createClaim(gitpoap1.id, jay.id, ClaimStatus.CLAIMED, ADDRESSES.jay, '4068606');
+  const claim1 = await ClaimFactory.createClaim(gitpoap1.id, vitalik.id, ClaimStatus.CLAIMED, ADDRESSES.test1, 'thunderdome', new Date(2020, 1, 1));
+  const claim2 = await ClaimFactory.createClaim(gitpoap1.id, jay.id, ClaimStatus.CLAIMED, ADDRESSES.jay, '4068606', new Date(2020, 1, 2));
   const claim3 = await ClaimFactory.createClaim(gitpoap1.id, johnz.id);
 
   // GitPOAP 2
-  const claim4 = await ClaimFactory.createClaim(gitpoap2.id, vitalik.id, ClaimStatus.CLAIMED, ADDRESSES.test1, 'ethdenver');
-  const claim5 = await ClaimFactory.createClaim(gitpoap2.id, jay.id, ClaimStatus.CLAIMED, ADDRESSES.jay, '4078452');
+  const claim4 = await ClaimFactory.createClaim(gitpoap2.id, vitalik.id, ClaimStatus.CLAIMED, ADDRESSES.test1, 'ethdenver', new Date(2020, 1, 3));
+  const claim5 = await ClaimFactory.createClaim(gitpoap2.id, jay.id, ClaimStatus.CLAIMED, ADDRESSES.jay, '4078452', new Date(2020, 1, 4));
   const claim6 = await ClaimFactory.createClaim(gitpoap2.id, anthony.id);
   const claim7 = await ClaimFactory.createClaim(gitpoap2.id, johnz.id);
 
   // GitPOAP 3
   const claim8 = await ClaimFactory.createClaim(gitpoap3.id, anthony.id);
-  const claim9 = await ClaimFactory.createClaim(gitpoap3.id, jay.id, ClaimStatus.CLAIMED, ADDRESSES.jay, '4082459');
+  const claim9 = await ClaimFactory.createClaim(gitpoap3.id, jay.id, ClaimStatus.CLAIMED, ADDRESSES.jay, '4082459', new Date(2020, 1, 5));
   const claim10 = await ClaimFactory.createClaim(gitpoap3.id, johnz.id);
 
   // GitPOAP 4 - GitPOAP FE Repo
   const claim11 = await ClaimFactory.createClaim(gitpoap4.id, anthony.id);
   const claim12 = await ClaimFactory.createClaim(gitpoap4.id, colfax.id);
   const claim13 = await ClaimFactory.createClaim(gitpoap4.id, vitalik.id);
-  const claim14 = await ClaimFactory.createClaim(gitpoap4.id, jay.id, ClaimStatus.CLAIMED, ADDRESSES.jay, '3217451');
+  const claim14 = await ClaimFactory.createClaim(gitpoap4.id, jay.id, ClaimStatus.CLAIMED, ADDRESSES.jay, '3217451', new Date(2020, 1, 6));
   const claim15 = await ClaimFactory.createClaim(gitpoap4.id, johnz.id);
 
   // GitPOAP 5 - GitPOAP BE Repo
-  const claim16 = await ClaimFactory.createClaim(gitpoap5.id, anthony.id, ClaimStatus.CLAIMED, ADDRESSES.anthony, '3973554');
-  const claim17 = await ClaimFactory.createClaim(gitpoap5.id, colfax.id, ClaimStatus.CLAIMED, ADDRESSES.colfax, '4126448');
+  const claim16 = await ClaimFactory.createClaim(gitpoap5.id, anthony.id, ClaimStatus.CLAIMED, ADDRESSES.anthony, '3973554', new Date(2020, 1, 7));
+  const claim17 = await ClaimFactory.createClaim(gitpoap5.id, colfax.id, ClaimStatus.CLAIMED, ADDRESSES.colfax, '4126448', new Date(2020, 1, 8));
   const claim18 = await ClaimFactory.createClaim(gitpoap5.id, jay.id);
   const claim19 = await ClaimFactory.createClaim(gitpoap5.id, johnz.id);
   const claim20 = await ClaimFactory.createClaim(gitpoap5.id, vitalik.id);
-  const claim21 = await ClaimFactory.createClaim(gitpoap5.id, anthony2.id, ClaimStatus.CLAIMED, ADDRESSES.anthony2, '123456789');
+  const claim21 = await ClaimFactory.createClaim(gitpoap5.id, anthony2.id, ClaimStatus.CLAIMED, ADDRESSES.anthony2, '123456789', new Date(2020, 1, 9));
 
   // GitPOAPs 7, 8, 9, 10, 11, 12 - GitPOAP BugBash Repos
   const claim7A = await ClaimFactory.createClaim(gitpoap7.id, jay.id);
