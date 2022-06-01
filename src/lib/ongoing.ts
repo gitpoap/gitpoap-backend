@@ -8,6 +8,7 @@ import {
   ongoingIssuanceProjectDurationSeconds,
   overallOngoingIssuanceDurationSeconds,
 } from '../metrics';
+import { extractMergeCommitSha } from './pullRequests';
 
 // The number of pull requests to request in a single page (currently the maximum number)
 const PULL_STEP_SIZE = 100;
@@ -112,7 +113,7 @@ export async function checkForNewContributions(gitPOAP: GitPOAPReturnType) {
           githubPullNumber: pull.number,
           githubTitle: pull.title,
           githubMergedAt: new Date(pull.merged_at),
-          githubMergeCommitSha: pull.merge_commit_sha,
+          githubMergeCommitSha: extractMergeCommitSha(pull),
           repo: {
             connect: {
               id: gitPOAP.repo.id,

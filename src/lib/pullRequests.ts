@@ -41,6 +41,16 @@ async function getRepoInfo(repoId: number) {
   });
 }
 
+// Helper function to either return the commit where this was merged
+// or the last commit of the PR in case merge_commit_sha is null
+export function extractMergeCommitSha(pr: GithubPullRequestData) {
+  if (pr.merge_commit_sha === null) {
+    return pr.head.sha;
+  }
+
+  return pr.merge_commit_sha;
+}
+
 async function backloadGithubPullRequest(
   repoId: number,
   gitPOAPMap: GitPOAPMap,
@@ -68,6 +78,7 @@ async function backloadGithubPullRequest(
   });
 
   const mergedAt = new Date(pr.merged_at);
+  const mergeCommitSha = extractMergeCommitSha(pr);
 
   // Don't create the PR if it already is in the DB (maybe via ongoing issuance)
   // but update the title if it's changed
@@ -81,13 +92,13 @@ async function backloadGithubPullRequest(
     update: {
       githubMergedAt: mergedAt,
       githubTitle: pr.title,
-      githubMergeCommitSha: pr.merge_commit_sha,
+      githubMergeCommitSha: mergeCommitSha,
     },
     create: {
       githubPullNumber: pr.number,
       githubTitle: pr.title,
       githubMergedAt: mergedAt,
-      githubMergeCommitSha: pr.merge_commit_sha,
+      githubMergeCommitSha: mergeCommitSha,
       repo: {
         connect: {
           id: repoId,
