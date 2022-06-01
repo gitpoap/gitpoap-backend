@@ -202,6 +202,9 @@ export type GithubPullRequestData = {
   merged_at: string;
   updated_at: string;
   merge_commit_sha: string;
+  head: {
+    sha: string;
+  };
 };
 
 // This should only be used for our background processes
