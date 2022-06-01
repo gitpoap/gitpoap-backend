@@ -1,6 +1,10 @@
 # gitpoap-backend
 
 [![Deploy to Amazon ECS (PROD)](https://github.com/gitpoap/gitpoap-backend/actions/workflows/deploy-gitpoap-backend-server.yml/badge.svg)](https://github.com/gitpoap/gitpoap-backend/actions/workflows/deploy-gitpoap-backend-server.yml)
+[![Deploy Public API to Amazon ECS (PROD)](https://github.com/gitpoap/gitpoap-backend/actions/workflows/deploy-gitpoap-public-api-server.yml/badge.svg)](https://github.com/gitpoap/gitpoap-backend/actions/workflows/deploy-gitpoap-public-api-server.yml)
+
+[![Deploy Backend to Amazon ECS (STAGING)](https://github.com/gitpoap/gitpoap-backend/actions/workflows/deploy-gitpoap-backend-staging-server.yml/badge.svg)](https://github.com/gitpoap/gitpoap-backend/actions/workflows/deploy-gitpoap-backend-staging-server.yml)
+[![Deploy Public API to Amazon ECS (STAGING)](https://github.com/gitpoap/gitpoap-backend/actions/workflows/deploy-gitpoap-public-api-staging-server.yml/badge.svg)](https://github.com/gitpoap/gitpoap-backend/actions/workflows/deploy-gitpoap-public-api-staging-server.yml)
 
 ## Running Locally with docker-compose
 
