@@ -168,7 +168,7 @@ model GithubPullRequest {
   githubPullNumber     Int
   githubTitle          String
   githubMergedAt       DateTime
-  githubMergeCommitSha String   @db.VarChar(41)
+  githubMergeCommitSha String?  @db.VarChar(41)
   repoId               Int
   repo                 Repo     @relation(fields: [repoId], references: [id])
   userId               Int
