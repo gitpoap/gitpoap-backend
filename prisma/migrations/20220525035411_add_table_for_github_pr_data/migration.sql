@@ -12,7 +12,6 @@ CREATE TABLE "GithubPullRequest" (
     "githubPullNumber" INTEGER NOT NULL,
     "githubTitle" TEXT NOT NULL,
     "githubMergedAt" TIMESTAMP(3) NOT NULL,
-    "githubMergeCommitSha" VARCHAR(41) NOT NULL,
     "repoId" INTEGER NOT NULL,
     "userId" INTEGER NOT NULL,
 
