@@ -1,5 +1,7 @@
 #!/bin/bash
 
+EXE_DIR=$(realpath $(dirname $0))
+
 aws iam create-role \
   --role-name ERROR-log-forwarder-execution-role \
-  --assume-role-policy-document '{"Version": "2012-10-17","Statement": [{ "Effect": "Allow", "Principal": {"Service": "lambda.amazonaws.com"}, "Action": "sts:AssumeRole"}]}'
+  --assume-role-policy-document $(cat $EXE_DIR/role-policy.json)
