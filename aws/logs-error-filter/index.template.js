@@ -1,5 +1,8 @@
-// From https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/SubscriptionFilters.html
+// From:
+// * https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/SubscriptionFilters.html
+// * https://stackoverflow.com/a/31485168/18750275
 
+var aws = require('aws-sdk');
 var zlib = require('zlib');
 
 exports.handler = function (input, context) {
@@ -9,11 +12,19 @@ exports.handler = function (input, context) {
     if (e) {
       context.fail(e);
     } else {
-      result = JSON.parse(result.toString());
+      var eventData = JSON.stringify(JSON.parse(result.toString()), null, 2);
 
-      console.log('[APP_NAME] Event Data:', JSON.stringify(result, null, 2));
+      console.log('[APP_NAME] Event Data:', eventData);
 
-      context.succeed();
+      var sns = new aws.SNS();
+
+      var params = {
+        TopicArn: 'arn:aws:sns:us-east-2:510113809275:gitpoap-backend-error-notification-topic',
+        Subject: '[APP_NAME]: ERROR!',
+        Message: eventData,
+      };
+
+      sns.publish(params, context.done);
     }
   });
 };
