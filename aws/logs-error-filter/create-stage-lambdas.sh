@@ -17,11 +17,11 @@ if [ $# != 1 ]; then
 fi
 
 if [ "$1" = "staging" ]; then
-  BACKEND=gitpoap-backend
-  PUBLIC_API=gitpoap-public-api
-elif [ "$1" = "production" ]; then
   BACKEND=gitpoap-backend-staging
   PUBLIC_API=gitpoap-public-api-staging
+elif [ "$1" = "production" ]; then
+  BACKEND=gitpoap-backend
+  PUBLIC_API=gitpoap-public-api
 else
   echo "<Stage> must be either 'staging' or 'production'"
   print_usage
