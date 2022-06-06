@@ -68,3 +68,9 @@ address) GitPOAPs. This returns data like:
   }
 ]
 ```
+
+### `GET /v1/repo/:owner/:name/badge`
+
+This endpoint generates GitHub badges containing the GitPOAP count for a specified repo. The repo is specified with an owner and name. This returns a SVG for use in a repo's `README.md` that looks like the following (using `ethereum/ethereum-org-website` as an example):
+
+[![gitpoaps](https://public-api.gitpoap.io/v1/repo/seven-heaven/repo7/badge)](https://gitpoap.io/gh/ethereum/ethereum-org-website)
