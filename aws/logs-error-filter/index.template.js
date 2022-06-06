@@ -5,6 +5,13 @@
 var aws = require('aws-sdk');
 var zlib = require('zlib');
 
+function transformLogEvent(logEvent) {
+  return {
+    timestamp: new Date(logEvent.timestamp).toISOString(),
+    message: logEvent.message,
+  };
+}
+
 exports.handler = function (input, context) {
   var payload = Buffer.from(input.awslogs.data, 'base64');
 
@@ -12,7 +19,7 @@ exports.handler = function (input, context) {
     if (e) {
       context.fail(e);
     } else {
-      var eventData = JSON.stringify(JSON.parse(result.toString()), null, 2);
+      var eventData = JSON.parse(result.toString());
 
       console.log('[APP_NAME] Event Data:', eventData);
 
@@ -21,7 +28,14 @@ exports.handler = function (input, context) {
       var params = {
         TopicArn: 'arn:aws:sns:us-east-2:510113809275:gitpoap-backend-error-notification-topic',
         Subject: '[APP_NAME]: ERROR!',
-        Message: eventData,
+        Message: JSON.stringify(
+          {
+            origin: 'APP_NAME',
+            logEvents: eventData.logEvents.map(transformLogEvent),
+          },
+          null,
+          2,
+        ),
       };
 
       sns.publish(params, context.done);
