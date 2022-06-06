@@ -15,7 +15,8 @@ LOG_GROUP_NAME="$1-server-container"
 
 set -ex
 
-cp index.template.js index.js
+npx tsc --project ./
+cp dist/index.template.js index.js
 sed -i "s/APP_NAME/$1/g" index.js
 
 zip index.zip index.js
