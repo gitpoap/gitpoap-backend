@@ -1877,6 +1877,13 @@
   dependencies:
     "@babel/types" "^7.3.0"
 
+"@types/badgen@^2.7.1":
+  version "2.7.1"
+  resolved "https://registry.yarnpkg.com/@types/badgen/-/badgen-2.7.1.tgz#9d92464b9ce9829aba3448f2f5cdd0292266eb93"
+  integrity sha512-Ks0nQjKB/IOF+5fTBvCfRDm5zarEJCycJQLruQuRsvQvKvW/1s+ibXUtZU+3GjaDVAy+DxQCTts+AyBz3Hk6eQ==
+  dependencies:
+    badgen "*"
+
 "@types/body-parser@*":
   version "1.19.1"
   resolved "https://registry.yarnpkg.com/@types/body-parser/-/body-parser-1.19.1.tgz#0c0174c42a7d017b818303d4b5d969cb0b75929c"
@@ -2480,6 +2487,11 @@ babel-preset-jest@^27.4.0:
   dependencies:
     babel-plugin-jest-hoist "^27.4.0"
     babel-preset-current-node-syntax "^1.0.0"
+
+badgen@*, badgen@^3.2.2:
+  version "3.2.2"
+  resolved "https://registry.yarnpkg.com/badgen/-/badgen-3.2.2.tgz#7556b520055c4952ee46229c57d7a1cc71a85748"
+  integrity sha512-MfBNhOzp+qbTg/3BAeaK1g+VE3uZ0CRfqMyrfyI3JUBz7b+DwxrZbYQdz5JQnibRih9YOVzXuVJl3A3xaWXfFQ==
 
 balanced-match@^1.0.0:
   version "1.0.2"
