@@ -6,6 +6,8 @@ import { resolveENS } from '../external/ens';
 import { retrievePOAPInfo } from '../external/poap';
 import { ClaimStatus } from '@generated/type-graphql';
 import { DateTime } from 'luxon';
+import { badgen } from 'badgen';
+import { GitPOAPMiniLogo } from './constants';
 
 export const v1Router = Router();
 
@@ -164,4 +166,43 @@ v1Router.get('/address/:address/gitpoaps', async function (req, res) {
   }
 
   return res.status(200).send(results);
+});
+
+v1Router.get('/repo/:owner/:name/badge', async (req, res) => {
+  const logger = createScopedLogger('GET /v1/repo/:owner/:name/badge');
+
+  logger.info(`Request for GitHub badge for the repo "${req.params.owner}/${req.params.name}"`);
+
+  const endTimer = httpRequestDurationSeconds.startTimer('GET', '/v1/repo/:owner/:name/badge');
+
+  const claimsCount = await context.prisma.claim.count({
+    where: {
+      status: ClaimStatus.CLAIMED,
+      gitPOAP: {
+        repo: {
+          organization: {
+            name: req.params.owner,
+          },
+          name: req.params.name,
+        },
+      },
+    },
+  });
+
+  //~ See https://github.com/badgen/badgen
+  const badgeSvg = badgen({
+    label: 'GitPOAPs',
+    status: `${claimsCount}`,
+    color: '307AE8', // Hex color for GitPOAP Blue
+    icon: `data:image/svg+xml;utf8,${encodeURIComponent(GitPOAPMiniLogo)}`,
+  });
+
+  endTimer({ status: 200 });
+
+  logger.debug(
+    `Completed request for GitHub badge for the repo "${req.params.owner}/${req.params.name}"`,
+  );
+
+  res.header('Content-Type', 'image/svg+xml');
+  return res.status(200).send(badgeSvg);
 });
