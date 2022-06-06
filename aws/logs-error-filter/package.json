@@ -1,0 +1,16 @@
+{
+  "name": "logs-error-filter",
+  "version": "1.0.0",
+  "description": "aws lambda for log filtering",
+  "main": "index.js",
+  "author": "Anthony Burzillo <burz@gitpoap.io>",
+  "license": "All Rights Reserved",
+  "private": true,
+  "dependencies": {
+    "aws-lambda": "^1.0.7",
+    "aws-sdk": "^2.1149.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.98"
+  }
+}
