@@ -113,6 +113,8 @@ export class GitPOAPFactory {
     poapSecret: string,
     status?: GitPOAPStatus,
     ongoing?: boolean,
+    level?: number,
+    threshold?: number,
   ): Promise<GitPOAP> => {
     const gitPOAP = await prisma.gitPOAP.create({
       data: <Prisma.GitPOAPCreateInput>{
@@ -121,6 +123,8 @@ export class GitPOAPFactory {
         poapSecret,
         status,
         ongoing,
+        level,
+        threshold,
         repo: {
           connect: {
             id: repoId,
