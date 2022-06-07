@@ -68,6 +68,9 @@ model Repo {
   organization      Organization        @relation(fields: [organizationId], references: [id])
   gitPOAPs          GitPOAP[]
   GithubPullRequest GithubPullRequest[]
+  // Default to the beginning of the year, but this will update when contributions
+  // are initially uploaded
+  lastPRUpdatedAt   DateTime            @default(dbgenerated("date_trunc('year', now())"))
 }
 
 model Claim {
@@ -93,30 +96,27 @@ model Claim {
 }
 
 model GitPOAP {
-  id              Int           @id @default(autoincrement())
-  type            ClaimType     @default(ANNUAL)
-  year            Int
-  poapEventId     Int           @unique
-  repoId          Int
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  repo            Repo          @relation(fields: [repoId], references: [id])
-  claims          Claim[]
+  id          Int           @id @default(autoincrement())
+  type        ClaimType     @default(ANNUAL)
+  year        Int
+  poapEventId Int           @unique
+  repoId      Int
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  repo        Repo          @relation(fields: [repoId], references: [id])
+  claims      Claim[]
   // Hide poapSecret from generated resolvers
   /// @TypeGraphQL.omit(output: true, input: true)
-  poapSecret      String        @db.VarChar(6)
-  status          GitPOAPStatus @default(UNAPPROVED)
+  poapSecret  String        @db.VarChar(6)
+  status      GitPOAPStatus @default(UNAPPROVED)
   // If a GitPOAP is marked as ongoing then the backend will automatically
   // request additional codes when we reach a minimum number remaining
-  ongoing         Boolean       @default(false)
-  // Default to the beginning of the year, but this will update when contributions
-  // are initially uploaded
-  lastPRUpdatedAt DateTime      @default(dbgenerated("date_trunc('year', now())"))
-  redeemCodes     RedeemCode[]
-  eventId         Int?
-  event           Event?        @relation(fields: [eventId], references: [id])
-  level           Int           @default(1)
-  threshold       Int           @default(1)
+  ongoing     Boolean       @default(false)
+  redeemCodes RedeemCode[]
+  eventId     Int?
+  event       Event?        @relation(fields: [eventId], references: [id])
+  level       Int           @default(1)
+  threshold   Int           @default(1)
 }
 
 model AuthToken {
