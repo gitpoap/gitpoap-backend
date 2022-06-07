@@ -115,6 +115,8 @@ model GitPOAP {
   redeemCodes     RedeemCode[]
   eventId         Int?
   event           Event?        @relation(fields: [eventId], references: [id])
+  level           Int           @default(1)
+  threshold       Int           @default(1)
 }
 
 model AuthToken {
