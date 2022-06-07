@@ -86,6 +86,8 @@ async function main() {
   const gitpoap11 = await GitPOAPFactory.createGitPOAP(2022, 36572, gitpoapBackendRepo.id, '613740', GitPOAPStatus.APPROVED);
   // Not the real POAP secret!
   const gitpoap12 = await GitPOAPFactory.createGitPOAP(2022, 37428, repoWagyuInstaller.id, '324324', GitPOAPStatus.UNAPPROVED, true);
+  const gitpoap13 = await GitPOAPFactory.createGitPOAP(2022, 37429, repoWagyuInstaller.id, '324325', GitPOAPStatus.UNAPPROVED, true, 2, 2);
+  const gitpoap14 = await GitPOAPFactory.createGitPOAP(2022, 37430, repoWagyuInstaller.id, '324326', GitPOAPStatus.UNAPPROVED, true, 3, 3);
 
   /* Add codes */
   await RedeemCodeFactory.addRedeemCodes(['6j8wda', 'tqaq9y', 'd4tdh0', 'o9uorf', 'eeyewe', '09wqld', 'tsl7wt', 'i52wvt', 'mshofb', 'v9cbcd'], gitpoap7.id);
