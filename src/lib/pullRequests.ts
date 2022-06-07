@@ -3,43 +3,44 @@ import { context } from '../context';
 import { GithubPullRequestData, getGithubRepositoryPullsAsAdmin } from '../external/github';
 import { pullRequestBackloadDurationSeconds } from '../metrics';
 import { upsertUser } from './users';
+import { createNewClaimsForRepoPR, RepoData } from './claims';
 
-type GitPOAPMap = Record<string, number>;
+async function getRepoInfo(repoId: number) {
+  const logger = createScopedLogger('getRepoInfo');
 
-// Generate a year to GitPOAP ID map for a repository
-async function generateGitPOAPMap(repoId: number): Promise<GitPOAPMap> {
-  const gitPOAPs = await context.prisma.gitPOAP.findMany({
+  const result = await context.prisma.repo.findMany({
     where: {
-      repoId,
+      id: repoId,
+      gitPOAPs: {
+        every: {
+          ongoing: true,
+        },
+      },
     },
     select: {
       id: true,
-      year: true,
-    },
-  });
-
-  return gitPOAPs.reduce((gitPOAPMap, currentGitPOAP) => {
-    return {
-      ...gitPOAPMap,
-      [currentGitPOAP.year.toString()]: currentGitPOAP.id,
-    };
-  }, {} as GitPOAPMap);
-}
-
-async function getRepoInfo(repoId: number) {
-  return await context.prisma.repo.findUnique({
-    where: {
-      id: repoId,
-    },
-    select: {
       name: true,
       organization: {
         select: {
           name: true,
         },
       },
+      gitPOAPs: {
+        select: {
+          id: true,
+          year: true,
+          threshold: true,
+        },
+      },
     },
   });
+
+  if (result.length !== 1) {
+    logger.error(`Found multiple repos with ID: ${repoId}`);
+    return null;
+  }
+
+  return result[0];
 }
 
 // Helper function to either return the commit where this was merged
@@ -52,11 +53,7 @@ export function extractMergeCommitSha(pr: GithubPullRequestData) {
   return pr.merge_commit_sha;
 }
 
-async function backloadGithubPullRequest(
-  repoId: number,
-  gitPOAPMap: GitPOAPMap,
-  pr: GithubPullRequestData,
-) {
+async function backloadGithubPullRequest(repo: RepoData, pr: GithubPullRequestData) {
   const logger = createScopedLogger('backloadGithubPullRequest');
 
   if (pr.merged_at === null) {
@@ -75,7 +72,7 @@ async function backloadGithubPullRequest(
   const githubPullRequest = await context.prisma.githubPullRequest.upsert({
     where: {
       repoId_githubPullNumber: {
-        repoId,
+        repoId: repo.id,
         githubPullNumber: pr.number,
       },
     },
@@ -91,7 +88,7 @@ async function backloadGithubPullRequest(
       githubMergeCommitSha: mergeCommitSha,
       repo: {
         connect: {
-          id: repoId,
+          id: repo.id,
         },
       },
       user: {
@@ -102,24 +99,7 @@ async function backloadGithubPullRequest(
     },
   });
 
-  const gitPOAPId = gitPOAPMap[mergedAt.getFullYear().toString()];
-  if (gitPOAPId === undefined) {
-    logger.warn(`There's no GitPOAP for year ${mergedAt.getFullYear()}`);
-    return;
-  }
-
-  // If this is the user's first PR to the repo in this particular year, mark
-  // it as the one that earned them the claim
-  await context.prisma.claim.updateMany({
-    where: {
-      gitPOAPId,
-      userId: user.id,
-      pullRequestEarned: null,
-    },
-    data: {
-      pullRequestEarnedId: githubPullRequest.id,
-    },
-  });
+  await createNewClaimsForRepoPR(user, repo, githubPullRequest);
 }
 
 const BACKFILL_PRS_PER_REQUEST = 100; // the max
@@ -139,8 +119,6 @@ export async function backloadGithubPullRequestData(repoId: number) {
   logger.info(
     `Backloading the historical PR data for repo ID: ${repoId} (${repoInfo.organization.name}/${repoInfo.name})`,
   );
-
-  const gitPOAPMap = await generateGitPOAPMap(repoId);
 
   let page = 1;
   let isProcessing = true;
@@ -167,7 +145,7 @@ export async function backloadGithubPullRequestData(repoId: number) {
     }
 
     // Handle all the PRs individually
-    await Promise.all(prData.map(pr => backloadGithubPullRequest(repoId, gitPOAPMap, pr)));
+    await Promise.all(prData.map(pr => backloadGithubPullRequest(repoInfo, pr)));
   }
 
   endTimer();
