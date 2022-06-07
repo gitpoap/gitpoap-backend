@@ -293,7 +293,6 @@ type GitPOAP {
   event: Event
   eventId: Int
   id: Int!
-  lastPRUpdatedAt: DateTime!
   level: Int!
   ongoing: Boolean!
   poapEventId: Int!
@@ -335,7 +334,6 @@ input GitPOAPOrderByWithRelationInput {
   event: EventOrderByWithRelationInput
   eventId: SortOrder
   id: SortOrder
-  lastPRUpdatedAt: SortOrder
   level: SortOrder
   ongoing: SortOrder
   poapEventId: SortOrder
@@ -358,7 +356,6 @@ enum GitPOAPScalarFieldEnum {
   createdAt
   eventId
   id
-  lastPRUpdatedAt
   level
   ongoing
   poapEventId
@@ -386,7 +383,6 @@ input GitPOAPWhereInput {
   event: EventRelationFilter
   eventId: IntNullableFilter
   id: IntFilter
-  lastPRUpdatedAt: DateTimeFilter
   level: IntFilter
   ongoing: BoolFilter
   poapEventId: IntFilter
@@ -1101,6 +1097,7 @@ type Repo {
   ): [GitPOAP!]!
   githubRepoId: Int!
   id: Int!
+  lastPRUpdatedAt: DateTime!
   name: String!
   organization: Organization!
   organizationId: Int!
@@ -1134,6 +1131,7 @@ type RepoData {
   ): [GitPOAP!]!
   githubRepoId: Int!
   id: Int!
+  lastPRUpdatedAt: DateTime!
   name: String!
   organization: Organization!
   organizationId: Int!
@@ -1161,6 +1159,7 @@ input RepoOrderByWithRelationInput {
   gitPOAPs: GitPOAPOrderByRelationAggregateInput
   githubRepoId: SortOrder
   id: SortOrder
+  lastPRUpdatedAt: SortOrder
   name: SortOrder
   organization: OrganizationOrderByWithRelationInput
   organizationId: SortOrder
@@ -1176,6 +1175,7 @@ enum RepoScalarFieldEnum {
   createdAt
   githubRepoId
   id
+  lastPRUpdatedAt
   name
   organizationId
   updatedAt
@@ -1190,6 +1190,7 @@ input RepoWhereInput {
   gitPOAPs: GitPOAPListRelationFilter
   githubRepoId: IntFilter
   id: IntFilter
+  lastPRUpdatedAt: DateTimeFilter
   name: StringFilter
   organization: OrganizationRelationFilter
   organizationId: IntFilter

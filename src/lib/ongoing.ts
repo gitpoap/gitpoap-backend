@@ -26,21 +26,24 @@ const ONGOING_ISSUANCE_DELAY_HOURS = 12;
 // require ongoing checks
 const DELAY_BETWEEN_ONGOING_ISSUANCE_CHECKS_SECONDS = 60;
 
-type GitPOAPReturnType = {
+type RepoReturnType = {
   id: number;
-  year: number;
+  name: string;
   lastPRUpdatedAt: Date;
-  repo: {
+  gitPOAPs: {
     id: number;
+    year: number;
+    threshold: number;
+  }[];
+  organization: {
     name: string;
-    organization: { name: string };
   };
 };
 
-export async function checkForNewContributions(gitPOAP: GitPOAPReturnType) {
+export async function checkForNewContributions(repo: RepoReturnType) {
   const logger = createScopedLogger('checkForNewContributions');
 
-  const project = `${gitPOAP.repo.organization.name}/${gitPOAP.repo.name}`;
+  const project = `${repo.organization.name}/${repo.name}`;
   logger.info(`Checking for new contributions to ${project}`);
 
   const endTimer = ongoingIssuanceProjectDurationSeconds.startTimer(project);
@@ -50,14 +53,14 @@ export async function checkForNewContributions(gitPOAP: GitPOAPReturnType) {
   let lastUpdatedAt = null;
   while (isProcessing) {
     const pulls = await getGithubRepositoryPullsAsAdmin(
-      gitPOAP.repo.organization.name,
-      gitPOAP.repo.name,
+      repo.organization.name,
+      repo.name,
       PULL_STEP_SIZE,
       page,
       'desc',
     );
     if (pulls === null) {
-      logger.error(`Failed to run ongoing issuance process for GitPOAP id: ${gitPOAP.id}`);
+      logger.error(`Failed to run ongoing issuance process for repo id: ${repo.id}`);
       endTimer({ success: 0 });
       return;
     }
@@ -78,12 +81,12 @@ export async function checkForNewContributions(gitPOAP: GitPOAPReturnType) {
       }
 
       // Stop if we've already handled this PR
-      if (updatedAt < gitPOAP.lastPRUpdatedAt) {
+      if (updatedAt < repo.lastPRUpdatedAt) {
         isProcessing = false;
         break;
       }
 
-      logger.info(`Creating a claim for ${pull.user.login} if it doesn't exist`);
+      logger.info(`Creating a claims for ${pull.user.login} if they don't exist`);
 
       // Create the User, GithubPullRequest, and Claim if they don't exist
       const user = await upsertUser(pull.user.id, pull.user.login);
@@ -91,7 +94,7 @@ export async function checkForNewContributions(gitPOAP: GitPOAPReturnType) {
       const githubPullRequest = await context.prisma.githubPullRequest.upsert({
         where: {
           repoId_githubPullNumber: {
-            repoId: gitPOAP.repo.id,
+            repoId: repo.id,
             githubPullNumber: pull.number,
           },
         },
@@ -106,7 +109,7 @@ export async function checkForNewContributions(gitPOAP: GitPOAPReturnType) {
           githubMergeCommitSha: extractMergeCommitSha(pull),
           repo: {
             connect: {
-              id: gitPOAP.repo.id,
+              id: repo.id,
             },
           },
           user: {
@@ -119,42 +122,61 @@ export async function checkForNewContributions(gitPOAP: GitPOAPReturnType) {
 
       const mergedAt = DateTime.fromISO(pull.merged_at);
 
+      // We assume here that all the ongoing GitPOAPs have the same year
+      const year = repo.gitPOAPs[0].year;
+
       // Log an error if we haven't figured out what to do in the new years
-      if (mergedAt.year > gitPOAP.year) {
-        logger.error(`Found a merged PR for GitPOAP ID ${gitPOAP.id} for a new year`);
+      if (mergedAt.year > year) {
+        logger.error(`Found a merged PR for repo ID ${repo.id} for a new year`);
         endTimer({ success: 0 });
         return;
         // Don't handle previous years (note we still handle an updated title)
-      } else if (mergedAt.year < gitPOAP.year) {
+      } else if (mergedAt.year < year) {
         continue;
       }
 
-      await context.prisma.claim.upsert({
-        where: {
-          gitPOAPId_userId: {
-            gitPOAPId: gitPOAP.id,
-            userId: user.id,
-          },
-        },
-        update: {},
-        create: {
-          gitPOAP: {
-            connect: {
-              id: gitPOAP.id,
+      const prCountData: { count: number }[] = await context.prisma.$queryRaw`
+        SELECT COUNT(id)
+        FROM "GithubPullRequest"
+        WHERE userId = ${user.id} AND repoId = ${repo.id}
+          AND date_part('year', githubMergedAt) = ${year}
+      `;
+      // There must be a result since we just created a PR
+      const prCount = prCountData[0].count;
+
+      for (const gitPOAP of repo.gitPOAPs) {
+        // Skip this GitPOAP if the threshold wasn't reached
+        if (prCount < gitPOAP.threshold) {
+          continue;
+        }
+
+        await context.prisma.claim.upsert({
+          where: {
+            gitPOAPId_userId: {
+              gitPOAPId: gitPOAP.id,
+              userId: user.id,
             },
           },
-          user: {
-            connect: {
-              id: user.id,
+          update: {},
+          create: {
+            gitPOAP: {
+              connect: {
+                id: gitPOAP.id,
+              },
+            },
+            user: {
+              connect: {
+                id: user.id,
+              },
+            },
+            pullRequestEarned: {
+              connect: {
+                id: githubPullRequest.id,
+              },
             },
           },
-          pullRequestEarned: {
-            connect: {
-              id: githubPullRequest.id,
-            },
-          },
-        },
-      });
+        });
+      }
     }
 
     ++page;
@@ -162,9 +184,9 @@ export async function checkForNewContributions(gitPOAP: GitPOAPReturnType) {
   }
 
   if (lastUpdatedAt !== null) {
-    await context.prisma.gitPOAP.update({
+    await context.prisma.repo.update({
       where: {
-        id: gitPOAP.id,
+        id: repo.id,
       },
       data: {
         lastPRUpdatedAt: lastUpdatedAt,
@@ -174,9 +196,7 @@ export async function checkForNewContributions(gitPOAP: GitPOAPReturnType) {
 
   endTimer({ success: 1 });
 
-  logger.debug(
-    `Finished checking for new contributions to ${gitPOAP.repo.organization.name}/${gitPOAP.repo.name}`,
-  );
+  logger.debug(`Finished checking for new contributions to ${repo.organization.name}/${repo.name}`);
 }
 
 async function runOngoingIssuanceUpdater() {
@@ -186,44 +206,49 @@ async function runOngoingIssuanceUpdater() {
 
   const endTimer = overallOngoingIssuanceDurationSeconds.startTimer();
 
-  const gitPOAPs: GitPOAPReturnType[] = await context.prisma.gitPOAP.findMany({
+  const repos: RepoReturnType[] = await context.prisma.repo.findMany({
     where: {
-      ongoing: true,
+      gitPOAPs: {
+        every: {
+          ongoing: true,
+        },
+      },
     },
     select: {
       id: true,
-      year: true,
+      name: true,
       lastPRUpdatedAt: true,
-      repo: {
+      gitPOAPs: {
         select: {
           id: true,
+          year: true,
+          threshold: true,
+        },
+      },
+      organization: {
+        select: {
           name: true,
-          organization: {
-            select: {
-              name: true,
-            },
-          },
         },
       },
     },
   });
 
-  logger.info(`Found ${gitPOAPs.length} ongoing GitPOAPs that need to be checked`);
+  logger.info(`Found ${repos.length} repos with ongoing GitPOAPs that need to be checked`);
 
-  for (let i = 0; i < gitPOAPs.length; ++i) {
+  for (let i = 0; i < repos.length; ++i) {
     if (i > 0) {
       logger.debug(
-        `Waiting ${DELAY_BETWEEN_ONGOING_ISSUANCE_CHECKS_SECONDS} seconds before checking the next GitPOAP`,
+        `Waiting ${DELAY_BETWEEN_ONGOING_ISSUANCE_CHECKS_SECONDS} seconds before checking the next repo`,
       );
 
       // Wait for a bit so we don't get rate limited
       await sleep(DELAY_BETWEEN_ONGOING_ISSUANCE_CHECKS_SECONDS);
     }
 
-    await checkForNewContributions(gitPOAPs[i]);
+    await checkForNewContributions(repos[i]);
   }
 
-  endTimer({ processed_count: gitPOAPs.length });
+  endTimer({ processed_count: repos.length });
 
   logger.debug('Finished running the ongoing issuance updater process');
 }
