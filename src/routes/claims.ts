@@ -16,6 +16,7 @@ import { httpRequestDurationSeconds } from '../metrics';
 import { DateTime } from 'luxon';
 import { sleep } from '../lib/sleep';
 import { backloadGithubPullRequestData } from '../lib/pullRequests';
+import { upsertUser } from '../lib/users';
 
 export const claimsRouter = Router();
 
@@ -389,18 +390,7 @@ claimsRouter.post('/create', jwtWithAdminOAuth(), async function (req, res) {
 
     // Ensure that we've created a user in our
     // system for the claim
-    const user = await context.prisma.user.upsert({
-      where: {
-        githubId: githubId,
-      },
-      update: {
-        githubHandle: githubUserInfo.login,
-      },
-      create: {
-        githubId: githubId,
-        githubHandle: githubUserInfo.login,
-      },
-    });
+    const user = await upsertUser(githubId, githubUserInfo.login);
 
     await context.prisma.claim.create({
       data: {
