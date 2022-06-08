@@ -10,6 +10,7 @@ import { requestGithubOAuthToken, getGithubCurrentUserInfo } from '../external/g
 import { JWT_SECRET } from '../environment';
 import { createScopedLogger } from '../logging';
 import { httpRequestDurationSeconds } from '../metrics';
+import { upsertUser } from '../lib/users';
 
 export const githubRouter = Router();
 
@@ -71,18 +72,7 @@ githubRouter.post('/', async function (req, res) {
   }
 
   // Update or create the user's data
-  const user = await context.prisma.user.upsert({
-    where: {
-      githubId: githubUser.id,
-    },
-    update: {
-      githubHandle: githubUser.login,
-    },
-    create: {
-      githubId: githubUser.id,
-      githubHandle: githubUser.login,
-    },
-  });
+  const user = await upsertUser(githubUser.id, githubUser.login);
 
   const authToken = await context.prisma.authToken.create({
     data: {

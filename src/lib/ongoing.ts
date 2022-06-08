@@ -9,6 +9,7 @@ import {
   overallOngoingIssuanceDurationSeconds,
 } from '../metrics';
 import { extractMergeCommitSha } from './pullRequests';
+import { upsertUser } from './users';
 
 // The number of pull requests to request in a single page (currently the maximum number)
 const PULL_STEP_SIZE = 100;
@@ -85,18 +86,7 @@ export async function checkForNewContributions(gitPOAP: GitPOAPReturnType) {
       logger.info(`Creating a claim for ${pull.user.login} if it doesn't exist`);
 
       // Create the User, GithubPullRequest, and Claim if they don't exist
-      const user = await context.prisma.user.upsert({
-        where: {
-          githubId: pull.user.id,
-        },
-        update: {
-          githubHandle: pull.user.login,
-        },
-        create: {
-          githubId: pull.user.id,
-          githubHandle: pull.user.login,
-        },
-      });
+      const user = await upsertUser(pull.user.id, pull.user.login);
 
       const githubPullRequest = await context.prisma.githubPullRequest.upsert({
         where: {
