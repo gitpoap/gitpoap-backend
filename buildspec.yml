@@ -6,3 +6,6 @@ phases:
   build:
     commands:
       - 'yarn build'
+  post_build:
+    commands:
+      - 'yarn test'
