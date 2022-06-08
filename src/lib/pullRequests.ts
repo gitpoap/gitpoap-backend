@@ -2,6 +2,7 @@ import { createScopedLogger } from '../logging';
 import { context } from '../context';
 import { GithubPullRequestData, getGithubRepositoryPullsAsAdmin } from '../external/github';
 import { pullRequestBackloadDurationSeconds } from '../metrics';
+import { upsertUser } from './users';
 
 type GitPOAPMap = Record<string, number>;
 
@@ -64,18 +65,7 @@ async function backloadGithubPullRequest(
   }
   logger.debug(`Handling PR #${pr.number}`);
 
-  const user = await context.prisma.user.upsert({
-    where: {
-      githubId: pr.user.id,
-    },
-    update: {
-      githubHandle: pr.user.login,
-    },
-    create: {
-      githubId: pr.user.id,
-      githubHandle: pr.user.login,
-    },
-  });
+  const user = await upsertUser(pr.user.id, pr.user.login);
 
   const mergedAt = new Date(pr.merged_at);
   const mergeCommitSha = extractMergeCommitSha(pr);
