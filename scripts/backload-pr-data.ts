@@ -9,6 +9,22 @@ import { sleep } from '../src/lib/sleep';
 
 const BACKLOADER_DELAY_BETWEEN_PROJECTS_SECONDS = 30;
 
+async function backloadRepos(repos: { id: number; }[]) {
+  const logger = createScopedLogger('backloadRepos');
+
+  for (let i = 0; i < repos.length; ++i) {
+    if (i !== 0) {
+      logger.info(
+        `Waiting ${BACKLOADER_DELAY_BETWEEN_PROJECTS_SECONDS} seconds before backloading next repo`,
+      );
+
+      await sleep(BACKLOADER_DELAY_BETWEEN_PROJECTS_SECONDS);
+    }
+
+    await backloadGithubPullRequestData(repos[i].id);
+  }
+}
+
 const main = async () => {
   const logger = createScopedLogger('main');
 
@@ -18,22 +34,18 @@ const main = async () => {
 
   updateLogLevel(argv['level']);
 
-  const repos = await context.prisma.repo.findMany({
-    select: {
-      id: true,
-    },
-  });
+  if (argv['only']) {
+    const repoIds = [argv['only']].concat(argv['_']);
 
-  for (let i = 0; i < repos.length; ++i) {
-    if (i !== 0) {
-      logger.info(
-        `Waiting ${BACKLOADER_DELAY_BETWEEN_PROJECTS_SECONDS} seconds before backloading next project`,
-      );
+    await backloadRepos(repoIds.map((repoId) => ({ id: repoId })));
+  } else {
+    const repos = await context.prisma.repo.findMany({
+      select: {
+        id: true,
+      },
+    });
 
-      await sleep(BACKLOADER_DELAY_BETWEEN_PROJECTS_SECONDS);
-    }
-
-    await backloadGithubPullRequestData(repos[i].id);
+    await backloadRepos(repos);
   }
 };
 
