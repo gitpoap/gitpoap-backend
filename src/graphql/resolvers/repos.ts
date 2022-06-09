@@ -10,6 +10,8 @@ import { getGithubRepositoryStarCount } from '../../external/github';
 class RepoData extends Repo {
   @Field()
   contributorCount: number;
+  @Field()
+  mintedGitPOAPCount: number;
 }
 
 @Resolver(of => Repo)
@@ -26,7 +28,7 @@ export class CustomRepoResolver {
     const endTimer = gqlRequestDurationSeconds.startTimer('repoData');
 
     const results = await prisma.$queryRaw<RepoData[]>`
-      SELECT r.*, COUNT(c.id) AS "contributorCount"
+      SELECT r.*, COUNT(DISTINCT c."userId") AS "contributorCount", COUNT(c.id) AS "mintedGitPOAPCount"
       FROM "Repo" as r
       INNER JOIN "GitPOAP" AS g ON g."repoId" = r.id
       INNER JOIN "Claim" AS c ON c."gitPOAPId" = g.id
