@@ -18,6 +18,13 @@ export async function resolveENS(ensName: string): Promise<string | null> {
 
   if (!ensName.endsWith('.eth')) {
     logger.debug("Skipping lookup since ensName doesn't end with '.eth'");
+
+    // We want to be able to assume that any address that is returned is valid
+    if (!isAddress(ensName)) {
+      logger.warn(`"${ensName} is not a valid address`);
+      return null;
+    }
+
     return ensName;
   }
 
@@ -41,7 +48,7 @@ export async function resolveENS(ensName: string): Promise<string | null> {
     if (ensName !== resolvedAddress) {
       logger.debug(`Resolved ${ensName} to ${resolvedAddress}`);
       if (resolvedAddress === null) {
-        logger.debug(`${ensName} is not a valid address`);
+        logger.warn(`${ensName} is not a valid address`);
         return null;
       }
     }
