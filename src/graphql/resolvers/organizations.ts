@@ -8,7 +8,11 @@ import { Prisma } from '@prisma/client';
 @ObjectType()
 class OrganizationData extends Organization {
   @Field()
+  contributorCount: number;
+  @Field()
   gitPOAPCount: number;
+  @Field()
+  mintedGitPOAPCount: number;
   @Field()
   projectCount: number;
 }
@@ -34,10 +38,15 @@ export class CustomOrganizationResolver {
     }
 
     let results = await prisma.$queryRaw<OrganizationData[]>`
-      SELECT o.*, COUNT(DISTINCT g."id") AS "gitPOAPCount", COUNT(r.id) AS "projectCount"
+      SELECT  o.*, 
+        COUNT(DISTINCT c."userId") AS "contributorCount",
+        COUNT(DISTINCT g."id") AS "gitPOAPCount",
+        COUNT(c.id) AS "mintedGitPOAPCount",
+        COUNT(r.id) AS "projectCount"
       FROM "Organization" as o
       INNER JOIN "Repo" AS r ON r."organizationId" = o.id
       INNER JOIN "GitPOAP" AS g ON g."repoId" = r.id
+      INNER JOIN "Claim" AS c ON c."gitPOAPId" = g.id
       WHERE ${orgId ? Prisma.sql`o.id = ${orgId}` : Prisma.sql`o.name = ${orgName}`}
       GROUP BY o.id
     `;
