@@ -12,6 +12,41 @@ import { URL } from 'url';
 import { context } from '../context';
 import { SECONDS_PER_HOUR } from '../constants';
 
+/** -- Response Types -- **/
+type GithubUserResponse = {
+  login: string;
+};
+
+export type GithubPullRequestData = {
+  number: number;
+  title: string;
+  user: {
+    id: number;
+    login: string;
+  };
+  merged_at: string | null;
+  updated_at: string;
+  merge_commit_sha: string;
+  head: {
+    sha: string;
+  };
+  base: {
+    repo: {
+      id: number;
+    };
+  };
+};
+
+export type GithubRepoResponse = {
+  id: number;
+  name: string;
+  owner: {
+    id: number;
+    login: string;
+  };
+  stargazers_count: number;
+};
+
 export async function requestGithubOAuthToken(code: string) {
   const logger = createScopedLogger('requestGithubOAuthToken');
 
@@ -42,13 +77,17 @@ export async function requestGithubOAuthToken(code: string) {
   return tokenJson.access_token;
 }
 
+/** -- Internal Functions -- **/
 async function makeGithubAPIRequestInternal(path: string, authorization: string) {
   const logger = createScopedLogger('makeGithubAPIRequestInternal');
 
   const endTimer = githubRequestDurationSeconds.startTimer('GET', path);
 
   logger.debug(
-    `Making a Github request via the ${authorization.substr(0, authorization.indexOf(' '))} method`,
+    `Making a Github request via the ${authorization.substring(
+      0,
+      authorization.indexOf(' '),
+    )} method`,
   );
 
   try {
@@ -91,6 +130,7 @@ async function makeAdminGithubAPIRequest(path: string) {
   return await makeGithubAPIRequestInternal(path, `Basic ${basicAuthString}`);
 }
 
+/** -- External Functions -- **/
 export async function getGithubCurrentUserInfo(githubToken: string) {
   return await makeGithubAPIRequest(`/user`, githubToken);
 }
@@ -99,19 +139,12 @@ export async function getGithubUser(githubHandle: string, githubToken: string) {
   return await makeGithubAPIRequest(`/users/${githubHandle}`, githubToken);
 }
 
-export async function getGithubUserById(githubId: number, githubToken: string) {
+export async function getGithubUserById(
+  githubId: number,
+  githubToken: string,
+): Promise<GithubUserResponse | null> {
   return await makeGithubAPIRequest(`/user/${githubId}`, githubToken);
 }
-
-export type GithubRepoResponse = {
-  id: number;
-  name: string;
-  owner: {
-    id: number;
-    login: string;
-  };
-  stargazers_count: number;
-};
 
 export async function getGithubRepository(
   organization: string,
@@ -192,21 +225,6 @@ export async function getGithubOrganizationAdmins(
   }
 }
 
-export type GithubPullRequestData = {
-  number: number;
-  title: string;
-  user: {
-    id: number;
-    login: string;
-  };
-  merged_at: string | null;
-  updated_at: string;
-  merge_commit_sha: string;
-  head: {
-    sha: string;
-  };
-};
-
 // This should only be used for our background processes
 export async function getGithubRepositoryPullsAsAdmin(
   org: string,
@@ -219,3 +237,12 @@ export async function getGithubRepositoryPullsAsAdmin(
     `/repos/${org}/${repo}/pulls?state=closed&sort=updated&direction=${direction}&per_page=${perPage}&page=${page}`,
   );
 }
+
+/* Get single pull request data */
+export const getSingleGithubRepositoryPullAsAdmin = async (
+  org: string,
+  repo: string,
+  pullRequestNum: number,
+): Promise<GithubPullRequestData> => {
+  return await makeAdminGithubAPIRequest(`/repos/${org}/${repo}/pulls/${pullRequestNum}`);
+};

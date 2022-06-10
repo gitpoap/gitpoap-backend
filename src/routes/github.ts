@@ -1,9 +1,7 @@
 import { Router } from 'express';
 import { JWT_EXP_TIME } from '../constants';
-import fetch from 'cross-fetch';
 import { sign, verify } from 'jsonwebtoken';
 import { context } from '../context';
-import { User } from '@generated/type-graphql';
 import { RequestAccessTokenSchema, RefreshAccessTokenSchema } from '../schemas/github';
 import { RefreshTokenPayload } from '../types/tokens';
 import { requestGithubOAuthToken, getGithubCurrentUserInfo } from '../external/github';
