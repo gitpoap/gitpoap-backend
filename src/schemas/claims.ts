@@ -11,3 +11,9 @@ export const CreateGitPOAPClaimsSchema = z.object({
   gitPOAPId: z.number(),
   recipientGithubIds: z.array(z.number()).nonempty(),
 });
+
+export const CreateGitPOAPBotClaimsSchema = z.object({
+  repo: z.string(),
+  owner: z.string(),
+  pullRequestNumber: z.number(),
+});
