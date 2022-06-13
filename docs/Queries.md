@@ -356,6 +356,55 @@ that returns data like:
 }
 ```
 
+## Organization Data
+
+To retrieve info about a Organization including its contributor count, gitPOAPCount, mintedGitPOAPCount and projectCount, we can run a query like:
+
+```graphql
+{
+  organizationData(orgId: 5) {
+    id
+    name
+    contributorCount
+    gitPOAPCount
+    mintedGitPOAPCount
+    projectCount
+  }
+}
+```
+
+or
+
+```graphql
+{
+  organizationData(orgName: "some-org", repoName: "some-repo") {
+    id
+    name
+    contributorCount
+    gitPOAPCount
+    mintedGitPOAPCount
+    projectCount
+  }
+}
+```
+
+that returns data like:
+
+```json
+{
+  "data": {
+    "organizationData": {
+      "id": 5,
+      "name": "some-repo",
+      "contributorCount": 5,
+      "gitPOAPCount": 3,
+      "mintedGitPOAPCount": 8,
+      "projectCount": 1
+    }
+  }
+}
+```
+
 ## All Organizations
 
 To retrieve a list of all organizations, we can run a query like:
