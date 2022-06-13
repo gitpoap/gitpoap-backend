@@ -626,6 +626,45 @@ Note that `page` and `perPage` are optional but must be specified. The options f
 - `"gitpoap-count"`: sort by the number of gitPOAPs (descending)
 - `"organization"`: sort by the name of the organization this repo belongs to (ascending)
 
+## Organization Repos
+
+To retrieve a list of all repos from a given organization, we can run a query like:
+
+```graphql
+{
+  organizationRepos(orgId: 1, sort: "date", page: 1, perPage: 1) {
+    id
+    name
+    contributorCount
+    mintedGitPOAPCount
+  }
+}
+```
+
+That returns data like:
+
+```json
+{
+  "data": {
+    "organizationRepos": [
+      {
+        "id": 6,
+        "name": "dopex",
+        "contributorCount": 5,
+        "mintedGitPOAPCount": 8
+      }
+    ]
+  }
+}
+```
+
+Note that `page` and `perPage` are optional but must be specified. The options for `sort` are:
+
+- `"alphabetical"` (default): sort the repo's name (ascending)
+- `"date"`: sort by the date of creation (descending)
+- `"contributor-count"`: sort by the number of contributors (descending)
+- `"minted-count"`: sort by the number of minted gitpoaps (descending)
+
 ## String Searching
 
 To search by a string (could be a name, address, or ENS name), we can run a query like:
