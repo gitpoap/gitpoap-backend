@@ -516,7 +516,7 @@ claimsRouter.post(
     if (claim !== null) {
       logger.warn(`Claim for gitPOAPId: ${gitPOAPData.id} and userId: ${user.id} already exists`);
       endTimer({ status: 409 });
-      res.status(200).send('CONFLICT');
+      res.status(409).send('CONFLICT');
     }
 
     await context.prisma.claim.create({
