@@ -876,6 +876,18 @@ To retrieve info about a Repo including its contributor count, we can run a quer
 }
 ```
 
+or
+
+```graphql
+{
+  repoData(orgName: "some-org", repoName: "some-repo") {
+    id
+    name
+    contributorCount
+  }
+}
+```
+
 that returns data like:
 
 ```json
