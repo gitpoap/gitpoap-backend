@@ -2,7 +2,7 @@ import { jest } from '@jest/globals';
 import { PrismaClient } from '@prisma/client';
 import { Provider } from '@ethersproject/providers';
 import { RedisClient } from '../../src/redis/client';
-import { mockDeep, mockReset, DeepMockProxy } from 'jest-mock-extended';
+import { mockDeep, DeepMockProxy } from 'jest-mock-extended';
 import { context } from '../../src/context';
 
 export type MockContext = {
@@ -21,9 +21,3 @@ jest.mock('../../src/context', () => ({
     redis: mockDeep<RedisClient>(),
   },
 }));
-
-beforeEach(() => {
-  mockReset(contextMock.prisma);
-  mockReset(contextMock.provider);
-  mockReset(contextMock.redis);
-});
