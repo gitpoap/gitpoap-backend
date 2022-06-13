@@ -1,7 +1,7 @@
 import { GitPOAP, Organization, Repo } from '@generated/type-graphql';
 import { context } from '../context';
 import { createScopedLogger } from '../logging';
-import { getGithubRepositoryPullsAsAdmin } from '../external/github';
+import { GithubPullRequestData, getGithubRepositoryPullsAsAdmin } from '../external/github';
 import { DateTime } from 'luxon';
 import { sleep } from './sleep';
 import {
@@ -41,6 +41,70 @@ type RepoReturnType = {
   };
 };
 
+type HandleNewPullReturnType = {
+  finished: boolean;
+  updatedAt: Date;
+};
+
+/**
+ * Handle a newly updated (and closed) pull request to a repository
+ *
+ * @param repo - Information about a repository and its GitPOAPs
+ * @param pull - The pull request to handle
+ * @returns An object describing whether we've finished processing
+ *   pull requests early and the updatedAt time of the PR
+ */
+async function handleNewPull(
+  repo: RepoReturnType,
+  pull: GithubPullRequestData,
+): Promise<HandleNewPullReturnType> {
+  const logger = createScopedLogger('handleNewPull');
+
+  const updatedAt = new Date(pull.updated_at);
+
+  // If the PR hasn't been merged yet, skip it
+  if (pull.merged_at === null) {
+    return { finished: false, updatedAt: updatedAt };
+  }
+
+  // Stop if we've already handled this PR
+  if (updatedAt < repo.lastPRUpdatedAt) {
+    return { finished: true, updatedAt: updatedAt };
+  }
+
+  logger.info(`Creating a claims for ${pull.user.login} if they don't exist`);
+
+  // Create the User, GithubPullRequest, and Claim if they don't exist
+  const user = await upsertUser(pull.user.id, pull.user.login);
+
+  const githubPullRequest = await upsertGithubPullRequest(
+    repo.id,
+    pull.number,
+    pull.title,
+    new Date(pull.merged_at),
+    extractMergeCommitSha(pull),
+    user.id,
+  );
+
+  const mergedAt = DateTime.fromISO(pull.merged_at);
+
+  // We assume here that all the ongoing GitPOAPs have the same year
+  const year = repo.gitPOAPs[0].year;
+
+  // Log an error if we haven't figured out what to do in the new years
+  if (mergedAt.year > year) {
+    logger.error(`Found a merged PR for repo ID ${repo.id} for a new year`);
+    return { finished: false, updatedAt: updatedAt };
+    // Don't handle previous years (note we still handle an updated title)
+  } else if (mergedAt.year < year) {
+    return { finished: false, updatedAt: updatedAt };
+  }
+
+  await createNewClaimsForRepoPR(user, repo, githubPullRequest);
+
+  return { finished: false, updatedAt: updatedAt };
+}
+
 export async function checkForNewContributions(repo: RepoReturnType) {
   const logger = createScopedLogger('checkForNewContributions');
 
@@ -69,54 +133,17 @@ export async function checkForNewContributions(repo: RepoReturnType) {
     logger.debug(`Retrieved ${pulls.length} pulls for processing`);
 
     for (const pull of pulls) {
-      // If the PR hasn't been merged yet, skip it
-      if (pull.merged_at === null) {
-        continue;
-      }
-
-      const updatedAt = new Date(pull.updated_at);
+      const result = await handleNewPull(repo, pull);
 
       // Save the first updatedAt value
       if (lastUpdatedAt === null) {
-        lastUpdatedAt = updatedAt;
+        lastUpdatedAt = result.updatedAt;
       }
 
-      // Stop if we've already handled this PR
-      if (updatedAt < repo.lastPRUpdatedAt) {
+      if (result.finished) {
         isProcessing = false;
         break;
       }
-
-      logger.info(`Creating a claims for ${pull.user.login} if they don't exist`);
-
-      // Create the User, GithubPullRequest, and Claim if they don't exist
-      const user = await upsertUser(pull.user.id, pull.user.login);
-
-      const githubPullRequest = await upsertGithubPullRequest(
-        repo.id,
-        pull.number,
-        pull.title,
-        new Date(pull.merged_at),
-        extractMergeCommitSha(pull),
-        user.id,
-      );
-
-      const mergedAt = DateTime.fromISO(pull.merged_at);
-
-      // We assume here that all the ongoing GitPOAPs have the same year
-      const year = repo.gitPOAPs[0].year;
-
-      // Log an error if we haven't figured out what to do in the new years
-      if (mergedAt.year > year) {
-        logger.error(`Found a merged PR for repo ID ${repo.id} for a new year`);
-        endTimer({ success: 0 });
-        return;
-        // Don't handle previous years (note we still handle an updated title)
-      } else if (mergedAt.year < year) {
-        continue;
-      }
-
-      await createNewClaimsForRepoPR(user, repo, githubPullRequest);
     }
 
     ++page;
