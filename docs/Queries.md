@@ -358,7 +358,7 @@ that returns data like:
 
 ## Organization Data
 
-To retrieve info about a Organization including its contributor count, gitPOAPCount, mintedGitPOAPCount and projectCount, we can run a query like:
+To retrieve info about a Organization including its contributorCount, gitPOAPCount, mintedGitPOAPCount and projectCount, we can run a query like:
 
 ```graphql
 {
