@@ -4,6 +4,7 @@ import { GithubPullRequestData, getGithubRepositoryPullsAsAdmin } from '../exter
 import { pullRequestBackloadDurationSeconds } from '../metrics';
 import { upsertUser } from './users';
 import { createNewClaimsForRepoPR, RepoData } from './claims';
+import { GithubPullRequest } from '@generated/type-graphql';
 
 async function getRepoInfo(repoId: number) {
   const logger = createScopedLogger('getRepoInfo');
@@ -53,6 +54,45 @@ export function extractMergeCommitSha(pr: GithubPullRequestData) {
   return pr.merge_commit_sha;
 }
 
+export async function upsertGithubPullRequest(
+  repoId: number,
+  prNumber: number,
+  prTitle: string,
+  mergedAt: Date,
+  mergeCommitSha: string,
+  userId: number,
+): Promise<GithubPullRequest> {
+  return await context.prisma.githubPullRequest.upsert({
+    where: {
+      repoId_githubPullNumber: {
+        repoId: repoId,
+        githubPullNumber: prNumber,
+      },
+    },
+    update: {
+      githubMergedAt: mergedAt,
+      githubTitle: prTitle,
+      githubMergeCommitSha: mergeCommitSha,
+    },
+    create: {
+      githubPullNumber: prNumber,
+      githubTitle: prTitle,
+      githubMergedAt: mergedAt,
+      githubMergeCommitSha: mergeCommitSha,
+      repo: {
+        connect: {
+          id: repoId,
+        },
+      },
+      user: {
+        connect: {
+          id: userId,
+        },
+      },
+    },
+  });
+}
+
 async function backloadGithubPullRequest(repo: RepoData, pr: GithubPullRequestData) {
   const logger = createScopedLogger('backloadGithubPullRequest');
 
@@ -60,44 +100,21 @@ async function backloadGithubPullRequest(repo: RepoData, pr: GithubPullRequestDa
     logger.debug(`Skipping unmerged PR #${pr.number}`);
     return;
   }
+
   logger.debug(`Handling PR #${pr.number}`);
 
   const user = await upsertUser(pr.user.id, pr.user.login);
 
-  const mergedAt = new Date(pr.merged_at);
-  const mergeCommitSha = extractMergeCommitSha(pr);
-
   // Don't create the PR if it already is in the DB (maybe via ongoing issuance)
   // but update the title if it's changed
-  const githubPullRequest = await context.prisma.githubPullRequest.upsert({
-    where: {
-      repoId_githubPullNumber: {
-        repoId: repo.id,
-        githubPullNumber: pr.number,
-      },
-    },
-    update: {
-      githubMergedAt: mergedAt,
-      githubTitle: pr.title,
-      githubMergeCommitSha: mergeCommitSha,
-    },
-    create: {
-      githubPullNumber: pr.number,
-      githubTitle: pr.title,
-      githubMergedAt: mergedAt,
-      githubMergeCommitSha: mergeCommitSha,
-      repo: {
-        connect: {
-          id: repo.id,
-        },
-      },
-      user: {
-        connect: {
-          id: user.id,
-        },
-      },
-    },
-  });
+  const githubPullRequest = await upsertGithubPullRequest(
+    repo.id,
+    pr.number,
+    pr.title,
+    new Date(pr.merged_at),
+    extractMergeCommitSha(pr),
+    user.id,
+  );
 
   await createNewClaimsForRepoPR(user, repo, githubPullRequest);
 }

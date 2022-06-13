@@ -8,7 +8,7 @@ import {
   ongoingIssuanceProjectDurationSeconds,
   overallOngoingIssuanceDurationSeconds,
 } from '../metrics';
-import { extractMergeCommitSha } from './pullRequests';
+import { extractMergeCommitSha, upsertGithubPullRequest } from './pullRequests';
 import { upsertUser } from './users';
 import { createNewClaimsForRepoPR } from './claims';
 
@@ -92,34 +92,14 @@ export async function checkForNewContributions(repo: RepoReturnType) {
       // Create the User, GithubPullRequest, and Claim if they don't exist
       const user = await upsertUser(pull.user.id, pull.user.login);
 
-      const githubPullRequest = await context.prisma.githubPullRequest.upsert({
-        where: {
-          repoId_githubPullNumber: {
-            repoId: repo.id,
-            githubPullNumber: pull.number,
-          },
-        },
-        // Assume only the title can change for now
-        update: {
-          githubTitle: pull.title,
-        },
-        create: {
-          githubPullNumber: pull.number,
-          githubTitle: pull.title,
-          githubMergedAt: new Date(pull.merged_at),
-          githubMergeCommitSha: extractMergeCommitSha(pull),
-          repo: {
-            connect: {
-              id: repo.id,
-            },
-          },
-          user: {
-            connect: {
-              id: user.id,
-            },
-          },
-        },
-      });
+      const githubPullRequest = await upsertGithubPullRequest(
+        repo.id,
+        pull.number,
+        pull.title,
+        new Date(pull.merged_at),
+        extractMergeCommitSha(pull),
+        user.id,
+      );
 
       const mergedAt = DateTime.fromISO(pull.merged_at);
 
