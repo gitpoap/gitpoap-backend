@@ -199,7 +199,7 @@ export type GithubPullRequestData = {
     id: number;
     login: string;
   };
-  merged_at: string;
+  merged_at: string | null;
   updated_at: string;
   merge_commit_sha: string;
   head: {
