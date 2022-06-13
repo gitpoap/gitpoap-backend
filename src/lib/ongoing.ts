@@ -27,7 +27,7 @@ const ONGOING_ISSUANCE_DELAY_HOURS = 12;
 // require ongoing checks
 const DELAY_BETWEEN_ONGOING_ISSUANCE_CHECKS_SECONDS = 60;
 
-type RepoReturnType = {
+export type RepoReturnType = {
   id: number;
   name: string;
   lastPRUpdatedAt: Date;
@@ -54,7 +54,7 @@ type HandleNewPullReturnType = {
  * @returns An object describing whether we've finished processing
  *   pull requests early and the updatedAt time of the PR
  */
-async function handleNewPull(
+export async function handleNewPull(
   repo: RepoReturnType,
   pull: GithubPullRequestData,
 ): Promise<HandleNewPullReturnType> {
