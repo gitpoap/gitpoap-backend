@@ -144,8 +144,10 @@ export async function backloadGithubPullRequestData(repoId: number) {
       isProcessing = false;
     }
 
-    // Handle all the PRs individually
-    await Promise.all(prData.map(pr => backloadGithubPullRequest(repoInfo, pr)));
+    // Handle all the PRs individually (and sequentially)
+    for (const pr of prData) {
+      await backloadGithubPullRequest(repoInfo, pr);
+    }
   }
 
   endTimer();
