@@ -19,7 +19,9 @@ export class CustomRepoResolver {
   @Query(returns => RepoData, { nullable: true })
   async repoData(
     @Ctx() { prisma }: Context,
-    @Arg('repoId') repoId: number,
+    @Arg('repoId', { defaultValue: null }) repoId?: number,
+    @Arg('orgName', { defaultValue: null }) orgName?: string,
+    @Arg('repoName', { defaultValue: null }) repoName?: string,
   ): Promise<RepoData | null> {
     const logger = createScopedLogger('GQL repoData');
 
@@ -27,22 +29,52 @@ export class CustomRepoResolver {
 
     const endTimer = gqlRequestDurationSeconds.startTimer('repoData');
 
-    const results = await prisma.$queryRaw<RepoData[]>`
-      SELECT r.*, COUNT(DISTINCT c."userId") AS "contributorCount", COUNT(c.id) AS "mintedGitPOAPCount"
-      FROM "Repo" as r
-      INNER JOIN "GitPOAP" AS g ON g."repoId" = r.id
-      INNER JOIN "Claim" AS c ON c."gitPOAPId" = g.id
-      WHERE r.id = ${repoId} AND c.status = ${ClaimStatus.CLAIMED}
-      GROUP BY r.id
-    `;
+    let results;
 
-    if (results.length === 0) {
-      logger.warn(`Failed to find repo with id: ${repoId}`);
+    if (repoId) {
+      results = await prisma.$queryRaw<RepoData[]>`
+        SELECT r.*, COUNT(DISTINCT c."userId") AS "contributorCount", COUNT(c.id) AS "mintedGitPOAPCount"
+        FROM "Repo" as r
+        INNER JOIN "GitPOAP" AS g ON g."repoId" = r.id
+        INNER JOIN "Claim" AS c ON c."gitPOAPId" = g.id
+        WHERE r.id = ${repoId} AND c.status = ${ClaimStatus.CLAIMED}
+        GROUP BY r.id
+      `;
+
+      if (results.length === 0) {
+        logger.warn(`Failed to find repo with id: ${repoId}`);
+        endTimer({ success: 0 });
+        return null;
+      }
+
+      logger.debug(`Completed request for data from repo: ${repoId}`);
+    } else if (orgName && repoName) {
+      results = await prisma.$queryRaw<RepoData[]>`
+        SELECT r.*, COUNT(DISTINCT c."userId") AS "contributorCount", COUNT(c.id) AS "mintedGitPOAPCount"
+        FROM "Repo" as r
+        INNER JOIN "Organization" AS o ON o.id = r."organizationId"
+        INNER JOIN "GitPOAP" AS g ON g."repoId" = r.id
+        INNER JOIN "Claim" AS c ON c."gitPOAPId" = g.id
+        WHERE o.name = ${orgName} AND r.name = ${repoName} AND c.status = ${ClaimStatus.CLAIMED}
+        GROUP BY r.id
+      `;
+
+      if (results.length === 0) {
+        logger.warn(`Failed to find repo with orgName: ${orgName} and repoName: ${repoName}`);
+        endTimer({ success: 0 });
+        return null;
+      }
+
+      logger.debug(`Completed request for data from repo: ${orgName}/${repoName}`);
+    } else if (!orgName !== !repoName) {
+      logger.warn('"orgName" and "repoName" must be specified together');
+      endTimer({ success: 0 });
+      return null;
+    } else {
+      logger.warn('Either a "repoId" or both "orgName" and "repoName" must be provided');
       endTimer({ success: 0 });
       return null;
     }
-
-    logger.debug(`Completed request data for repo: ${repoId}`);
 
     endTimer({ success: 1 });
 
