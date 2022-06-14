@@ -13,6 +13,8 @@ class RepoData extends Repo {
   contributorCount: number;
   @Field()
   mintedGitPOAPCount: number;
+  @Field()
+  starredCount: number;
 }
 
 @Resolver(of => Repo)
@@ -76,6 +78,8 @@ export class CustomRepoResolver {
       endTimer({ success: 0 });
       return null;
     }
+
+    results[0].starredCount = await getGithubRepositoryStarCount(results[0].githubRepoId);
 
     endTimer({ success: 1 });
 
@@ -308,12 +312,20 @@ export class CustomRepoResolver {
       ${pagination}
     `;
 
+    // Promise.all waits until all the promises are resolved to return the result
+    const resultsWithStarredCount = await Promise.all(
+      results.map(async repo => {
+        const starredCount = await getGithubRepositoryStarCount(repo.githubRepoId);
+        return { ...repo, starredCount };
+      }),
+    );
+
     logger.info(
       `Request for all repos in organization ${orgId} using sort ${sort}, with ${perPage} results per page and page ${page}`,
     );
 
     endTimer({ success: 1 });
 
-    return results;
+    return resultsWithStarredCount;
   }
 }
