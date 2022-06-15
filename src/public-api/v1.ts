@@ -100,8 +100,9 @@ v1Router.get('/address/:address/gitpoaps', async function (req, res) {
       status: ClaimStatus.CLAIMED,
     },
     select: {
+      id: true,
       createdAt: true,
-      claimedAt: true,
+      mintedAt: true,
       poapTokenId: true,
       pullRequestEarned: true,
       gitPOAP: {
@@ -124,15 +125,16 @@ v1Router.get('/address/:address/gitpoaps', async function (req, res) {
 
   type ResultType = {
     gitPoapId: number;
+    gitPoapEventId: number;
     poapTokenId: string;
     poapEventId: number;
     name: string;
     year: number;
     description: string;
     imageUrl: string;
-    repository: string;
+    repositories: string[];
     earnedAt: string;
-    claimedAt: string;
+    mintedAt: string;
   };
 
   let results: ResultType[] = [];
@@ -152,16 +154,17 @@ v1Router.get('/address/:address/gitpoaps', async function (req, res) {
       : claim.createdAt;
 
     results.push({
-      gitPoapId: claim.gitPOAP.id,
+      gitPoapId: claim.id,
+      gitPoapEventId: claim.gitPOAP.id,
       poapTokenId: <string>claim.poapTokenId,
       poapEventId: claim.gitPOAP.poapEventId,
       name: poapData.event.name,
       year: claim.gitPOAP.year,
       description: poapData.event.description,
       imageUrl: poapData.event.image_url,
-      repository: `${claim.gitPOAP.repo.organization.name}/${claim.gitPOAP.repo.name}`,
+      repositories: [`${claim.gitPOAP.repo.organization.name}/${claim.gitPOAP.repo.name}`],
       earnedAt: DateTime.fromJSDate(earnedAt).toFormat('yyyy-MM-dd'),
-      claimedAt: DateTime.fromJSDate(<Date>claim.claimedAt).toFormat('yyyy-MM-dd'),
+      mintedAt: DateTime.fromJSDate(<Date>claim.mintedAt).toFormat('yyyy-MM-dd'),
     });
   }
 

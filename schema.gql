@@ -10,11 +10,11 @@ input BoolFilter {
 
 type Claim {
   address: String
-  claimedAt: DateTime
   createdAt: DateTime!
   gitPOAP: GitPOAP!
   gitPOAPId: Int!
   id: Int!
+  mintedAt: DateTime
   poapTokenId: String
   pullRequestEarned: GithubPullRequest
   pullRequestEarnedId: Int
@@ -41,11 +41,11 @@ input ClaimOrderByRelationAggregateInput {
 
 input ClaimOrderByWithRelationInput {
   address: SortOrder
-  claimedAt: SortOrder
   createdAt: SortOrder
   gitPOAP: GitPOAPOrderByWithRelationInput
   gitPOAPId: SortOrder
   id: SortOrder
+  mintedAt: SortOrder
   poapTokenId: SortOrder
   pullRequestEarned: GithubPullRequestOrderByWithRelationInput
   pullRequestEarnedId: SortOrder
@@ -57,10 +57,10 @@ input ClaimOrderByWithRelationInput {
 
 enum ClaimScalarFieldEnum {
   address
-  claimedAt
   createdAt
   gitPOAPId
   id
+  mintedAt
   poapTokenId
   pullRequestEarnedId
   qrHash
@@ -87,11 +87,11 @@ input ClaimWhereInput {
   NOT: [ClaimWhereInput!]
   OR: [ClaimWhereInput!]
   address: StringNullableFilter
-  claimedAt: DateTimeNullableFilter
   createdAt: DateTimeFilter
   gitPOAP: GitPOAPRelationFilter
   gitPOAPId: IntFilter
   id: IntFilter
+  mintedAt: DateTimeNullableFilter
   poapTokenId: StringNullableFilter
   pullRequestEarned: GithubPullRequestRelationFilter
   pullRequestEarnedId: IntNullableFilter
@@ -680,6 +680,30 @@ type OrganizationCount {
   repos: Int!
 }
 
+type OrganizationData {
+  _count: OrganizationCount
+  contributorCount: Float!
+  createdAt: DateTime!
+  description: String
+  gitPOAPCount: Float!
+  githubOrgId: Int!
+  id: Int!
+  mintedGitPOAPCount: Float!
+  name: String!
+  projectCount: Float!
+  repos(
+    cursor: RepoWhereUniqueInput
+    distinct: [RepoScalarFieldEnum!]
+    orderBy: [RepoOrderByWithRelationInput!]
+    skip: Int
+    take: Int
+    where: RepoWhereInput
+  ): [Repo!]!
+  twitterHandle: String
+  updatedAt: DateTime!
+  url: String
+}
+
 input OrganizationOrderByWithRelationInput {
   createdAt: SortOrder
   description: SortOrder
@@ -967,6 +991,7 @@ type Query {
   mostClaimedGitPOAPs(count: Float = 10): [GitPOAPWithClaimsCount!]
   mostHonoredContributors(count: Float = 10): [ProfileWithClaimsCount!]!
   organization(where: OrganizationWhereUniqueInput!): Organization
+  organizationData(orgId: Float = null, orgName: String = null): OrganizationData
   organizations(
     cursor: OrganizationWhereUniqueInput
     distinct: [OrganizationScalarFieldEnum!]
@@ -988,7 +1013,7 @@ type Query {
   ): [Profile!]!
   recentlyAddedProjects(count: Float = 10): [Repo!]!
   repo(where: RepoWhereUniqueInput!): Repo
-  repoData(repoId: Float!): RepoData
+  repoData(orgName: String = null, repoId: Float = null, repoName: String = null): RepoData
   repoGitPOAPs(
     page: Float = null
     perPage: Float = null
@@ -1132,6 +1157,7 @@ type RepoData {
   githubRepoId: Int!
   id: Int!
   lastPRUpdatedAt: DateTime!
+  mintedGitPOAPCount: Float!
   name: String!
   organization: Organization!
   organizationId: Int!

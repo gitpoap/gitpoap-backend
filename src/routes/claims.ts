@@ -121,7 +121,7 @@ async function runClaimsPostProcessing(claimIds: number[], qrHashes: string[]) {
           data: {
             status: ClaimStatus.CLAIMED,
             poapTokenId: poapData.result.token.toString(),
-            claimedAt: new Date(),
+            mintedAt: new Date(),
           },
         });
 
