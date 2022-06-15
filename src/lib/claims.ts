@@ -18,8 +18,8 @@ export async function createNewClaimsForRepoPR(
   const prCountData: { count: number }[] = await context.prisma.$queryRaw`
     SELECT COUNT(id)
     FROM "GithubPullRequest"
-    WHERE userId = ${user.id} AND repoId = ${repo.id}
-      AND date_part('year', githubMergedAt) = ${repo.gitPOAPs[0].year}
+    WHERE "userId" = ${user.id} AND "repoId" = ${repo.id}
+      AND date_part('year', "githubMergedAt") = ${repo.gitPOAPs[0].year}
   `;
   // There must be a result since we just created a PR
   const prCount = prCountData[0].count;
