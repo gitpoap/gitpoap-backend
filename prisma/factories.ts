@@ -19,7 +19,7 @@ export class ClaimFactory {
     status?: ClaimStatus,
     address?: string,
     poapTokenId?: string,
-    claimedAt?: Date,
+    mintedAt?: Date,
   ): Promise<Claim> => {
     const claim = await prisma.claim.create({
       data: <Prisma.ClaimCreateInput>{
@@ -36,7 +36,7 @@ export class ClaimFactory {
         status,
         address,
         poapTokenId,
-        claimedAt,
+        mintedAt,
       },
     });
     console.log(`Creating claim with id: ${claim.id}`);
