@@ -12,6 +12,8 @@ RUN yarn install
 
 COPY ./ ./
 
+RUN yarn build
+
 # let's use a .env local to our docker setup
 COPY .dockerfiles/public-api-server.env .env
 
