@@ -1,9 +1,14 @@
 import { Arg, Ctx, Field, ObjectType, Resolver, Query } from 'type-graphql';
-import { Organization, OrganizationOrderByWithRelationInput } from '@generated/type-graphql';
+import {
+  ClaimStatus,
+  Organization,
+  OrganizationOrderByWithRelationInput,
+} from '@generated/type-graphql';
 import { Context } from '../../context';
 import { createScopedLogger } from '../../logging';
 import { gqlRequestDurationSeconds } from '../../metrics';
 import { Prisma } from '@prisma/client';
+import { RepoData } from './repos';
 
 @ObjectType()
 class OrganizationData extends Organization {
@@ -111,6 +116,72 @@ export class CustomOrganizationResolver {
 
     logger.info(
       `Request for all organizations using sort ${sort}, with ${perPage} results per page and page ${page}`,
+    );
+
+    endTimer({ success: 1 });
+
+    return results;
+  }
+
+  @Query(returns => [RepoData], { nullable: true })
+  async organizationRepos(
+    @Ctx() { prisma }: Context,
+    @Arg('orgId') orgId: number,
+    @Arg('sort', { defaultValue: 'alphabetical' }) sort?: string,
+    @Arg('perPage', { defaultValue: null }) perPage?: number,
+    @Arg('page', { defaultValue: null }) page?: number,
+  ): Promise<RepoData[] | null> {
+    const logger = createScopedLogger('GQL organizationRepos');
+
+    logger.info(
+      `Request for all repos in organization ${orgId} using sort ${sort}, with ${perPage} results per page and page ${page}`,
+    );
+
+    const endTimer = gqlRequestDurationSeconds.startTimer('allRepos');
+
+    let orderBy;
+    switch (sort) {
+      case 'alphabetical':
+        orderBy = Prisma.sql`name ASC`;
+        break;
+      case 'date':
+        orderBy = Prisma.sql`"createdAt" DESC`;
+        break;
+      case 'contributor-count':
+        orderBy = Prisma.sql`"contributorCount" DESC`;
+        break;
+      case 'minted-count':
+        orderBy = Prisma.sql`"mintedGitPOAPCount" DESC`;
+        break;
+      default:
+        logger.warn(`Unknown value provided for sort: ${sort}`);
+        endTimer({ success: 0 });
+        return null;
+    }
+
+    if ((page === null || perPage === null) && page !== perPage) {
+      logger.warn('"page" and "perPage" must be specified together');
+      endTimer({ success: 0 });
+      return null;
+    }
+
+    let pagination = page
+      ? Prisma.sql`OFFSET ${(page - 1) * <number>perPage} ROWS FETCH NEXT ${perPage} ROWS ONLY`
+      : Prisma.empty;
+
+    const results = await prisma.$queryRaw<RepoData[]>`
+      SELECT r.*, COUNT(DISTINCT c."userId") AS "contributorCount", COUNT(c.id) AS "mintedGitPOAPCount"
+      FROM "Repo" as r
+      INNER JOIN "GitPOAP" AS g ON g."repoId" = r.id
+      INNER JOIN "Claim" AS c ON c."gitPOAPId" = g.id
+      WHERE r."organizationId" = ${orgId} AND c.status = ${ClaimStatus.CLAIMED}
+      GROUP BY r.id
+      ORDER BY ${orderBy}
+      ${pagination}
+    `;
+
+    logger.info(
+      `Request for all repos in organization ${orgId} using sort ${sort}, with ${perPage} results per page and page ${page}`,
     );
 
     endTimer({ success: 1 });
