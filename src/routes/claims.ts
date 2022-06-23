@@ -535,7 +535,7 @@ type ReqBody = { repo: string; owner: string; pullRequestNumber: number };
 
 claimsRouter.post(
   '/gitpoap-bot/create',
-  jwtWithAdminOAuth(),
+  //jwtWithAdminOAuth(),
   async function (req: Request<any, any, ReqBody>, res) {
     const logger = createScopedLogger('POST /claims/gitpoap-bot/create');
 
@@ -569,6 +569,12 @@ claimsRouter.post(
       req.body.owner,
       req.body.pullRequestNumber,
     );
+    if (pull === null) {
+      const msg = `Failed to query repo data for "${req.body.owner}/${req.body.repo}" via GitHub API`;
+      logger.error(msg);
+      endTimer({ status: 404 });
+      return res.status(404).send({ msg });
+    }
 
     // Ensure that we've created a user in our system for the claim
     const user = await upsertUser(pull.user.id, pull.user.login);
