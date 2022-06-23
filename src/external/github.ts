@@ -30,11 +30,6 @@ export type GithubPullRequestData = {
   head: {
     sha: string;
   };
-  base: {
-    repo: {
-      id: number;
-    };
-  };
 };
 
 export type GithubRepoResponse = {
