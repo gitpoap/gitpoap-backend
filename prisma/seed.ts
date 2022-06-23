@@ -66,6 +66,7 @@ async function main() {
   const repo568 = await RepoFactory.createRepo('repo568', 568, org3.id);
   const repoDopex = await RepoFactory.createRepo('dopex', 127534193, org5.id);
   const repoWagyuInstaller = await RepoFactory.createRepo('wagyu-installer', 336862756, org6.id);
+  const gitpoapBotTestRepo = await RepoFactory.createRepo('gitpoap-bot-test-repo', 502133931, org4.id); // real id
 
   /* Create GitPOAPs */
   const gitpoap1 = await GitPOAPFactory.createGitPOAP(2022, 1, repo34.id, '012345', GitPOAPStatus.APPROVED);
