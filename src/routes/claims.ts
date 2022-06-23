@@ -11,7 +11,12 @@ import { isSignatureValid } from '../signatures';
 import jwt from 'express-jwt';
 import { jwtWithAdminOAuth } from '../middleware';
 import { AccessTokenPayload, AccessTokenPayloadWithOAuth } from '../types/tokens';
-import { retrieveClaimInfo, redeemPOAP, requestPOAPCodes } from '../external/poap';
+import {
+  redeemPOAP,
+  requestPOAPCodes,
+  retrieveClaimInfo,
+  retrievePOAPEventInfo,
+} from '../external/poap';
 import { getSingleGithubRepositoryPullAsAdmin, getGithubUserById } from '../external/github';
 import { JWT_SECRET } from '../environment';
 import { createScopedLogger } from '../logging';
@@ -19,8 +24,13 @@ import { MINIMUM_REMAINING_REDEEM_CODES, REDEEM_CODE_STEP_SIZE } from '../consta
 import { httpRequestDurationSeconds } from '../metrics';
 import { DateTime } from 'luxon';
 import { sleep } from '../lib/sleep';
-import { backloadGithubPullRequestData } from '../lib/pullRequests';
+import {
+  backloadGithubPullRequestData,
+  upsertGithubPullRequest,
+  extractMergeCommitSha,
+} from '../lib/pullRequests';
 import { upsertUser } from '../lib/users';
+import { createNewClaimsForRepoPR, RepoData } from '../lib/claims';
 
 export const claimsRouter = Router();
 
@@ -433,6 +443,94 @@ claimsRouter.post('/create', jwtWithAdminOAuth(), async function (req, res) {
   backloadGithubPullRequestData(gitPOAPData.repoId);
 });
 
+async function getRepoByName(owner: string, repo: string): Promise<RepoData | null> {
+  const logger = createScopedLogger('getRepoByName');
+
+  const result = await context.prisma.repo.findMany({
+    where: {
+      name: repo,
+      organization: {
+        name: owner,
+      },
+      gitPOAPs: {
+        every: {
+          ongoing: true,
+        },
+      },
+    },
+    select: {
+      id: true,
+      gitPOAPs: {
+        select: {
+          id: true,
+          year: true,
+          threshold: true,
+        },
+      },
+    },
+  });
+
+  if (result.length === 0) {
+    logger.error(`Couldn't find any repos in the DB named "${owner}/${repo}"`);
+    return null;
+  } else if (result.length > 1) {
+    logger.error(`Found multiple repos in DB named "${owner}/${repo}"`);
+    return null;
+  }
+
+  return result[0];
+}
+
+type BotClaimData = {
+  id: number;
+  gitPOAP: { id: number; poapEventId: number; threshold: number };
+  name: string;
+  imageUrl: string;
+  description: string;
+};
+
+async function retrieveClaimsCreatedByPRForBot(pullRequestId: number): Promise<BotClaimData[]> {
+  const logger = createScopedLogger('retrieveClaimsCreatedByPRForBot');
+
+  // Retrieve any new claims created by this new PR
+  const newClaims = await context.prisma.claim.findMany({
+    where: {
+      pullRequestEarnedId: pullRequestId,
+    },
+    select: {
+      id: true,
+      gitPOAP: {
+        select: {
+          id: true,
+          poapEventId: true,
+          threshold: true,
+        },
+      },
+    },
+  });
+
+  let claimsData: BotClaimData[] = [];
+  for (const claim of newClaims) {
+    const poapEvent = await retrievePOAPEventInfo(claim.gitPOAP.poapEventId);
+    if (poapEvent === null) {
+      logger.error(
+        `Failed to lookup POAP event (${claim.gitPOAP.poapEventId}) for GitPOAP id ${claim.gitPOAP.id}`,
+      );
+      // Just skip this Claim if we caught an error, and we can investigate afterwards
+      continue;
+    }
+
+    claimsData.push({
+      name: poapEvent.name,
+      imageUrl: poapEvent.image_url,
+      description: poapEvent.description,
+      ...claim,
+    });
+  }
+
+  return claimsData;
+}
+
 type ReqBody = { repo: string; owner: string; pullRequestNumber: number };
 
 claimsRouter.post(
@@ -440,7 +538,9 @@ claimsRouter.post(
   jwtWithAdminOAuth(),
   async function (req: Request<any, any, ReqBody>, res) {
     const logger = createScopedLogger('POST /claims/gitpoap-bot/create');
+
     logger.debug(`Body: ${JSON.stringify(req.body)}`);
+
     const endTimer = httpRequestDurationSeconds.startTimer('POST', '/claims/gitpoap-bot/create');
 
     const schemaResult = CreateGitPOAPBotClaimsSchema.safeParse(req.body);
@@ -453,8 +553,16 @@ claimsRouter.post(
     }
 
     logger.info(
-      `Request to create claim for PR #${req.body.pullRequestNumber} on "${req.body.owner}/${req.body.repo}`,
+      `Request to create claim for PR #${req.body.pullRequestNumber} on "${req.body.owner}/${req.body.repo}"`,
     );
+
+    const repo = await getRepoByName(req.body.owner, req.body.repo);
+    if (repo === null) {
+      const msg = `Failed to find repo: "${req.body.owner}/${req.body.repo}"`;
+      logger.warn(msg);
+      endTimer({ status: 404 });
+      return res.status(404).send({ msg });
+    }
 
     const pull = await getSingleGithubRepositoryPullAsAdmin(
       req.body.repo,
@@ -462,77 +570,23 @@ claimsRouter.post(
       req.body.pullRequestNumber,
     );
 
-    const mergedAt = DateTime.fromISO(pull.merged_at);
+    // Ensure that we've created a user in our system for the claim
+    const user = await upsertUser(pull.user.id, pull.user.login);
 
-    const gitPOAPData = await context.prisma.gitPOAP.findFirst({
-      where: {
-        repo: {
-          githubRepoId: pull.base.repo.id,
-        },
-        year: mergedAt.year,
-      },
-    });
-
-    if (gitPOAPData === null) {
-      const errMsg = `No applicable GitPOAP found for PR #${req.body.pullRequestNumber} on repo: ${req.body.owner}/${req.body.repo} and year: ${mergedAt.year}`;
-      logger.warn(errMsg);
-      endTimer({ status: 404 });
-      return res.status(404).send({
-        msg: errMsg,
-      });
-    }
-
-    if (gitPOAPData.status === GitPOAPStatus.UNAPPROVED) {
-      const msg = `GitPOAP ID ${gitPOAPData.id} has not been approved yet`;
-      logger.warn(msg);
-      endTimer({ status: 400 });
-      return res.status(400).send({ msg });
-    }
-
-    const githubUserInfo = await getGithubUserById(
-      pull.user.id,
-      (<AccessTokenPayloadWithOAuth>req.user).githubOAuthToken,
+    const githubPullRequest = await upsertGithubPullRequest(
+      repo.id,
+      pull.number,
+      pull.title,
+      // Since we are getting from the merge message, we assume this is not null
+      new Date(<string>pull.merged_at),
+      extractMergeCommitSha(pull),
+      user.id,
     );
 
-    if (githubUserInfo === null) {
-      const msg = `GitHub user with ID ${pull.user.id} not found`;
-      logger.warn(msg);
-      endTimer({ status: 400 });
-      return res.status(400).send({ msg });
-    }
+    // Create any new claims (if they haven't been already)
+    await createNewClaimsForRepoPR(user, repo, githubPullRequest);
 
-    // Ensure that we've created a user in our system for the claim
-    const user = await upsertUser(pull.user.id, githubUserInfo.login);
-
-    const claim = context.prisma.claim.findUnique({
-      where: {
-        gitPOAPId_userId: {
-          gitPOAPId: gitPOAPData.id,
-          userId: user.id,
-        },
-      },
-    });
-
-    if (claim !== null) {
-      logger.warn(`Claim for gitPOAPId: ${gitPOAPData.id} and userId: ${user.id} already exists`);
-      endTimer({ status: 409 });
-      res.status(409).send('CONFLICT');
-    }
-
-    await context.prisma.claim.create({
-      data: {
-        gitPOAP: {
-          connect: {
-            id: gitPOAPData.id,
-          },
-        },
-        user: {
-          connect: {
-            id: user.id,
-          },
-        },
-      },
-    });
+    const newClaims = await retrieveClaimsCreatedByPRForBot(githubPullRequest.id);
 
     logger.debug(
       `Completed request to create claim for PR #${req.body.pullRequestNumber} on "${req.body.owner}/${req.body.repo}`,
@@ -540,9 +594,6 @@ claimsRouter.post(
 
     endTimer({ status: 200 });
 
-    res.status(200).send('CREATED');
-
-    // Run the backloader in the background
-    backloadGithubPullRequestData(gitPOAPData.repoId);
+    res.status(200).send({ newClaims });
   },
 );
