@@ -11,6 +11,8 @@ export const ADMIN_GITHUB_IDS = [
   23272494, // kayleen / nixorokish
 ];
 
+export const GITPOAP_BOT_APP_ID = 209535;
+
 // The minimum number of redeem codes we need to maintain
 // for "ongoing" GitPOAPs. If we reach this threshold after
 // a claim, we will request additional codes

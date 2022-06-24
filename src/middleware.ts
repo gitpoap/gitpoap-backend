@@ -5,7 +5,8 @@ import { AccessTokenPayload } from './types/tokens';
 import { ErrorRequestHandler, RequestHandler } from 'express';
 import { JWT_SECRET } from './environment';
 import { createScopedLogger } from './logging';
-import { ADMIN_GITHUB_IDS } from './constants';
+import { ADMIN_GITHUB_IDS, GITPOAP_BOT_APP_ID } from './constants';
+import { getGithubAuthenticatedApp } from './external/github';
 
 export function jwtWithOAuth() {
   const jwtMiddleware = jwt({ secret: JWT_SECRET as string, algorithms: ['HS256'] });
@@ -67,6 +68,47 @@ export function jwtWithAdminOAuth() {
     };
 
     jwtMiddleware(req, res, callback);
+  };
+
+  return middleware;
+}
+
+// Auth middleware for gitpoap-bot
+export function gitpoapBotAuth() {
+  const logger = createScopedLogger('gitpoapBotAuth');
+
+  const middleware: RequestHandler = async (req, res, next) => {
+    if (!req.headers.authorization) {
+      logger.warn('Non-gitpoap-bot user attempted to hit a gitpoap-bot route');
+      next({ status: 401, msg: 'You are not privileged for this endpoint' });
+      return;
+    }
+
+    const authParts = req.headers.authorization.split(' ');
+
+    if (authParts.length !== 2 || authParts[0] !== 'Bearer') {
+      logger.warn('gitpoap-bot route hit with invalid credentials');
+      next({ status: 400, msg: 'Invalid credentials' });
+      return;
+    }
+
+    const token = authParts[1];
+
+    const githubApp = await getGithubAuthenticatedApp(token);
+
+    if (!githubApp) {
+      logger.warn('gitpoap-bot route hit with invalid credentials');
+      next({ status: 400, msg: 'Invalid credentials' });
+      return;
+    }
+
+    if (githubApp.id !== GITPOAP_BOT_APP_ID) {
+      logger.warn(`Unauthorized app id ${githubApp.id} attempted to access gitpoap-bot routes`);
+      next({ status: 401, msg: 'You are not privileged for this endpoint' });
+      return;
+    }
+
+    next();
   };
 
   return middleware;

@@ -116,6 +116,10 @@ async function makeGithubAPIRequest(path: string, githubToken: string) {
   return await makeGithubAPIRequestInternal(path, `token ${githubToken}`);
 }
 
+async function makeGithubJWTAPIRequest(path: string, jwtToken: string) {
+  return await makeGithubAPIRequestInternal(path, `Bearer ${jwtToken}`);
+}
+
 // This should only be used for our background processes
 async function makeAdminGithubAPIRequest(path: string) {
   const basicAuthString = Buffer.from(
@@ -241,3 +245,7 @@ export const getSingleGithubRepositoryPullAsAdmin = async (
 ): Promise<GithubPullRequestData> => {
   return await makeAdminGithubAPIRequest(`/repos/${org}/${repo}/pulls/${pullRequestNum}`);
 };
+
+export async function getGithubAuthenticatedApp(jwtToken: string) {
+  return await makeGithubJWTAPIRequest('/app', jwtToken);
+}
