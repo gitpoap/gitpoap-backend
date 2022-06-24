@@ -9,7 +9,7 @@ import { ClaimStatus, GitPOAP, GitPOAPStatus } from '@prisma/client';
 import { resolveENS } from '../external/ens';
 import { isSignatureValid } from '../signatures';
 import jwt from 'express-jwt';
-import { jwtWithAdminOAuth } from '../middleware';
+import { jwtWithAdminOAuth, gitpoapBotAuth } from '../middleware';
 import { AccessTokenPayload, AccessTokenPayloadWithOAuth } from '../types/tokens';
 import { redeemPOAP, requestPOAPCodes, retrieveClaimInfo } from '../external/poap';
 import { getSingleGithubRepositoryPullAsAdmin, getGithubUserById } from '../external/github';
@@ -443,7 +443,7 @@ type ReqBody = { repo: string; owner: string; pullRequestNumber: number };
 
 claimsRouter.post(
   '/gitpoap-bot/create',
-  //jwtWithAdminOAuth(),
+  gitpoapBotAuth(),
   async function (req: Request<any, any, ReqBody>, res) {
     const logger = createScopedLogger('POST /claims/gitpoap-bot/create');
 
