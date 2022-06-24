@@ -53,6 +53,7 @@ export class CustomOrganizationResolver {
       INNER JOIN "GitPOAP" AS g ON g."repoId" = r.id
       INNER JOIN "Claim" AS c ON c."gitPOAPId" = g.id
       WHERE ${orgId ? Prisma.sql`o.id = ${orgId}` : Prisma.sql`o.name = ${orgName}`}
+      AND c.status = ${ClaimStatus.CLAIMED}
       GROUP BY o.id
     `;
 
