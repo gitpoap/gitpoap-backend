@@ -90,6 +90,10 @@ async function main() {
   const gitpoap13 = await GitPOAPFactory.createGitPOAP(2022, 37429, repoWagyuInstaller.id, '324325', GitPOAPStatus.UNAPPROVED, true, 2, 2);
   const gitpoap14 = await GitPOAPFactory.createGitPOAP(2022, 37430, repoWagyuInstaller.id, '324326', GitPOAPStatus.UNAPPROVED, true, 3, 3);
 
+  // For gitpoap-bot-test-repo (uses random POAP IDs)
+  const gitpoap15 = await GitPOAPFactory.createGitPOAP(2022, 36573, gitpoapBotTestRepo.id, '123456', GitPOAPStatus.APPROVED, true);
+  const gitpoap16 = await GitPOAPFactory.createGitPOAP(2022, 36574, gitpoapBotTestRepo.id, '123456', GitPOAPStatus.APPROVED, true, 2, 2);
+
   /* Add codes */
   await RedeemCodeFactory.addRedeemCodes(['6j8wda', 'tqaq9y', 'd4tdh0', 'o9uorf', 'eeyewe', '09wqld', 'tsl7wt', 'i52wvt', 'mshofb', 'v9cbcd'], gitpoap7.id);
   await RedeemCodeFactory.addRedeemCodes(['7s4dn3', 'q9237f', 'd0e21q', 'qzaj5c', 'ozy2c9', 'p7yqjo', 'cgsevm', 'hou5kq', 'j6sxom', '058qv8'], gitpoap8.id);
