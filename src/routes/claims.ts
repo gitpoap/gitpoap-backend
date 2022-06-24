@@ -473,8 +473,8 @@ claimsRouter.post(
     }
 
     const pull = await getSingleGithubRepositoryPullAsAdmin(
-      req.body.repo,
       req.body.owner,
+      req.body.repo,
       req.body.pullRequestNumber,
     );
     if (pull === null) {
