@@ -25,14 +25,16 @@ export async function createNewClaimsForRepoPR(
   githubPullRequest: { id: number },
 ) {
   // We assume here that all the ongoing GitPOAPs have the same year
-  const prCountData: { count: number }[] = await context.prisma.$queryRaw`
-    SELECT COUNT(id)
-    FROM "GithubPullRequest"
-    WHERE "userId" = ${user.id} AND "repoId" = ${repo.id}
-      AND date_part('year', "githubMergedAt") = ${repo.gitPOAPs[0].year}
-  `;
-  // There must be a result since we just created a PR
-  const prCount = prCountData[0].count;
+  const prCount = await context.prisma.githubPullRequest.count({
+    where: {
+      userId: user.id,
+      repoId: repo.id,
+      githubMergedAt: {
+        gte: new Date(repo.gitPOAPs[0].year, 0, 1),
+        lt: new Date(repo.gitPOAPs[0].year + 1, 0, 1),
+      },
+    },
+  });
 
   for (const gitPOAP of repo.gitPOAPs) {
     // Skip this GitPOAP if the threshold wasn't reached
