@@ -992,6 +992,12 @@ type Query {
   mostHonoredContributors(count: Float = 10): [ProfileWithClaimsCount!]!
   organization(where: OrganizationWhereUniqueInput!): Organization
   organizationData(orgId: Float = null, orgName: String = null): OrganizationData
+  organizationRepos(
+    orgId: Float!
+    page: Float = null
+    perPage: Float = null
+    sort: String = "alphabetical"
+  ): [RepoData!]
   organizations(
     cursor: OrganizationWhereUniqueInput
     distinct: [OrganizationScalarFieldEnum!]
