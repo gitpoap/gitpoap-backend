@@ -11,6 +11,8 @@ export class RepoData extends Repo {
   @Field()
   contributorCount: number;
   @Field()
+  gitPOAPCount: number;
+  @Field()
   mintedGitPOAPCount: number;
 }
 
@@ -33,7 +35,10 @@ export class CustomRepoResolver {
 
     if (repoId) {
       results = await prisma.$queryRaw<RepoData[]>`
-        SELECT r.*, COUNT(DISTINCT c."userId") AS "contributorCount", COUNT(c.id) AS "mintedGitPOAPCount"
+        SELECT r.*, 
+          COUNT(DISTINCT c."userId") AS "contributorCount",
+          COUNT(DISTINCT g.id) AS "gitPOAPCount",
+          COUNT(c.id) AS "mintedGitPOAPCount"
         FROM "Repo" as r
         INNER JOIN "GitPOAP" AS g ON g."repoId" = r.id
         INNER JOIN "Claim" AS c ON c."gitPOAPId" = g.id
@@ -50,7 +55,10 @@ export class CustomRepoResolver {
       logger.debug(`Completed request for data from repo: ${repoId}`);
     } else if (orgName && repoName) {
       results = await prisma.$queryRaw<RepoData[]>`
-        SELECT r.*, COUNT(DISTINCT c."userId") AS "contributorCount", COUNT(c.id) AS "mintedGitPOAPCount"
+        SELECT r.*, 
+          COUNT(DISTINCT c."userId") AS "contributorCount",
+          COUNT(DISTINCT g.id) AS "gitPOAPCount",
+          COUNT(c.id) AS "mintedGitPOAPCount"
         FROM "Repo" as r
         INNER JOIN "Organization" AS o ON o.id = r."organizationId"
         INNER JOIN "GitPOAP" AS g ON g."repoId" = r.id

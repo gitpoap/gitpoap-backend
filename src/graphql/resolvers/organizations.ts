@@ -45,7 +45,7 @@ export class CustomOrganizationResolver {
     let results = await prisma.$queryRaw<OrganizationData[]>`
       SELECT o.*, 
         COUNT(DISTINCT c."userId") AS "contributorCount",
-        COUNT(DISTINCT g."id") AS "gitPOAPCount",
+        COUNT(DISTINCT g.id) AS "gitPOAPCount",
         COUNT(c.id) AS "mintedGitPOAPCount",
         COUNT(DISTINCT r.id) AS "projectCount"
       FROM "Organization" as o
@@ -173,7 +173,10 @@ export class CustomOrganizationResolver {
       : Prisma.empty;
 
     const results = await prisma.$queryRaw<RepoData[]>`
-      SELECT r.*, COUNT(DISTINCT c."userId") AS "contributorCount", COUNT(c.id) AS "mintedGitPOAPCount"
+      SELECT r.*, 
+        COUNT(DISTINCT c."userId") AS "contributorCount",
+        COUNT(DISTINCT g.id) AS "gitPOAPCount",
+        COUNT(c.id) AS "mintedGitPOAPCount"
       FROM "Repo" as r
       INNER JOIN "GitPOAP" AS g ON g."repoId" = r.id
       INNER JOIN "Claim" AS c ON c."gitPOAPId" = g.id

@@ -1152,6 +1152,7 @@ type RepoData {
   _count: RepoCount
   contributorCount: Float!
   createdAt: DateTime!
+  gitPOAPCount: Float!
   gitPOAPs(
     cursor: GitPOAPWhereUniqueInput
     distinct: [GitPOAPScalarFieldEnum!]
