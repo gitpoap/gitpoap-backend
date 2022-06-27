@@ -35,7 +35,7 @@ function fillInUpsert(userId: number, gitPOAPId: number, prId: number) {
 
 describe('createNewClaimsForRepoPR', () => {
   it('Does nothing when threshold is not met', async () => {
-    contextMock.prisma.$queryRaw.mockResolvedValue([{ count: 1 }]);
+    contextMock.prisma.githubPullRequest.count.mockResolvedValue(1);
 
     const repo: RepoData = {
       id: 43,
@@ -50,13 +50,13 @@ describe('createNewClaimsForRepoPR', () => {
 
     await createNewClaimsForRepoPR(user, repo, pr);
 
-    expect(contextMock.prisma.$queryRaw).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.githubPullRequest.count).toHaveBeenCalledTimes(1);
 
     expect(contextMock.prisma.claim.upsert).toHaveBeenCalledTimes(0);
   });
 
   it('Creates claim when threshold is met', async () => {
-    contextMock.prisma.$queryRaw.mockResolvedValue([{ count: 1 }]);
+    contextMock.prisma.githubPullRequest.count.mockResolvedValue(1);
 
     const repo: RepoData = {
       id: 43,
@@ -71,7 +71,7 @@ describe('createNewClaimsForRepoPR', () => {
 
     await createNewClaimsForRepoPR(user, repo, pr);
 
-    expect(contextMock.prisma.$queryRaw).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.githubPullRequest.count).toHaveBeenCalledTimes(1);
 
     expect(contextMock.prisma.claim.upsert).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.claim.upsert).toHaveBeenCalledWith(
@@ -80,7 +80,7 @@ describe('createNewClaimsForRepoPR', () => {
   });
 
   it('Creates multiple claims when thresholds are met', async () => {
-    contextMock.prisma.$queryRaw.mockResolvedValue([{ count: 4 }]);
+    contextMock.prisma.githubPullRequest.count.mockResolvedValue(4);
 
     const repo: RepoData = {
       id: 43,
@@ -105,7 +105,7 @@ describe('createNewClaimsForRepoPR', () => {
 
     await createNewClaimsForRepoPR(user, repo, pr);
 
-    expect(contextMock.prisma.$queryRaw).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.githubPullRequest.count).toHaveBeenCalledTimes(1);
 
     expect(contextMock.prisma.claim.upsert).toHaveBeenCalledTimes(2);
     expect(contextMock.prisma.claim.upsert).toHaveBeenCalledWith(
