@@ -12,11 +12,6 @@ async function getRepoInfo(repoId: number) {
   const result = await context.prisma.repo.findMany({
     where: {
       id: repoId,
-      gitPOAPs: {
-        every: {
-          ongoing: true,
-        },
-      },
     },
     select: {
       id: true,
@@ -27,6 +22,9 @@ async function getRepoInfo(repoId: number) {
         },
       },
       gitPOAPs: {
+        where: {
+          ongoing: true,
+        },
         select: {
           id: true,
           year: true,

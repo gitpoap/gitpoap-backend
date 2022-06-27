@@ -174,18 +174,14 @@ async function runOngoingIssuanceUpdater() {
   const endTimer = overallOngoingIssuanceDurationSeconds.startTimer();
 
   const repos: RepoReturnType[] = await context.prisma.repo.findMany({
-    where: {
-      gitPOAPs: {
-        every: {
-          ongoing: true,
-        },
-      },
-    },
     select: {
       id: true,
       name: true,
       lastPRUpdatedAt: true,
       gitPOAPs: {
+        where: {
+          ongoing: true,
+        },
         select: {
           id: true,
           year: true,
