@@ -179,8 +179,11 @@ export class CustomOrganizationResolver {
         COUNT(c.id) AS "mintedGitPOAPCount"
       FROM "Repo" as r
       INNER JOIN "GitPOAP" AS g ON g."repoId" = r.id
-      INNER JOIN "Claim" AS c ON c."gitPOAPId" = g.id
-      WHERE r."organizationId" = ${orgId} AND c.status = ${ClaimStatus.CLAIMED}
+      LEFT JOIN 
+        (SELECT * 
+          FROM "Claim" 
+          WHERE status = ${ClaimStatus.CLAIMED}) AS c ON c."gitPOAPId" = g.id
+      WHERE r."organizationId" = ${orgId}
       GROUP BY r.id
       ORDER BY ${orderBy}
       ${pagination}

@@ -41,8 +41,11 @@ export class CustomRepoResolver {
           COUNT(c.id) AS "mintedGitPOAPCount"
         FROM "Repo" as r
         INNER JOIN "GitPOAP" AS g ON g."repoId" = r.id
-        INNER JOIN "Claim" AS c ON c."gitPOAPId" = g.id
-        WHERE r.id = ${repoId} AND c.status = ${ClaimStatus.CLAIMED}
+        LEFT JOIN 
+          (SELECT * 
+            FROM "Claim" 
+            WHERE status = ${ClaimStatus.CLAIMED}) AS c ON c."gitPOAPId" = g.id
+        WHERE r.id = ${repoId}
         GROUP BY r.id
       `;
 
@@ -62,8 +65,11 @@ export class CustomRepoResolver {
         FROM "Repo" as r
         INNER JOIN "Organization" AS o ON o.id = r."organizationId"
         INNER JOIN "GitPOAP" AS g ON g."repoId" = r.id
-        INNER JOIN "Claim" AS c ON c."gitPOAPId" = g.id
-        WHERE o.name = ${orgName} AND r.name = ${repoName} AND c.status = ${ClaimStatus.CLAIMED}
+        LEFT JOIN 
+          (SELECT * 
+            FROM "Claim" 
+            WHERE status = ${ClaimStatus.CLAIMED}) AS c ON c."gitPOAPId" = g.id
+        WHERE o.name = ${orgName} AND r.name = ${repoName}
         GROUP BY r.id
       `;
 
