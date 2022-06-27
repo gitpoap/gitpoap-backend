@@ -173,16 +173,11 @@ export class CustomOrganizationResolver {
       : Prisma.empty;
 
     const results = await prisma.$queryRaw<RepoData[]>`
-      SELECT r.*, 
-        COUNT(DISTINCT c."userId") AS "contributorCount",
-        COUNT(c.id) AS "mintedGitPOAPCount"
+      SELECT r.*, COUNT(DISTINCT c."userId") AS "contributorCount", COUNT(c.id) AS "mintedGitPOAPCount"
       FROM "Repo" as r
       INNER JOIN "GitPOAP" AS g ON g."repoId" = r.id
-      LEFT JOIN 
-        (SELECT * 
-          FROM "Claim" 
-          WHERE status = ${ClaimStatus.CLAIMED}) AS c ON c."gitPOAPId" = g.id
-      WHERE r."organizationId" = ${orgId}
+      INNER JOIN "Claim" AS c ON c."gitPOAPId" = g.id
+      WHERE r."organizationId" = ${orgId} AND c.status = ${ClaimStatus.CLAIMED}
       GROUP BY r.id
       ORDER BY ${orderBy}
       ${pagination}
