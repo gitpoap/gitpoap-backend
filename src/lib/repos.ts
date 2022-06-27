@@ -11,15 +11,13 @@ export async function getRepoByName(owner: string, repo: string): Promise<RepoDa
       organization: {
         name: owner,
       },
-      gitPOAPs: {
-        every: {
-          ongoing: true,
-        },
-      },
     },
     select: {
       id: true,
       gitPOAPs: {
+        where: {
+          ongoing: true,
+        },
         select: {
           id: true,
           year: true,
