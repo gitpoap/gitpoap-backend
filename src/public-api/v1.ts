@@ -192,6 +192,24 @@ v1Router.get('/repo/:owner/:name/badge', async (req, res) => {
     },
   });
 
+  const repo = await context.prisma.repo.findFirst({
+    select: {
+      id: true,
+      name: true,
+      organization: {
+        select: {
+          name: true,
+        },
+      },
+    },
+    where: {
+      organization: {
+        name: req.params.owner,
+      },
+      name: req.params.name,
+    },
+  });
+
   //~ See https://github.com/badgen/badgen
   const badgeSvg = badgen({
     label: 'GitPOAPs',
@@ -200,6 +218,16 @@ v1Router.get('/repo/:owner/:name/badge', async (req, res) => {
     icon: `data:image/svg+xml;utf8,${encodeURIComponent(GitPOAPMiniLogo)}`,
   });
 
+  /* Embed link to the repo page in the badge */
+  const badgeSvgWithLink = badgeSvg
+    .replace(
+      '<title>',
+      /* Eventually use new URL route */
+      // `<a href="https://gitpoap.io/repo/${req.params.owner}/${req.params.name}"><title>GitPOAPs: `,
+      `<a href="https://gitpoap.io/rp/${repo?.id ?? ''}"><title>`,
+    )
+    .replace('</svg>', `</a></svg>`);
+
   endTimer({ status: 200 });
 
   logger.debug(
@@ -207,5 +235,5 @@ v1Router.get('/repo/:owner/:name/badge', async (req, res) => {
   );
 
   res.header('Content-Type', 'image/svg+xml');
-  return res.status(200).send(badgeSvg);
+  return res.status(200).send(badgeSvgWithLink);
 });
