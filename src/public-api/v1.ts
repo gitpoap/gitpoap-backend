@@ -223,7 +223,7 @@ v1Router.get('/repo/:owner/:name/badge', async (req, res) => {
     .replace(
       '<title>',
       /* Eventually use new URL route */
-      // `<a href="https://gitpoap.io/repo/${req.params.owner}/${req.params.name}"><title>GitPOAPs: `,
+      // `<a href="https://gitpoap.io/repo/${req.params.owner}/${req.params.name}"><title>`,
       `<a href="https://gitpoap.io/rp/${repo?.id ?? ''}"><title>`,
     )
     .replace('</svg>', `</a></svg>`);
