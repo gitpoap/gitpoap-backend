@@ -218,13 +218,15 @@ v1Router.get('/repo/:owner/:name/badge', async (req, res) => {
     icon: `data:image/svg+xml;utf8,${encodeURIComponent(GitPOAPMiniLogo)}`,
   });
 
+  const url = repo?.id ? `https://gitpoap.io/rp/${repo.id}` : 'https://gitpoap.io';
+
   /* Embed link to the repo page in the badge */
   const badgeSvgWithLink = badgeSvg
     .replace(
       '<title>',
-      /* Eventually use new URL route */
+      /* Eventually use new URL route for gitpoap repo pages */
       // `<a href="https://gitpoap.io/repo/${req.params.owner}/${req.params.name}"><title>`,
-      `<a href="https://gitpoap.io/rp/${repo?.id ?? ''}"><title>`,
+      `<a href="${url}"><title>`,
     )
     .replace('</svg>', `</a></svg>`);
 
