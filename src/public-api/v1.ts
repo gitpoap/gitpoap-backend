@@ -195,12 +195,6 @@ v1Router.get('/repo/:owner/:name/badge', async (req, res) => {
   const repo = await context.prisma.repo.findFirst({
     select: {
       id: true,
-      name: true,
-      organization: {
-        select: {
-          name: true,
-        },
-      },
     },
     where: {
       organization: {
