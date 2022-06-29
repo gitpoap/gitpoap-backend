@@ -10,6 +10,7 @@ import { GitPOAPStatus } from '@generated/type-graphql';
 import { httpRequestDurationSeconds } from '../metrics';
 import { upsertProjectById } from '../lib/projects';
 import { AccessTokenPayloadWithOAuth } from '../types/tokens';
+import { backloadGithubPullRequestData } from '../lib/pullRequests';
 
 export const gitpoapsRouter = Router();
 
@@ -178,6 +179,10 @@ gitpoapsRouter.post(
       return res.status(400).send({ msg });
     }
 
+    const gitPOAPId = parseInt(req.body.id, 10);
+
+    logger.info(`Request to upload codes for GitPOAP ID ${gitPOAPId}`);
+
     let codes;
     try {
       codes = req.file.buffer
@@ -200,8 +205,6 @@ gitpoapsRouter.post(
       return res.status(500).send({ msg });
     }
 
-    const gitPOAPId = parseInt(req.body.id, 10);
-
     await context.prisma.redeemCode.createMany({
       data: codes.map((code: string) => {
         return {
@@ -221,8 +224,30 @@ gitpoapsRouter.post(
       },
     });
 
+    logger.debug(`Completed request to upload codes for GitPOAP ID ${gitPOAPId}`);
+
     endTimer({ status: 200 });
 
-    return res.status(200).send('UPLOADED');
+    res.status(200).send('UPLOADED');
+
+    // Run the backloader in the background so that claims are created immediately
+    const gitPOAPData = await context.prisma.gitPOAP.findUnique({
+      where: {
+        id: gitPOAPId,
+      },
+      select: {
+        repo: {
+          select: {
+            id: true,
+          },
+        },
+      },
+    });
+    if (gitPOAPData === null) {
+      logger.error(`Failed to lookup the Repo ID for GitPOAP ID ${gitPOAPId}`);
+      return;
+    }
+
+    backloadGithubPullRequestData(gitPOAPData.repo.id);
   },
 );
