@@ -166,7 +166,7 @@ export async function checkForNewContributions(repo: RepoReturnType) {
   logger.debug(`Finished checking for new contributions to ${repo.organization.name}/${repo.name}`);
 }
 
-async function runOngoingIssuanceUpdater() {
+export async function runOngoingIssuanceUpdater() {
   const logger = createScopedLogger('runOngoingIssuanceUpdater');
 
   logger.info('Running the ongoing issuance updater process');
@@ -222,6 +222,22 @@ async function runOngoingIssuanceUpdater() {
   logger.debug('Finished running the ongoing issuance updater process');
 }
 
+export async function updateOngoingIssuanceLastRun() {
+  const now = DateTime.now().toJSDate();
+  await context.prisma.batchTiming.upsert({
+    where: {
+      name: ONGOING_ISSUANCE_BATCH_TIMING_KEY,
+    },
+    update: {
+      lastRun: now,
+    },
+    create: {
+      name: ONGOING_ISSUANCE_BATCH_TIMING_KEY,
+      lastRun: now,
+    },
+  });
+}
+
 // Try to run ongoing issuance updater if there has been enough time elapsed since
 // any instance last ran it
 export async function tryToRunOngoingIssuanceUpdater() {
@@ -248,19 +264,7 @@ export async function tryToRunOngoingIssuanceUpdater() {
 
     // Update the last time ran to now (we do this first so the other instance
     // also doesn't start this process)
-    const now = DateTime.now().toJSDate();
-    await context.prisma.batchTiming.upsert({
-      where: {
-        name: ONGOING_ISSUANCE_BATCH_TIMING_KEY,
-      },
-      update: {
-        lastRun: now,
-      },
-      create: {
-        name: ONGOING_ISSUANCE_BATCH_TIMING_KEY,
-        lastRun: now,
-      },
-    });
+    await updateOngoingIssuanceLastRun();
 
     await runOngoingIssuanceUpdater();
 

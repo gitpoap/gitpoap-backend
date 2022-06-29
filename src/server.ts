@@ -13,6 +13,7 @@ import { gitpoapsRouter } from './routes/gitpoaps';
 import { profilesRouter } from './routes/profiles';
 import { projectsRouter } from './routes/projects';
 import { organizationsRouter } from './routes/organizations';
+import { triggersRouter } from './routes/triggers';
 import { CONTACTS_TABLE_NAME } from './dynamo';
 import {
   MILLISECONDS_PER_MINUTE,
@@ -72,6 +73,7 @@ const main = async () => {
   app.use('/profiles', profilesRouter);
   app.use('/projects', projectsRouter);
   app.use('/organizations', organizationsRouter);
+  app.use('/triggers', triggersRouter);
 
   app.use(errorHandler);
 
