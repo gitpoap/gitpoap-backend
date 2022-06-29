@@ -208,7 +208,11 @@ async function runOngoingIssuanceUpdater() {
       await sleep(DELAY_BETWEEN_ONGOING_ISSUANCE_CHECKS_SECONDS);
     }
 
-    await checkForNewContributions(repos[i]);
+    try {
+      await checkForNewContributions(repos[i]);
+    } catch (err) {
+      logger.error(`Failed to run the ongoing issuance process for Repo ID ${repos[i]}: ${err}`);
+    }
   }
 
   endTimer({ processed_count: repos.length });
