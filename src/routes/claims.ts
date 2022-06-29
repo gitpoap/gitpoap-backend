@@ -403,8 +403,16 @@ claimsRouter.post('/create', jwtWithAdminOAuth(), async function (req, res) {
     // system for the claim
     const user = await upsertUser(githubId, githubUserInfo.login);
 
-    await context.prisma.claim.create({
-      data: {
+    // Upsert so we can rerun the script if necessary
+    await context.prisma.claim.upsert({
+      where: {
+        gitPOAPId_userId: {
+          gitPOAPId: gitPOAPData.id,
+          userId: user.id,
+        },
+      },
+      update: {},
+      create: {
         gitPOAP: {
           connect: {
             id: gitPOAPData.id,
