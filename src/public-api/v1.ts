@@ -230,6 +230,10 @@ v1Router.get('/repo/:owner/:name/badge', async (req, res) => {
     `Completed request for GitHub badge for the repo "${req.params.owner}/${req.params.name}"`,
   );
 
-  res.header('Content-Type', 'image/svg+xml');
+  res.set({
+    'Content-Type': 'image/svg+xml',
+    'Cache-Control': 'max-age=0, no-cache, no-store, must-revalidate',
+  });
+
   return res.status(200).send(badgeSvgWithLink);
 });
