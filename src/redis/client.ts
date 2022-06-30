@@ -6,6 +6,7 @@ import { redisRequestDurationSeconds } from '../metrics';
 
 export type RedisClient = {
   connect: () => Promise<any>;
+  disconnect: () => Promise<any>;
   setValue: (prefix: string, key: string, value: string, ttl?: number) => Promise<any>;
   getValue: (prefix: string, key: string) => Promise<string | null>;
   deleteKey: (prefix: string, key: string) => Promise<any>;
@@ -26,6 +27,9 @@ export function createRedisClient(): RedisClient {
   return {
     connect: async () => {
       return await client.connect();
+    },
+    disconnect: async () => {
+      return await client.quit();
     },
     setValue: async (prefix: string, key: string, value: string, ttl?: number) => {
       const endTimer = redisRequestDurationSeconds.startTimer('SET');
