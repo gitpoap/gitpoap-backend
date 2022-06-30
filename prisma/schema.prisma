@@ -68,9 +68,20 @@ model Repo {
   organization      Organization        @relation(fields: [organizationId], references: [id])
   gitPOAPs          GitPOAP[]
   GithubPullRequest GithubPullRequest[]
+  projectId         Int?
+  project           Project?            @relation(fields: [projectId], references: [id])
   // Default to the beginning of the year, but this will update when contributions
   // are initially uploaded
   lastPRUpdatedAt   DateTime            @default(dbgenerated("date_trunc('year'::text, now())"))
+}
+
+model Project {
+  id        Int       @id @default(autoincrement())
+  name      String    @db.VarChar(50)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  repos     Repo[]
+  GitPOAP   GitPOAP[]
 }
 
 model Claim {
@@ -100,10 +111,12 @@ model GitPOAP {
   type        ClaimType     @default(ANNUAL)
   year        Int
   poapEventId Int           @unique
-  repoId      Int
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
+  repoId      Int
   repo        Repo          @relation(fields: [repoId], references: [id])
+  projectId   Int?
+  project     Project?      @relation(fields: [projectId], references: [id])
   claims      Claim[]
   // Hide poapSecret from generated resolvers
   /// @TypeGraphQL.omit(output: true, input: true)
