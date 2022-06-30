@@ -354,9 +354,10 @@ type GitPOAP {
   type: ClaimType!
   year: Int!
   poapEventId: Int!
-  repoId: Int!
   createdAt: DateTime!
   updatedAt: DateTime!
+  repoId: Int!
+  projectId: Int
   status: GitPOAPStatus!
   ongoing: Boolean!
   eventId: Int
@@ -364,6 +365,7 @@ type GitPOAP {
   threshold: Int!
   _count: GitPOAPCount
   repo: Repo!
+  project: Project
   claims(
     where: ClaimWhereInput
     orderBy: [ClaimOrderByWithRelationInput!]
@@ -407,6 +409,7 @@ type Repo {
   createdAt: DateTime!
   updatedAt: DateTime!
   organizationId: Int!
+  projectId: Int
   lastPRUpdatedAt: DateTime!
   _count: RepoCount
   organization: Organization!
@@ -426,6 +429,7 @@ type Repo {
     skip: Int
     distinct: [GithubPullRequestScalarFieldEnum!]
   ): [GithubPullRequest!]!
+  project: Project
 }
 
 type RepoCount {
@@ -470,6 +474,8 @@ input RepoWhereInput {
   organization: OrganizationRelationFilter
   gitPOAPs: GitPOAPListRelationFilter
   GithubPullRequest: GithubPullRequestListRelationFilter
+  projectId: IntNullableFilter
+  project: ProjectRelationFilter
   lastPRUpdatedAt: DateTimeFilter
 }
 
@@ -620,10 +626,12 @@ input GitPOAPWhereInput {
   type: EnumClaimTypeFilter
   year: IntFilter
   poapEventId: IntFilter
-  repoId: IntFilter
   createdAt: DateTimeFilter
   updatedAt: DateTimeFilter
+  repoId: IntFilter
   repo: RepoRelationFilter
+  projectId: IntNullableFilter
+  project: ProjectRelationFilter
   claims: ClaimListRelationFilter
   status: EnumGitPOAPStatusFilter
   ongoing: BoolFilter
@@ -651,6 +659,45 @@ input NestedEnumClaimTypeFilter {
 input RepoRelationFilter {
   is: RepoWhereInput
   isNot: RepoWhereInput
+}
+
+input IntNullableFilter {
+  equals: Int
+  in: [Int!]
+  notIn: [Int!]
+  lt: Int
+  lte: Int
+  gt: Int
+  gte: Int
+  not: NestedIntNullableFilter
+}
+
+input NestedIntNullableFilter {
+  equals: Int
+  in: [Int!]
+  notIn: [Int!]
+  lt: Int
+  lte: Int
+  gt: Int
+  gte: Int
+  not: NestedIntNullableFilter
+}
+
+input ProjectRelationFilter {
+  is: ProjectWhereInput
+  isNot: ProjectWhereInput
+}
+
+input ProjectWhereInput {
+  AND: [ProjectWhereInput!]
+  OR: [ProjectWhereInput!]
+  NOT: [ProjectWhereInput!]
+  id: IntFilter
+  name: StringFilter
+  createdAt: DateTimeFilter
+  updatedAt: DateTimeFilter
+  repos: RepoListRelationFilter
+  GitPOAP: GitPOAPListRelationFilter
 }
 
 input ClaimListRelationFilter {
@@ -761,28 +808,6 @@ input GithubPullRequestWhereInput {
   Claim: ClaimListRelationFilter
 }
 
-input IntNullableFilter {
-  equals: Int
-  in: [Int!]
-  notIn: [Int!]
-  lt: Int
-  lte: Int
-  gt: Int
-  gte: Int
-  not: NestedIntNullableFilter
-}
-
-input NestedIntNullableFilter {
-  equals: Int
-  in: [Int!]
-  notIn: [Int!]
-  lt: Int
-  lte: Int
-  gt: Int
-  gte: Int
-  not: NestedIntNullableFilter
-}
-
 input GithubPullRequestRelationFilter {
   is: GithubPullRequestWhereInput
   isNot: GithubPullRequestWhereInput
@@ -863,6 +888,8 @@ input RepoOrderByWithRelationInput {
   organization: OrganizationOrderByWithRelationInput
   gitPOAPs: GitPOAPOrderByRelationAggregateInput
   GithubPullRequest: GithubPullRequestOrderByRelationAggregateInput
+  projectId: SortOrder
+  project: ProjectOrderByWithRelationInput
   lastPRUpdatedAt: SortOrder
 }
 
@@ -895,6 +922,15 @@ input GithubPullRequestOrderByRelationAggregateInput {
   _count: SortOrder
 }
 
+input ProjectOrderByWithRelationInput {
+  id: SortOrder
+  name: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  repos: RepoOrderByRelationAggregateInput
+  GitPOAP: GitPOAPOrderByRelationAggregateInput
+}
+
 input RepoWhereUniqueInput {
   id: Int
   githubRepoId: Int
@@ -907,6 +943,7 @@ enum RepoScalarFieldEnum {
   createdAt
   updatedAt
   organizationId
+  projectId
   lastPRUpdatedAt
 }
 
@@ -915,10 +952,12 @@ input GitPOAPOrderByWithRelationInput {
   type: SortOrder
   year: SortOrder
   poapEventId: SortOrder
-  repoId: SortOrder
   createdAt: SortOrder
   updatedAt: SortOrder
+  repoId: SortOrder
   repo: RepoOrderByWithRelationInput
+  projectId: SortOrder
+  project: ProjectOrderByWithRelationInput
   claims: ClaimOrderByRelationAggregateInput
   status: SortOrder
   ongoing: SortOrder
@@ -964,9 +1003,10 @@ enum GitPOAPScalarFieldEnum {
   type
   year
   poapEventId
-  repoId
   createdAt
   updatedAt
+  repoId
+  projectId
   poapSecret
   status
   ongoing
@@ -1119,6 +1159,19 @@ enum GithubPullRequestScalarFieldEnum {
   githubMergeCommitSha
   repoId
   userId
+}
+
+type Project {
+  id: Int!
+  name: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  _count: ProjectCount
+}
+
+type ProjectCount {
+  repos: Int!
+  GitPOAP: Int!
 }
 
 type RedeemCode {
@@ -1793,9 +1846,10 @@ type GitPOAPCountAggregate {
   type: Int!
   year: Int!
   poapEventId: Int!
-  repoId: Int!
   createdAt: Int!
   updatedAt: Int!
+  repoId: Int!
+  projectId: Int!
   poapSecret: Int!
   status: Int!
   ongoing: Int!
@@ -1810,6 +1864,7 @@ type GitPOAPAvgAggregate {
   year: Float
   poapEventId: Float
   repoId: Float
+  projectId: Float
   eventId: Float
   level: Float
   threshold: Float
@@ -1820,6 +1875,7 @@ type GitPOAPSumAggregate {
   year: Int
   poapEventId: Int
   repoId: Int
+  projectId: Int
   eventId: Int
   level: Int
   threshold: Int
@@ -1830,9 +1886,10 @@ type GitPOAPMinAggregate {
   type: ClaimType
   year: Int
   poapEventId: Int
-  repoId: Int
   createdAt: DateTime
   updatedAt: DateTime
+  repoId: Int
+  projectId: Int
   poapSecret: String
   status: GitPOAPStatus
   ongoing: Boolean
@@ -1846,9 +1903,10 @@ type GitPOAPMaxAggregate {
   type: ClaimType
   year: Int
   poapEventId: Int
-  repoId: Int
   createdAt: DateTime
   updatedAt: DateTime
+  repoId: Int
+  projectId: Int
   poapSecret: String
   status: GitPOAPStatus
   ongoing: Boolean
@@ -1862,9 +1920,10 @@ type GitPOAPGroupBy {
   type: ClaimType!
   year: Int!
   poapEventId: Int!
-  repoId: Int!
   createdAt: DateTime!
   updatedAt: DateTime!
+  repoId: Int!
+  projectId: Int
   poapSecret: String!
   status: GitPOAPStatus!
   ongoing: Boolean!
@@ -1883,9 +1942,10 @@ input GitPOAPOrderByWithAggregationInput {
   type: SortOrder
   year: SortOrder
   poapEventId: SortOrder
-  repoId: SortOrder
   createdAt: SortOrder
   updatedAt: SortOrder
+  repoId: SortOrder
+  projectId: SortOrder
   status: SortOrder
   ongoing: SortOrder
   eventId: SortOrder
@@ -1903,9 +1963,10 @@ input GitPOAPCountOrderByAggregateInput {
   type: SortOrder
   year: SortOrder
   poapEventId: SortOrder
-  repoId: SortOrder
   createdAt: SortOrder
   updatedAt: SortOrder
+  repoId: SortOrder
+  projectId: SortOrder
   status: SortOrder
   ongoing: SortOrder
   eventId: SortOrder
@@ -1918,6 +1979,7 @@ input GitPOAPAvgOrderByAggregateInput {
   year: SortOrder
   poapEventId: SortOrder
   repoId: SortOrder
+  projectId: SortOrder
   eventId: SortOrder
   level: SortOrder
   threshold: SortOrder
@@ -1928,9 +1990,10 @@ input GitPOAPMaxOrderByAggregateInput {
   type: SortOrder
   year: SortOrder
   poapEventId: SortOrder
-  repoId: SortOrder
   createdAt: SortOrder
   updatedAt: SortOrder
+  repoId: SortOrder
+  projectId: SortOrder
   status: SortOrder
   ongoing: SortOrder
   eventId: SortOrder
@@ -1943,9 +2006,10 @@ input GitPOAPMinOrderByAggregateInput {
   type: SortOrder
   year: SortOrder
   poapEventId: SortOrder
-  repoId: SortOrder
   createdAt: SortOrder
   updatedAt: SortOrder
+  repoId: SortOrder
+  projectId: SortOrder
   status: SortOrder
   ongoing: SortOrder
   eventId: SortOrder
@@ -1958,6 +2022,7 @@ input GitPOAPSumOrderByAggregateInput {
   year: SortOrder
   poapEventId: SortOrder
   repoId: SortOrder
+  projectId: SortOrder
   eventId: SortOrder
   level: SortOrder
   threshold: SortOrder
@@ -1971,9 +2036,10 @@ input GitPOAPScalarWhereWithAggregatesInput {
   type: EnumClaimTypeWithAggregatesFilter
   year: IntWithAggregatesFilter
   poapEventId: IntWithAggregatesFilter
-  repoId: IntWithAggregatesFilter
   createdAt: DateTimeWithAggregatesFilter
   updatedAt: DateTimeWithAggregatesFilter
+  repoId: IntWithAggregatesFilter
+  projectId: IntNullableWithAggregatesFilter
   status: EnumGitPOAPStatusWithAggregatesFilter
   ongoing: BoolWithAggregatesFilter
   eventId: IntNullableWithAggregatesFilter
@@ -2550,6 +2616,7 @@ type RepoCountAggregate {
   createdAt: Int!
   updatedAt: Int!
   organizationId: Int!
+  projectId: Int!
   lastPRUpdatedAt: Int!
   _all: Int!
 }
@@ -2558,12 +2625,14 @@ type RepoAvgAggregate {
   id: Float
   githubRepoId: Float
   organizationId: Float
+  projectId: Float
 }
 
 type RepoSumAggregate {
   id: Int
   githubRepoId: Int
   organizationId: Int
+  projectId: Int
 }
 
 type RepoMinAggregate {
@@ -2573,6 +2642,7 @@ type RepoMinAggregate {
   createdAt: DateTime
   updatedAt: DateTime
   organizationId: Int
+  projectId: Int
   lastPRUpdatedAt: DateTime
 }
 
@@ -2583,6 +2653,7 @@ type RepoMaxAggregate {
   createdAt: DateTime
   updatedAt: DateTime
   organizationId: Int
+  projectId: Int
   lastPRUpdatedAt: DateTime
 }
 
@@ -2593,6 +2664,7 @@ type RepoGroupBy {
   createdAt: DateTime!
   updatedAt: DateTime!
   organizationId: Int!
+  projectId: Int
   lastPRUpdatedAt: DateTime!
   _count: RepoCountAggregate
   _avg: RepoAvgAggregate
@@ -2608,6 +2680,7 @@ input RepoOrderByWithAggregationInput {
   createdAt: SortOrder
   updatedAt: SortOrder
   organizationId: SortOrder
+  projectId: SortOrder
   lastPRUpdatedAt: SortOrder
   _count: RepoCountOrderByAggregateInput
   _avg: RepoAvgOrderByAggregateInput
@@ -2623,6 +2696,7 @@ input RepoCountOrderByAggregateInput {
   createdAt: SortOrder
   updatedAt: SortOrder
   organizationId: SortOrder
+  projectId: SortOrder
   lastPRUpdatedAt: SortOrder
 }
 
@@ -2630,6 +2704,7 @@ input RepoAvgOrderByAggregateInput {
   id: SortOrder
   githubRepoId: SortOrder
   organizationId: SortOrder
+  projectId: SortOrder
 }
 
 input RepoMaxOrderByAggregateInput {
@@ -2639,6 +2714,7 @@ input RepoMaxOrderByAggregateInput {
   createdAt: SortOrder
   updatedAt: SortOrder
   organizationId: SortOrder
+  projectId: SortOrder
   lastPRUpdatedAt: SortOrder
 }
 
@@ -2649,6 +2725,7 @@ input RepoMinOrderByAggregateInput {
   createdAt: SortOrder
   updatedAt: SortOrder
   organizationId: SortOrder
+  projectId: SortOrder
   lastPRUpdatedAt: SortOrder
 }
 
@@ -2656,6 +2733,7 @@ input RepoSumOrderByAggregateInput {
   id: SortOrder
   githubRepoId: SortOrder
   organizationId: SortOrder
+  projectId: SortOrder
 }
 
 input RepoScalarWhereWithAggregatesInput {
@@ -2668,6 +2746,7 @@ input RepoScalarWhereWithAggregatesInput {
   createdAt: DateTimeWithAggregatesFilter
   updatedAt: DateTimeWithAggregatesFilter
   organizationId: IntWithAggregatesFilter
+  projectId: IntNullableWithAggregatesFilter
   lastPRUpdatedAt: DateTimeWithAggregatesFilter
 }
 
@@ -2888,6 +2967,7 @@ type RepoData {
   createdAt: DateTime!
   updatedAt: DateTime!
   organizationId: Int!
+  projectId: Int
   lastPRUpdatedAt: DateTime!
   _count: RepoCount
   organization: Organization!
@@ -2907,6 +2987,7 @@ type RepoData {
     skip: Int
     distinct: [GithubPullRequestScalarFieldEnum!]
   ): [GithubPullRequest!]!
+  project: Project
   contributorCount: Float!
   gitPOAPCount: Float!
   mintedGitPOAPCount: Float!
