@@ -212,18 +212,6 @@ v1Router.get('/repo/:owner/:name/badge', async (req, res) => {
     icon: `data:image/svg+xml;utf8,${encodeURIComponent(GitPOAPMiniLogo)}`,
   });
 
-  const url = repo?.id ? `https://gitpoap.io/rp/${repo.id}` : 'https://gitpoap.io';
-
-  /* Embed link to the repo page in the badge */
-  const badgeSvgWithLink = badgeSvg
-    .replace(
-      '<title>',
-      /* Eventually use new URL route for gitpoap repo pages */
-      // `<a href="https://gitpoap.io/repo/${req.params.owner}/${req.params.name}"><title>`,
-      `<a href="${url}"><title>`,
-    )
-    .replace('</svg>', `</a></svg>`);
-
   endTimer({ status: 200 });
 
   logger.debug(
@@ -235,5 +223,5 @@ v1Router.get('/repo/:owner/:name/badge', async (req, res) => {
     'Cache-Control': 'max-age=0, no-cache, no-store, must-revalidate',
   });
 
-  return res.status(200).send(badgeSvgWithLink);
+  return res.status(200).send(badgeSvg);
 });
