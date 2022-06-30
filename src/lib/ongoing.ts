@@ -173,28 +173,30 @@ async function runOngoingIssuanceUpdater() {
 
   const endTimer = overallOngoingIssuanceDurationSeconds.startTimer();
 
-  const repos: RepoReturnType[] = await context.prisma.repo.findMany({
-    select: {
-      id: true,
-      name: true,
-      lastPRUpdatedAt: true,
-      gitPOAPs: {
-        where: {
-          ongoing: true,
+  const repos: RepoReturnType[] = (
+    await context.prisma.repo.findMany({
+      select: {
+        id: true,
+        name: true,
+        lastPRUpdatedAt: true,
+        gitPOAPs: {
+          where: {
+            ongoing: true,
+          },
+          select: {
+            id: true,
+            year: true,
+            threshold: true,
+          },
         },
-        select: {
-          id: true,
-          year: true,
-          threshold: true,
+        organization: {
+          select: {
+            name: true,
+          },
         },
       },
-      organization: {
-        select: {
-          name: true,
-        },
-      },
-    },
-  });
+    })
+  ).filter(r => r.gitPOAPs.length > 0);
 
   logger.info(`Found ${repos.length} repos with ongoing GitPOAPs that need to be checked`);
 
@@ -211,7 +213,7 @@ async function runOngoingIssuanceUpdater() {
     try {
       await checkForNewContributions(repos[i]);
     } catch (err) {
-      logger.error(`Failed to run the ongoing issuance process for Repo ID ${repos[i]}: ${err}`);
+      logger.error(`Failed to run the ongoing issuance process for Repo ID ${repos[i].id}: ${err}`);
     }
   }
 
