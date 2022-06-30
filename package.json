@@ -14,7 +14,8 @@
     "gql:build-schema": "npx prisma generate; ts-node-dev ./scripts/build-gql-schema.ts",
     "pr-backload": "APP_NAME=pr-backload ts-node-dev ./scripts/backload-pr-data.ts",
     "test": "jest --setupFiles dotenv/config",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "multi-repo:upsert-project-links": "APP_NAME=upsert-project-links ts-node-dev ./scripts/upsert-project-links.ts"
   },
   "devDependencies": {
     "@types/badgen": "^2.7.1",
