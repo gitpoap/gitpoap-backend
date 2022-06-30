@@ -19,6 +19,13 @@ const upload = multer();
 gitpoapsRouter.post('/', jwtWithAdminOAuth(), upload.single('image'), async function (req, res) {
   const logger = createScopedLogger('POST /gitpoaps');
 
+  // TODO: remove after multi-repo part 2
+  const msg =
+    'We are in the midst of the migration to Projects, you cannot create GitPOAPs right now';
+  logger.error(msg);
+  return res.status(401).send({ msg });
+  /*
+
   logger.debug(`Body: ${JSON.stringify(req.body)}`);
 
   const endTimer = httpRequestDurationSeconds.startTimer('POST', '/gitpoaps');
@@ -106,6 +113,7 @@ gitpoapsRouter.post('/', jwtWithAdminOAuth(), upload.single('image'), async func
   endTimer({ status: 201 });
 
   return res.status(201).send('CREATED');
+  */
 });
 
 gitpoapsRouter.get('/poap-token-id/:id', async function (req, res) {
