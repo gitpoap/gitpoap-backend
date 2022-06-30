@@ -39,11 +39,17 @@ let eventsCache: Record<string, any> = {
   25149: events.event25149,
   19375: events.event19375,
   29009: events.event29009,
+  34634: events.event34634,
   36568: events.event36568,
   36569: events.event36569,
   36570: events.event36570,
   36571: events.event36571,
   36572: events.event36572,
+  36573: events.event36573,
+  36574: events.event36574,
+  37428: events.event37428,
+  37429: events.event37429,
+  37430: events.event37430,
 };
 let nextEventId = 900000;
 
@@ -86,7 +92,7 @@ let tokensCache: Record<string, any> = {
 };
 let nextTokenId = 100000000;
 
-let qrHashMap: Record<string, { tokenId: number, minted: DateTime }> = {};
+let qrHashMap: Record<string, { tokenId: number; minted: DateTime }> = {};
 
 app.use(express.json());
 
@@ -303,7 +309,7 @@ app.get('/actions/claim-qr', async (req, res) => {
     tx_status: 'pending',
     delegated_mint: false,
     delegated_signed_message: '',
-    result: null
+    result: null,
   };
 
   if ((req.query.qr_hash as string) in qrHashMap) {

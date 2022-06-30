@@ -2,8 +2,8 @@ import { POAPEvent } from './poap';
 
 export const event1: POAPEvent = {
   id: 1,
-  fancy_id: 'welcome-to-the-thunderdome',
-  name: 'Welcome to the Thunderdome',
+  fancy_id: 'gitpoap-2022-welcome-to-the-thunderdome-contributor',
+  name: 'GitPOAP: 2022 Welcome to the Thunderdome Contributor',
   event_url: 'https://thunderdome.xyz',
   image_url: 'https://avatars.githubusercontent.com/u/1555326?v=4',
   country: '',
@@ -18,8 +18,8 @@ export const event1: POAPEvent = {
 
 export const event2: POAPEvent = {
   id: 2,
-  fancy_id: 'ethdenver',
-  name: 'ethdenver',
+  fancy_id: 'gitpoap-2022-ethdenver-contributor',
+  name: 'GitPOAP: 2022 ethdenver Contributor',
   event_url: 'https://eth.denver',
   image_url: 'https://avatars.githubusercontent.com/u/1455326?v=4',
   country: '',
@@ -34,8 +34,8 @@ export const event2: POAPEvent = {
 
 export const event3: POAPEvent = {
   id: 3,
-  fancy_id: 'big-ol-pizza',
-  name: 'you ate some pizza pie',
+  fancy_id: 'gitpoap-2022-you-ate-some-pizza-pie-contributor',
+  name: 'GitPOAP: 2022 you ate some pizza pie Contributor',
   event_url: 'https://pizza.party',
   image_url: 'https://avatars.githubusercontent.com/u/1355326?v=4',
   country: '',
@@ -118,8 +118,8 @@ export const event25149: POAPEvent = {
 
 export const event19375: POAPEvent = {
   id: 19375,
-  fancy_id: 'gitpoap1-2021',
-  name: 'GitPOAP1',
+  fancy_id: 'gitpoap-2021-gitpoap1-contributor',
+  name: 'GitPOAP: 2021 GitPOAP1 Contributor',
   event_url: 'https://gitpoap.io',
   image_url: 'https://assets.poap.xyz/gitpoap1-2021-logo-1640113981980.png',
   country: 'USA',
@@ -134,8 +134,8 @@ export const event19375: POAPEvent = {
 
 export const event29009: POAPEvent = {
   id: 29009,
-  fancy_id: 'gitpoap-strategy-meeting-ethdenver-2022-2022',
-  name: 'GitPOAP Strategy Meeting - EthDenver 2022',
+  fancy_id: 'gitpoap-2022-gitpoap-strategy-meeting-hackathon-ethdenver-2022-contributor',
+  name: 'GitPOAP: 2022 GitPOAP Strategy Meeting Hackathon - EthDenver 2022 Contributor',
   event_url: 'https://gitpoap.io/',
   image_url:
     'https://assets.poap.xyz/gitpoap-strategy-meeting-ethdenver-2022-2022-logo-1645132648036.png',
@@ -150,82 +150,189 @@ export const event29009: POAPEvent = {
   supply: 6,
 };
 
+export const event34634: POAPEvent = {
+  id: 34634,
+  fancy_id: 'gitpoap-2022-dopex-contributor',
+  name: 'GitPOAP: 2022 dopex Contributor',
+  event_url: 'https://github.com/burz/dopex',
+  image_url: 'https://assets.poap.xyz/gitpoap-2022-dopex-contributor-2022-logo-1656525957069.png',
+  country: '',
+  city: '',
+  description:
+    'You made at least one contribution to the dopex project in 2022. Your contributions are greatly appreciated!',
+  year: 2022,
+  start_date: '01-Jan-2022',
+  end_date: '31-Dec-2022',
+  expiry_date: '01-Apr-2023',
+  supply: 10,
+};
+
 export const event36568: POAPEvent = {
   id: 36568,
-  fancy_id: "gitpoap-bug-bash-test-1-2022",
-  name: "GitPOAP Bug Bash - Test 1",
-  event_url: "https://gitpoap.io",
-  image_url: "https://assets.poap.xyz/gitpoap-bug-bash-test-1-2022-logo-1648760515405.png",
-  country: "",
-  city: "",
-  description: "This POAP commemorates the pre-launch bug bash organized by the GitPOAP team to test whether the platform is working as expected using real POAPs. (1)",
+  fancy_id: 'gitpoap-2022-bug-bash-hackathon-test-1-contributor',
+  name: 'GitPOAP: 2022 Bug Bash Hackathon - Test 1 Contributor',
+  event_url: 'https://gitpoap.io',
+  image_url: 'https://assets.poap.xyz/gitpoap-bug-bash-test-1-2022-logo-1648760515405.png',
+  country: '',
+  city: '',
+  description:
+    'This POAP commemorates the pre-launch bug bash organized by the GitPOAP team to test whether the platform is working as expected using real POAPs. (1)',
   year: 2022,
-  start_date: "30-Mar-2022",
-  end_date: "30-Jun-2022",
-  expiry_date: "30-Jul-2022",
+  start_date: '30-Mar-2022',
+  end_date: '30-Jun-2022',
+  expiry_date: '30-Jul-2022',
   supply: 6,
 };
 
 export const event36569: POAPEvent = {
   id: 36569,
-  fancy_id: "gitpoap-bug-bash-test-2-2022",
-  name: "GitPOAP Bug Bash - Test 2",
-  event_url: "https://gitpoap.io",
-  image_url: "https://assets.poap.xyz/gitpoap-bug-bash-test-2-2022-logo-1648760566987.png",
-  country: "",
-  city: "",
-  description: "This POAP commemorates the pre-launch bug bash organized by the GitPOAP team to test whether the platform is working as expected using real POAPs. (2)",
+  fancy_id: 'gitpoap-2022-bug-bash-hackathon-test-2-contributor',
+  name: 'GitPOAP: 2022 Bug Bash Hackathon - Test 2 Contributor',
+  event_url: 'https://gitpoap.io',
+  image_url: 'https://assets.poap.xyz/gitpoap-bug-bash-test-2-2022-logo-1648760566987.png',
+  country: '',
+  city: '',
+  description:
+    'This POAP commemorates the pre-launch bug bash organized by the GitPOAP team to test whether the platform is working as expected using real POAPs. (2)',
   year: 2022,
-  start_date: "30-Mar-2022",
-  end_date: "30-Jun-2022",
-  expiry_date: "30-Jul-2022",
+  start_date: '30-Mar-2022',
+  end_date: '30-Jun-2022',
+  expiry_date: '30-Jul-2022',
   supply: 6,
 };
 
 export const event36570: POAPEvent = {
   id: 36570,
-  fancy_id: "gitpoap-bug-bash-test-3-2022",
-  name: "GitPOAP Bug Bash - Test 3",
-  event_url: "https://gitpoap.io",
-  image_url: "https://assets.poap.xyz/gitpoap-bug-bash-test-3-2022-logo-1648760569627.png",
-  country: "",
-  city: "",
-  description: "This POAP commemorates the pre-launch bug bash organized by the GitPOAP team to test whether the platform is working as expected using real POAPs. (3)",
+  fancy_id: 'gitpoap-2022-bug-bash-test-hackathon-3-contributor',
+  name: 'GitPOAP: 2022 Bug Bash Hackathon - Test 3 Contributor',
+  event_url: 'https://gitpoap.io',
+  image_url: 'https://assets.poap.xyz/gitpoap-bug-bash-test-3-2022-logo-1648760569627.png',
+  country: '',
+  city: '',
+  description:
+    'This POAP commemorates the pre-launch bug bash organized by the GitPOAP team to test whether the platform is working as expected using real POAPs. (3)',
   year: 2022,
-  start_date: "30-Mar-2022",
-  end_date: "30-Jun-2022",
-  expiry_date: "30-Jul-2022",
+  start_date: '30-Mar-2022',
+  end_date: '30-Jun-2022',
+  expiry_date: '30-Jul-2022',
   supply: 6,
 };
 
 export const event36571: POAPEvent = {
   id: 36571,
-  fancy_id: "gitpoap-bug-bash-test-4-2022",
-  name: "GitPOAP Bug Bash - Test 4",
-  event_url: "https://gitpoap.io",
-  image_url: "https://assets.poap.xyz/gitpoap-bug-bash-test-4-2022-logo-1648760572852.png",
-  country: "",
-  city: "",
-  description: "This POAP commemorates the pre-launch bug bash organized by the GitPOAP team to test whether the platform is working as expected using real POAPs. (4)",
+  fancy_id: 'gitpoap-2022-bug-bash-hackathon-test-4-contributor',
+  name: 'GitPOAP: 2022 Bug Bash Hackathon - Test 4 Contributor',
+  event_url: 'https://gitpoap.io',
+  image_url: 'https://assets.poap.xyz/gitpoap-bug-bash-test-4-2022-logo-1648760572852.png',
+  country: '',
+  city: '',
+  description:
+    'This POAP commemorates the pre-launch bug bash organized by the GitPOAP team to test whether the platform is working as expected using real POAPs. (4)',
   year: 2022,
-  start_date: "30-Mar-2022",
-  end_date: "30-Jun-2022",
-  expiry_date: "30-Jul-2022",
+  start_date: '30-Mar-2022',
+  end_date: '30-Jun-2022',
+  expiry_date: '30-Jul-2022',
   supply: 6,
 };
 
 export const event36572: POAPEvent = {
   id: 36572,
-  fancy_id: "gitpoap-bug-bash-test-5-2022",
-  name: "GitPOAP Bug Bash - Test 5",
-  event_url: "https://gitpoap.io",
-  image_url: "https://assets.poap.xyz/gitpoap-bug-bash-test-5-2022-logo-1648760575985.png",
-  country: "",
-  city: "",
-  description: "This POAP commemorates the pre-launch bug bash organized by the GitPOAP team to test whether the platform is working as expected using real POAPs. (5)",
+  fancy_id: 'gitpoap-2022-bug-bash-test-hackathon-5-contributor',
+  name: 'GitPOAP: 2022 Bug Bash Hackathon - Test 5 Contributor',
+  event_url: 'https://gitpoap.io',
+  image_url: 'https://assets.poap.xyz/gitpoap-bug-bash-test-5-2022-logo-1648760575985.png',
+  country: '',
+  city: '',
+  description:
+    'This POAP commemorates the pre-launch bug bash organized by the GitPOAP team to test whether the platform is working as expected using real POAPs. (5)',
   year: 2022,
-  start_date: "30-Mar-2022",
-  end_date: "30-Jun-2022",
-  expiry_date: "30-Jul-2022",
+  start_date: '30-Mar-2022',
+  end_date: '30-Jun-2022',
+  expiry_date: '30-Jul-2022',
   supply: 6,
+};
+
+export const event36573: POAPEvent = {
+  id: 36573,
+  fancy_id: 'gitpoap-2022-gitpoap-bot-test-repo-contributor-2022',
+  name: 'GitPOAP: 2022 gitpoap-bot-test-repo Contributor',
+  event_url: 'https://github.com/stake-house/wagyu-installer',
+  image_url: 'https://assets.poap.xyz/2022-wagyu-installer-contributor-2022-logo-1649213116205.png',
+  country: '',
+  city: '',
+  description:
+    'You contributed at least one merged pull request to the Wagyu Installer project in 2022.  Your contributions are greatly valued.',
+  year: 2022,
+  start_date: '01-Jan-2022',
+  end_date: '31-Dec-2022',
+  expiry_date: '01-Apr-2023',
+  supply: 60,
+};
+
+export const event36574: POAPEvent = {
+  id: 36574,
+  fancy_id: 'gitpoap-2022-gitpoap-bot-test-repo-contributor-level-2-2022',
+  name: 'GitPOAP: 2022 gitpoap-bot-test-repo Contributor Level 2',
+  event_url: 'https://github.com/stake-house/wagyu-installer',
+  image_url: 'https://assets.poap.xyz/2022-wagyu-installer-contributor-2022-logo-1649213116205.png',
+  country: '',
+  city: '',
+  description:
+    'You contributed at least two merged pull requests to the Wagyu Installer project in 2022.  Your contributions are greatly valued.',
+  year: 2022,
+  start_date: '01-Jan-2022',
+  end_date: '31-Dec-2022',
+  expiry_date: '01-Apr-2023',
+  supply: 60,
+};
+
+export const event37428: POAPEvent = {
+  id: 37428,
+  fancy_id: '2022-wagyu-installer-contributor-2022',
+  name: '2022 Wagyu Installer Contributor',
+  event_url: 'https://github.com/stake-house/wagyu-installer',
+  image_url: 'https://assets.poap.xyz/2022-wagyu-installer-contributor-2022-logo-1649213116205.png',
+  country: '',
+  city: '',
+  description:
+    'You contributed at least one merged pull request to the Wagyu Installer project in 2022.  Your contributions are greatly valued.',
+  year: 2022,
+  start_date: '01-Jan-2022',
+  end_date: '31-Dec-2022',
+  expiry_date: '01-Apr-2023',
+  supply: 60,
+};
+
+export const event37429: POAPEvent = {
+  id: 37429,
+  fancy_id: '2022-wagyu-installer-contributor-level-2-2022',
+  name: '2022 Wagyu Installer Contributor Level 2',
+  event_url: 'https://github.com/stake-house/wagyu-installer',
+  image_url: 'https://assets.poap.xyz/2022-wagyu-installer-contributor-2022-logo-1649213116205.png',
+  country: '',
+  city: '',
+  description:
+    'You contributed at least two merged pull requests to the Wagyu Installer project in 2022.  Your contributions are greatly valued.',
+  year: 2022,
+  start_date: '01-Jan-2022',
+  end_date: '31-Dec-2022',
+  expiry_date: '01-Apr-2023',
+  supply: 60,
+};
+
+export const event37430: POAPEvent = {
+  id: 37430,
+  fancy_id: '2022-wagyu-installer-contributor-level-3-2022',
+  name: '2022 Wagyu Installer Contributor Level 3',
+  event_url: 'https://github.com/stake-house/wagyu-installer',
+  image_url: 'https://assets.poap.xyz/2022-wagyu-installer-contributor-2022-logo-1649213116205.png',
+  country: '',
+  city: '',
+  description:
+    'You contributed at least five merged pull request to the Wagyu Installer project in 2022.  Your contributions are greatly valued.',
+  year: 2022,
+  start_date: '01-Jan-2022',
+  end_date: '31-Dec-2022',
+  expiry_date: '01-Apr-2023',
+  supply: 60,
 };
