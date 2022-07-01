@@ -697,7 +697,7 @@ input ProjectWhereInput {
   createdAt: DateTimeFilter
   updatedAt: DateTimeFilter
   repos: RepoListRelationFilter
-  GitPOAP: GitPOAPListRelationFilter
+  gitPOAPs: GitPOAPListRelationFilter
 }
 
 input ClaimListRelationFilter {
@@ -928,7 +928,7 @@ input ProjectOrderByWithRelationInput {
   createdAt: SortOrder
   updatedAt: SortOrder
   repos: RepoOrderByRelationAggregateInput
-  GitPOAP: GitPOAPOrderByRelationAggregateInput
+  gitPOAPs: GitPOAPOrderByRelationAggregateInput
 }
 
 input RepoWhereUniqueInput {
@@ -1171,7 +1171,7 @@ type Project {
 
 type ProjectCount {
   repos: Int!
-  GitPOAP: Int!
+  gitPOAPs: Int!
 }
 
 type RedeemCode {
