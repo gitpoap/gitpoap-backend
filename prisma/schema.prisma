@@ -81,7 +81,7 @@ model Project {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   repos     Repo[]
-  GitPOAP   GitPOAP[]
+  gitPOAPs  GitPOAP[]
 }
 
 model Claim {
