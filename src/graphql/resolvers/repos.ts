@@ -40,7 +40,8 @@ export class CustomRepoResolver {
           COUNT(DISTINCT g.id) AS "gitPOAPCount",
           COUNT(c.id) AS "mintedGitPOAPCount"
         FROM "Repo" as r
-        INNER JOIN "GitPOAP" AS g ON g."repoId" = r.id
+        INNER JOIN "Project" AS p ON r."projectId" = p.id
+        INNER JOIN "GitPOAP" AS g ON g."projectId" = p.id
         LEFT JOIN 
           (SELECT * 
             FROM "Claim" 
@@ -64,7 +65,8 @@ export class CustomRepoResolver {
           COUNT(c.id) AS "mintedGitPOAPCount"
         FROM "Repo" as r
         INNER JOIN "Organization" AS o ON o.id = r."organizationId"
-        INNER JOIN "GitPOAP" AS g ON g."repoId" = r.id
+        INNER JOIN "Project" AS p ON r."projectId" = p.id
+        INNER JOIN "GitPOAP" AS g ON g."projectId" = p.id
         LEFT JOIN 
           (SELECT * 
             FROM "Claim" 
@@ -225,8 +227,10 @@ export class CustomRepoResolver {
         break;
       case 'gitpoap-count':
         orderBy = {
-          gitPOAPs: {
-            _count: 'desc',
+          project: {
+            gitPOAPs: {
+              _count: 'desc',
+            },
           },
         };
         break;
