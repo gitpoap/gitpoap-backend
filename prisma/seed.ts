@@ -3,13 +3,14 @@ import { PrismaClient } from '@prisma/client';
 import { ClaimStatus, GitPOAPStatus } from '@generated/type-graphql';
 import {
   ClaimFactory,
-  UserFactory,
-  OrganizationFactory,
-  RepoFactory,
-  GitPOAPFactory,
-  ProfileFactory,
   FeaturedPOAPFactory,
+  GitPOAPFactory,
+  OrganizationFactory,
+  ProfileFactory,
+  ProjectFactory,
   RedeemCodeFactory,
+  RepoFactory,
+  UserFactory,
 } from './factories';
 
 export const prisma = new PrismaClient();
@@ -44,6 +45,16 @@ async function main() {
   const johnz = await UserFactory.createUser(5, 'johnz');
   const anthony2 = await UserFactory.createUser(6, 'burzzzzz');
 
+  /* Create Projects */
+  const frontendProject = await ProjectFactory.createProject();
+  const backendProject = await ProjectFactory.createProject();
+  const repo7Project = await ProjectFactory.createProject();
+  const repo34Project = await ProjectFactory.createProject();
+  const repo568Project = await ProjectFactory.createProject();
+  const dopexProject = await ProjectFactory.createProject();
+  const wagyuInstallerProject = await ProjectFactory.createProject();
+  const botTestProject = await ProjectFactory.createProject();
+
   /* Create Organizations */
   const org1 = await OrganizationFactory.createOrganization(43, 'org43');
   const org2 = await OrganizationFactory.createOrganization(7, 'seven-heaven');
@@ -59,40 +70,40 @@ async function main() {
   const org6 = await OrganizationFactory.createOrganization(81711181, 'stake-house');
 
   /* Create Repos */
-  const gitpoapFeRepo = await RepoFactory.createRepo('gitpoap-fe', 439490658, org4.id); // real id
-  const gitpoapBackendRepo = await RepoFactory.createRepo('gitpoap-backend', 416584564, org4.id); // real id
-  const repo7 = await RepoFactory.createRepo('repo7', 7, org2.id);
-  const repo34 = await RepoFactory.createRepo('repo34', 34, org1.id);
-  const repo568 = await RepoFactory.createRepo('repo568', 568, org3.id);
-  const repoDopex = await RepoFactory.createRepo('dopex', 127534193, org5.id);
-  const repoWagyuInstaller = await RepoFactory.createRepo('wagyu-installer', 336862756, org6.id);
-  const gitpoapBotTestRepo = await RepoFactory.createRepo('gitpoap-bot-test-repo', 502133931, org4.id); // real id
+  const gitpoapFeRepo = await RepoFactory.createRepo('gitpoap-fe', 439490658, org4.id, frontendProject.id); // real id
+  const gitpoapBackendRepo = await RepoFactory.createRepo('gitpoap-backend', 416584564, org4.id, backendProject.id); // real id
+  const repo7 = await RepoFactory.createRepo('repo7', 7, org2.id, repo7Project.id);
+  const repo34 = await RepoFactory.createRepo('repo34', 34, org1.id, repo34Project.id);
+  const repo568 = await RepoFactory.createRepo('repo568', 568, org3.id, repo568Project.id);
+  const repoDopex = await RepoFactory.createRepo('dopex', 127534193, org5.id, dopexProject.id);
+  const repoWagyuInstaller = await RepoFactory.createRepo('wagyu-installer', 336862756, org6.id, wagyuInstallerProject.id);
+  const gitpoapBotTestRepo = await RepoFactory.createRepo('gitpoap-bot-test-repo', 502133931, org4.id, botTestProject.id); // real id
 
   /* Create GitPOAPs */
-  const gitpoap1 = await GitPOAPFactory.createGitPOAP(2022, 1, repo34.id, '012345', GitPOAPStatus.APPROVED);
-  const gitpoap2 = await GitPOAPFactory.createGitPOAP(2024, 2, repo7.id, '123456', GitPOAPStatus.APPROVED);
-  const gitpoap3 = await GitPOAPFactory.createGitPOAP(2015, 3, repo568.id, '234567', GitPOAPStatus.APPROVED);
+  const gitpoap1 = await GitPOAPFactory.createGitPOAP(2022, 1, repo34Project.id, '012345', GitPOAPStatus.APPROVED);
+  const gitpoap2 = await GitPOAPFactory.createGitPOAP(2024, 2, repo7Project.id, '123456', GitPOAPStatus.APPROVED);
+  const gitpoap3 = await GitPOAPFactory.createGitPOAP(2015, 3, repo568Project.id, '234567', GitPOAPStatus.APPROVED);
   // For GitPOAP FE Repo ~ Using generic GitPOAP related POAP for now ~ eventID: 19375
-  const gitpoap4 = await GitPOAPFactory.createGitPOAP(2020, 19375, gitpoapFeRepo.id, '345678', GitPOAPStatus.APPROVED);
+  const gitpoap4 = await GitPOAPFactory.createGitPOAP(2020, 19375, frontendProject.id, '345678', GitPOAPStatus.APPROVED);
   // For GitPOAP BE Repo ~ Using GitPOAP Strategy Meeting POAP for now ~ eventID: 29009
-  const gitpoap5 = await GitPOAPFactory.createGitPOAP(2020, 29009, gitpoapBackendRepo.id, '456789', GitPOAPStatus.APPROVED);
+  const gitpoap5 = await GitPOAPFactory.createGitPOAP(2020, 29009, backendProject.id, '456789', GitPOAPStatus.APPROVED);
   // For burz/dopex repo ~ eventID: 34634
-  const gitpoap6 = await GitPOAPFactory.createGitPOAP(2022, 34634, repoDopex.id, '304374');
+  const gitpoap6 = await GitPOAPFactory.createGitPOAP(2022, 34634, dopexProject.id, '304374');
 
   // For the gitpoaps created for the bug bash -~- March 2022
-  const gitpoap7 = await GitPOAPFactory.createGitPOAP(2022, 36568, gitpoapFeRepo.id, '669250', GitPOAPStatus.APPROVED);
-  const gitpoap8 = await GitPOAPFactory.createGitPOAP(2022, 36569, gitpoapFeRepo.id, '102513', GitPOAPStatus.APPROVED);
-  const gitpoap9 = await GitPOAPFactory.createGitPOAP(2022, 36570, gitpoapBackendRepo.id, '929862', GitPOAPStatus.APPROVED);
-  const gitpoap10 = await GitPOAPFactory.createGitPOAP(2022, 36571, gitpoapBackendRepo.id, '252134', GitPOAPStatus.APPROVED);
-  const gitpoap11 = await GitPOAPFactory.createGitPOAP(2022, 36572, gitpoapBackendRepo.id, '613740', GitPOAPStatus.APPROVED);
+  const gitpoap7 = await GitPOAPFactory.createGitPOAP(2022, 36568, frontendProject.id, '669250', GitPOAPStatus.APPROVED);
+  const gitpoap8 = await GitPOAPFactory.createGitPOAP(2022, 36569, frontendProject.id, '102513', GitPOAPStatus.APPROVED, false, 2, 2);
+  const gitpoap9 = await GitPOAPFactory.createGitPOAP(2022, 36570, backendProject.id, '929862', GitPOAPStatus.APPROVED);
+  const gitpoap10 = await GitPOAPFactory.createGitPOAP(2022, 36571, backendProject.id, '252134', GitPOAPStatus.APPROVED, false, 2, 2);
+  const gitpoap11 = await GitPOAPFactory.createGitPOAP(2022, 36572, backendProject.id, '613740', GitPOAPStatus.APPROVED, false, 3, 3);
   // Not the real POAP secret!
-  const gitpoap12 = await GitPOAPFactory.createGitPOAP(2022, 37428, repoWagyuInstaller.id, '324324', GitPOAPStatus.UNAPPROVED, true);
-  const gitpoap13 = await GitPOAPFactory.createGitPOAP(2022, 37429, repoWagyuInstaller.id, '324325', GitPOAPStatus.UNAPPROVED, true, 2, 2);
-  const gitpoap14 = await GitPOAPFactory.createGitPOAP(2022, 37430, repoWagyuInstaller.id, '324326', GitPOAPStatus.UNAPPROVED, true, 3, 3);
+  const gitpoap12 = await GitPOAPFactory.createGitPOAP(2022, 37428, wagyuInstallerProject.id, '324324', GitPOAPStatus.UNAPPROVED, true);
+  const gitpoap13 = await GitPOAPFactory.createGitPOAP(2022, 37429, wagyuInstallerProject.id, '324325', GitPOAPStatus.UNAPPROVED, true, 2, 2);
+  const gitpoap14 = await GitPOAPFactory.createGitPOAP(2022, 37430, wagyuInstallerProject.id, '324326', GitPOAPStatus.UNAPPROVED, true, 3, 3);
 
   // For gitpoap-bot-test-repo (uses random POAP IDs)
-  const gitpoap15 = await GitPOAPFactory.createGitPOAP(2022, 36573, gitpoapBotTestRepo.id, '123456', GitPOAPStatus.APPROVED, true);
-  const gitpoap16 = await GitPOAPFactory.createGitPOAP(2022, 36574, gitpoapBotTestRepo.id, '123456', GitPOAPStatus.APPROVED, true, 2, 2);
+  const gitpoap15 = await GitPOAPFactory.createGitPOAP(2022, 36573, botTestProject.id, '123456', GitPOAPStatus.APPROVED, true);
+  const gitpoap16 = await GitPOAPFactory.createGitPOAP(2022, 36574, botTestProject.id, '123456', GitPOAPStatus.APPROVED, true, 2, 2);
 
   /* Add codes */
   await RedeemCodeFactory.addRedeemCodes(['6j8wda', 'tqaq9y', 'd4tdh0', 'o9uorf', 'eeyewe', '09wqld', 'tsl7wt', 'i52wvt', 'mshofb', 'v9cbcd'], gitpoap7.id);

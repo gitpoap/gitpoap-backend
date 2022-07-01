@@ -1,14 +1,15 @@
 import { ClaimStatus, GitPOAPStatus } from '@generated/type-graphql';
 import {
-  Prisma,
-  User,
-  Organization,
-  Repo,
-  GitPOAP,
   Claim,
-  Profile,
   FeaturedPOAP,
+  GitPOAP,
+  Organization,
+  Prisma,
+  Profile,
+  Project,
   RedeemCode,
+  Repo,
+  User,
 } from '@prisma/client';
 import { prisma } from './seed';
 
@@ -82,11 +83,21 @@ export class OrganizationFactory {
   };
 }
 
+export class ProjectFactory {
+  static createProject = async (): Promise<Project> => {
+    const project = await prisma.project.create({ data: {} });
+    console.log(`Creating project with id: ${project.id}`);
+
+    return project;
+  };
+}
+
 export class RepoFactory {
   static createRepo = async (
     name: string,
     githubRepoId: number,
     organizationId: number,
+    projectId: number,
   ): Promise<Repo> => {
     const repo = await prisma.repo.create({
       data: <Prisma.RepoCreateInput>{
@@ -95,6 +106,11 @@ export class RepoFactory {
         organization: {
           connect: {
             id: organizationId,
+          },
+        },
+        project: {
+          connect: {
+            id: projectId,
           },
         },
       },
@@ -109,7 +125,7 @@ export class GitPOAPFactory {
   static createGitPOAP = async (
     year: number,
     poapEventId: number,
-    repoId: number,
+    projectId: number,
     poapSecret: string,
     status?: GitPOAPStatus,
     ongoing?: boolean,
@@ -125,9 +141,9 @@ export class GitPOAPFactory {
         ongoing,
         level,
         threshold,
-        repo: {
+        project: {
           connect: {
-            id: repoId,
+            id: projectId,
           },
         },
       },
