@@ -374,6 +374,17 @@ claimsRouter.post('/create', jwtWithAdminOAuth(), async function (req, res) {
     where: {
       id: req.body.gitPOAPId,
     },
+    include: {
+      project: {
+        select: {
+          repos: {
+            select: {
+              id: true,
+            },
+          },
+        },
+      },
+    },
   });
   if (gitPOAPData === null) {
     logger.warn(`GitPOAP ID ${req.body.gitPOAPId} not found`);
@@ -444,7 +455,9 @@ claimsRouter.post('/create', jwtWithAdminOAuth(), async function (req, res) {
   res.status(200).send('CREATED');
 
   // Run the backloader in the background
-  backloadGithubPullRequestData(gitPOAPData.repoId);
+  for (const repo of gitPOAPData.project.repos) {
+    backloadGithubPullRequestData(repo.id);
+  }
 });
 
 type ReqBody = { repo: string; owner: string; pullRequestNumber: number };

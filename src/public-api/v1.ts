@@ -177,11 +177,15 @@ v1Router.get('/address/:address/gitpoaps', async function (req, res) {
           id: true,
           year: true,
           poapEventId: true,
-          repo: {
+          project: {
             select: {
-              name: true,
-              organization: {
-                select: { name: true },
+              repos: {
+                select: {
+                  name: true,
+                  organization: {
+                    select: { name: true },
+                  },
+                },
               },
             },
           },
@@ -215,6 +219,10 @@ v1Router.get('/address/:address/gitpoaps', async function (req, res) {
       return res.status(500).send({ msg });
     }
 
+    const repositories = claim.gitPOAP.project.repos.map(repo => {
+      return `${repo.organization.name}/${repo.name}`;
+    });
+
     // Default to created at time of the Claim (e.g. for hackathons)
     const earnedAt = claim.pullRequestEarned
       ? claim.pullRequestEarned.githubMergedAt
@@ -229,7 +237,7 @@ v1Router.get('/address/:address/gitpoaps', async function (req, res) {
       year: claim.gitPOAP.year,
       description: poapData.event.description,
       imageUrl: poapData.event.image_url,
-      repositories: [`${claim.gitPOAP.repo.organization.name}/${claim.gitPOAP.repo.name}`],
+      repositories,
       earnedAt: DateTime.fromJSDate(earnedAt).toFormat('yyyy-MM-dd'),
       mintedAt: DateTime.fromJSDate(<Date>claim.mintedAt).toFormat('yyyy-MM-dd'),
     });
@@ -249,11 +257,15 @@ v1Router.get('/repo/:owner/:name/badge', async (req, res) => {
     where: {
       status: ClaimStatus.CLAIMED,
       gitPOAP: {
-        repo: {
-          organization: {
-            name: req.params.owner,
+        project: {
+          repos: {
+            some: {
+              organization: {
+                name: req.params.owner,
+              },
+              name: req.params.name,
+            },
           },
-          name: req.params.name,
         },
       },
     },
