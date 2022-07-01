@@ -388,14 +388,25 @@ export class CustomGitPOAPResolver {
       return null;
     }
 
-    const gitPOAPs = await prisma.gitPOAP.findMany({
+    const repo = await prisma.repo.findUnique({
       where: {
-        repoId: repoId,
+        id: repoId,
+      },
+      select: {
+        project: {
+          select: {
+            gitPOAPs: true,
+          },
+        },
       },
     });
+    if (repo === null) {
+      logger.warn(`Failed to look up repo with ID: ${repoId}`);
+      return null;
+    }
 
     let gitPOAPsWithEvents = [];
-    for (const gitPOAP of gitPOAPs) {
+    for (const gitPOAP of repo.project.gitPOAPs) {
       const event = await retrievePOAPEventInfo(gitPOAP.poapEventId);
       if (event === null) {
         logger.error(

@@ -4,11 +4,13 @@ import { retrievePOAPEventInfo } from '../external/poap';
 
 export type RepoData = {
   id: number;
-  gitPOAPs: {
-    id: number;
-    year: number;
-    threshold: number;
-  }[];
+  project: {
+    gitPOAPs: {
+      id: number;
+      year: number;
+      threshold: number;
+    }[];
+  };
 };
 
 export type ClaimData = {
@@ -30,13 +32,13 @@ export async function createNewClaimsForRepoPR(
       userId: user.id,
       repoId: repo.id,
       githubMergedAt: {
-        gte: new Date(repo.gitPOAPs[0].year, 0, 1),
-        lt: new Date(repo.gitPOAPs[0].year + 1, 0, 1),
+        gte: new Date(repo.project.gitPOAPs[0].year, 0, 1),
+        lt: new Date(repo.project.gitPOAPs[0].year + 1, 0, 1),
       },
     },
   });
 
-  for (const gitPOAP of repo.gitPOAPs) {
+  for (const gitPOAP of repo.project.gitPOAPs) {
     // Skip this GitPOAP if the threshold wasn't reached
     if (prCount < gitPOAP.threshold) {
       continue;

@@ -31,11 +31,13 @@ export type RepoReturnType = {
   id: number;
   name: string;
   lastPRUpdatedAt: Date;
-  gitPOAPs: {
-    id: number;
-    year: number;
-    threshold: number;
-  }[];
+  project: {
+    gitPOAPs: {
+      id: number;
+      year: number;
+      threshold: number;
+    }[];
+  };
   organization: {
     name: string;
   };
@@ -89,7 +91,7 @@ export async function handleNewPull(
   const mergedAt = DateTime.fromISO(pull.merged_at);
 
   // We assume here that all the ongoing GitPOAPs have the same year
-  const year = repo.gitPOAPs[0].year;
+  const year = repo.project.gitPOAPs[0].year;
 
   // Log an error if we haven't figured out what to do in the new years
   if (mergedAt.year > year) {
@@ -179,14 +181,18 @@ export async function runOngoingIssuanceUpdater() {
         id: true,
         name: true,
         lastPRUpdatedAt: true,
-        gitPOAPs: {
-          where: {
-            ongoing: true,
-          },
+        project: {
           select: {
-            id: true,
-            year: true,
-            threshold: true,
+            gitPOAPs: {
+              where: {
+                ongoing: true,
+              },
+              select: {
+                id: true,
+                year: true,
+                threshold: true,
+              },
+            },
           },
         },
         organization: {
@@ -196,7 +202,7 @@ export async function runOngoingIssuanceUpdater() {
         },
       },
     })
-  ).filter(r => r.gitPOAPs.length > 0);
+  ).filter(r => r.project.gitPOAPs.length > 0);
 
   logger.info(`Found ${repos.length} repos with ongoing GitPOAPs that need to be checked`);
 
