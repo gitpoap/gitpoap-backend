@@ -21,14 +21,18 @@ async function getRepoInfo(repoId: number) {
           name: true,
         },
       },
-      gitPOAPs: {
-        where: {
-          ongoing: true,
-        },
+      project: {
         select: {
-          id: true,
-          year: true,
-          threshold: true,
+          gitPOAPs: {
+            where: {
+              ongoing: true,
+            },
+            select: {
+              id: true,
+              year: true,
+              threshold: true,
+            },
+          },
         },
       },
     },
