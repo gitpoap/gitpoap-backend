@@ -1,4 +1,8 @@
-import { CreateGitPOAPSchema, UploadGitPOAPCodesSchema } from '../schemas/gitpoaps';
+import {
+  CreateGitPOAPSchema,
+  CreateGitPOAPProjectSchema,
+  UploadGitPOAPCodesSchema,
+} from '../schemas/gitpoaps';
 import { Router } from 'express';
 import { context } from '../context';
 import { createPOAPEvent } from '../external/poap';
@@ -8,9 +12,9 @@ import short from 'short-uuid';
 import multer from 'multer';
 import { GitPOAPStatus } from '@generated/type-graphql';
 import { httpRequestDurationSeconds } from '../metrics';
-import { upsertProjectById } from '../lib/projects';
 import { AccessTokenPayloadWithOAuth } from '../types/tokens';
 import { backloadGithubPullRequestData } from '../lib/pullRequests';
+import { createProjectWithGithubRepoIds } from '../lib/projects';
 
 export const gitpoapsRouter = Router();
 
@@ -38,22 +42,54 @@ gitpoapsRouter.post('/', jwtWithAdminOAuth(), upload.single('image'), async func
     return res.status(400).send({ msg });
   }
 
-  const githubRepoId = parseInt(req.body.githubRepoId, 10);
+  const projectChoice = JSON.parse(req.body.project);
+  const projectSchemaResult = CreateGitPOAPProjectSchema.safeParse(projectChoice);
+  if (!projectSchemaResult.success) {
+    logger.warn(
+      `Missing/invalid fields in the "project" provided JSON in request: ${JSON.stringify(
+        projectSchemaResult.error.issues,
+      )}`,
+    );
+    endTimer({ status: 400 });
+    return res.status(400).send({ issues: projectSchemaResult.error.issues });
+  }
 
-  logger.info(`Request to create a new GitPOAP "${req.body.name}" for repo ${githubRepoId}`);
+  let project;
+  if (projectChoice.projectId) {
+    logger.info(
+      `Request to create a new GitPOAP "${req.body.name}" for project ${projectChoice.projectId}`,
+    );
 
-  // Lookup the stored info about the repo provided
-  const repo = await upsertProjectById(
-    githubRepoId,
-    (<AccessTokenPayloadWithOAuth>req.user).githubOAuthToken,
-  );
-
-  if (!repo) {
-    logger.warn("Repo hasn't been added to GitPOAP");
-    endTimer({ status: 404 });
-    return res.status(404).send({
-      message: `There is no repo with id: ${githubRepoId}`,
+    project = await context.prisma.project.findUnique({
+      where: {
+        id: projectChoice.projectId,
+      },
+      select: {
+        id: true,
+      },
     });
+    if (project === null) {
+      const msg = `Failed to find project with id: ${projectChoice.projectId}`;
+      logger.warn(msg);
+      endTimer({ status: 404 });
+      return res.status(404).send({ msg });
+    }
+  } else {
+    logger.info(
+      `Request to create a new GitPOAP "${req.body.name}" for project with Github Repo IDs: ${projectChoice.githubRepoIds}`,
+    );
+
+    project = await createProjectWithGithubRepoIds(
+      projectChoice.githubRepoIds,
+      (<AccessTokenPayloadWithOAuth>req.user).githubOAuthToken,
+    );
+    if (project === null) {
+      const msg =
+        "Failed to create a new project. It's possible one of the repos is already within another project";
+      logger.warn(msg);
+      endTimer({ status: 400 });
+      return res.status(400).send({ msg });
+    }
   }
 
   // Create a secret code of the form "[0-9]{6}" that will be used to
@@ -89,9 +125,9 @@ gitpoapsRouter.post('/', jwtWithAdminOAuth(), upload.single('image'), async func
     data: {
       year: poapInfo.year,
       poapEventId: poapInfo.id,
-      repo: {
+      project: {
         connect: {
-          id: repo.id,
+          id: project.id,
         },
       },
       poapSecret: secretCode,
@@ -100,7 +136,7 @@ gitpoapsRouter.post('/', jwtWithAdminOAuth(), upload.single('image'), async func
   });
 
   logger.debug(
-    `Completed request to create a new GitPOAP "${req.body.name}" for repo ${githubRepoId}`,
+    `Completed request to create a new GitPOAP "${req.body.name}" for project ${project.id}`,
   );
 
   endTimer({ status: 201 });
@@ -258,7 +294,7 @@ gitpoapsRouter.post(
       return;
     }
 
-    for (const repo in gitPOAPData.project.repos) {
+    for (const repo of gitPOAPData.project.repos) {
       backloadGithubPullRequestData(repo.id);
     }
   },

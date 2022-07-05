@@ -1,9 +1,9 @@
 import { z } from 'zod';
 
 export const RequestAccessTokenSchema = z.object({
-  code: z.string(),
+  code: z.string().nonempty(),
 });
 
 export const RefreshAccessTokenSchema = z.object({
-  token: z.string(),
+  token: z.string().nonempty(),
 });
