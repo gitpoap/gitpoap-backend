@@ -193,6 +193,38 @@ type Query {
     take: Int
     skip: Int
   ): [ProfileGroupBy!]!
+  project(where: ProjectWhereUniqueInput!): Project
+  findFirstProject(
+    where: ProjectWhereInput
+    orderBy: [ProjectOrderByWithRelationInput!]
+    cursor: ProjectWhereUniqueInput
+    take: Int
+    skip: Int
+    distinct: [ProjectScalarFieldEnum!]
+  ): Project
+  projects(
+    where: ProjectWhereInput
+    orderBy: [ProjectOrderByWithRelationInput!]
+    cursor: ProjectWhereUniqueInput
+    take: Int
+    skip: Int
+    distinct: [ProjectScalarFieldEnum!]
+  ): [Project!]!
+  aggregateProject(
+    where: ProjectWhereInput
+    orderBy: [ProjectOrderByWithRelationInput!]
+    cursor: ProjectWhereUniqueInput
+    take: Int
+    skip: Int
+  ): AggregateProject!
+  groupByProject(
+    where: ProjectWhereInput
+    orderBy: [ProjectOrderByWithAggregationInput!]
+    by: [ProjectScalarFieldEnum!]!
+    having: ProjectScalarWhereWithAggregatesInput
+    take: Int
+    skip: Int
+  ): [ProjectGroupBy!]!
   repo(where: RepoWhereUniqueInput!): Repo
   findFirstRepo(
     where: RepoWhereInput
@@ -316,8 +348,8 @@ type Query {
   lastMonthContributors: Float!
   profileData(address: String!): NullableProfile
   mostHonoredContributors(count: Float = 10): [ProfileWithClaimsCount!]!
-  repoMostHonoredContributors(
-    repoId: Float!
+  projectMostHonoredContributors(
+    projectId: Float!
     count: Float = 10
   ): [ProfileWithClaimsCount!]!
   search(text: String!): SearchResults!
@@ -405,6 +437,22 @@ type Project {
   createdAt: DateTime!
   updatedAt: DateTime!
   _count: ProjectCount
+  repos(
+    where: RepoWhereInput
+    orderBy: [RepoOrderByWithRelationInput!]
+    cursor: RepoWhereUniqueInput
+    take: Int
+    skip: Int
+    distinct: [RepoScalarFieldEnum!]
+  ): [Repo!]!
+  gitPOAPs(
+    where: GitPOAPWhereInput
+    orderBy: [GitPOAPOrderByWithRelationInput!]
+    cursor: GitPOAPWhereUniqueInput
+    take: Int
+    skip: Int
+    distinct: [GitPOAPScalarFieldEnum!]
+  ): [GitPOAP!]!
 }
 
 type ProjectCount {
@@ -412,23 +460,71 @@ type ProjectCount {
   gitPOAPs: Int!
 }
 
-input ClaimWhereInput {
-  AND: [ClaimWhereInput!]
-  OR: [ClaimWhereInput!]
-  NOT: [ClaimWhereInput!]
+type Repo {
+  id: Int!
+  name: String!
+  githubRepoId: Int!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  organizationId: Int!
+  projectId: Int!
+  lastPRUpdatedAt: DateTime!
+  _count: RepoCount
+  organization: Organization!
+  GithubPullRequest(
+    where: GithubPullRequestWhereInput
+    orderBy: [GithubPullRequestOrderByWithRelationInput!]
+    cursor: GithubPullRequestWhereUniqueInput
+    take: Int
+    skip: Int
+    distinct: [GithubPullRequestScalarFieldEnum!]
+  ): [GithubPullRequest!]!
+  project: Project!
+}
+
+type RepoCount {
+  GithubPullRequest: Int!
+}
+
+type Organization {
+  id: Int!
+  githubOrgId: Int!
+  name: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  description: String
+  twitterHandle: String
+  url: String
+  _count: OrganizationCount
+  repos(
+    where: RepoWhereInput
+    orderBy: [RepoOrderByWithRelationInput!]
+    cursor: RepoWhereUniqueInput
+    take: Int
+    skip: Int
+    distinct: [RepoScalarFieldEnum!]
+  ): [Repo!]!
+}
+
+type OrganizationCount {
+  repos: Int!
+}
+
+input RepoWhereInput {
+  AND: [RepoWhereInput!]
+  OR: [RepoWhereInput!]
+  NOT: [RepoWhereInput!]
   id: IntFilter
+  name: StringFilter
+  githubRepoId: IntFilter
   createdAt: DateTimeFilter
   updatedAt: DateTimeFilter
-  mintedAt: DateTimeNullableFilter
-  status: EnumClaimStatusFilter
-  poapTokenId: StringNullableFilter
-  address: StringNullableFilter
-  gitPOAPId: IntFilter
-  gitPOAP: GitPOAPRelationFilter
-  userId: IntFilter
-  user: UserRelationFilter
-  pullRequestEarnedId: IntNullableFilter
-  pullRequestEarned: GithubPullRequestRelationFilter
+  organizationId: IntFilter
+  organization: OrganizationRelationFilter
+  GithubPullRequest: GithubPullRequestListRelationFilter
+  projectId: IntFilter
+  project: ProjectRelationFilter
+  lastPRUpdatedAt: DateTimeFilter
 }
 
 input IntFilter {
@@ -453,6 +549,40 @@ input NestedIntFilter {
   not: NestedIntFilter
 }
 
+input StringFilter {
+  equals: String
+  in: [String!]
+  notIn: [String!]
+  lt: String
+  lte: String
+  gt: String
+  gte: String
+  contains: String
+  startsWith: String
+  endsWith: String
+  mode: QueryMode
+  not: NestedStringFilter
+}
+
+enum QueryMode {
+  default
+  insensitive
+}
+
+input NestedStringFilter {
+  equals: String
+  in: [String!]
+  notIn: [String!]
+  lt: String
+  lte: String
+  gt: String
+  gte: String
+  contains: String
+  startsWith: String
+  endsWith: String
+  not: NestedStringFilter
+}
+
 input DateTimeFilter {
   equals: DateTime
   in: [DateTime!]
@@ -473,6 +603,133 @@ input NestedDateTimeFilter {
   gt: DateTime
   gte: DateTime
   not: NestedDateTimeFilter
+}
+
+input OrganizationRelationFilter {
+  is: OrganizationWhereInput
+  isNot: OrganizationWhereInput
+}
+
+input OrganizationWhereInput {
+  AND: [OrganizationWhereInput!]
+  OR: [OrganizationWhereInput!]
+  NOT: [OrganizationWhereInput!]
+  id: IntFilter
+  githubOrgId: IntFilter
+  name: StringFilter
+  createdAt: DateTimeFilter
+  updatedAt: DateTimeFilter
+  description: StringNullableFilter
+  twitterHandle: StringNullableFilter
+  url: StringNullableFilter
+  repos: RepoListRelationFilter
+}
+
+input StringNullableFilter {
+  equals: String
+  in: [String!]
+  notIn: [String!]
+  lt: String
+  lte: String
+  gt: String
+  gte: String
+  contains: String
+  startsWith: String
+  endsWith: String
+  mode: QueryMode
+  not: NestedStringNullableFilter
+}
+
+input NestedStringNullableFilter {
+  equals: String
+  in: [String!]
+  notIn: [String!]
+  lt: String
+  lte: String
+  gt: String
+  gte: String
+  contains: String
+  startsWith: String
+  endsWith: String
+  not: NestedStringNullableFilter
+}
+
+input RepoListRelationFilter {
+  every: RepoWhereInput
+  some: RepoWhereInput
+  none: RepoWhereInput
+}
+
+input GithubPullRequestListRelationFilter {
+  every: GithubPullRequestWhereInput
+  some: GithubPullRequestWhereInput
+  none: GithubPullRequestWhereInput
+}
+
+input GithubPullRequestWhereInput {
+  AND: [GithubPullRequestWhereInput!]
+  OR: [GithubPullRequestWhereInput!]
+  NOT: [GithubPullRequestWhereInput!]
+  id: IntFilter
+  createdAt: DateTimeFilter
+  updatedAt: DateTimeFilter
+  githubPullNumber: IntFilter
+  githubTitle: StringFilter
+  githubMergedAt: DateTimeFilter
+  githubMergeCommitSha: StringFilter
+  repoId: IntFilter
+  repo: RepoRelationFilter
+  userId: IntFilter
+  user: UserRelationFilter
+  Claim: ClaimListRelationFilter
+}
+
+input RepoRelationFilter {
+  is: RepoWhereInput
+  isNot: RepoWhereInput
+}
+
+input UserRelationFilter {
+  is: UserWhereInput
+  isNot: UserWhereInput
+}
+
+input UserWhereInput {
+  AND: [UserWhereInput!]
+  OR: [UserWhereInput!]
+  NOT: [UserWhereInput!]
+  id: IntFilter
+  githubId: IntFilter
+  githubHandle: StringFilter
+  createdAt: DateTimeFilter
+  updatedAt: DateTimeFilter
+  claims: ClaimListRelationFilter
+  GithubPullRequest: GithubPullRequestListRelationFilter
+}
+
+input ClaimListRelationFilter {
+  every: ClaimWhereInput
+  some: ClaimWhereInput
+  none: ClaimWhereInput
+}
+
+input ClaimWhereInput {
+  AND: [ClaimWhereInput!]
+  OR: [ClaimWhereInput!]
+  NOT: [ClaimWhereInput!]
+  id: IntFilter
+  createdAt: DateTimeFilter
+  updatedAt: DateTimeFilter
+  mintedAt: DateTimeNullableFilter
+  status: EnumClaimStatusFilter
+  poapTokenId: StringNullableFilter
+  address: StringNullableFilter
+  gitPOAPId: IntFilter
+  gitPOAP: GitPOAPRelationFilter
+  userId: IntFilter
+  user: UserRelationFilter
+  pullRequestEarnedId: IntNullableFilter
+  pullRequestEarned: GithubPullRequestRelationFilter
 }
 
 input DateTimeNullableFilter {
@@ -509,40 +766,6 @@ input NestedEnumClaimStatusFilter {
   in: [ClaimStatus!]
   notIn: [ClaimStatus!]
   not: NestedEnumClaimStatusFilter
-}
-
-input StringNullableFilter {
-  equals: String
-  in: [String!]
-  notIn: [String!]
-  lt: String
-  lte: String
-  gt: String
-  gte: String
-  contains: String
-  startsWith: String
-  endsWith: String
-  mode: QueryMode
-  not: NestedStringNullableFilter
-}
-
-enum QueryMode {
-  default
-  insensitive
-}
-
-input NestedStringNullableFilter {
-  equals: String
-  in: [String!]
-  notIn: [String!]
-  lt: String
-  lte: String
-  gt: String
-  gte: String
-  contains: String
-  startsWith: String
-  endsWith: String
-  not: NestedStringNullableFilter
 }
 
 input GitPOAPRelationFilter {
@@ -600,131 +823,6 @@ input ProjectWhereInput {
   updatedAt: DateTimeFilter
   repos: RepoListRelationFilter
   gitPOAPs: GitPOAPListRelationFilter
-}
-
-input RepoListRelationFilter {
-  every: RepoWhereInput
-  some: RepoWhereInput
-  none: RepoWhereInput
-}
-
-input RepoWhereInput {
-  AND: [RepoWhereInput!]
-  OR: [RepoWhereInput!]
-  NOT: [RepoWhereInput!]
-  id: IntFilter
-  name: StringFilter
-  githubRepoId: IntFilter
-  createdAt: DateTimeFilter
-  updatedAt: DateTimeFilter
-  organizationId: IntFilter
-  organization: OrganizationRelationFilter
-  GithubPullRequest: GithubPullRequestListRelationFilter
-  projectId: IntFilter
-  project: ProjectRelationFilter
-  lastPRUpdatedAt: DateTimeFilter
-}
-
-input StringFilter {
-  equals: String
-  in: [String!]
-  notIn: [String!]
-  lt: String
-  lte: String
-  gt: String
-  gte: String
-  contains: String
-  startsWith: String
-  endsWith: String
-  mode: QueryMode
-  not: NestedStringFilter
-}
-
-input NestedStringFilter {
-  equals: String
-  in: [String!]
-  notIn: [String!]
-  lt: String
-  lte: String
-  gt: String
-  gte: String
-  contains: String
-  startsWith: String
-  endsWith: String
-  not: NestedStringFilter
-}
-
-input OrganizationRelationFilter {
-  is: OrganizationWhereInput
-  isNot: OrganizationWhereInput
-}
-
-input OrganizationWhereInput {
-  AND: [OrganizationWhereInput!]
-  OR: [OrganizationWhereInput!]
-  NOT: [OrganizationWhereInput!]
-  id: IntFilter
-  githubOrgId: IntFilter
-  name: StringFilter
-  createdAt: DateTimeFilter
-  updatedAt: DateTimeFilter
-  description: StringNullableFilter
-  twitterHandle: StringNullableFilter
-  url: StringNullableFilter
-  repos: RepoListRelationFilter
-}
-
-input GithubPullRequestListRelationFilter {
-  every: GithubPullRequestWhereInput
-  some: GithubPullRequestWhereInput
-  none: GithubPullRequestWhereInput
-}
-
-input GithubPullRequestWhereInput {
-  AND: [GithubPullRequestWhereInput!]
-  OR: [GithubPullRequestWhereInput!]
-  NOT: [GithubPullRequestWhereInput!]
-  id: IntFilter
-  createdAt: DateTimeFilter
-  updatedAt: DateTimeFilter
-  githubPullNumber: IntFilter
-  githubTitle: StringFilter
-  githubMergedAt: DateTimeFilter
-  githubMergeCommitSha: StringFilter
-  repoId: IntFilter
-  repo: RepoRelationFilter
-  userId: IntFilter
-  user: UserRelationFilter
-  Claim: ClaimListRelationFilter
-}
-
-input RepoRelationFilter {
-  is: RepoWhereInput
-  isNot: RepoWhereInput
-}
-
-input UserRelationFilter {
-  is: UserWhereInput
-  isNot: UserWhereInput
-}
-
-input UserWhereInput {
-  AND: [UserWhereInput!]
-  OR: [UserWhereInput!]
-  NOT: [UserWhereInput!]
-  id: IntFilter
-  githubId: IntFilter
-  githubHandle: StringFilter
-  createdAt: DateTimeFilter
-  updatedAt: DateTimeFilter
-  claims: ClaimListRelationFilter
-  GithubPullRequest: GithubPullRequestListRelationFilter
-}
-
-input ClaimListRelationFilter {
-  every: ClaimWhereInput
-  some: ClaimWhereInput
-  none: ClaimWhereInput
 }
 
 input GitPOAPListRelationFilter {
@@ -825,6 +923,131 @@ input GithubPullRequestRelationFilter {
   isNot: GithubPullRequestWhereInput
 }
 
+input RepoOrderByWithRelationInput {
+  id: SortOrder
+  name: SortOrder
+  githubRepoId: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  organizationId: SortOrder
+  organization: OrganizationOrderByWithRelationInput
+  GithubPullRequest: GithubPullRequestOrderByRelationAggregateInput
+  projectId: SortOrder
+  project: ProjectOrderByWithRelationInput
+  lastPRUpdatedAt: SortOrder
+}
+
+enum SortOrder {
+  asc
+  desc
+}
+
+input OrganizationOrderByWithRelationInput {
+  id: SortOrder
+  githubOrgId: SortOrder
+  name: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  description: SortOrder
+  twitterHandle: SortOrder
+  url: SortOrder
+  repos: RepoOrderByRelationAggregateInput
+}
+
+input RepoOrderByRelationAggregateInput {
+  _count: SortOrder
+}
+
+input GithubPullRequestOrderByRelationAggregateInput {
+  _count: SortOrder
+}
+
+input ProjectOrderByWithRelationInput {
+  id: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  repos: RepoOrderByRelationAggregateInput
+  gitPOAPs: GitPOAPOrderByRelationAggregateInput
+}
+
+input GitPOAPOrderByRelationAggregateInput {
+  _count: SortOrder
+}
+
+input RepoWhereUniqueInput {
+  id: Int
+  githubRepoId: Int
+}
+
+enum RepoScalarFieldEnum {
+  id
+  name
+  githubRepoId
+  createdAt
+  updatedAt
+  organizationId
+  projectId
+  lastPRUpdatedAt
+}
+
+type GithubPullRequest {
+  id: Int!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  githubPullNumber: Int!
+  githubTitle: String!
+  githubMergedAt: DateTime!
+  githubMergeCommitSha: String!
+  repoId: Int!
+  userId: Int!
+  _count: GithubPullRequestCount
+  repo: Repo!
+  user: User!
+  Claim(
+    where: ClaimWhereInput
+    orderBy: [ClaimOrderByWithRelationInput!]
+    cursor: ClaimWhereUniqueInput
+    take: Int
+    skip: Int
+    distinct: [ClaimScalarFieldEnum!]
+  ): [Claim!]!
+}
+
+type GithubPullRequestCount {
+  Claim: Int!
+}
+
+type User {
+  id: Int!
+  githubId: Int!
+  githubHandle: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  _count: UserCount
+  claims(
+    where: ClaimWhereInput
+    orderBy: [ClaimOrderByWithRelationInput!]
+    cursor: ClaimWhereUniqueInput
+    take: Int
+    skip: Int
+    distinct: [ClaimScalarFieldEnum!]
+  ): [Claim!]!
+  GithubPullRequest(
+    where: GithubPullRequestWhereInput
+    orderBy: [GithubPullRequestOrderByWithRelationInput!]
+    cursor: GithubPullRequestWhereUniqueInput
+    take: Int
+    skip: Int
+    distinct: [GithubPullRequestScalarFieldEnum!]
+  ): [GithubPullRequest!]!
+}
+
+type UserCount {
+  claims: Int!
+  authTokens: Int!
+  GithubPullRequest: Int!
+}
+
 input ClaimOrderByWithRelationInput {
   id: SortOrder
   createdAt: SortOrder
@@ -839,11 +1062,6 @@ input ClaimOrderByWithRelationInput {
   user: UserOrderByWithRelationInput
   pullRequestEarnedId: SortOrder
   pullRequestEarned: GithubPullRequestOrderByWithRelationInput
-}
-
-enum SortOrder {
-  asc
-  desc
 }
 
 input GitPOAPOrderByWithRelationInput {
@@ -863,22 +1081,6 @@ input GitPOAPOrderByWithRelationInput {
   event: EventOrderByWithRelationInput
   level: SortOrder
   threshold: SortOrder
-}
-
-input ProjectOrderByWithRelationInput {
-  id: SortOrder
-  createdAt: SortOrder
-  updatedAt: SortOrder
-  repos: RepoOrderByRelationAggregateInput
-  gitPOAPs: GitPOAPOrderByRelationAggregateInput
-}
-
-input RepoOrderByRelationAggregateInput {
-  _count: SortOrder
-}
-
-input GitPOAPOrderByRelationAggregateInput {
-  _count: SortOrder
 }
 
 input ClaimOrderByRelationAggregateInput {
@@ -916,10 +1118,6 @@ input UserOrderByWithRelationInput {
   GithubPullRequest: GithubPullRequestOrderByRelationAggregateInput
 }
 
-input GithubPullRequestOrderByRelationAggregateInput {
-  _count: SortOrder
-}
-
 input GithubPullRequestOrderByWithRelationInput {
   id: SortOrder
   createdAt: SortOrder
@@ -933,32 +1131,6 @@ input GithubPullRequestOrderByWithRelationInput {
   userId: SortOrder
   user: UserOrderByWithRelationInput
   Claim: ClaimOrderByRelationAggregateInput
-}
-
-input RepoOrderByWithRelationInput {
-  id: SortOrder
-  name: SortOrder
-  githubRepoId: SortOrder
-  createdAt: SortOrder
-  updatedAt: SortOrder
-  organizationId: SortOrder
-  organization: OrganizationOrderByWithRelationInput
-  GithubPullRequest: GithubPullRequestOrderByRelationAggregateInput
-  projectId: SortOrder
-  project: ProjectOrderByWithRelationInput
-  lastPRUpdatedAt: SortOrder
-}
-
-input OrganizationOrderByWithRelationInput {
-  id: SortOrder
-  githubOrgId: SortOrder
-  name: SortOrder
-  createdAt: SortOrder
-  updatedAt: SortOrder
-  description: SortOrder
-  twitterHandle: SortOrder
-  url: SortOrder
-  repos: RepoOrderByRelationAggregateInput
 }
 
 input ClaimWhereUniqueInput {
@@ -984,6 +1156,49 @@ enum ClaimScalarFieldEnum {
   gitPOAPId
   userId
   pullRequestEarnedId
+}
+
+input GithubPullRequestWhereUniqueInput {
+  id: Int
+  repoId_githubPullNumber: GithubPullRequestRepoIdGithubPullNumberCompoundUniqueInput
+}
+
+input GithubPullRequestRepoIdGithubPullNumberCompoundUniqueInput {
+  repoId: Int!
+  githubPullNumber: Int!
+}
+
+enum GithubPullRequestScalarFieldEnum {
+  id
+  createdAt
+  updatedAt
+  githubPullNumber
+  githubTitle
+  githubMergedAt
+  githubMergeCommitSha
+  repoId
+  userId
+}
+
+input GitPOAPWhereUniqueInput {
+  id: Int
+  poapEventId: Int
+}
+
+enum GitPOAPScalarFieldEnum {
+  id
+  type
+  year
+  poapEventId
+  createdAt
+  updatedAt
+  projectId
+  poapSecret
+  status
+  ongoing
+  eventId
+  level
+  threshold
 }
 
 type RedeemCode {
@@ -1028,152 +1243,6 @@ type Event {
 
 type EventCount {
   GitPOAP: Int!
-}
-
-type User {
-  id: Int!
-  githubId: Int!
-  githubHandle: String!
-  createdAt: DateTime!
-  updatedAt: DateTime!
-  _count: UserCount
-  claims(
-    where: ClaimWhereInput
-    orderBy: [ClaimOrderByWithRelationInput!]
-    cursor: ClaimWhereUniqueInput
-    take: Int
-    skip: Int
-    distinct: [ClaimScalarFieldEnum!]
-  ): [Claim!]!
-  GithubPullRequest(
-    where: GithubPullRequestWhereInput
-    orderBy: [GithubPullRequestOrderByWithRelationInput!]
-    cursor: GithubPullRequestWhereUniqueInput
-    take: Int
-    skip: Int
-    distinct: [GithubPullRequestScalarFieldEnum!]
-  ): [GithubPullRequest!]!
-}
-
-type UserCount {
-  claims: Int!
-  authTokens: Int!
-  GithubPullRequest: Int!
-}
-
-type GithubPullRequest {
-  id: Int!
-  createdAt: DateTime!
-  updatedAt: DateTime!
-  githubPullNumber: Int!
-  githubTitle: String!
-  githubMergedAt: DateTime!
-  githubMergeCommitSha: String!
-  repoId: Int!
-  userId: Int!
-  _count: GithubPullRequestCount
-  repo: Repo!
-  user: User!
-  Claim(
-    where: ClaimWhereInput
-    orderBy: [ClaimOrderByWithRelationInput!]
-    cursor: ClaimWhereUniqueInput
-    take: Int
-    skip: Int
-    distinct: [ClaimScalarFieldEnum!]
-  ): [Claim!]!
-}
-
-type GithubPullRequestCount {
-  Claim: Int!
-}
-
-type Repo {
-  id: Int!
-  name: String!
-  githubRepoId: Int!
-  createdAt: DateTime!
-  updatedAt: DateTime!
-  organizationId: Int!
-  projectId: Int!
-  lastPRUpdatedAt: DateTime!
-  _count: RepoCount
-  organization: Organization!
-  GithubPullRequest(
-    where: GithubPullRequestWhereInput
-    orderBy: [GithubPullRequestOrderByWithRelationInput!]
-    cursor: GithubPullRequestWhereUniqueInput
-    take: Int
-    skip: Int
-    distinct: [GithubPullRequestScalarFieldEnum!]
-  ): [GithubPullRequest!]!
-  project: Project!
-}
-
-type RepoCount {
-  GithubPullRequest: Int!
-}
-
-type Organization {
-  id: Int!
-  githubOrgId: Int!
-  name: String!
-  createdAt: DateTime!
-  updatedAt: DateTime!
-  description: String
-  twitterHandle: String
-  url: String
-  _count: OrganizationCount
-  repos(
-    where: RepoWhereInput
-    orderBy: [RepoOrderByWithRelationInput!]
-    cursor: RepoWhereUniqueInput
-    take: Int
-    skip: Int
-    distinct: [RepoScalarFieldEnum!]
-  ): [Repo!]!
-}
-
-type OrganizationCount {
-  repos: Int!
-}
-
-input RepoWhereUniqueInput {
-  id: Int
-  githubRepoId: Int
-}
-
-enum RepoScalarFieldEnum {
-  id
-  name
-  githubRepoId
-  createdAt
-  updatedAt
-  organizationId
-  projectId
-  lastPRUpdatedAt
-}
-
-input GithubPullRequestWhereUniqueInput {
-  id: Int
-  repoId_githubPullNumber: GithubPullRequestRepoIdGithubPullNumberCompoundUniqueInput
-}
-
-input GithubPullRequestRepoIdGithubPullNumberCompoundUniqueInput {
-  repoId: Int!
-  githubPullNumber: Int!
-}
-
-enum GithubPullRequestScalarFieldEnum {
-  id
-  createdAt
-  updatedAt
-  githubPullNumber
-  githubTitle
-  githubMergedAt
-  githubMergeCommitSha
-  repoId
-  userId
 }
 
 type AggregateClaim {
@@ -1789,27 +1858,6 @@ input NestedStringWithAggregatesFilter {
   _count: NestedIntFilter
   _min: NestedStringFilter
   _max: NestedStringFilter
-}
-
-input GitPOAPWhereUniqueInput {
-  id: Int
-  poapEventId: Int
-}
-
-enum GitPOAPScalarFieldEnum {
-  id
-  type
-  year
-  poapEventId
-  createdAt
-  updatedAt
-  projectId
-  poapSecret
-  status
-  ongoing
-  eventId
-  level
-  threshold
 }
 
 type AggregateGitPOAP {
@@ -2565,6 +2613,108 @@ input ProfileScalarWhereWithAggregatesInput {
   githubHandle: StringNullableWithAggregatesFilter
   twitterHandle: StringNullableWithAggregatesFilter
   personalSiteUrl: StringNullableWithAggregatesFilter
+}
+
+input ProjectWhereUniqueInput {
+  id: Int
+}
+
+enum ProjectScalarFieldEnum {
+  id
+  createdAt
+  updatedAt
+}
+
+type AggregateProject {
+  _count: ProjectCountAggregate
+  _avg: ProjectAvgAggregate
+  _sum: ProjectSumAggregate
+  _min: ProjectMinAggregate
+  _max: ProjectMaxAggregate
+}
+
+type ProjectCountAggregate {
+  id: Int!
+  createdAt: Int!
+  updatedAt: Int!
+  _all: Int!
+}
+
+type ProjectAvgAggregate {
+  id: Float
+}
+
+type ProjectSumAggregate {
+  id: Int
+}
+
+type ProjectMinAggregate {
+  id: Int
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+type ProjectMaxAggregate {
+  id: Int
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+type ProjectGroupBy {
+  id: Int!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  _count: ProjectCountAggregate
+  _avg: ProjectAvgAggregate
+  _sum: ProjectSumAggregate
+  _min: ProjectMinAggregate
+  _max: ProjectMaxAggregate
+}
+
+input ProjectOrderByWithAggregationInput {
+  id: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  _count: ProjectCountOrderByAggregateInput
+  _avg: ProjectAvgOrderByAggregateInput
+  _max: ProjectMaxOrderByAggregateInput
+  _min: ProjectMinOrderByAggregateInput
+  _sum: ProjectSumOrderByAggregateInput
+}
+
+input ProjectCountOrderByAggregateInput {
+  id: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+}
+
+input ProjectAvgOrderByAggregateInput {
+  id: SortOrder
+}
+
+input ProjectMaxOrderByAggregateInput {
+  id: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+}
+
+input ProjectMinOrderByAggregateInput {
+  id: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+}
+
+input ProjectSumOrderByAggregateInput {
+  id: SortOrder
+}
+
+input ProjectScalarWhereWithAggregatesInput {
+  AND: [ProjectScalarWhereWithAggregatesInput!]
+  OR: [ProjectScalarWhereWithAggregatesInput!]
+  NOT: [ProjectScalarWhereWithAggregatesInput!]
+  id: IntWithAggregatesFilter
+  createdAt: DateTimeWithAggregatesFilter
+  updatedAt: DateTimeWithAggregatesFilter
 }
 
 type AggregateRepo {
