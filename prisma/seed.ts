@@ -40,7 +40,7 @@ async function main() {
   const colfax = await UserFactory.createUser(2, GH_HANDLES.colfax);
   const jay = await UserFactory.createUser(8076957, GH_HANDLES.jay);
   const anthony = await UserFactory.createUser(1555326, GH_HANDLES.anthony);
-  const aldo = await UserFactory.createUser(16078, GH_HANDLES.aldo);
+  const aldo = await UserFactory.createUser(19416312, GH_HANDLES.aldo);
   const johnz = await UserFactory.createUser(5, 'johnz');
   const anthony2 = await UserFactory.createUser(6, 'burzzzzz');
 
