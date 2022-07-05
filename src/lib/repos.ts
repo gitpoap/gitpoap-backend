@@ -8,7 +8,12 @@ import {
   getGithubRepositoryById,
 } from '../external/github';
 
-async function upsertRepoHelper(repoInfo: GithubRepoResponse, projectId: number): Promise<Repo> {
+async function createRepoHelper(
+  repoInfo: GithubRepoResponse,
+  projectId: number,
+): Promise<Repo | null> {
+  const logger = createScopedLogger('createRepoHelper');
+
   // Add the org if it doesn't already exist
   const org = await context.prisma.organization.upsert({
     where: {
@@ -21,35 +26,38 @@ async function upsertRepoHelper(repoInfo: GithubRepoResponse, projectId: number)
     },
   });
 
-  return await context.prisma.repo.upsert({
-    where: {
-      githubRepoId: repoInfo.id,
-    },
-    update: {},
-    create: {
-      githubRepoId: repoInfo.id,
-      name: repoInfo.name,
-      organization: {
-        connect: {
-          id: org.id,
+  try {
+    return await context.prisma.repo.create({
+      data: {
+        githubRepoId: repoInfo.id,
+        name: repoInfo.name,
+        organization: {
+          connect: {
+            id: org.id,
+          },
+        },
+        project: {
+          connect: {
+            id: projectId,
+          },
         },
       },
-      project: {
-        connect: {
-          id: projectId,
-        },
-      },
-    },
-  });
+    });
+  } catch (err) {
+    logger.error(
+      `Failed to create repo "${repoInfo.owner.login}/${repoInfo.name}" for Project ID ${projectId}`,
+    );
+    return null;
+  }
 }
 
-export async function upsertRepo(
+export async function createRepo(
   organization: string,
   repository: string,
   projectId: number,
   githubOAuthToken: string,
 ): Promise<Repo | null> {
-  const logger = createScopedLogger('upsertRepo');
+  const logger = createScopedLogger('createRepo');
 
   logger.info(
     `Creating Repo ${organization}/${repository} in project ID ${projectId} if it doesn't exist`,
@@ -61,15 +69,15 @@ export async function upsertRepo(
     return null;
   }
 
-  return await upsertRepoHelper(repoInfo, projectId);
+  return await createRepoHelper(repoInfo, projectId);
 }
 
-export async function upsertRepoById(
+export async function createRepoByGithubId(
   githubRepoId: number,
   projectId: number,
   githubOAuthToken: string,
 ): Promise<Repo | null> {
-  const logger = createScopedLogger('upsertRepoById');
+  const logger = createScopedLogger('createRepoByGithubId');
 
   logger.info(
     `Creating Repo for GitHub repository ID ${githubRepoId} in project ID ${projectId} if it doesn't exist`,
@@ -81,7 +89,7 @@ export async function upsertRepoById(
     return null;
   }
 
-  return await upsertRepoHelper(repoInfo, projectId);
+  return await createRepoHelper(repoInfo, projectId);
 }
 
 export async function getRepoByName(owner: string, repo: string): Promise<RepoData | null> {

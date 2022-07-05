@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { SignatureSchema } from './signature';
 
 export const ClaimGitPOAPSchema = z.object({
-  address: z.string(),
+  address: z.string().nonempty(),
   claimIds: z.array(z.number()).nonempty(),
   signature: SignatureSchema,
 });
@@ -13,7 +13,7 @@ export const CreateGitPOAPClaimsSchema = z.object({
 });
 
 export const CreateGitPOAPBotClaimsSchema = z.object({
-  repo: z.string(),
-  owner: z.string(),
+  repo: z.string().nonempty(),
+  owner: z.string().nonempty(),
   pullRequestNumber: z.number(),
 });
