@@ -155,7 +155,27 @@ for convenience):
 
 ```json
 {
-  "githubRepoId": 9001,
+  "project": "{ \"githubRepoIds\": [ 9001 ], }", // JSON string
+  "name": "GitPOAP Contributor 2022",
+  "description": "You contributed to GitPOAP in 2022!\nCongrats, you are a super cool person!",
+  "startDate": "01-Jan-2022",
+  "endDate": "31-Dec-2022",
+  "expiryDate": "31-Jan-2023",
+  "year": 2022,
+  "eventUrl": "https://github.com/gitpoap/gitpoap-backend",
+  "email": "burz@gitpoap.io",
+  "numRequestedCodes": 10,
+  "ongoing": false,
+  "city": "London", // optional
+  "country": "UK" // optional
+}
+```
+
+to create a project, or for an existing project:
+
+```json
+{
+  "project": "{ \"id\": 5 }", // JSON string
   "name": "GitPOAP Contributor 2022",
   "description": "You contributed to GitPOAP in 2022!\nCongrats, you are a super cool person!",
   "startDate": "01-Jan-2022",
