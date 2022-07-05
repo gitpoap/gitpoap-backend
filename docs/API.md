@@ -1,18 +1,5 @@
 # API
 
-## Add Project
-
-`POST /projects`
-
-Data:
-
-```json
-{
-  "organization": "some_org",
-  "repository": "some_repo"
-}
-```
-
 ## Update Profile
 
 `POST /profiles`
