@@ -13,6 +13,7 @@ import {
   GitPOAPRelationsResolver,
   FeaturedPOAPRelationsResolver,
   GithubPullRequestRelationsResolver,
+  ProjectRelationsResolver,
   /* Auto-generated GitPOAP Resolvers */
   FindUniqueGitPOAPResolver,
   FindFirstGitPOAPResolver,
@@ -61,6 +62,12 @@ import {
   FindManyGithubPullRequestResolver,
   GroupByGithubPullRequestResolver,
   AggregateGithubPullRequestResolver,
+  /* Auto-generated GithubPullRequest Resolvers */
+  FindUniqueProjectResolver,
+  FindFirstProjectResolver,
+  FindManyProjectResolver,
+  GroupByProjectResolver,
+  AggregateProjectResolver,
 } from '@generated/type-graphql';
 import { CustomClaimResolver } from './resolvers/claims';
 import { CustomGitPOAPResolver } from './resolvers/gitpoaps';
@@ -79,6 +86,7 @@ const allResolvers: NonEmptyArray<Function> = [
   GitPOAPRelationsResolver,
   FeaturedPOAPRelationsResolver,
   GithubPullRequestRelationsResolver,
+  ProjectRelationsResolver,
   /* Auto-generated GitPOAP READ Resolvers */
   FindUniqueGitPOAPResolver,
   FindFirstGitPOAPResolver,
@@ -127,6 +135,12 @@ const allResolvers: NonEmptyArray<Function> = [
   FindManyGithubPullRequestResolver,
   GroupByGithubPullRequestResolver,
   AggregateGithubPullRequestResolver,
+  /* Auto-generated Project READ Resolvers */
+  FindUniqueProjectResolver,
+  FindFirstProjectResolver,
+  FindManyProjectResolver,
+  GroupByProjectResolver,
+  AggregateProjectResolver,
   /* ~~ Custom resolvers ~~ */
   CustomClaimResolver,
   CustomGitPOAPResolver,
