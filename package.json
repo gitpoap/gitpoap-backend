@@ -13,8 +13,9 @@
     "postinstall": "npx prisma generate",
     "gql:build-schema": "npx prisma generate; ts-node-dev ./scripts/build-gql-schema.ts",
     "pr-backload": "APP_NAME=pr-backload ts-node-dev ./scripts/backload-pr-data.ts",
-    "test": "jest --setupFiles dotenv/config",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "test": "jest --setupFiles dotenv/config --testPathPatterns '/unit/'",
+    "integration-test": "docker-compose --profile integration-tests up --build --force-recreate --renew-anon-volumes --abort-on-container-exit"
   },
   "devDependencies": {
     "@types/badgen": "^2.7.1",
