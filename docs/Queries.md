@@ -995,7 +995,9 @@ that returns data like:
 To retrieve the number of stars on a repo we can run a query like:
 
 ```graphql
+{
   repoStarCount(repoId: 54)
+}
 ```
 
 that returns data like:
