@@ -50,9 +50,10 @@ services:
       - redis
       - fake-poap-api
       - fake-poap-auth
-    environment:
-      - POAP_CLIENT_ID=a good client id
-      - POAP_CLIENT_SECRET=super secret!
+    profiles:
+      - server
+      - metrics
+      - integration-tests
 
   public-api-server:
     build:
@@ -66,9 +67,9 @@ services:
       - redis
       - fake-poap-api
       - fake-poap-auth
-    environment:
-      - POAP_CLIENT_ID=a good client id
-      - POAP_CLIENT_SECRET=super secret!
+    profiles:
+      - public-server
+      - metrics
 
   prometheus:
     build:
@@ -79,6 +80,8 @@ services:
     depends_on:
       - server
       - public-api-server
+    profiles:
+      - metrics
 
   grafana:
     build:
@@ -88,3 +91,16 @@ services:
       - '9091:9091'
     depends_on:
       - prometheus
+    profiles:
+      - metrics
+
+  integration-tests:
+    build:
+      context: .
+      dockerfile: .dockerfiles/integration-tests.Dockerfile
+    depends_on:
+      - db
+      - redis
+      - server
+    profiles:
+      - integration-tests

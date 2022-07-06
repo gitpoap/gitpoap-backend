@@ -44,13 +44,15 @@ const repo: RepoReturnType = {
   id: 5,
   name: 'repo',
   lastPRUpdatedAt: new Date('2022-06-10'),
-  gitPOAPs: [
-    {
-      id: 50,
-      year: 2022,
-      threshold: 1,
-    },
-  ],
+  project: {
+    gitPOAPs: [
+      {
+        id: 50,
+        year: 2022,
+        threshold: 1,
+      },
+    ],
+  },
   organization: {
     name: 'org',
   },
