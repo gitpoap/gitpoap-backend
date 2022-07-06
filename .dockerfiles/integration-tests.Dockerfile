@@ -14,8 +14,6 @@ RUN yarn install
 
 COPY ./ ./
 
-RUN yarn build
-
 # Steal the .env from the server
 COPY .dockerfiles/server.env .env
 
