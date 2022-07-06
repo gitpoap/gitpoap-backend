@@ -15,7 +15,9 @@
     "pr-backload": "APP_NAME=pr-backload ts-node-dev ./scripts/backload-pr-data.ts",
     "prepare": "husky install",
     "test": "jest --setupFiles dotenv/config --testPathPatterns '/unit/'",
-    "integration-test": "docker-compose --profile integration-tests up --build --force-recreate --renew-anon-volumes --abort-on-container-exit"
+    "build-integration-test": "docker-compose --profile integration-tests build --parallel",
+    "run-integration-test": "docker-compose --profile integration-tests up --force-recreate --renew-anon-volumes --abort-on-container-exit",
+    "integration-test": "yarn build-integration-test && yarn run-integration-test"
   },
   "devDependencies": {
     "@types/badgen": "^2.7.1",
@@ -37,6 +39,7 @@
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-prettier": "^4.0.0",
     "husky": ">=6",
+    "graphql-request": "^4.3.0",
     "jest": "^28.1.1",
     "jest-mock-extended": "^2.0.6",
     "lint-staged": ">=10",
