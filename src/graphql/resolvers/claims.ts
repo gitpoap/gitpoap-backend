@@ -52,7 +52,7 @@ export class CustomClaimResolver {
         id: true,
       },
       where: {
-        updatedAt: { gt: getLastMonthStartDatetime() },
+        mintedAt: { gt: getLastMonthStartDatetime() },
         status: ClaimStatus.CLAIMED,
       },
     });

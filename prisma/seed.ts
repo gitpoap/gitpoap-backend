@@ -12,26 +12,9 @@ import {
   RepoFactory,
   UserFactory,
 } from './factories';
+import { ADDRESSES, GH_HANDLES, GH_IDS } from './constants';
 
 export const prisma = new PrismaClient();
-
-const ADDRESSES = {
-  test1: '0xae95f7e7fb2fcf86148ef832faed2752ae5a358a' as const,
-  jay: '0xaE32D159BB3ABFcAdFaBE7aBB461C2AB4805596D'.toLowerCase(),
-  anthony: '0xAe95f7e7fb2FCF86148ef832FAeD2752Ae5A358a'.toLowerCase(),
-  anthony2: '0x206e554084BEeC98e08043397be63C5132Cc01A1'.toLowerCase(),
-  colfax: '0x56d389C4E07A48d429035532402301310B8143A0'.toLowerCase(),
-  vitalik: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'.toLowerCase(),
-  aldo: '0x02738d122e0970aAf8DEADf0c6A217a1923E1e99'.toLowerCase(),
-};
-
-const GH_HANDLES = {
-  jay: 'jaypb1',
-  anthony: 'burz',
-  colfax: 'colfax23',
-  vitalik: 'vbuterin',
-  aldo: 'aldolamb',
-};
 
 async function main() {
   console.log('Starting DB seeding...');
@@ -39,9 +22,9 @@ async function main() {
   /* Create Users */
   const vitalik = await UserFactory.createUser(1, GH_HANDLES.vitalik);
   const colfax = await UserFactory.createUser(2, GH_HANDLES.colfax);
-  const jay = await UserFactory.createUser(8076957, GH_HANDLES.jay);
-  const anthony = await UserFactory.createUser(1555326, GH_HANDLES.anthony);
-  const aldo = await UserFactory.createUser(19416312, GH_HANDLES.aldo);
+  const jay = await UserFactory.createUser(GH_IDS.jay, GH_HANDLES.jay);
+  const anthony = await UserFactory.createUser(GH_IDS.anthony, GH_HANDLES.anthony);
+  const aldo = await UserFactory.createUser(GH_IDS.aldo, GH_HANDLES.aldo);
   const johnz = await UserFactory.createUser(5, 'johnz');
   const anthony2 = await UserFactory.createUser(6, 'burzzzzz');
 
@@ -125,7 +108,7 @@ async function main() {
   const claim7 = await ClaimFactory.createClaim(gitpoap2.id, johnz.id);
 
   // GitPOAP 3
-  const claim8 = await ClaimFactory.createClaim(gitpoap3.id, anthony.id);
+  const claim8 = await ClaimFactory.createClaim(gitpoap3.id, anthony.id, ClaimStatus.CLAIMED, ADDRESSES.anthony, 'pizza-pie', new Date(2022, 4, 5));
   const claim9 = await ClaimFactory.createClaim(gitpoap3.id, jay.id, ClaimStatus.CLAIMED, ADDRESSES.jay, '4082459', new Date(2020, 1, 5));
   const claim10 = await ClaimFactory.createClaim(gitpoap3.id, johnz.id);
 
