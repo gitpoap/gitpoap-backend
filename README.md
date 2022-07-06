@@ -42,14 +42,14 @@ MAILCHIMP_API_KEY="fake-key-us14"
 To run all of the services (`fake-poap-api`, `fake-poap-auth`, `db`, `redis`, and `server`) locally
 (with seeded data), we can run:
 ```sh
-docker-compose up --build --force-recreate --renew-anon-volumes
+docker-compose --profile server up --build --force-recreate --renew-anon-volumes
 ```
 
 ### Everything but the Server
 
 To run background services (`fake-poap-api`, `fake-poap-auth`, `db`, and `redis`), we can run:
-```bash
-docker-compose up --build --force-recreate --renew-anon-volumes db fake-poap-a{pi,uth} redis
+```sh
+docker-compose up --build --force-recreate --renew-anon-volumes
 ```
 then you can easily work on the backend API while making code changes locally (which will restart after any changes) via:
 ```sh

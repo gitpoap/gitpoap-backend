@@ -1,6 +1,8 @@
 FROM node:17.4.0
 
-WORKDIR /usr/src/server
+WORKDIR /usr/src/integration-tests
+
+RUN apt-get update && apt-get install -y curl
 
 COPY package.json yarn.lock ./
 
@@ -14,9 +16,7 @@ COPY ./ ./
 
 RUN yarn build
 
-# Let's use a .env local to our docker setup
+# Steal the .env from the server
 COPY .dockerfiles/server.env .env
 
-EXPOSE 3001 8080
-
-CMD ["./.dockerfiles/run-server.sh"]
+CMD ["./.dockerfiles/integration-tests.sh"]
