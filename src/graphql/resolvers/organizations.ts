@@ -19,7 +19,7 @@ class OrganizationData extends Organization {
   @Field()
   mintedGitPOAPCount: number;
   @Field()
-  projectCount: number;
+  repoCount: number;
 }
 
 @Resolver(of => Organization)
@@ -43,15 +43,16 @@ export class CustomOrganizationResolver {
     }
 
     let results = await prisma.$queryRaw<OrganizationData[]>`
-      SELECT o.*, 
+      SELECT o.*,
         COUNT(DISTINCT c."userId") AS "contributorCount",
         COUNT(DISTINCT g.id) AS "gitPOAPCount",
         COUNT(c.id) AS "mintedGitPOAPCount",
-        COUNT(DISTINCT r.id) AS "projectCount"
+        COUNT(DISTINCT r.id) AS "repoCount"
       FROM "Organization" as o
       INNER JOIN "Repo" AS r ON r."organizationId" = o.id
-      INNER JOIN "GitPOAP" AS g ON g."repoId" = r.id
-      LEFT JOIN 
+      INNER JOIN "Project" AS p ON r."projectId" = p.id
+      INNER JOIN "GitPOAP" AS g ON g."projectId" = p.id
+      LEFT JOIN
         (SELECT * 
           FROM "Claim" 
           WHERE status = ${ClaimStatus.CLAIMED}) AS c ON c."gitPOAPId" = g.id
@@ -96,7 +97,7 @@ export class CustomOrganizationResolver {
         break;
       case 'date':
         orderBy = {
-          updatedAt: 'desc',
+          createdAt: 'desc',
         };
         break;
       default:
@@ -145,10 +146,10 @@ export class CustomOrganizationResolver {
     let orderBy;
     switch (sort) {
       case 'alphabetical':
-        orderBy = Prisma.sql`name ASC`;
+        orderBy = Prisma.sql`r.name ASC`;
         break;
       case 'date':
-        orderBy = Prisma.sql`"createdAt" DESC`;
+        orderBy = Prisma.sql`r."createdAt" DESC`;
         break;
       case 'contributor-count':
         orderBy = Prisma.sql`"contributorCount" DESC`;
@@ -173,13 +174,14 @@ export class CustomOrganizationResolver {
       : Prisma.empty;
 
     const results = await prisma.$queryRaw<RepoData[]>`
-      SELECT r.*, 
+      SELECT r.*,
         COUNT(DISTINCT c."userId") AS "contributorCount",
         COUNT(DISTINCT g.id) AS "gitPOAPCount",
         COUNT(c.id) AS "mintedGitPOAPCount"
       FROM "Repo" as r
-      INNER JOIN "GitPOAP" AS g ON g."repoId" = r.id
-      LEFT JOIN 
+      INNER JOIN "Project" AS p ON p.id = r."projectId"
+      INNER JOIN "GitPOAP" AS g ON g."projectId" = p.id
+      LEFT JOIN
         (SELECT * 
           FROM "Claim" 
           WHERE status = ${ClaimStatus.CLAIMED}) AS c ON c."gitPOAPId" = g.id
