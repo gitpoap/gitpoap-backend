@@ -94,7 +94,7 @@ export class CustomProfileResolver {
       FROM "Claim" AS c
       WHERE c.address IS NOT NULL
         AND c.status = ${ClaimStatus.CLAIMED}
-        AND c."updatedAt" > ${getLastMonthStartDatetime()}
+        AND c."mintedAt" > ${getLastMonthStartDatetime()}
     `;
 
     logger.debug("Completed request for last month's contributors");
@@ -228,13 +228,14 @@ export class CustomProfileResolver {
     };
 
     const results: ResultType[] = await prisma.$queryRaw`
-      SELECT p.*, COUNT(c.id) AS "claimsCount"
-      FROM "Profile" AS p
-      JOIN "Claim" AS c ON c.address = p.address
-      JOIN "GitPOAP" AS gp ON gp.id = c."gitPOAPId"
-      WHERE c.status = ${ClaimStatus.CLAIMED}
-      AND gp."repoId" = ${repoId}
-      GROUP BY p.id
+      SELECT pf.*, COUNT(c.id) AS "claimsCount"
+      FROM "Profile" AS pf
+      INNER JOIN "Claim" AS c ON c.address = pf.address
+      INNER JOIN "GitPOAP" AS gp ON gp.id = c."gitPOAPId"
+      INNER JOIN "Project" AS pr ON pr.id = gp."projectId"
+      INNER JOIN "Repo" AS r ON r."projectId" = pr.id
+      WHERE c.status = ${ClaimStatus.CLAIMED} AND r.id = ${repoId}
+      GROUP BY pf.id
       ORDER BY "claimsCount" DESC
       LIMIT ${count}
     `;
