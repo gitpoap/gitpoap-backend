@@ -377,7 +377,7 @@ or
 
 ```graphql
 {
-  organizationData(orgName: "some-org", repoName: "some-repo") {
+  organizationData(orgName: "some-org") {
     id
     name
     contributorCount

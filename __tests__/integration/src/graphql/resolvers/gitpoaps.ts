@@ -52,7 +52,7 @@ describe('CustomClaimResolver', () => {
     expect(data.gitPOAPEvent.event.name).toEqual(event2.name);
   });
 
-  it('userPOAPs', async () => {
+  it('userPOAPs - date', async () => {
     const data = await client.request(gql`
       {
         userPOAPs(address: "${ADDRESSES.anthony}", perPage: 1, page: 1) {
@@ -112,7 +112,7 @@ describe('CustomClaimResolver', () => {
     expect(data.userPOAPs.poaps[0].event.name).toEqual(event25149.name);
   });
 
-  it('repoGitPOAPs', async () => {
+  it('repoGitPOAPs - date', async () => {
     const data = await client.request(gql`
       {
         repoGitPOAPs(repoId: 2, perPage: 1, page: 1) {
@@ -205,7 +205,7 @@ describe('CustomClaimResolver', () => {
     expect(data.profileFeaturedPOAPs.poaps.length).toEqual(0);
   });
 
-  it('gitPOAPHolders', async () => {
+  it('gitPOAPHolders - claim-date', async () => {
     const data = await client.request(gql`
       {
         gitPOAPHolders(gitPOAPId: 9, perPage: 1, page: 1) {
