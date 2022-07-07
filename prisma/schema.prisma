@@ -70,7 +70,7 @@ model Repo {
   GithubPullRequest GithubPullRequest[]
   // Default to the beginning of the year, but this will update when contributions
   // are initially uploaded
-  lastPRUpdatedAt   DateTime            @default(dbgenerated("date_trunc('year', now())"))
+  lastPRUpdatedAt   DateTime            @default(dbgenerated("date_trunc('year'::text, now())"))
 }
 
 model Claim {
