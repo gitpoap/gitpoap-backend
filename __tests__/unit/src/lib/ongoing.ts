@@ -1,13 +1,13 @@
 import { jest } from '@jest/globals';
-import { contextMock } from '../../../__mocks__/src/context';
-import { handleNewPull, RepoReturnType } from '../../../src/lib/ongoing';
-import { GithubPullRequestData } from '../../../src/external/github';
-import { upsertUser } from '../../../src/lib/users';
-import { upsertGithubPullRequest } from '../../../src/lib/pullRequests';
+import { contextMock } from '../../../../__mocks__/src/context';
+import { handleNewPull, RepoReturnType } from '../../../../src/lib/ongoing';
+import { GithubPullRequestData } from '../../../../src/external/github';
+import { upsertUser } from '../../../../src/lib/users';
+import { upsertGithubPullRequest } from '../../../../src/lib/pullRequests';
 import { User } from '@generated/type-graphql';
-import { createNewClaimsForRepoPR } from '../../../src/lib/claims';
+import { createNewClaimsForRepoPR } from '../../../../src/lib/claims';
 
-jest.mock('../../../src/lib/users');
+jest.mock('../../../../src/lib/users');
 
 const mockedLogger = {
   error: jest.fn(),
@@ -16,18 +16,18 @@ const mockedLogger = {
   debug: jest.fn(),
 };
 
-jest.mock('../../../src/logging', () => ({
+jest.mock('../../../../src/logging', () => ({
   __esModule: true,
   createScopedLogger: () => mockedLogger,
 }));
 
-jest.mock('../../../src/lib/pullRequests', () => ({
+jest.mock('../../../../src/lib/pullRequests', () => ({
   __esModule: true,
-  ...(<any>jest.requireActual('../../../src/lib/pullRequests')),
+  ...(<any>jest.requireActual('../../../../src/lib/pullRequests')),
   upsertGithubPullRequest: jest.fn(),
 }));
 
-jest.mock('../../../src/lib/claims');
+jest.mock('../../../../src/lib/claims');
 
 const mockedUpsertUser = jest.mocked(upsertUser, true);
 const mockedUpsertGithubPullRequest = jest.mocked(upsertGithubPullRequest, true);
