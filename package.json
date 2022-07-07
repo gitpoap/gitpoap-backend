@@ -14,7 +14,7 @@
     "gql:build-schema": "npx prisma generate; ts-node-dev ./scripts/build-gql-schema.ts",
     "pr-backload": "APP_NAME=pr-backload ts-node-dev ./scripts/backload-pr-data.ts",
     "prepare": "husky install",
-    "test": "jest --setupFiles dotenv/config --testPathPatterns '/unit/'",
+    "test": "jest --setupFiles dotenv/config --testPathPattern '/unit/'",
     "docker:build-background": "docker-compose build --parallel",
     "docker:run-background": "docker-compose up --force-recreate --renew-anon-volumes",
     "docker:background": "yarn docker:build-background && yarn docker:run-background",
