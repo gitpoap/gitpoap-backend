@@ -1,8 +1,11 @@
 # Generalized Accomplishment POAPs Plan
 
-This document describes the plan for implementing Generalized Accomplishment POAPs (GAPs). GAPs are a set of GitPOAPs that have the following properties: (1) They are not specific to users, & open for all GitHub users to claim; (2) They are based on a users total set of contributions on GitHub, not just those specific to a particular project.
+This document describes the plan for implementing Generalized Accomplishment POAPs (GAPs). GAPs are a set of GitPOAPs that have the following properties:
 
-That said, the work involved wrt building this feature involves DB changes, the use of a rules engine, and a background process that periodically checks whether a user qualifies for a new GAP or set of GAPs.
+1. They are not specific to users, & open for all GitHub users to claim;
+2. They are based on a users total set of contributions on GitHub, not just those specific to a particular project.
+
+That said, the work involved wrt building this feature involves DB changes, the creation of a rules engine, and a background process that periodically checks whether a user qualifies for a new GAP or set of GAPs.
 
 ## DB Changes
 
@@ -47,11 +50,15 @@ model GitPOAP {
 
 ## Rules Engine
 
-In order to define rules in a structured & declarative way, & minimize the amount of in-line conditionals, we will use a rules engine to define rules for GAPs. After evaluating a number of possible open source rules engine libraries written in JS / TS, we've selected `json-rules-engine` due to it's high usage, & solid documentation. One unfortunate downside is that the library hasn't been updated since June 2021. In the case where bugs are showstoppers, we will fork the code & fix ourselves.
+In order to define rules in a structured & declarative way, & minimize the amount of in-line conditionals, we will use a rules engine to define rules for GAPs. After evaluating a number of possible open source rules engine libraries written in JS / TS, we've selected `json-rules-engine` due to it's high usage, & good documentation. One unfortunate downside is that the library hasn't been updated since June 2021. In the case where bugs are showstoppers, we will fork the code & fix ourselves.
 
-A brief description of how `json-rules-engine` works - 3 primary entities exist: (1) the Engine; (2) a Rules object; & (3) a Fact. A Fact represents a set of structured data that is evaluated by the engine according to the rules object.
+A brief description of how `json-rules-engine` works - 3 primary entities exist:
 
-The first proof-of-concept GAP that we intend to create is the `Bear Market Builder` GAP - a token that signifies that a holder has merged a PR into any open source repo with > 10 starts since the official start of the crypto bear market.
+1. The Engine
+2. Rules objects
+3. Fact objects - A Fact represents a set of structured data that is evaluated by the engine according to the rules object.
+
+The first proof-of-concept GAP that we intend to create is the `Bear Market Builder` GAP - a token that signifies that a holder has merged a PR into any open source repo with > 10 stars since the official start of the crypto bear market (for ex: 2022-01-01)
 
 The rule as defined for `json-rules-engine` would look something like the following:
 
@@ -69,12 +76,18 @@ const bearMarketBuilderRule = {
         value: 5,
         path: '$.prCount',
       },
+      {
+        fact: 'prs-in-bear-market',
+        operator: 'greaterThanInclusive',
+        value: 10,
+        path: '$.starGazersCount',
+      },
     ],
   },
   event: {
     type: 'create-gap-claim',
     params: {
-      message: 'current user is eligible for the bear market builder gitpoap',
+      message: 'user is eligible to claim a gitpoap',
       gitPOAPId: 10,
     },
   } as GapClaimEvent,
@@ -82,17 +95,22 @@ const bearMarketBuilderRule = {
 
 engine.addFact('prs-in-bear-market', (params, almanac) => {
   const githubHandle = await almanac.factValue('githubHandle');
-  const { issueCount: prCount } = await octokit.graphql(
+  const { issueCount: prCount, starGazersCount } = await octokit.graphql(
     `
       query {
         search(query: "merged:>2022-01-01 author:${githubHandle} is:pr is:merged" type: ISSUE, first: 100) {
           issueCount
+          ... as PullRequest {
+            repository {
+              starGazersCount
+            }
+          }
         }
       }
   `,
   );
 
-  return { prCount };
+  return { prCount, starGazersCount };
 });
 
 // subscribe directly to the 'create-gap-claim' event
@@ -106,7 +124,9 @@ engine.on('create-gap-claim', (params, almanac) => {
 });
 
 const facts = { githubHandle: 'peebeejay', userId: 1, existingGAPs: [...] };
-const { events } = await engine.run(facts);
+
+/* Run the engine */
+await engine.run(facts);
 ```
 
 ## File Structure
@@ -117,6 +137,10 @@ const { events } = await engine.run(facts);
 |       |-- bearMarketBuilder.ts
 |       |-- ...
 |       `-- openSourceContributor.ts
+|-- /facts
+|       |-- prsInBearMarketFact.ts
+|       |-- ...
+|       `-- blahFact.ts
 |-- engine.ts // load all the rules & facts in this file -> create the engine
 `-- index.ts // perhaps run the engine for all UserIDs here
 ```
