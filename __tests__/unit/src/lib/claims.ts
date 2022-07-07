@@ -1,5 +1,5 @@
-import { contextMock } from '../../../__mocks__/src/context';
-import { createNewClaimsForRepoPR, RepoData } from '../../../src/lib/claims';
+import { contextMock } from '../../../../__mocks__/src/context';
+import { createNewClaimsForRepoPR, RepoData } from '../../../../src/lib/claims';
 
 const user = { id: 4 };
 const pr = { id: 32 };
