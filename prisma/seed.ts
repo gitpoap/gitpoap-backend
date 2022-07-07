@@ -49,7 +49,7 @@ async function main() {
     'gitpoap',
     'http://gitpoap.io',
   );
-  const org5 = await OrganizationFactory.createOrganization(1555326, 'burz labz');
+  const org5 = await OrganizationFactory.createOrganization(GH_IDS.anthony, 'burz');
   const org6 = await OrganizationFactory.createOrganization(81711181, 'stake-house');
 
   /* Create Repos */

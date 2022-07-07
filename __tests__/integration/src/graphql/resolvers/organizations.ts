@@ -1,0 +1,153 @@
+import { GraphQLClient, gql } from 'graphql-request';
+
+describe('CustomOrganizationResolver', () => {
+  const client = new GraphQLClient('http://server:3001/graphql');
+
+  it('organizationData - orgId', async () => {
+    const data = await client.request(gql`
+      {
+        organizationData(orgId: 3) {
+          id
+          name
+          contributorCount
+          gitPOAPCount
+          mintedGitPOAPCount
+          repoCount
+        }
+      }
+    `);
+
+    expect(data.organizationData).not.toEqual(null);
+    expect(data.organizationData.id).toEqual(3);
+    expect(data.organizationData.name).toEqual('some-other-org');
+    expect(data.organizationData.repoCount).toEqual(1);
+    expect(data.organizationData.gitPOAPCount).toEqual(1);
+    expect(data.organizationData.mintedGitPOAPCount).toEqual(2);
+    expect(data.organizationData.contributorCount).toEqual(2);
+  });
+
+  it('organizationData - orgName', async () => {
+    const data = await client.request(gql`
+      {
+        organizationData(orgName: "gitpoap") {
+          id
+          name
+          contributorCount
+          gitPOAPCount
+          mintedGitPOAPCount
+          repoCount
+        }
+      }
+    `);
+
+    expect(data.organizationData).not.toEqual(null);
+    expect(data.organizationData.id).toEqual(4);
+    expect(data.organizationData.name).toEqual('gitpoap');
+    expect(data.organizationData.repoCount).toEqual(3);
+    expect(data.organizationData.gitPOAPCount).toEqual(9);
+    expect(data.organizationData.mintedGitPOAPCount).toEqual(7);
+    expect(data.organizationData.contributorCount).toEqual(4);
+  });
+
+  it('allOrganizations - alphabetical', async () => {
+    const data = await client.request(gql`
+      {
+        allOrganizations(perPage: 1, page: 1) {
+          name
+          repos {
+            name
+          }
+        }
+      }
+    `);
+
+    expect(data.allOrganizations.length).toEqual(1);
+    expect(data.allOrganizations[0].name).toEqual('burz');
+    expect(data.allOrganizations[0].repos.length).toEqual(1);
+    expect(data.allOrganizations[0].repos[0].name).toEqual('dopex');
+  });
+
+  it('allOrganizations - date', async () => {
+    const data = await client.request(gql`
+      {
+        allOrganizations(sort: "date", perPage: 1, page: 1) {
+          name
+          repos {
+            name
+          }
+        }
+      }
+    `);
+
+    expect(data.allOrganizations.length).toEqual(1);
+    expect(data.allOrganizations[0].name).toEqual('stake-house');
+    expect(data.allOrganizations[0].repos.length).toEqual(1);
+    expect(data.allOrganizations[0].repos[0].name).toEqual('wagyu-installer');
+  });
+
+  const expectGitPOAPBackendProject = (data: Record<string, any>) => {
+    expect(data.organizationRepos.length).toEqual(1);
+    expect(data.organizationRepos[0].name).toEqual('gitpoap-backend');
+    expect(data.organizationRepos[0].mintedGitPOAPCount).toEqual(6);
+    expect(data.organizationRepos[0].contributorCount).toEqual(3);
+  };
+
+  it('organizationRepos - alphabetical', async () => {
+    const data = await client.request(gql`
+      {
+        organizationRepos(orgId: 4, perPage: 1, page: 1) {
+          name
+          mintedGitPOAPCount
+          contributorCount
+        }
+      }
+    `);
+
+    expectGitPOAPBackendProject(data);
+  });
+
+  it('organizationRepos - date', async () => {
+    const data = await client.request(gql`
+      {
+        organizationRepos(orgId: 4, sort: "date", perPage: 1, page: 1) {
+          name
+          mintedGitPOAPCount
+          contributorCount
+        }
+      }
+    `);
+
+    expect(data.organizationRepos.length).toEqual(1);
+    expect(data.organizationRepos[0].name).toEqual('gitpoap-bot-test-repo');
+    expect(data.organizationRepos[0].mintedGitPOAPCount).toEqual(0);
+    expect(data.organizationRepos[0].contributorCount).toEqual(0);
+  });
+
+  it('organizationRepos - contributor-count', async () => {
+    const data = await client.request(gql`
+      {
+        organizationRepos(orgId: 4, sort: "contributor-count", perPage: 1, page: 1) {
+          name
+          mintedGitPOAPCount
+          contributorCount
+        }
+      }
+    `);
+
+    expectGitPOAPBackendProject(data);
+  });
+
+  it('organizationRepos - minted-count', async () => {
+    const data = await client.request(gql`
+      {
+        organizationRepos(orgId: 4, sort: "minted-count", perPage: 1, page: 1) {
+          name
+          mintedGitPOAPCount
+          contributorCount
+        }
+      }
+    `);
+
+    expectGitPOAPBackendProject(data);
+  });
+});
