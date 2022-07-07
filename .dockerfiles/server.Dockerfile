@@ -12,8 +12,6 @@ RUN yarn install
 
 COPY ./ ./
 
-RUN yarn build
-
 # Let's use a .env local to our docker setup
 COPY .dockerfiles/server.env .env
 
