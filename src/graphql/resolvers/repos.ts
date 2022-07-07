@@ -171,15 +171,15 @@ export class CustomRepoResolver {
   }
 
   @Query(returns => [Repo])
-  async recentlyAddedProjects(
+  async recentlyAddedRepos(
     @Ctx() { prisma }: Context,
     @Arg('count', { defaultValue: 10 }) count: number,
   ): Promise<Repo[]> {
-    const logger = createScopedLogger('GQL recentlyAddedProjects');
+    const logger = createScopedLogger('GQL recentlyAddedRepos');
 
-    logger.info(`Request for the ${count} most recently added projects`);
+    logger.info(`Request for the ${count} most recently added repos`);
 
-    const endTimer = gqlRequestDurationSeconds.startTimer('recentlyAddedProjects');
+    const endTimer = gqlRequestDurationSeconds.startTimer('recentlyAddedRepos');
 
     const results = await prisma.repo.findMany({
       orderBy: {
@@ -191,7 +191,7 @@ export class CustomRepoResolver {
       },
     });
 
-    logger.debug(`Completed request for the ${count} most recently added projects`);
+    logger.debug(`Completed request for the ${count} most recently added repos`);
 
     endTimer({ success: 1 });
 
@@ -222,7 +222,7 @@ export class CustomRepoResolver {
         break;
       case 'date':
         orderBy = {
-          updatedAt: 'desc',
+          createdAt: 'desc',
         };
         break;
       case 'gitpoap-count':
