@@ -1,10 +1,14 @@
-import { PutItemCommand } from '@aws-sdk/client-dynamodb';
 import { Router } from 'express';
 import jwt from 'express-jwt';
-import { dynamoDB, CONTACTS_TABLE_NAME } from '../dynamo';
 import { JWT_SECRET } from '../environment';
 import { createScopedLogger } from '../logging';
 import { httpRequestDurationSeconds } from '../metrics';
+import mailChimpClient from '@mailchimp/mailchimp_marketing';
+
+mailChimpClient.setConfig({
+  apiKey: 'e926f32160593e7dc66f7f632b03113d-us14',
+  server: 'us14',
+});
 
 export const subscribeRouter = Router();
 
@@ -19,24 +23,23 @@ subscribeRouter.post(
     const endTimer = httpRequestDurationSeconds.startTimer('POST', '/subscribe');
 
     if (!req.user) {
-      logger.warn('Token is invalid');
       endTimer({ status: 401 });
       return res.sendStatus(401);
     } else {
       logger.info(`Request to subscribe ${req.body.email}`);
 
-      const params = {
-        TableName: CONTACTS_TABLE_NAME,
-        Item: {
-          email: { S: req.body.email },
-          timestamp: { S: new Date().toISOString() },
-        },
-      };
-
       try {
-        await dynamoDB.send(new PutItemCommand(params));
-      } catch (err) {
-        logger.warn(`Got error from dynamo DB send: ${err}`);
+        /* Directly add email address to mailchimp list */
+        await mailChimpClient.lists.addListMember('cc7ac358ee', {
+          email_address: req.body.email,
+          status: 'subscribed',
+        });
+      } catch (err: any) {
+        /* On error, just log */
+        logger.error(err);
+        endTimer({ status: 200 });
+
+        return res.sendStatus(200);
       }
 
       logger.debug(`Completed request to subscribe ${req.body.email}`);
