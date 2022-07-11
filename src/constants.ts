@@ -9,6 +9,8 @@ export const ADMIN_GITHUB_IDS = [
   8076957, // jaypb1
   1555326, // burz
   23272494, // kayleen / nixorokish
+  109097759, // Kayla
+  19416312, // Aldo
 ];
 
 export const GITPOAP_BOT_APP_ID = 209535;
