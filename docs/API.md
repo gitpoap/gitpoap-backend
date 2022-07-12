@@ -260,6 +260,21 @@ but if found it will return specific extra metadata like:
 }
 ```
 
+## Add Repos to an Existing Project
+
+`POST /projects/add-repos`
+
+Data:
+
+```json
+{
+  "projectId": 2342,
+  "githubRepoIds": [2]
+}
+```
+
+Note that the user submitting the request must have Admin credentials.
+
 ## Appendix
 
 ### Generating Signatures
