@@ -12,7 +12,7 @@ export async function createProjectWithGithubRepoIds(
   const project = await context.prisma.project.create({ data: {} });
 
   for (const id of githubRepoIds) {
-    const repo = createRepoByGithubId(id, project.id, githubOAuthToken);
+    const repo = await createRepoByGithubId(id, project.id, githubOAuthToken);
     if (repo === null) {
       // Rollback the project
       logger.warn(

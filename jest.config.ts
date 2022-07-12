@@ -8,5 +8,5 @@ export default {
   testEnvironment: 'node',
   // Automatically clear mock calls, instances, contexts and results before every test
   clearMocks: true,
-  testPathIgnorePatterns: ['/aws/', '/node_modules/'],
+  testPathIgnorePatterns: ['<rootDir>/aws/', '/node_modules/'],
 };
