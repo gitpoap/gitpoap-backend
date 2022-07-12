@@ -82,6 +82,22 @@ export const poapRequestDurationSeconds = {
   },
 };
 
+const _mailChimpRequestDurationSeconds = new Histogram({
+  name: 'mailchimp_request_duration_seconds',
+  help: 'Duration of MailChimp API requests in seconds',
+  labelNames: ['stage', 'method', 'path', 'success'],
+});
+register.registerMetric(_mailChimpRequestDurationSeconds);
+export const mailChimpRequestDurationSeconds = {
+  startTimer: (method: string, path: string) => {
+    const endTimer = _mailChimpRequestDurationSeconds.startTimer();
+
+    return (values: { success: number }) => {
+      endTimer({ stage: NODE_ENV, method, path, ...values });
+    };
+  },
+};
+
 const _ensRequestDurationSeconds = new Histogram({
   name: 'ens_request_duration_seconds',
   help: 'Duration of ENS requests in seconds',
