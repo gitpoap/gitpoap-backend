@@ -323,7 +323,7 @@ type Query {
   repoStarCount(repoId: Float!): Float!
   totalRepos: Float!
   lastMonthRepos: Float!
-  recentlyAddedProjects(count: Float = 10): [Repo!]!
+  recentlyAddedRepos(count: Float = 10): [Repo!]!
   allRepos(
     page: Float = null
     perPage: Float = null
@@ -348,8 +348,8 @@ type Query {
   lastMonthContributors: Float!
   profileData(address: String!): NullableProfile
   mostHonoredContributors(count: Float = 10): [ProfileWithClaimsCount!]!
-  projectMostHonoredContributors(
-    projectId: Float!
+  repoMostHonoredContributors(
+    repoId: Float!
     count: Float = 10
   ): [ProfileWithClaimsCount!]!
   search(text: String!): SearchResults!
@@ -3122,7 +3122,7 @@ type OrganizationData {
   contributorCount: Float!
   gitPOAPCount: Float!
   mintedGitPOAPCount: Float!
-  projectCount: Float!
+  repoCount: Float!
 }
 
 type NullableProfile {
