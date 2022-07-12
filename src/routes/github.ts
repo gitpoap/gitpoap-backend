@@ -1,6 +1,5 @@
 import { Router } from 'express';
-import { JWT_EXP_TIME } from '../constants';
-import { sign, verify } from 'jsonwebtoken';
+import { verify } from 'jsonwebtoken';
 import { context } from '../context';
 import { RequestAccessTokenSchema, RefreshAccessTokenSchema } from '../schemas/github';
 import { RefreshTokenPayload } from '../types/tokens';
@@ -8,19 +7,9 @@ import { requestGithubOAuthToken, getGithubCurrentUserInfo } from '../external/g
 import { JWT_SECRET } from '../environment';
 import { createScopedLogger } from '../logging';
 import { httpRequestDurationSeconds } from '../metrics';
-import { upsertUser } from '../lib/users';
+import { generateAuthTokens, generateNewAuthTokens } from '../lib/authTokens';
 
 export const githubRouter = Router();
-
-function generateAccessToken(authTokenId: number, githubId: number, githubHandle: string): string {
-  return sign({ authTokenId, githubId, githubHandle }, JWT_SECRET as string, {
-    expiresIn: JWT_EXP_TIME,
-  });
-}
-
-function generateRefreshToken(authTokenId: number, githubId: number, generation: number) {
-  return sign({ authTokenId, githubId, generation }, JWT_SECRET as string);
-}
 
 githubRouter.post('/', async function (req, res) {
   const logger = createScopedLogger('POST /github');
@@ -69,28 +58,13 @@ githubRouter.post('/', async function (req, res) {
     });
   }
 
-  // Update or create the user's data
-  const user = await upsertUser(githubUser.id, githubUser.login);
-
-  const authToken = await context.prisma.authToken.create({
-    data: {
-      githubOAuthToken: githubToken,
-      user: {
-        connect: {
-          id: user.id,
-        },
-      },
-    },
-  });
+  const authTokens = await generateNewAuthTokens(githubUser.id, githubUser.login, githubToken);
 
   logger.debug('Completed a GitHub login request');
 
   endTimer({ status: 200 });
 
-  return res.status(200).json({
-    accessToken: generateAccessToken(authToken.id, user.githubId, user.githubHandle),
-    refreshToken: generateRefreshToken(authToken.id, user.githubId, authToken.generation),
-  });
+  return res.status(200).json(authTokens);
 });
 
 githubRouter.post('/refresh', async function (req, res) {
@@ -175,8 +149,14 @@ githubRouter.post('/refresh', async function (req, res) {
 
   endTimer({ status: 200 });
 
-  return res.status(200).json({
-    accessToken: generateAccessToken(authToken.id, payload.githubId, authToken.user.githubHandle),
-    refreshToken: generateRefreshToken(authToken.id, payload.githubId, nextGeneration),
-  });
+  return res
+    .status(200)
+    .json(
+      generateAuthTokens(
+        authToken.id,
+        nextGeneration,
+        payload.githubId,
+        authToken.user.githubHandle,
+      ),
+    );
 });
