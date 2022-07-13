@@ -1,8 +1,8 @@
 import 'reflect-metadata';
-import { getSchema } from '../src/graphql/schema';
+import { createAndEmitSchema } from '../src/graphql/schema';
 
 const main = async () => {
-  await getSchema;
+  await createAndEmitSchema();
 };
 
 main();

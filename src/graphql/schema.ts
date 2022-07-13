@@ -1,4 +1,8 @@
+import { writeFileSync } from 'fs';
+import { printSchema } from 'graphql/utilities';
+import { format } from 'prettier';
 import { buildSchema, NonEmptyArray } from 'type-graphql';
+
 import {
   /* Auto-generated Relation Resolvers */
   UserRelationsResolver,
@@ -132,8 +136,19 @@ const allResolvers: NonEmptyArray<Function> = [
   CustomSearchResolver,
 ];
 
-export const getSchema = buildSchema({
-  resolvers: allResolvers,
-  emitSchemaFile: true,
-  validate: false,
-});
+const createSchema = async () =>
+  await buildSchema({
+    resolvers: allResolvers,
+    validate: false,
+  });
+
+export const createAndEmitSchema = async () => {
+  const schema = await createSchema();
+  const schemaText = printSchema(schema, { commentDescriptions: true });
+  const prettySchema = format(schemaText, { parser: 'graphql' });
+  writeFileSync('schema.gql', prettySchema, 'utf8');
+
+  return schema;
+};
+
+createAndEmitSchema();

@@ -15,5 +15,11 @@
         "printWidth": 160
       }
     }
+    ,{
+      "files": "schema.gql",
+      "options": {
+        "printWidth": 75
+      }
+    }
   ]
 }
