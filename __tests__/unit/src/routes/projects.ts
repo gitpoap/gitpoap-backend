@@ -4,10 +4,13 @@ import { generateAuthTokens } from '../../../../src/lib/authTokens';
 import { ADMIN_GITHUB_IDS } from '../../../../src/constants';
 import request from 'supertest';
 import { createRepoByGithubId } from '../../../../src/lib/repos';
+import { backloadGithubPullRequestData } from '../../../../src/lib/pullRequests';
 
 jest.mock('../../../../src/lib/repos');
+jest.mock('../../../../src/lib/pullRequests');
 
 const mockedCreateRepoByGithubId = jest.mocked(createRepoByGithubId, true);
+const mockedBackloadGithubPullRequestData = jest.mocked(backloadGithubPullRequestData, true);
 
 const authTokenId = 4;
 const githubId = 232444;
@@ -90,9 +93,11 @@ describe('POST /projects/add-repos', () => {
   });
 
   it('Adds valid repos to valid project with admin JWT', async () => {
+    const repoId = 234232;
+
     contextMock.prisma.authToken.findUnique.mockResolvedValue({ githubOAuthToken } as any);
     contextMock.prisma.project.findUnique.mockResolvedValue({ id: projectId } as any);
-    mockedCreateRepoByGithubId.mockResolvedValue({} as any);
+    mockedCreateRepoByGithubId.mockResolvedValue({ id: repoId } as any);
 
     const authTokens = generateAuthTokens(234, 4, ADMIN_GITHUB_IDS[0], githubHandle);
 
@@ -115,5 +120,7 @@ describe('POST /projects/add-repos', () => {
       projectId,
       githubOAuthToken,
     );
+    expect(mockedBackloadGithubPullRequestData).toHaveBeenCalledTimes(1);
+    expect(mockedBackloadGithubPullRequestData).toHaveBeenCalledWith(repoId);
   });
 });
