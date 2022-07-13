@@ -6,6 +6,7 @@ import { AddReposSchema } from '../schemas/projects';
 import { createRepoByGithubId } from '../lib/repos';
 import { context } from '../context';
 import { AccessTokenPayloadWithOAuth } from '../types/tokens';
+import { backloadGithubPullRequestData } from '../lib/pullRequests';
 
 export const projectsRouter = Router();
 
@@ -44,6 +45,7 @@ projectsRouter.post('/add-repos', jwtWithAdminOAuth(), async (req, res) => {
     return res.status(404).send({ msg });
   }
 
+  let addedIds: number[] = [];
   let failures: number[] = [];
   for (const githubRepoId of req.body.githubRepoIds) {
     const repo = await createRepoByGithubId(
@@ -53,6 +55,8 @@ projectsRouter.post('/add-repos', jwtWithAdminOAuth(), async (req, res) => {
     );
     if (repo === null) {
       failures.push(githubRepoId);
+    } else {
+      addedIds.push(repo.id);
     }
   }
 
@@ -69,5 +73,10 @@ projectsRouter.post('/add-repos', jwtWithAdminOAuth(), async (req, res) => {
 
   endTimer({ status: 200 });
 
-  return res.status(200).send('ADDED');
+  res.status(200).send('ADDED');
+
+  // Run backloader in the background so that claims are created immediately
+  for (const repoId of addedIds) {
+    backloadGithubPullRequestData(repoId);
+  }
 });
