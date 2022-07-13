@@ -39,11 +39,8 @@ const main = async () => {
   logger.info('Connected to redis');
 
   let count = 0;
-  for (
-    let gitPOAP = await nextGitPOAPWithMissingProjectId();
-    gitPOAP !== null;
-    gitPOAP = await nextGitPOAPWithMissingProjectId()
-  ) {
+  let gitPOAP;
+  while ((gitPOAP = await nextGitPOAPWithMissingProjectId()) !== null) {
     count += 1;
 
     logger.info(`Linking GitPOAP (id: ${gitPOAP.id}) with Repo (id: ${gitPOAP.repo.id})`);
