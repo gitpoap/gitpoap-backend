@@ -122,6 +122,31 @@ v1Router.get('/gitpoaps/:gitpoapId/addresses', async function (req, res) {
 
   return res.status(200).send({ addresses: mappedAddresses });
 });
+
+v1Router.get('/gitpoaps/addresses', async function (req, res) {
+  const logger = createScopedLogger('GET /v1/gitpoaps/addresses');
+  logger.info(`Request to get all addresses that possess any GitPOAP`);
+  const endTimer = httpRequestDurationSeconds.startTimer('GET', '/v1/gitpoaps/addresses');
+
+  const addresses = await context.prisma.claim.findMany({
+    distinct: ['address'],
+    where: {
+      address: {
+        not: null,
+      },
+    },
+    select: {
+      address: true,
+    },
+  });
+
+  const mappedAddresses = addresses.map(address => address.address);
+  endTimer({ status: 200 });
+  logger.info(`Completed request to get all addresses that possess any GitPOAP`);
+
+  return res.status(200).send({ addresses: mappedAddresses });
+});
+
 v1Router.get('/address/:address/gitpoaps', async function (req, res) {
   const logger = createScopedLogger('GET /v1/address/:address/gitpoaps');
 
