@@ -155,7 +155,7 @@ for convenience):
 
 ```json
 {
-  "project": "{ \"githubRepoIds\": [ 9001 ], }", // JSON string
+  "project": "{ \"projectName\": \"some name\", \"githubRepoIds\": [ 9001 ], }", // JSON string
   "name": "GitPOAP Contributor 2022",
   "description": "You contributed to GitPOAP in 2022!\nCongrats, you are a super cool person!",
   "startDate": "01-Jan-2022",
