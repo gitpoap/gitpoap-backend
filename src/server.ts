@@ -20,7 +20,7 @@ import {
   ONGOING_ISSUANCE_CHECK_FREQUENCY_MINUTES,
   PORT,
 } from './constants';
-import { getSchema } from './graphql/schema';
+import { createAndEmitSchema } from './graphql/schema';
 import { context } from './context';
 import { graphqlHTTP } from 'express-graphql';
 import { registerHandler } from 'segfault-handler';
@@ -64,7 +64,10 @@ const main = async () => {
   app.use('/subscribe', subscribeRouter);
   app.use('/suggest', suggestRouter);
   app.use('/github', githubRouter);
-  app.use('/graphql', graphqlHTTP({ schema: await getSchema, context, graphiql: true }));
+  app.use(
+    '/graphql',
+    graphqlHTTP({ schema: await createAndEmitSchema(), context, graphiql: true }),
+  );
 
   /* API endpoints for the frontend */
   app.use('/claims', claimsRouter);
