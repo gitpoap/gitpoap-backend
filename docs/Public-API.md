@@ -47,6 +47,40 @@ And in the case that it is not a GitPOAP project contribution level:
 }
 ```
 
+### `GET /v1/gitpoaps/:gitpoapId/addresses`
+
+This endpoint allows users to query for a list of addresses that hold a GitPOAP specified by ID. It returns something like:
+
+```json
+{
+  "addresses": [
+    "0x4b412F5eF87A2F85Fc8C6f90728d2D03941aFd80",
+    "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
+  ]
+}
+```
+
+And in the case that no GitPOAP with that ID is found:
+
+```json
+{
+  "message": "GitPOAP not found"
+}
+```
+
+### `GET /v1/gitpoaps/addresses`
+
+This endpoint allows users to query for a list of all addresses that hold any GitPOAP. It returns something like:
+
+```json
+{
+  "addresses": [
+    "0x4b412F5eF87A2F85Fc8C6f90728d2D03941aFd80",
+    "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
+  ]
+}
+```
+
 ### `GET /v1/address/:address/gitpoaps`
 
 This endpoint allows users to query for some address's (either and ETH or ENS
