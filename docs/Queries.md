@@ -125,8 +125,10 @@ The query to get an address's (or an ENS's) POAPs and GitPOAPs is as follows:
     gitPOAPs {
       claim {
         gitPOAP {
-          repo {
-            name
+          project {
+            repos {
+              name
+            }
           }
         }
         status
@@ -154,32 +156,55 @@ and returns data in the form:
 {
   "data": {
     "userPOAPs": {
-      "totalGitPOAPs": 1,
-      "totalPOAPs": 1,
+      "totalGitPOAPs": 3,
+      "totalPOAPs": 4,
       "gitPOAPs": [
         {
           "claim": {
             "gitPOAP": {
-              "repo": {
-                "name": "repo34"
+              "project": {
+                "repos": [
+                  {
+                    "name": "repo568"
+                  }
+                ]
               }
             },
-            "status": "COMPLETED",
-            "poapTokenId": "thunderdome"
+            "status": "CLAIMED",
+            "poapTokenId": "pizza-pie"
           },
           "event": {
-            "name": "Welcome to the Thunderdome",
-            "image_url": "https://avatars.githubusercontent.com/u/1555326?v=4"
+            "name": "GitPOAP: 2022 you ate some pizza pie Contributor",
+            "image_url": "https://avatars.githubusercontent.com/u/1355326?v=4"
+          }
+        },
+        {
+          "claim": {
+            "gitPOAP": {
+              "project": {
+                "repos": [
+                  {
+                    "name": "repo7"
+                  }
+                ]
+              }
+            },
+            "status": "CLAIMED",
+            "poapTokenId": "ethdenver"
+          },
+          "event": {
+            "name": "GitPOAP: 2022 ethdenver Contributor",
+            "image_url": "https://avatars.githubusercontent.com/u/1455326?v=4"
           }
         }
       ],
       "poaps": [
         {
           "event": {
-            "name": "ethdenver",
-            "image_url": "https://avatars.githubusercontent.com/u/1455326?v=4"
+            "name": "You've met Colfax!",
+            "image_url": "https://assets.poap.xyz/youve-met-colfax-2022-logo-1644520442055.png"
           },
-          "tokenId": "ethdenver"
+          "tokenId": "4068606"
         }
       ]
     }
@@ -274,9 +299,7 @@ The query to get a repo's GitPOAPs is as follows:
     totalGitPOAPs
     gitPOAPs {
       gitPOAP {
-        repo {
-          name
-        }
+        id
       }
       event {
         name
@@ -293,17 +316,15 @@ and returns data in the form:
 {
   "data": {
     "repoGitPOAPs": {
-      "totalGitPOAPs": 1,
+      "totalGitPOAPs": 3,
       "gitPOAPs": [
         {
           "gitPOAP": {
-            "repo": {
-              "name": "repo34"
-            }
-          }
+            "id": 4
+          },
           "event": {
-            "name": "Welcome to the Thunderdome",
-            "image_url": "https://avatars.githubusercontent.com/u/1555326?v=4"
+            "name": "GitPOAP: 2021 GitPOAP1 Contributor",
+            "image_url": "https://assets.poap.xyz/gitpoap1-2021-logo-1640113981980.png"
           }
         }
       ]
@@ -368,7 +389,7 @@ To retrieve info about a Organization including its contributorCount, gitPOAPCou
     contributorCount
     gitPOAPCount
     mintedGitPOAPCount
-    projectCount
+    repoCount
   }
 }
 ```
@@ -383,7 +404,7 @@ or
     contributorCount
     gitPOAPCount
     mintedGitPOAPCount
-    projectCount
+    repoCount
   }
 }
 ```
@@ -399,7 +420,7 @@ that returns data like:
       "contributorCount": 5,
       "gitPOAPCount": 3,
       "mintedGitPOAPCount": 8,
-      "projectCount": 1
+      "repoCount": 1
     }
   }
 }
@@ -529,13 +550,13 @@ that returns data like:
 }
 ```
 
-## Recently Added Projects
+## Recently Added Repos
 
-To retrieve a list of the most recently added projects, we can run a query like:
+To retrieve a list of the most recently added repos, we can run a query like:
 
 ```graphql
 {
-  recentlyAddedProjects(count: 2) {
+  recentlyAddedRepos(count: 2) {
     id
     name
     createdAt
@@ -559,14 +580,6 @@ that returns data like:
         "organization": {
           "name": "some-other-org"
         }
-      },
-      {
-        "id": 2,
-        "name": "repo7",
-        "createdAt": "2022-03-07T23:53:35.859Z",
-        "organization": {
-          "name": "seven-heaven"
-        }
       }
     ]
   }
@@ -584,11 +597,12 @@ To retrieve a list of all organizations, we can run a query like:
     name
     githubRepoId
     organization {
-      id
       name
     }
-    gitPOAPs {
-      poapEventId
+    project {
+      gitPOAPs {
+        poapEventId
+      }
     }
   }
 }
@@ -601,18 +615,19 @@ That returns data like:
   "data": {
     "allRepos": [
       {
-        "id": 6,
-        "name": "dopex",
-        "githubRepoId": 127534193,
+        "id": 8,
+        "name": "gitpoap-bot-test-repo",
+        "githubRepoId": 502133931,
         "organization": {
-          "id": 5,
-          "name": "burz labz"
+          "name": "gitpoap"
         },
-        "gitPOAPs": [
-          {
-            "poapEventId": 34634
-          }
-        ]
+        "project": {
+          "gitPOAPs": [
+            {
+              "poapEventId": 36573
+            }
+          ]
+        }
       }
     ]
   }
@@ -996,7 +1011,7 @@ To retrieve the number of stars on a repo we can run a query like:
 
 ```graphql
 {
-  repoStarCount(repoId: 54)
+  repoStarCount(repoId: 7)
 }
 ```
 
@@ -1005,7 +1020,7 @@ that returns data like:
 ```json
 {
   "data": {
-    "repoStarCount": 5
+    "repoStarCount": 37
   }
 }
 ```
