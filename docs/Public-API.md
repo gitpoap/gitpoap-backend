@@ -84,8 +84,8 @@ This endpoint allows users to query for a list of all addresses that hold any Gi
 {
   "addresses": [
     "0x4b412F5eF87A2F85Fc8C6f90728d2D03941aFd80",
-    "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
-    "0x02738d122e0970aAf8DEADf0c6A217a1923E1e99"
+    "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+    "0x02738d122e0970aAf8DEADf0c6A217a1923E1e99",
     "0xae95f7e7fb2fcf86148ef832faed2752ae5a358a"
   ]
 }
