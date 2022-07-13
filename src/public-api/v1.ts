@@ -80,6 +80,48 @@ v1Router.get('/poap-event/:poapEventId/is-gitpoap', async function (req, res) {
   });
 });
 
+v1Router.get('/gitpoaps/:gitpoapId/addresses', async function (req, res) {
+  const logger = createScopedLogger('GET /v1/gitpoaps/:gitpoapId/addresses');
+  logger.info(`Request to get all addresses that possess GitPOAP id ${req.params.gitpoapId}`);
+  const endTimer = httpRequestDurationSeconds.startTimer(
+    'GET',
+    '/v1/gitpoaps/:gitpoapId/addresses',
+  );
+
+  const gitPOAPId = parseInt(req.params.gitpoapId, 10);
+  const gitPOAP = await context.prisma.gitPOAP.findUnique({
+    where: {
+      id: gitPOAPId,
+    },
+  });
+
+  if (gitPOAP === null) {
+    const msg = 'GitPOAP not found';
+    logger.warn(msg);
+    endTimer({ status: 404 });
+    return res.status(404).send({ message: msg });
+  }
+
+  const addresses = await context.prisma.claim.findMany({
+    where: {
+      gitPOAPId,
+      address: {
+        not: null,
+      },
+    },
+    select: {
+      address: true,
+    },
+  });
+
+  const mappedAddresses = addresses.map(address => address.address);
+  endTimer({ status: 200 });
+  logger.info(
+    `Completed request to get all addresses that possess GitPOAP id ${req.params.gitpoapId}`,
+  );
+
+  return res.status(200).send({ addresses: mappedAddresses });
+});
 v1Router.get('/address/:address/gitpoaps', async function (req, res) {
   const logger = createScopedLogger('GET /v1/address/:address/gitpoaps');
 
