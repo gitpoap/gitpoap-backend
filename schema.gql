@@ -321,6 +321,7 @@ type Query {
     count: Float = 10
   ): [ProfileWithClaimsCount!]!
   search(text: String!): SearchResults!
+  searchv2(text: String!): SearchResultsV2!
 }
 
 type Claim {
@@ -2967,4 +2968,17 @@ type SearchResults {
 type ProfileWithENS {
   profile: Profile!
   ens: String!
+}
+
+type SearchResultsV2 {
+  results: [SearchResultItem!]!
+  total: Float!
+}
+
+type SearchResultItem {
+  id: String!
+  text: String!
+  type: String!
+  href: String
+  score: String
 }
