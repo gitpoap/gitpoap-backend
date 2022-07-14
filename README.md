@@ -34,7 +34,7 @@ GITHUB_APP_CLIENT_SECRET="whoville"
 GITHUB_APP_REDIRECT_URL="http://localhost:3000/login"
 
 REDIS_URL="redis://gitpoap-redis:ICanHazASecurePassword@localhost:6379"
-MAILCHIMP_API_KEY="e926f32160593e7dc66f7f632b03113d-us14"
+MAILCHIMP_API_KEY="fake-key-us14"
 ```
 
 ### Entire Backend
