@@ -693,7 +693,6 @@ input ProjectWhereInput {
   OR: [ProjectWhereInput!]
   NOT: [ProjectWhereInput!]
   id: IntFilter
-  name: StringFilter
   createdAt: DateTimeFilter
   updatedAt: DateTimeFilter
   repos: RepoListRelationFilter
@@ -924,7 +923,6 @@ input GithubPullRequestOrderByRelationAggregateInput {
 
 input ProjectOrderByWithRelationInput {
   id: SortOrder
-  name: SortOrder
   createdAt: SortOrder
   updatedAt: SortOrder
   repos: RepoOrderByRelationAggregateInput
@@ -1163,7 +1161,6 @@ enum GithubPullRequestScalarFieldEnum {
 
 type Project {
   id: Int!
-  name: String!
   createdAt: DateTime!
   updatedAt: DateTime!
   _count: ProjectCount

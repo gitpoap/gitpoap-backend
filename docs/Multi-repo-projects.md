@@ -11,10 +11,10 @@ a `GitPOAP` and a `Repo`:
 ```prisma
 model Project {
   id        Int @id  @default(autoincrement())
-  name      String   @db.VarChar(50)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   repos     Repo[]
+  gitPOAPs  GitPOAP[]
 }
 ```
 and update the `Repo` model so that it references the project (A project will have a
@@ -64,7 +64,7 @@ model GitPOAP {
 
 ## Rollout Plan
 
-We will do the rollout in four steps (all within the same day, ideally within the same hour or so -- perhaps late at night):
+We will do the rollout in three steps (all within the same day, ideally within the same hour or so -- perhaps late at night):
 
 1. In our first rollout to PROD, we will:
     - Add the `Project` table to the DB
@@ -74,14 +74,11 @@ We will do the rollout in four steps (all within the same day, ideally within th
 2. Run a script on the `db-client` machine that:
     - Creates a new `Project` row for each of the existing `Repo`s and fill in the `Repo` and associated
         `GitPOAP`'s `projectId` fields to point to that row
-    - Temporarily sets each `Projects` name to be the `name` (not the owner/`Organization.name`) of the `Repo`
 3. In our second rollout to PROD we will:
     - Make the `projectId` fields on `GitPOAP` and `Repo` non-nullable
     - Remove the `repoId` field from `GitPOAP`
     - Re-enable creation of new Projects/GitPOAPs via the API
     - Create an (admin) "Add repo to project" endpoint that accepts repos as a list of "owner/repo"
-4. Finally, we can manually (or perhaps create a script ahead of time) update any projects that we need
-    to use different names for than the original columns
 
 In this way we get 90% of the work done for free but will need to update the names of a few projects after the fact,
 but most everything is completely automated.
