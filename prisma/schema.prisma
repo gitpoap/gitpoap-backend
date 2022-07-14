@@ -77,7 +77,6 @@ model Repo {
 
 model Project {
   id        Int       @id @default(autoincrement())
-  name      String    @db.VarChar(50)
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   repos     Repo[]
