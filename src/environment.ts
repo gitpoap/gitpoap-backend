@@ -26,3 +26,4 @@ export const GITHUB_APP_CLIENT_SECRET = env.get('GITHUB_APP_CLIENT_SECRET').requ
 export const GITHUB_APP_REDIRECT_URL = env.get('GITHUB_APP_REDIRECT_URL').required().asString();
 
 export const REDIS_URL = env.get('REDIS_URL').required().asString();
+export const MAILCHIMP_API_KEY = env.get('MAILCHIMP_API_KEY').required().asString();
