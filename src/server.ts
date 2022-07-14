@@ -25,7 +25,7 @@ import { context } from './context';
 import { graphqlHTTP } from 'express-graphql';
 import { registerHandler } from 'segfault-handler';
 import { errorHandler } from './middleware';
-import { NODE_ENV, JWT_SECRET, AWS_PROFILE } from './environment';
+import { NODE_ENV, JWT_SECRET, AWS_PROFILE, MAILCHIMP_API_KEY } from './environment';
 import { createScopedLogger, updateLogLevel } from './logging';
 import minimist from 'minimist';
 import { startMetricsServer } from './metrics';
@@ -87,6 +87,7 @@ const main = async () => {
     logger.debug(`Secret:            ${JWT_SECRET}`);
     logger.debug(`Contacts table:    ${CONTACTS_TABLE_NAME}`);
     logger.debug(`Using AWS Profile: ${AWS_PROFILE}`);
+    logger.debug(`MailChimp API Key: ${MAILCHIMP_API_KEY}`);
   });
 
   startMetricsServer();

@@ -18,6 +18,9 @@ declare global {
 
       GITHUB_API_URL: string;
       GITHUB_APP_URL: string;
+
+      REDIS_URL: string;
+      MAILCHIMP_API_KEY: string;
     }
   }
 }
