@@ -1,4 +1,5 @@
 import mailChimpClient, { MemberErrorResponse } from '@mailchimp/mailchimp_marketing';
+import { MAILCHIMP_API_KEY } from '../environment';
 import { createScopedLogger } from '../logging';
 import { mailChimpRequestDurationSeconds } from '../metrics';
 
@@ -22,8 +23,9 @@ const isMailChimpError = (error: unknown): error is MailChimpError => {
 };
 
 mailChimpClient.setConfig({
-  apiKey: 'e926f32160593e7dc66f7f632b03113d-us14',
-  server: 'us14',
+  apiKey: MAILCHIMP_API_KEY,
+  /* server is everything after the "-" in the API key. Ex: "us14" */
+  server: MAILCHIMP_API_KEY.split('-')[1],
 });
 
 export const addListMember = async (email: string, listId: string) => {
