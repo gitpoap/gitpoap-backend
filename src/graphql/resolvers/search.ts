@@ -15,6 +15,7 @@ class ProfileWithENS {
   ens: string;
 }
 
+/* Search V1 */
 @ObjectType()
 class SearchResults {
   @Field(() => [User])
@@ -30,6 +31,7 @@ class SearchResults {
   profileByENS: ProfileWithENS | null;
 }
 
+/* Search V2 */
 @ObjectType()
 class SearchResultItem {
   @Field()
@@ -126,13 +128,6 @@ export class CustomSearchResolver {
     const matchText = `%${text}%`;
     const limit = 2;
     const offset = 0;
-
-    /*
-    Things to add:
-    - search for profile by ens
-    - search for gitpoap by name
-    - search for gitpoap by description
-    */
 
     const rawRecordsQuery = Prisma.sql`
         SELECT
