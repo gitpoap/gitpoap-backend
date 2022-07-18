@@ -1,5 +1,4 @@
 require('dotenv').config();
-
 import 'reflect-metadata';
 import { CONTACTS_TABLE_NAME } from './dynamo';
 import {
@@ -9,7 +8,7 @@ import {
 } from './constants';
 import { context } from './context';
 import { registerHandler } from 'segfault-handler';
-import { NODE_ENV, JWT_SECRET, AWS_PROFILE, MAILCHIMP_API_KEY } from './environment';
+import { NODE_ENV, JWT_SECRET, AWS_PROFILE, MAILCHIMP_API_KEY, SENTRY_DSN } from './environment';
 import { createScopedLogger, updateLogLevel } from './logging';
 import minimist from 'minimist';
 import { startMetricsServer } from './metrics';
@@ -45,6 +44,7 @@ const main = async () => {
     logger.debug(`Contacts table:    ${CONTACTS_TABLE_NAME}`);
     logger.debug(`Using AWS Profile: ${AWS_PROFILE}`);
     logger.debug(`MailChimp API Key: ${MAILCHIMP_API_KEY}`);
+    logger.debug(`Sentry DSN:        ${SENTRY_DSN}`);
   });
 
   startMetricsServer();
