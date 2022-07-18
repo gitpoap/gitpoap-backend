@@ -11,12 +11,16 @@ triggersRouter.get('/ongoing-issuance', jwtWithAdminOAuth(), async (req, res) =>
 
   const endTimer = httpRequestDurationSeconds.startTimer('GET', '/triggers/ongoing-issuance');
 
+  logger.info('Admin request to start ongoing issuance now');
+
   // Update the last time ran to now (we do this first so the other instance
   // also doesn't start this process)
   await updateOngoingIssuanceLastRun();
 
   // Start ongoing issuance process in the background
   runOngoingIssuanceUpdater();
+
+  logger.debug('Completed admin request to start ongoing issuance now');
 
   endTimer({ status: 200 });
 
