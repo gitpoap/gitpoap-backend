@@ -1,5 +1,7 @@
 import 'reflect-metadata';
-import express from 'express';
+import express, { Express } from 'express';
+import * as Sentry from '@sentry/node';
+import * as Tracing from '@sentry/tracing';
 import { graphqlHTTP } from 'express-graphql';
 import { createAndEmitSchema } from './graphql/schema';
 import { context } from './context';
@@ -20,6 +22,7 @@ import { vitalsRouter } from './routes/vitals';
 
 export async function setupApp() {
   const app = express();
+  initializeSentry(app);
 
   app.use(cors());
   app.use(express.json());
@@ -48,6 +51,8 @@ export async function setupApp() {
   app.use('/triggers', triggersRouter);
   app.use('/vitals', vitalsRouter);
 
+  /* Initialize Error Handlers */
+  app.use(Sentry.Handlers.errorHandler());
   app.use(errorHandler);
 
   return app;
