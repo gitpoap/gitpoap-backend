@@ -62,6 +62,8 @@
     "@aws-sdk/credential-provider-ini": "^3.36.1",
     "@mailchimp/mailchimp_marketing": "^3.0.75",
     "@prisma/client": "^3.8.1",
+    "@sentry/node": "^7.7.0",
+    "@sentry/tracing": "^7.7.0",
     "badgen": "^3.2.2",
     "class-validator": "^0.13.2",
     "cors": "^2.8.5",
