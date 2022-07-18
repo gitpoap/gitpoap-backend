@@ -16,6 +16,7 @@ import { profilesRouter } from './routes/profiles';
 import { projectsRouter } from './routes/projects';
 import { organizationsRouter } from './routes/organizations';
 import { triggersRouter } from './routes/triggers';
+import { vitalsRouter } from './routes/vitals';
 
 export async function setupApp() {
   const app = express();
@@ -45,6 +46,7 @@ export async function setupApp() {
   app.use('/projects', projectsRouter);
   app.use('/organizations', organizationsRouter);
   app.use('/triggers', triggersRouter);
+  app.use('/vitals', vitalsRouter);
 
   app.use(errorHandler);
 
