@@ -244,6 +244,20 @@ export async function updateOngoingIssuanceLastRun() {
   });
 }
 
+export async function lookupLastOngoingIssuanceRun(): Promise<DateTime | null> {
+  const batchTiming = await context.prisma.batchTiming.findUnique({
+    where: {
+      name: ONGOING_ISSUANCE_BATCH_TIMING_KEY,
+    },
+  });
+
+  if (batchTiming === null) {
+    return null;
+  }
+
+  return DateTime.fromJSDate(batchTiming.lastRun);
+}
+
 // Try to run ongoing issuance updater if there has been enough time elapsed since
 // any instance last ran it
 export async function tryToRunOngoingIssuanceUpdater() {
@@ -252,15 +266,9 @@ export async function tryToRunOngoingIssuanceUpdater() {
   logger.info('Attempting to run the ongoing issuance updater');
 
   try {
-    const batchTiming = await context.prisma.batchTiming.findUnique({
-      where: {
-        name: ONGOING_ISSUANCE_BATCH_TIMING_KEY,
-      },
-    });
+    const lastRun = await lookupLastOngoingIssuanceRun();
 
-    if (batchTiming !== null) {
-      const lastRun = DateTime.fromJSDate(batchTiming.lastRun);
-
+    if (lastRun !== null) {
       // If not enough time has elapsed since the last run, skip the run
       if (lastRun.plus({ hours: ONGOING_ISSUANCE_DELAY_HOURS }) > DateTime.now()) {
         logger.debug('Not enough time has elapsed since the last run');
