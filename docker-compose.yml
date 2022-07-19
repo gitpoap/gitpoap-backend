@@ -71,6 +71,7 @@ services:
     profiles:
       - public-api
       - metrics
+      - integration-tests
 
   prometheus:
     build:
@@ -103,5 +104,6 @@ services:
       - db
       - redis
       - server
+      - public-api-server
     profiles:
       - integration-tests
