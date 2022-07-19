@@ -19,7 +19,7 @@ to allow only `SELECT` statements on these tables:
 ```sql
 GRANT SELECT ON "Claim" TO <Your-User>;
 GRANT SELECT ON "FeaturedPOAP" TO <Your-User>;
-GRANT SELECT ON "GithubPullRequest" TO <YourUser>;
+GRANT SELECT ON "GithubPullRequest" TO <Your-User>;
 GRANT SELECT ON "GitPOAP" TO <Your-User>;
 GRANT SELECT ON "Organization" TO <Your-User>;
 GRANT SELECT ON "Profile" TO <Your-User>;

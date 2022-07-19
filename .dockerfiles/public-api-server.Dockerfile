@@ -2,6 +2,8 @@ FROM node:17.4.0
 
 WORKDIR /usr/src/server
 
+RUN apt update && apt install -y postgresql-client-common postgresql-client
+
 COPY package.json yarn.lock ./
 
 # the schema needs to be available to install node_modules
@@ -21,4 +23,4 @@ EXPOSE 3122 8080
 
 RUN npx tsc --project ./
 
-CMD ["yarn", "run", "start-api"]
+CMD ["./.dockerfiles/run-public-api-server.sh"]
