@@ -52,6 +52,7 @@ services:
       - fake-poap-auth
     profiles:
       - server
+      - public-api
       - metrics
       - integration-tests
 
@@ -68,7 +69,7 @@ services:
       - fake-poap-api
       - fake-poap-auth
     profiles:
-      - public-server
+      - public-api
       - metrics
 
   prometheus:
