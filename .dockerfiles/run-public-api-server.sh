@@ -6,4 +6,4 @@ set -ex
 
 ./.dockerfiles/readonly-db-setup.sh
 
-yarn run start-api
+yarn run start-api --level debug
