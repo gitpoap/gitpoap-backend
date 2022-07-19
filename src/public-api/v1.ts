@@ -271,18 +271,6 @@ v1Router.get('/repo/:owner/:name/badge', async (req, res) => {
     },
   });
 
-  const repo = await context.prisma.repo.findFirst({
-    select: {
-      id: true,
-    },
-    where: {
-      organization: {
-        name: req.params.owner,
-      },
-      name: req.params.name,
-    },
-  });
-
   //~ See https://github.com/badgen/badgen
   const badgeSvg = badgen({
     label: 'GitPOAPs',
