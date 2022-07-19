@@ -21,6 +21,9 @@
     "docker:build-server": "docker-compose --profile server build --parallel",
     "docker:run-server": "docker-compose --profile server up --force-recreate --renew-anon-volumes",
     "docker:server": "yarn docker:build-server && yarn docker:run-server",
+    "docker:build-public-api": "docker-compose --profile public-api build --parallel",
+    "docker:run-public-api": "docker-compose --profile public-api up --force-recreate --renew-anon-volumes",
+    "docker:public-api": "yarn docker:build-public-api && yarn docker:run-public-api",
     "docker:build-integration-tests": "docker-compose --profile integration-tests build --parallel",
     "docker:run-integration-tests": "docker-compose --profile integration-tests up --force-recreate --renew-anon-volumes --abort-on-container-exit",
     "integration-test": "yarn docker:build-integration-tests && yarn docker:run-integration-tests"
