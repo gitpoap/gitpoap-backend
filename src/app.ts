@@ -22,23 +22,26 @@ import { vitalsRouter } from './routes/vitals';
 import { NODE_ENV, SENTRY_DSN } from './environment';
 
 const initializeSentry = (app: Express) => {
-  Sentry.init({
-    dsn: SENTRY_DSN,
-    environment: NODE_ENV,
-    /* Only send errors to sentry if env is production */
-    enabled: NODE_ENV === 'production',
-    integrations: [
-      new Sentry.Integrations.Http({ tracing: true }),
-      new Tracing.Integrations.Express({ app }),
-    ],
-    tracesSampleRate: 1.0,
-  });
+  if (SENTRY_DSN) {
+    Sentry.init({
+      dsn: SENTRY_DSN,
+      environment: NODE_ENV,
+      /* Only send errors to sentry if env is production */
+      enabled: NODE_ENV === 'production',
+      integrations: [
+        new Sentry.Integrations.Http({ tracing: true }),
+        new Tracing.Integrations.Express({ app }),
+      ],
+      tracesSampleRate: 1.0,
+    });
 
-  // RequestHandler creates a separate execution context using domains, so that every
-  // transaction/span/breadcrumb is attached to its own Hub instance
-  app.use(Sentry.Handlers.requestHandler());
-  // TracingHandler creates a trace for every incoming request
-  app.use(Sentry.Handlers.tracingHandler());
+    // RequestHandler creates a separate execution context using domains, so that every
+    // transaction/span/breadcrumb is attached to its own Hub instance
+    app.use(Sentry.Handlers.requestHandler());
+    // TracingHandler creates a trace for every incoming request
+    app.use(Sentry.Handlers.tracingHandler());
+    app.use(Sentry.Handlers.errorHandler());
+  }
 };
 
 export async function setupApp() {
@@ -72,8 +75,6 @@ export async function setupApp() {
   app.use('/triggers', triggersRouter);
   app.use('/vitals', vitalsRouter);
 
-  /* Initialize Error Handlers */
-  app.use(Sentry.Handlers.errorHandler());
   app.use(errorHandler);
 
   return app;
