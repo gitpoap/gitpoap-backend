@@ -1,6 +1,7 @@
 import { context } from '../context';
 import { createScopedLogger } from '../logging';
 import { retrievePOAPEventInfo } from '../external/poap';
+import { Claim } from '@generated/type-graphql';
 
 export type RepoData = {
   id: number;
@@ -21,6 +22,40 @@ export type ClaimData = {
   description: string;
 };
 
+export async function upsertClaim(
+  user: { id: number },
+  gitPOAP: { id: number },
+  githubPullRequest: { id: number },
+): Promise<Claim> {
+  return await context.prisma.claim.upsert({
+    where: {
+      gitPOAPId_userId: {
+        gitPOAPId: gitPOAP.id,
+        userId: user.id,
+      },
+    },
+    update: {},
+    create: {
+      gitPOAP: {
+        connect: {
+          id: gitPOAP.id,
+        },
+      },
+      user: {
+        connect: {
+          id: user.id,
+        },
+      },
+      pullRequestEarned: {
+        connect: {
+          id: githubPullRequest.id,
+        },
+      },
+    },
+  });
+}
+
+// This should only be used for PRs from the current year!
 export async function createNewClaimsForRepoPR(
   user: { id: number },
   repo: RepoData,
@@ -44,32 +79,7 @@ export async function createNewClaimsForRepoPR(
       continue;
     }
 
-    await context.prisma.claim.upsert({
-      where: {
-        gitPOAPId_userId: {
-          gitPOAPId: gitPOAP.id,
-          userId: user.id,
-        },
-      },
-      update: {},
-      create: {
-        gitPOAP: {
-          connect: {
-            id: gitPOAP.id,
-          },
-        },
-        user: {
-          connect: {
-            id: user.id,
-          },
-        },
-        pullRequestEarned: {
-          connect: {
-            id: githubPullRequest.id,
-          },
-        },
-      },
-    });
+    await upsertClaim(user, gitPOAP, githubPullRequest);
   }
 }
 
