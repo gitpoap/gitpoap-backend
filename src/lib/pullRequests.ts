@@ -132,7 +132,7 @@ async function backloadGithubPullRequest(repo: RepoData, pr: GithubPullRequestDa
   const claim = await upsertClaim(user, relevantGitPOAP, githubPullRequest);
 
   // If this is the user's first PR set the earned at field
-  if (!claim.pullRequestEarned) {
+  if (claim.pullRequestEarnedId === null) {
     logger.info(
       `Setting pullRequestEarned for Claim ID ${claim.id} to GithubPullRequest ID ${githubPullRequest.id} for user ${pr.user.login}`,
     );
