@@ -298,11 +298,8 @@ export class CustomGitPOAPResolver {
     if (sort === 'date') {
       // Sort so that most recently claimed comes first
       gitPOAPsOnly.sort((left, right) => {
-        // Note that we create claim placeholders before they are
-        // actually initiated by the user so the claim time is
-        // the updatedAt time
-        const leftDate = new Date(left.claim.updatedAt);
-        const rightDate = new Date(right.claim.updatedAt);
+        const leftDate = left.claim.mintedAt as Date;
+        const rightDate = right.claim.mintedAt as Date;
         if (leftDate < rightDate) {
           return 1;
         }
