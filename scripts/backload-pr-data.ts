@@ -7,7 +7,7 @@ import minimist from 'minimist';
 import { context } from '../src/context';
 import { sleep } from '../src/lib/sleep';
 
-const BACKLOADER_DELAY_BETWEEN_PROJECTS_SECONDS = 30;
+const BACKLOADER_DELAY_BETWEEN_PROJECTS_SECONDS = 10;
 
 async function backloadRepos(repos: { id: number; }[]) {
   const logger = createScopedLogger('backloadRepos');
@@ -39,9 +39,17 @@ const main = async () => {
 
     await backloadRepos(repoIds.map((repoId) => ({ id: repoId })));
   } else {
+    const where = argv['from']
+      ? { id: { gte: parseInt(argv['from'], 10) } }
+      : undefined;
+
     const repos = await context.prisma.repo.findMany({
+      where,
       select: {
         id: true,
+      },
+      orderBy: {
+        id: 'desc',
       },
     });
 

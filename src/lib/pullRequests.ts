@@ -3,7 +3,7 @@ import { context } from '../context';
 import { GithubPullRequestData, getGithubRepositoryPullsAsAdmin } from '../external/github';
 import { pullRequestBackloadDurationSeconds } from '../metrics';
 import { upsertUser } from './users';
-import { createNewClaimsForRepoPR, RepoData } from './claims';
+import { upsertClaim, RepoData } from './claims';
 import { GithubPullRequest } from '@generated/type-graphql';
 
 async function getRepoInfo(repoId: number) {
@@ -24,9 +24,6 @@ async function getRepoInfo(repoId: number) {
       project: {
         select: {
           gitPOAPs: {
-            where: {
-              ongoing: true,
-            },
             select: {
               id: true,
               year: true,
@@ -64,6 +61,10 @@ export async function upsertGithubPullRequest(
   mergeCommitSha: string,
   userId: number,
 ): Promise<GithubPullRequest> {
+  const logger = createScopedLogger('upsertGithubPullRequest');
+
+  logger.info(`Upserting PR #${prNumber}`);
+
   return await context.prisma.githubPullRequest.upsert({
     where: {
       repoId_githubPullNumber: {
@@ -107,18 +108,51 @@ async function backloadGithubPullRequest(repo: RepoData, pr: GithubPullRequestDa
 
   const user = await upsertUser(pr.user.id, pr.user.login);
 
+  const mergedAt = new Date(pr.merged_at);
+
   // Don't create the PR if it already is in the DB (maybe via ongoing issuance)
   // but update the title if it's changed
   const githubPullRequest = await upsertGithubPullRequest(
     repo.id,
     pr.number,
     pr.title,
-    new Date(pr.merged_at),
+    mergedAt,
     extractMergeCommitSha(pr),
     user.id,
   );
 
-  await createNewClaimsForRepoPR(user, repo, githubPullRequest);
+  const relevantGitPOAP = repo.project.gitPOAPs.find(x => x.year === mergedAt.getFullYear());
+  if (!relevantGitPOAP) {
+    logger.warn(
+      `No relevant GitPOAP found for Repo ID ${repo.id} for year ${mergedAt.getFullYear()}`,
+    );
+    return;
+  }
+
+  const claim = await upsertClaim(user, relevantGitPOAP, githubPullRequest);
+
+  // If this is the user's first PR set the earned at field
+  if (!claim.pullRequestEarned) {
+    logger.info(
+      `Setting pullRequestEarned for Claim ID ${claim.id} to GithubPullRequest ID ${githubPullRequest.id} for user ${pr.user.login}`,
+    );
+
+    await context.prisma.claim.update({
+      where: {
+        gitPOAPId_userId: {
+          gitPOAPId: relevantGitPOAP.id,
+          userId: user.id,
+        },
+      },
+      data: {
+        pullRequestEarned: {
+          connect: {
+            id: githubPullRequest.id,
+          },
+        },
+      },
+    });
+  }
 }
 
 const BACKFILL_PRS_PER_REQUEST = 100; // the max
@@ -138,6 +172,11 @@ export async function backloadGithubPullRequestData(repoId: number) {
   logger.info(
     `Backloading the historical PR data for repo ID: ${repoId} (${repoInfo.organization.name}/${repoInfo.name})`,
   );
+
+  if (repoInfo.project.gitPOAPs.length === 0) {
+    logger.warn(`No GitPOAPs found for repo with ID ${repoId}`);
+    return;
+  }
 
   let page = 1;
   let isProcessing = true;
