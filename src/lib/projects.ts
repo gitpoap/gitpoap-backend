@@ -37,3 +37,29 @@ export async function createProjectWithGithubRepoIds(
 
   return project;
 }
+
+export async function getOrCreateProjectWithGithubRepoId(
+  githubRepoId: number,
+  githubOAuthToken: string,
+): Promise<Project | null> {
+  const logger = createScopedLogger('getOrCreateProjectWithGithubRepoId');
+
+  const repo = await context.prisma.repo.findUnique({
+    where: {
+      githubRepoId,
+    },
+    select: {
+      project: true,
+    },
+  });
+
+  if (repo !== null) {
+    logger.info(
+      `Found Repo for GitHub repository ID ${githubRepoId} in Project ID ${repo.project.id}`,
+    );
+    return repo.project;
+  }
+  logger.debug(`No repo found for GitHub repository ID ${githubRepoId}. Attempting to create.`);
+
+  return await createProjectWithGithubRepoIds([githubRepoId], githubOAuthToken);
+}

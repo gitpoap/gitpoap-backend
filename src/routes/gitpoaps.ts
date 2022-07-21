@@ -3,7 +3,8 @@ import {
   CreateGitPOAPProjectSchema,
   UploadGitPOAPCodesSchema,
 } from '../schemas/gitpoaps';
-import { Router } from 'express';
+import { Request, Router } from 'express';
+import { z } from 'zod';
 import { context } from '../context';
 import { createPOAPEvent } from '../external/poap';
 import { createScopedLogger } from '../logging';
@@ -14,11 +15,16 @@ import { GitPOAPStatus } from '@generated/type-graphql';
 import { httpRequestDurationSeconds } from '../metrics';
 import { AccessTokenPayloadWithOAuth } from '../types/tokens';
 import { backloadGithubPullRequestData } from '../lib/pullRequests';
-import { createProjectWithGithubRepoIds } from '../lib/projects';
+import {
+  createProjectWithGithubRepoIds,
+  getOrCreateProjectWithGithubRepoId,
+} from '../lib/projects';
 
 export const gitpoapsRouter = Router();
 
 const upload = multer();
+
+type ReqBody = z.infer<typeof CreateGitPOAPSchema>;
 
 gitpoapsRouter.post('/', jwtWithAdminOAuth(), upload.single('image'), async function (req, res) {
   const logger = createScopedLogger('POST /gitpoaps');
@@ -42,7 +48,7 @@ gitpoapsRouter.post('/', jwtWithAdminOAuth(), upload.single('image'), async func
     return res.status(400).send({ msg });
   }
 
-  const projectChoice = JSON.parse(req.body.project);
+  const projectChoice: z.infer<typeof CreateGitPOAPProjectSchema> = JSON.parse(req.body.project);
   const projectSchemaResult = CreateGitPOAPProjectSchema.safeParse(projectChoice);
   if (!projectSchemaResult.success) {
     logger.warn(
@@ -54,8 +60,8 @@ gitpoapsRouter.post('/', jwtWithAdminOAuth(), upload.single('image'), async func
     return res.status(400).send({ issues: projectSchemaResult.error.issues });
   }
 
-  let project;
-  if (projectChoice.projectId) {
+  let project: { id: number } | null = null;
+  if ('projectId' in projectChoice && projectChoice.projectId) {
     logger.info(
       `Request to create a new GitPOAP "${req.body.name}" for project ${projectChoice.projectId}`,
     );
@@ -74,22 +80,28 @@ gitpoapsRouter.post('/', jwtWithAdminOAuth(), upload.single('image'), async func
       endTimer({ status: 404 });
       return res.status(404).send({ msg });
     }
-  } else {
+  } else if ('githubRepoIds' in projectChoice) {
     logger.info(
       `Request to create a new GitPOAP "${req.body.name}" for project with Github Repo IDs: ${projectChoice.githubRepoIds}`,
     );
-
-    project = await createProjectWithGithubRepoIds(
-      projectChoice.githubRepoIds,
-      (<AccessTokenPayloadWithOAuth>req.user).githubOAuthToken,
-    );
-    if (project === null) {
-      const msg =
-        "Failed to create a new project. It's possible one of the repos is already within another project";
-      logger.warn(msg);
-      endTimer({ status: 400 });
-      return res.status(400).send({ msg });
+    if (projectChoice.githubRepoIds.length === 1) {
+      project = await getOrCreateProjectWithGithubRepoId(
+        projectChoice.githubRepoIds[0],
+        (<AccessTokenPayloadWithOAuth>req.user).githubOAuthToken,
+      );
+    } else {
+      project = await createProjectWithGithubRepoIds(
+        projectChoice.githubRepoIds,
+        (<AccessTokenPayloadWithOAuth>req.user).githubOAuthToken,
+      );
     }
+  }
+
+  if (project === null) {
+    const msg = `Failed to create a new project.`;
+    logger.warn(msg);
+    endTimer({ status: 400 });
+    return res.status(400).send({ msg });
   }
 
   // Create a secret code of the form "[0-9]{6}" that will be used to
@@ -103,13 +115,13 @@ gitpoapsRouter.post('/', jwtWithAdminOAuth(), upload.single('image'), async func
     req.body.startDate,
     req.body.endDate,
     req.body.expiryDate,
-    req.body.year,
+    parseInt(req.body.year, 10),
     req.body.eventUrl,
     req.file.originalname,
     req.file.buffer,
     secretCode,
     req.body.email,
-    req.body.numRequestedCodes,
+    parseInt(req.body.numRequestedCodes, 10),
     req.body.city, // optional
     req.body.country, // optional
   );
@@ -140,7 +152,6 @@ gitpoapsRouter.post('/', jwtWithAdminOAuth(), upload.single('image'), async func
   );
 
   endTimer({ status: 201 });
-
   return res.status(201).send('CREATED');
 });
 
