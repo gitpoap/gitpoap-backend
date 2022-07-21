@@ -26,134 +26,139 @@ const upload = multer();
 
 type ReqBody = z.infer<typeof CreateGitPOAPSchema>;
 
-gitpoapsRouter.post('/', jwtWithAdminOAuth(), upload.single('image'), async function (req, res) {
-  const logger = createScopedLogger('POST /gitpoaps');
+gitpoapsRouter.post(
+  '/',
+  jwtWithAdminOAuth(),
+  upload.single('image'),
+  async function (req: Request<any, any, ReqBody>, res) {
+    const logger = createScopedLogger('POST /gitpoaps');
 
-  logger.debug(`Body: ${JSON.stringify(req.body)}`);
+    logger.debug(`Body: ${JSON.stringify(req.body)}`);
 
-  const endTimer = httpRequestDurationSeconds.startTimer('POST', '/gitpoaps');
+    const endTimer = httpRequestDurationSeconds.startTimer('POST', '/gitpoaps');
 
-  const schemaResult = CreateGitPOAPSchema.safeParse(req.body);
-  if (!schemaResult.success) {
-    logger.warn(
-      `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
+    const schemaResult = CreateGitPOAPSchema.safeParse(req.body);
+    if (!schemaResult.success) {
+      logger.warn(
+        `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
+      );
+      endTimer({ status: 400 });
+      return res.status(400).send({ issues: schemaResult.error.issues });
+    }
+    if (!req.file) {
+      const msg = 'Missing/invalid "image" upload in request';
+      logger.warn(msg);
+      endTimer({ status: 400 });
+      return res.status(400).send({ msg });
+    }
+
+    const projectChoice: z.infer<typeof CreateGitPOAPProjectSchema> = JSON.parse(req.body.project);
+    const projectSchemaResult = CreateGitPOAPProjectSchema.safeParse(projectChoice);
+    if (!projectSchemaResult.success) {
+      logger.warn(
+        `Missing/invalid fields in the "project" provided JSON in request: ${JSON.stringify(
+          projectSchemaResult.error.issues,
+        )}`,
+      );
+      endTimer({ status: 400 });
+      return res.status(400).send({ issues: projectSchemaResult.error.issues });
+    }
+
+    let project: { id: number } | null = null;
+    if ('projectId' in projectChoice && projectChoice.projectId) {
+      logger.info(
+        `Request to create a new GitPOAP "${req.body.name}" for project ${projectChoice.projectId}`,
+      );
+
+      project = await context.prisma.project.findUnique({
+        where: {
+          id: projectChoice.projectId,
+        },
+        select: {
+          id: true,
+        },
+      });
+      if (project === null) {
+        const msg = `Failed to find project with id: ${projectChoice.projectId}`;
+        logger.warn(msg);
+        endTimer({ status: 404 });
+        return res.status(404).send({ msg });
+      }
+    } else if ('githubRepoIds' in projectChoice) {
+      logger.info(
+        `Request to create a new GitPOAP "${req.body.name}" for project with Github Repo IDs: ${projectChoice.githubRepoIds}`,
+      );
+      if (projectChoice.githubRepoIds.length === 1) {
+        project = await getOrCreateProjectWithGithubRepoId(
+          projectChoice.githubRepoIds[0],
+          (<AccessTokenPayloadWithOAuth>req.user).githubOAuthToken,
+        );
+      } else {
+        project = await createProjectWithGithubRepoIds(
+          projectChoice.githubRepoIds,
+          (<AccessTokenPayloadWithOAuth>req.user).githubOAuthToken,
+        );
+      }
+    }
+
+    if (project === null) {
+      const msg = `Failed to create a new project.`;
+      logger.warn(msg);
+      endTimer({ status: 400 });
+      return res.status(400).send({ msg });
+    }
+
+    // Create a secret code of the form "[0-9]{6}" that will be used to
+    // modify the event and allow minting of POAPs
+    const secretCode = short('0123456789').new().slice(0, 6);
+
+    // Call the POAP API to create the event
+    const poapInfo = await createPOAPEvent(
+      req.body.name,
+      req.body.description,
+      req.body.startDate,
+      req.body.endDate,
+      req.body.expiryDate,
+      parseInt(req.body.year, 10),
+      req.body.eventUrl,
+      req.file.originalname,
+      req.file.buffer,
+      secretCode,
+      req.body.email,
+      parseInt(req.body.numRequestedCodes, 10),
+      req.body.city, // optional
+      req.body.country, // optional
     );
-    endTimer({ status: 400 });
-    return res.status(400).send({ issues: schemaResult.error.issues });
-  }
-  if (!req.file) {
-    const msg = 'Missing/invalid "image" upload in request';
-    logger.warn(msg);
-    endTimer({ status: 400 });
-    return res.status(400).send({ msg });
-  }
+    if (poapInfo == null) {
+      logger.error('Failed to create event via POAP API');
+      endTimer({ status: 500 });
+      return res.status(500).send({ msg: 'Failed to create POAP via API' });
+    }
 
-  const projectChoice: z.infer<typeof CreateGitPOAPProjectSchema> = JSON.parse(req.body.project);
-  const projectSchemaResult = CreateGitPOAPProjectSchema.safeParse(projectChoice);
-  if (!projectSchemaResult.success) {
-    logger.warn(
-      `Missing/invalid fields in the "project" provided JSON in request: ${JSON.stringify(
-        projectSchemaResult.error.issues,
-      )}`,
-    );
-    endTimer({ status: 400 });
-    return res.status(400).send({ issues: projectSchemaResult.error.issues });
-  }
+    logger.debug(`Created GitPOAP in POAP system: ${JSON.stringify(poapInfo)}`);
 
-  let project: { id: number } | null = null;
-  if ('projectId' in projectChoice && projectChoice.projectId) {
-    logger.info(
-      `Request to create a new GitPOAP "${req.body.name}" for project ${projectChoice.projectId}`,
-    );
-
-    project = await context.prisma.project.findUnique({
-      where: {
-        id: projectChoice.projectId,
-      },
-      select: {
-        id: true,
+    await context.prisma.gitPOAP.create({
+      data: {
+        year: poapInfo.year,
+        poapEventId: poapInfo.id,
+        project: {
+          connect: {
+            id: project.id,
+          },
+        },
+        poapSecret: secretCode,
+        ongoing: req.body.ongoing === 'true',
       },
     });
-    if (project === null) {
-      const msg = `Failed to find project with id: ${projectChoice.projectId}`;
-      logger.warn(msg);
-      endTimer({ status: 404 });
-      return res.status(404).send({ msg });
-    }
-  } else if ('githubRepoIds' in projectChoice) {
-    logger.info(
-      `Request to create a new GitPOAP "${req.body.name}" for project with Github Repo IDs: ${projectChoice.githubRepoIds}`,
+
+    logger.debug(
+      `Completed request to create a new GitPOAP "${req.body.name}" for project ${project.id}`,
     );
-    if (projectChoice.githubRepoIds.length === 1) {
-      project = await getOrCreateProjectWithGithubRepoId(
-        projectChoice.githubRepoIds[0],
-        (<AccessTokenPayloadWithOAuth>req.user).githubOAuthToken,
-      );
-    } else {
-      project = await createProjectWithGithubRepoIds(
-        projectChoice.githubRepoIds,
-        (<AccessTokenPayloadWithOAuth>req.user).githubOAuthToken,
-      );
-    }
-  }
 
-  if (project === null) {
-    const msg = `Failed to create a new project.`;
-    logger.warn(msg);
-    endTimer({ status: 400 });
-    return res.status(400).send({ msg });
-  }
-
-  // Create a secret code of the form "[0-9]{6}" that will be used to
-  // modify the event and allow minting of POAPs
-  const secretCode = short('0123456789').new().slice(0, 6);
-
-  // Call the POAP API to create the event
-  const poapInfo = await createPOAPEvent(
-    req.body.name,
-    req.body.description,
-    req.body.startDate,
-    req.body.endDate,
-    req.body.expiryDate,
-    parseInt(req.body.year, 10),
-    req.body.eventUrl,
-    req.file.originalname,
-    req.file.buffer,
-    secretCode,
-    req.body.email,
-    parseInt(req.body.numRequestedCodes, 10),
-    req.body.city, // optional
-    req.body.country, // optional
-  );
-  if (poapInfo == null) {
-    logger.error('Failed to create event via POAP API');
-    endTimer({ status: 500 });
-    return res.status(500).send({ msg: 'Failed to create POAP via API' });
-  }
-
-  logger.debug(`Created GitPOAP in POAP system: ${JSON.stringify(poapInfo)}`);
-
-  await context.prisma.gitPOAP.create({
-    data: {
-      year: poapInfo.year,
-      poapEventId: poapInfo.id,
-      project: {
-        connect: {
-          id: project.id,
-        },
-      },
-      poapSecret: secretCode,
-      ongoing: req.body.ongoing === 'true',
-    },
-  });
-
-  logger.debug(
-    `Completed request to create a new GitPOAP "${req.body.name}" for project ${project.id}`,
-  );
-
-  endTimer({ status: 201 });
-  return res.status(201).send('CREATED');
-});
+    endTimer({ status: 201 });
+    return res.status(201).send('CREATED');
+  },
+);
 
 gitpoapsRouter.get('/poap-token-id/:id', async function (req, res) {
   const logger = createScopedLogger('GET /gitpoaps/poap-token-id/:id');
