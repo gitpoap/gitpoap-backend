@@ -24,13 +24,13 @@ export const gitpoapsRouter = Router();
 
 const upload = multer();
 
-type ReqBody = z.infer<typeof CreateGitPOAPSchema>;
+type CreateGitPOAPReqBody = z.infer<typeof CreateGitPOAPSchema>;
 
 gitpoapsRouter.post(
   '/',
   jwtWithAdminOAuth(),
   upload.single('image'),
-  async function (req: Request<any, any, ReqBody>, res) {
+  async function (req: Request<any, any, CreateGitPOAPReqBody>, res) {
     const logger = createScopedLogger('POST /gitpoaps');
 
     logger.debug(`Body: ${JSON.stringify(req.body)}`);
