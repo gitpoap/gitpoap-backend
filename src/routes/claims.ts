@@ -287,6 +287,7 @@ claimsRouter.post(
           },
           data: {
             status: ClaimStatus.UNCLAIMED,
+            address: null,
           },
         });
 
