@@ -1,6 +1,7 @@
 import fetch from 'cross-fetch';
 import { context } from '../context';
 import { DateTime } from 'luxon';
+import Sentry from '@sentry/node';
 import {
   POAP_AUTH_URL,
   POAP_API_URL,
@@ -128,11 +129,21 @@ async function makeGenericPOAPRequest(
     const poapResponse = await fetch(new URL(path, POAP_API_URL).href, requestOptions);
 
     if (poapResponse.status >= 400) {
-      logger.error(
-        `Bad response (${
-          poapResponse.status
-        }) for ${method} ${path} from POAP API: ${await poapResponse.text()}`,
-      );
+      const msg = `Bad response (${
+        poapResponse.status
+      }) for ${method} ${path} from POAP API: ${await poapResponse.text()}`;
+      logger.error(msg);
+      Sentry.captureException(new Error(msg), {
+        level: 'error',
+        extra: {
+          body,
+        },
+        tags: {
+          service: 'poap-api',
+          method,
+          path,
+        },
+      });
       endTimer({ success: 0 });
       return null;
     }
@@ -142,6 +153,17 @@ async function makeGenericPOAPRequest(
     return await poapResponse.json();
   } catch (err) {
     logger.error(`Error while calling POAP API: ${err}`);
+    Sentry.captureException(err, {
+      level: 'error',
+      extra: {
+        body,
+      },
+      tags: {
+        service: 'poap-api',
+        method,
+        path,
+      },
+    });
     endTimer({ success: 0 });
     return null;
   }
