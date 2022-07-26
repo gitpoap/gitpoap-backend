@@ -193,7 +193,7 @@ v1Router.get('/address/:address/gitpoaps', async function (req, res) {
     },
   });
 
-  const results = mapsClaimsToGitPOAPResults(claims);
+  const results = await mapsClaimsToGitPOAPResults(claims);
 
   if (results === null) {
     const msg = `Failed to query POAP data for claims`;
@@ -250,7 +250,7 @@ v1Router.get('/github/user/:githubHandle/gitpoaps', async function (req, res) {
     },
   });
 
-  const results = mapsClaimsToGitPOAPResults(claims);
+  const results = await mapsClaimsToGitPOAPResults(claims);
 
   if (results === null) {
     const msg = `Failed to query POAP data for claims`;
