@@ -54,6 +54,7 @@ describe('CustomProfileResolver', () => {
           address
           name
           githubHandle
+          leaderboardVisible
         }
       }
     `);
@@ -63,6 +64,7 @@ describe('CustomProfileResolver', () => {
     expect(data.profileData.address).toEqual(address);
     expect(data.profileData.name).toEqual(null);
     expect(data.profileData.githubHandle).toEqual(null);
+    expect(data.profileData.leaderboardVisible).toEqual(true);
   });
 
   it('mostHonoredContributors', async () => {
