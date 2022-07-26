@@ -7,6 +7,7 @@ import { POAPEvent } from './poap';
 import winston from 'winston';
 import multer from 'multer';
 import { extname } from 'path';
+import short from 'short-uuid';
 
 const logger = winston.createLogger({
   level: 'info',
@@ -415,6 +416,42 @@ app.post('/redeem-requests', async (req, res) => {
   }
 
   return res.status(200).send('324324');
+});
+
+const GetEventCodesSchema = z.object({
+  secret_code: z.string(),
+});
+
+function generateFakeQRCodes() {
+  let codes = [];
+
+  const generator = short();
+
+  for (let i = 0; i < 50; ++i) {
+    codes.push({
+      qr_hash: generator.new().slice(0, 6),
+      claimed: Math.random() < 0.5,
+    });
+  }
+
+  return codes;
+}
+
+app.get('/event/:id/qr-codes', async (req, res) => {
+  logger.info('Received GET /event/:id/qr-codes request');
+
+  const schemaResult = GetEventCodesSchema.safeParse(req.body);
+  if (!schemaResult.success) {
+    return res.status(400).send({ issues: schemaResult.error.issues });
+  }
+
+  if (!(await validateAuth(req))) {
+    return res.status(401).send({ msg: 'The token is invalid' });
+  }
+
+  // Note: Assume that the secret_code is correct for the event
+
+  return res.status(200).send(generateFakeQRCodes());
 });
 
 app.listen(port, () => {
