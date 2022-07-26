@@ -1,13 +1,12 @@
 import { Router } from 'express';
-import { context } from '../context';
-import { httpRequestDurationSeconds } from '../metrics';
-import { createScopedLogger } from '../logging';
-import { resolveENS } from '../external/ens';
-import { retrievePOAPInfo } from '../external/poap';
+import { context } from '../../context';
+import { httpRequestDurationSeconds } from '../../metrics';
+import { createScopedLogger } from '../../logging';
+import { resolveENS } from '../../external/ens';
 import { ClaimStatus } from '@generated/type-graphql';
-import { DateTime } from 'luxon';
 import { badgen } from 'badgen';
 import { GitPOAPMiniLogo } from './constants';
+import { mapsClaimsToGitPOAPResults } from './helpers';
 
 export const v1Router = Router();
 
@@ -194,53 +193,70 @@ v1Router.get('/address/:address/gitpoaps', async function (req, res) {
     },
   });
 
-  type ResultType = {
-    gitPoapId: number;
-    gitPoapEventId: number;
-    poapTokenId: string;
-    poapEventId: number;
-    name: string;
-    year: number;
-    description: string;
-    imageUrl: string;
-    repositories: string[];
-    earnedAt: string;
-    mintedAt: string;
-  };
+  const results = mapsClaimsToGitPOAPResults(claims);
 
-  let results: ResultType[] = [];
+  if (results === null) {
+    const msg = `Failed to query POAP data for claims`;
+    logger.error(msg);
+    endTimer({ status: 500 });
+    return res.status(500).send({ msg });
+  }
 
-  for (const claim of claims) {
-    const poapData = await retrievePOAPInfo(<string>claim.poapTokenId);
-    if (poapData === null) {
-      const msg = `Failed to query POAP ID "${claim.gitPOAP.poapEventId}" data from POAP API`;
-      logger.error(msg);
-      endTimer({ status: 500 });
-      return res.status(500).send({ msg });
-    }
+  return res.status(200).send(results);
+});
 
-    const repositories = claim.gitPOAP.project.repos.map(repo => {
-      return `${repo.organization.name}/${repo.name}`;
-    });
+v1Router.get('/github/user/:githubHandle/gitpoaps', async function (req, res) {
+  const logger = createScopedLogger('GET /v1/github/user/:githubHandle/gitpoaps');
+  logger.info(`Request for GitPOAPs for githubHandle "${req.params.githubHandle}"`);
+  const endTimer = httpRequestDurationSeconds.startTimer(
+    'GET',
+    '/v1/github/user/:githubHandle/gitpoaps',
+  );
 
-    // Default to created at time of the Claim (e.g. for hackathons)
-    const earnedAt = claim.pullRequestEarned
-      ? claim.pullRequestEarned.githubMergedAt
-      : claim.createdAt;
+  const claims = await context.prisma.claim.findMany({
+    where: {
+      user: {
+        githubHandle: {
+          equals: req.params.githubHandle,
+        },
+      },
+      status: ClaimStatus.CLAIMED,
+    },
+    select: {
+      id: true,
+      createdAt: true,
+      mintedAt: true,
+      poapTokenId: true,
+      pullRequestEarned: true,
+      gitPOAP: {
+        select: {
+          id: true,
+          year: true,
+          poapEventId: true,
+          project: {
+            select: {
+              repos: {
+                select: {
+                  name: true,
+                  organization: {
+                    select: { name: true },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
 
-    results.push({
-      gitPoapId: claim.id,
-      gitPoapEventId: claim.gitPOAP.id,
-      poapTokenId: <string>claim.poapTokenId,
-      poapEventId: claim.gitPOAP.poapEventId,
-      name: poapData.event.name,
-      year: claim.gitPOAP.year,
-      description: poapData.event.description,
-      imageUrl: poapData.event.image_url,
-      repositories,
-      earnedAt: DateTime.fromJSDate(earnedAt).toFormat('yyyy-MM-dd'),
-      mintedAt: DateTime.fromJSDate(<Date>claim.mintedAt).toFormat('yyyy-MM-dd'),
-    });
+  const results = mapsClaimsToGitPOAPResults(claims);
+
+  if (results === null) {
+    const msg = `Failed to query POAP data for claims`;
+    logger.error(msg);
+    endTimer({ status: 500 });
+    return res.status(500).send({ msg });
   }
 
   return res.status(200).send(results);
