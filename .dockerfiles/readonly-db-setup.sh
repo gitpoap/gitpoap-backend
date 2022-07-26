@@ -18,6 +18,7 @@ GRANT SELECT ON "Profile" TO $READONLY_USER;
 GRANT SELECT ON "Repo" TO $READONLY_USER;
 GRANT SELECT ON "User" TO $READONLY_USER;
 GRANT SELECT ON "Project" TO $READONLY_USER;
--- We need to expose Secret so the public API can interface with POAP
-GRANT SELECT ON "Secret" TO $READONLY_USER;
+-- We need to expose more on Secret so the public API can interface with POAP
+GRANT SELECT, INSERT, UPDATE ON "Secret" TO $READONLY_USER;
+GRANT USAGE, SELECT ON SEQUENCE "Secret_id_seq" TO $READONLY_USER;
 EOF
