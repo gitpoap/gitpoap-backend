@@ -9,7 +9,6 @@ import {
   POAP_API_KEY,
 } from '../environment';
 import { createScopedLogger } from '../logging';
-import { createReadStream } from 'fs';
 import FormData from 'form-data';
 import { poapRequestDurationSeconds } from '../metrics';
 import { URL } from 'url';
@@ -129,8 +128,10 @@ async function makeGenericPOAPRequest(
     const poapResponse = await fetch(new URL(path, POAP_API_URL).href, requestOptions);
 
     if (poapResponse.status >= 400) {
-      logger.warn(
-        `Bad response (${poapResponse.status}) from POAP API: ${await poapResponse.text()}`,
+      logger.error(
+        `Bad response (${
+          poapResponse.status
+        }) for ${method} ${path} from POAP API: ${await poapResponse.text()}`,
       );
       endTimer({ success: 0 });
       return null;
@@ -140,7 +141,7 @@ async function makeGenericPOAPRequest(
 
     return await poapResponse.json();
   } catch (err) {
-    logger.warn(`Error while calling POAP API: ${err}`);
+    logger.error(`Error while calling POAP API: ${err}`);
     endTimer({ success: 0 });
     return null;
   }
