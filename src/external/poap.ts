@@ -1,7 +1,7 @@
 import fetch from 'cross-fetch';
 import { context } from '../context';
 import { DateTime } from 'luxon';
-import Sentry from '@sentry/node';
+import * as Sentry from '@sentry/node';
 import {
   POAP_AUTH_URL,
   POAP_API_URL,
