@@ -1,7 +1,7 @@
 #!/bin/bash
 
 DATABASE_URL=postgresql://postgres:foobar88@db:5432
-READONLY_USER=gitpoap_readonly_db_user 
+READONLY_USER=gitpoap_readonly_db_user
 READONLY_PASSWORD=foobar99
 
 # Note that if this needs to change for new tables/etc, then the AWS

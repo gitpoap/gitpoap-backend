@@ -33,7 +33,7 @@ export const mapsClaimsToGitPOAPResults = async (
 
   const results: GitPOAPResultType[] = [];
 
-  for (const claim of claims) {
+  claims.forEach(async claim => {
     const poapData = await retrievePOAPInfo(<string>claim.poapTokenId);
     if (poapData === null) {
       const msg = `Failed to query POAP ID "${claim.gitPOAP.poapEventId}" data from POAP API`;
@@ -64,7 +64,7 @@ export const mapsClaimsToGitPOAPResults = async (
       earnedAt: DateTime.fromJSDate(earnedAt).toFormat('yyyy-MM-dd'),
       mintedAt: DateTime.fromJSDate(<Date>claim.mintedAt).toFormat('yyyy-MM-dd'),
     });
-  }
+  });
 
   return results;
 };

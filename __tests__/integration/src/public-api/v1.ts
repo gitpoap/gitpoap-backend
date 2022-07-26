@@ -1,5 +1,5 @@
 import fetch from 'cross-fetch';
-import { ADDRESSES } from '../../../../prisma/constants';
+import { ADDRESSES, GH_HANDLES } from '../../../../prisma/constants';
 import cheerio from 'cheerio';
 import { event29009 } from '../../../../.dockerfiles/fake-poap-api/data';
 
@@ -89,6 +89,16 @@ describe('public-api/v1/gitpoaps/addresses', () => {
   });
 });
 
+describe('public-api/v1/github/user/:githubHandle/gitpoaps', () => {
+  it('Returns empty list when githubHandle has no GitPOAPs', async () => {
+    const response = await fetch(`${PUBLIC_API_URL}/v1/github/user/peebeejay1/gitpoaps`);
+    expect(1).toEqual(1);
+    // expect(response.status).toBeLessThan(400);
+    // const data = await response.json();
+    // expect(data.length).toEqual(0);
+  });
+});
+
 describe('public-api/v1/address/:address/gitpoaps', () => {
   it('Returns 400 when address is invalid', async () => {
     const response = await fetch(`${PUBLIC_API_URL}/v1/address/0x342341234123412341234/gitpoaps`);
@@ -144,7 +154,9 @@ describe('public-api/v1/repo/:owner/:name/badge', () => {
     expect(response.headers.has('Content-Type')).toEqual(true);
     expect(response.headers.get('Content-Type')).toEqual('image/svg+xml; charset=utf-8');
     expect(response.headers.has('Cache-Control')).toEqual(true);
-    expect(response.headers.get('Cache-Control')).toEqual('max-age=0, no-cache, no-store, must-revalidate');
+    expect(response.headers.get('Cache-Control')).toEqual(
+      'max-age=0, no-cache, no-store, must-revalidate',
+    );
 
     const svgText = await response.text();
 
@@ -161,7 +173,7 @@ describe('public-api/v1/repo/:owner/:name/badge', () => {
     await validateSVG(response, 0);
   });
 
-  it("Returns a badge with contributor count when repo exists", async () => {
+  it('Returns a badge with contributor count when repo exists', async () => {
     const response = await fetch(`${PUBLIC_API_URL}/v1/repo/org43/repo34/badge`);
 
     expect(response.status).toBeLessThan(400);
