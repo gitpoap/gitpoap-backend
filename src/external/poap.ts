@@ -194,6 +194,36 @@ export async function requestPOAPCodes(
   );
 }
 
+type RetrievePOAPCodesResponse = { qr_hash: string; claimed: boolean }[];
+
+async function retrievePOAPCodes(
+  event_id: number,
+  secret_code: string,
+): Promise<RetrievePOAPCodesResponse | null> {
+  return await makePOAPRequest(
+    `${POAP_API_URL}/event/{event_id}/qr-codes`,
+    'POST',
+    JSON.stringify({ secret_code }),
+  );
+}
+
+export async function retrieveUnusedPOAPCodes(
+  event_id: number,
+  secret_code: string,
+): Promise<string[] | null> {
+  const data = await retrievePOAPCodes(event_id, secret_code);
+  if (data === null) {
+    return null;
+  }
+
+  return data.reduce((results, datum) => {
+    if (!datum.claimed) {
+      results.push(datum.qr_hash);
+    }
+    return results;
+  }, <string[]>[]);
+}
+
 export async function retrieveClaimInfo(qr_hash: string) {
   return await makePOAPRequest(`${POAP_API_URL}/actions/claim-qr?qr_hash=${qr_hash}`, 'GET', null);
 }
