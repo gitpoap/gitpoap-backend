@@ -28,7 +28,7 @@ type Claim = {
 export const mapsClaimsToGitPOAPResults = async (
   claims: Claim[],
 ): Promise<GitPOAPResultType[] | null> => {
-  const logger = createScopedLogger('getPOAPDataForClaim');
+  const logger = createScopedLogger('mapsClaimsToGitPOAPResults');
   logger.info(`Getting POAP data for ${claims.length} claims`);
 
   const results: GitPOAPResultType[] = [];
