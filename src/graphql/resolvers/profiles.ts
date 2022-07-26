@@ -44,6 +44,9 @@ class NullableProfile {
   @Field(() => String, { nullable: true })
   personalSiteUrl: string | null;
 
+  @Field(() => Boolean)
+  leaderboardVisible: boolean;
+
   @Field(() => [FeaturedPOAP])
   featuredPOAPs: FeaturedPOAP[];
 }
@@ -156,6 +159,7 @@ export class CustomProfileResolver {
         githubHandle: null,
         twitterHandle: null,
         personalSiteUrl: null,
+        leaderboardVisible: true,
         featuredPOAPs: [],
       };
     }
@@ -191,6 +195,7 @@ export class CustomProfileResolver {
       FROM "Profile" AS p
       JOIN "Claim" AS c ON c.address = p.address
       WHERE c.status = ${ClaimStatus.CLAIMED}
+      AND p."leaderboardVisible" = true
       GROUP BY p.id
       ORDER BY "claimsCount" DESC
       LIMIT ${count}
@@ -235,6 +240,7 @@ export class CustomProfileResolver {
       INNER JOIN "Project" AS pr ON pr.id = gp."projectId"
       INNER JOIN "Repo" AS r ON r."projectId" = pr.id
       WHERE c.status = ${ClaimStatus.CLAIMED} AND r.id = ${repoId}
+      AND pf."leaderboardVisible" = true
       GROUP BY pf.id
       ORDER BY "claimsCount" DESC
       LIMIT ${count}
