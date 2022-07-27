@@ -114,6 +114,28 @@ address) GitPOAPs. This returns data like:
 ]
 ```
 
+### `GET /v1/github/user/:githubHandle/gitpoaps`
+
+This endpoint allows users to query for minted GitPOAPs associated with a specified GitHub handle. This returns data like:
+
+```json
+[
+  {
+    "gitPoapId": 34,
+    "gitPoapEventId": 32423,
+    "poapTokenId": "2432",
+    "poapEventId": 343,
+    "name": "GitPOAP: gitpoap-docs Level 2 Contributor 2022",
+    "year": 2022,
+    "description": "You've made at least 5 contributions to the gitpoap-docs project in 2022!",
+    "imageUrl": "https://assets.poap.xyz/gitpoap-2022-devconnect-hackathon-gitpoap-team-contributor-2022-logo-1650466033470.png",
+    "repositories": ["gitpoap/gitpoap-docs"],
+    "earnedAt": "2022-04-25",
+    "mintedAt": "2022-05-22"
+  }
+]
+```
+
 ### `GET /v1/repo/:owner/:name/badge`
 
 This endpoint generates GitHub badges containing the GitPOAP count for a specified repo. The repo is specified with an owner and name. This returns a SVG for use in a repo's `README.md` that looks like the following (using `ethereum/ethereum-org-website` as an example):
