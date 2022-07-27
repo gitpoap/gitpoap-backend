@@ -51,20 +51,32 @@ export class CustomSearchResolver {
     }
 
     const matchText = `%${text}%`;
-    const usersByGithubHandle = await prisma.$queryRaw<User[]>`
-      SELECT * FROM "User"
-      WHERE "githubHandle" ILIKE ${matchText}
-    `;
+    const usersByGithubHandle = await prisma.user.findMany({
+      where: {
+        githubHandle: {
+          contains: matchText,
+          mode: 'insensitive',
+        },
+      },
+    });
 
-    const profilesByName = await prisma.$queryRaw<Profile[]>`
-      SELECT * FROM "Profile"
-      WHERE name ILIKE ${matchText}
-    `;
+    const profilesByName = await prisma.profile.findMany({
+      where: {
+        name: {
+          contains: matchText,
+          mode: 'insensitive',
+        },
+      },
+    });
 
-    const profilesByAddress = await prisma.$queryRaw<Profile[]>`
-      SELECT * FROM "Profile"
-      WHERE address ILIKE ${matchText}
-    `;
+    const profilesByAddress = await prisma.profile.findMany({
+      where: {
+        address: {
+          contains: matchText,
+          mode: 'insensitive',
+        },
+      },
+    });
 
     let profileByENS = null;
     const resolvedAddress = await resolveENS(text);
