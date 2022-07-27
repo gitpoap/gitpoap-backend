@@ -1216,6 +1216,12 @@ input RedeemCodeOrderByWithRelationInput {
 
 input RedeemCodeWhereUniqueInput {
   id: Int
+  gitPOAPId_code: RedeemCodeGitPOAPIdCodeCompoundUniqueInput
+}
+
+input RedeemCodeGitPOAPIdCodeCompoundUniqueInput {
+  gitPOAPId: Int!
+  code: String!
 }
 
 enum RedeemCodeScalarFieldEnum {
