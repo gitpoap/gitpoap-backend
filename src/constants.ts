@@ -22,9 +22,9 @@ export const MINIMUM_REMAINING_REDEEM_CODES = 15;
 // The number of new claims to request
 export const REDEEM_CODE_STEP_SIZE = 50;
 
-// How often do we check if we can run the ongoing issuance background
-// process per instance?
+// How often do we check if we can run background processes per instance?
 export const ONGOING_ISSUANCE_CHECK_FREQUENCY_MINUTES = 30;
+export const CHECK_FOR_CODES_CHECK_FREQUENCY_MINUTES = 5;
 
 export const SECONDS_PER_MINUTE = 60;
 export const SECONDS_PER_HOUR = 60 * SECONDS_PER_MINUTE;
