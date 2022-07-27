@@ -1,6 +1,6 @@
 import { GithubPullRequest } from '@prisma/client';
 import { DateTime } from 'luxon';
-import { retrievePOAPInfo } from '../../external/poap';
+import { retrievePOAPEventInfo } from '../../external/poap';
 import { createScopedLogger } from '../../logging';
 import { GitPOAPResultType } from './types';
 
@@ -34,9 +34,9 @@ export const mapsClaimsToGitPOAPResults = async (
   const results: GitPOAPResultType[] = [];
 
   for (const claim of claims) {
-    const poapData = await retrievePOAPInfo(<string>claim.poapTokenId);
+    const poapEventData = await retrievePOAPEventInfo(claim.gitPOAP.poapEventId);
 
-    if (poapData === null) {
+    if (poapEventData === null) {
       const msg = `Failed to query POAP ID "${claim.gitPOAP.poapEventId}" data from POAP API`;
       logger.error(msg);
 
@@ -57,13 +57,13 @@ export const mapsClaimsToGitPOAPResults = async (
       gitPoapEventId: claim.gitPOAP.id,
       poapTokenId: <string>claim.poapTokenId,
       poapEventId: claim.gitPOAP.poapEventId,
-      name: poapData.event.name,
+      name: poapEventData.name,
       year: claim.gitPOAP.year,
-      description: poapData.event.description,
-      imageUrl: poapData.event.image_url,
+      description: poapEventData.description,
+      imageUrl: poapEventData.image_url,
       repositories,
       earnedAt: DateTime.fromJSDate(earnedAt).toFormat('yyyy-MM-dd'),
-      mintedAt: DateTime.fromJSDate(<Date>claim.mintedAt).toFormat('yyyy-MM-dd'),
+      mintedAt: claim.mintedAt ? DateTime.fromJSDate(claim.mintedAt).toFormat('yyyy-MM-dd') : null,
     });
   }
 
