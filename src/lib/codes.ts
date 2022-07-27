@@ -1,5 +1,5 @@
 import { context } from '../context';
-import { GitPOAPStatus } from '@generated/type-graphql';
+import { GitPOAPStatus, RedeemCode } from '@generated/type-graphql';
 import { createScopedLogger } from '../logging';
 import { retrieveUnusedPOAPCodes } from '../external/poap';
 import { DateTime } from 'luxon';
@@ -10,6 +10,26 @@ const CHECK_FOR_CODES_BATCH_TIMING_KEY = 'check-for-codes';
 
 // The amount of minutes to wait before checking for new codes
 const CHECK_FOR_CODES_DELAY_MINUTES = 30;
+
+export async function upsertCode(gitPOAPId: number, code: string): Promise<RedeemCode> {
+  return await context.prisma.redeemCode.upsert({
+    where: {
+      gitPOAPId_code: {
+        gitPOAPId,
+        code,
+      },
+    },
+    update: {},
+    create: {
+      gitPOAP: {
+        connect: {
+          id: gitPOAPId,
+        },
+      },
+      code,
+    },
+  });
+}
 
 async function countCodes(gitPOAPId: number) {
   return await context.prisma.redeemCode.count({
@@ -43,23 +63,7 @@ async function checkGitPOAPForNewCodes(gitPOAP: GitPOAPWithSecret) {
   logger.debug(`Received ${unusedCodes.length} unused codes from POAP API`);
 
   for (const code of unusedCodes) {
-    await context.prisma.redeemCode.upsert({
-      where: {
-        gitPOAPId_code: {
-          gitPOAPId: gitPOAP.id,
-          code: code,
-        },
-      },
-      update: {},
-      create: {
-        gitPOAP: {
-          connect: {
-            id: gitPOAP.id,
-          },
-        },
-        code: code,
-      },
-    });
+    await upsertCode(gitPOAP.id, code);
   }
 
   const endingCount = await countCodes(gitPOAP.id);
