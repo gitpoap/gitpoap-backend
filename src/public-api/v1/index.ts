@@ -7,6 +7,7 @@ import { ClaimStatus } from '@generated/type-graphql';
 import { badgen } from 'badgen';
 import { GitPOAPMiniLogo } from './constants';
 import { mapsClaimsToGitPOAPResults } from './helpers';
+import { z } from 'zod';
 
 export const v1Router = Router();
 
@@ -213,6 +214,36 @@ v1Router.get('/github/user/:githubHandle/gitpoaps', async function (req, res) {
     '/v1/github/user/:githubHandle/gitpoaps',
   );
 
+  const QuerySchema = z.object({
+    status: z.enum(['claimed', 'unclaimed', 'minting', 'pending']).optional(),
+  });
+
+  const schemaResult = QuerySchema.safeParse(req.query);
+  if (!schemaResult.success) {
+    logger.warn(
+      `Missing/invalid query fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
+    );
+    endTimer({ status: 400 });
+    return res.status(400).send({ issues: schemaResult.error.issues });
+  }
+
+  let status: ClaimStatus | undefined = undefined;
+
+  switch (req.query.status) {
+    case 'claimed':
+      status = ClaimStatus.CLAIMED;
+      break;
+    case 'unclaimed':
+      status = ClaimStatus.UNCLAIMED;
+      break;
+    case 'pending':
+      status = ClaimStatus.PENDING;
+      break;
+    case 'minting':
+      status = ClaimStatus.MINTING;
+      break;
+  }
+
   const claims = await context.prisma.claim.findMany({
     where: {
       user: {
@@ -220,7 +251,7 @@ v1Router.get('/github/user/:githubHandle/gitpoaps', async function (req, res) {
           equals: req.params.githubHandle,
         },
       },
-      status: ClaimStatus.CLAIMED,
+      status,
     },
     select: {
       id: true,
