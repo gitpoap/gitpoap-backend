@@ -25,10 +25,10 @@ type Claim = {
   mintedAt: Date | null;
 };
 
-export const mapsClaimsToGitPOAPResults = async (
+export const mapClaimsToGitPOAPResults = async (
   claims: Claim[],
 ): Promise<GitPOAPResultType[] | null> => {
-  const logger = createScopedLogger('mapsClaimsToGitPOAPResults');
+  const logger = createScopedLogger('mapClaimsToGitPOAPResults');
   logger.info(`Getting POAP data for ${claims.length} claims`);
 
   const results: GitPOAPResultType[] = [];

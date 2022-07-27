@@ -6,7 +6,7 @@ import { resolveENS } from '../../external/ens';
 import { ClaimStatus } from '@generated/type-graphql';
 import { badgen } from 'badgen';
 import { GitPOAPMiniLogo } from './constants';
-import { mapsClaimsToGitPOAPResults } from './helpers';
+import { mapClaimsToGitPOAPResults } from './helpers';
 import { z } from 'zod';
 
 export const v1Router = Router();
@@ -194,7 +194,7 @@ v1Router.get('/address/:address/gitpoaps', async function (req, res) {
     },
   });
 
-  const results = await mapsClaimsToGitPOAPResults(claims);
+  const results = await mapClaimsToGitPOAPResults(claims);
 
   if (results === null) {
     const msg = `Failed to query POAP data for claims`;
@@ -281,7 +281,7 @@ v1Router.get('/github/user/:githubHandle/gitpoaps', async function (req, res) {
     },
   });
 
-  const results = await mapsClaimsToGitPOAPResults(claims);
+  const results = await mapClaimsToGitPOAPResults(claims);
 
   if (results === null) {
     const msg = `Failed to query POAP data for claims`;
