@@ -19,6 +19,7 @@ import {
   createProjectWithGithubRepoIds,
   getOrCreateProjectWithGithubRepoId,
 } from '../lib/projects';
+import { upsertCode } from '../lib/codes';
 
 export const gitpoapsRouter = Router();
 
@@ -263,14 +264,9 @@ gitpoapsRouter.post(
       return res.status(500).send({ msg });
     }
 
-    await context.prisma.redeemCode.createMany({
-      data: codes.map((code: string) => {
-        return {
-          gitPOAPId,
-          code: code,
-        };
-      }),
-    });
+    for (const code of codes) {
+      await upsertCode(gitPOAPId, code);
+    }
 
     // Move the GitPOAP (back) into the APPROVED state
     await context.prisma.gitPOAP.update({
