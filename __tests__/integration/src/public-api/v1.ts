@@ -139,12 +139,46 @@ describe('public-api/v1/address/:address/gitpoaps', () => {
   });
 });
 
+describe('public-api/v1/github/user/:githubHandle/gitpoaps', () => {
+  it('Returns empty list when githubHandle has no GitPOAPs', async () => {
+    const response = await fetch(`${PUBLIC_API_URL}/v1/github/user/peebeejay1/gitpoaps`);
+    expect(response.status).toBeLessThan(400);
+    const data = await response.json();
+    expect(data.length).toEqual(0);
+  });
+
+  it("Returns known user's GitPOAPs", async () => {
+    const response = await fetch(`${PUBLIC_API_URL}/v1/github/user/burzzzzz/gitpoaps`);
+    expect(response.status).toBeLessThan(400);
+    const data = await response.json();
+
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
+    expect(data.length).toEqual(1);
+    expect(data[0].gitPoapId).toEqual(21);
+    expect(data[0].gitPoapEventId).toEqual(5);
+    expect(data[0].poapTokenId).toEqual('123456789');
+    expect(data[0].poapEventId).toEqual(29009);
+    expect(data[0].name).toEqual(event29009.name);
+    expect(data[0].year).toEqual(2020);
+    expect(data[0].description).toEqual(event29009.description);
+    expect(data[0].imageUrl).toEqual(event29009.image_url);
+    expect(data[0].repositories.length).toEqual(1);
+    expect(data[0].repositories[0]).toEqual('gitpoap/gitpoap-backend');
+    expect(new Date(data[0].earnedAt)).toEqual(todayStart);
+    expect(new Date(data[0].mintedAt)).toEqual(new Date(2020, 1, 9));
+  });
+});
+
 describe('public-api/v1/repo/:owner/:name/badge', () => {
   const validateSVG = async (response: any, expectedCount: number) => {
     expect(response.headers.has('Content-Type')).toEqual(true);
     expect(response.headers.get('Content-Type')).toEqual('image/svg+xml; charset=utf-8');
     expect(response.headers.has('Cache-Control')).toEqual(true);
-    expect(response.headers.get('Cache-Control')).toEqual('max-age=0, no-cache, no-store, must-revalidate');
+    expect(response.headers.get('Cache-Control')).toEqual(
+      'max-age=0, no-cache, no-store, must-revalidate',
+    );
 
     const svgText = await response.text();
 
@@ -161,7 +195,7 @@ describe('public-api/v1/repo/:owner/:name/badge', () => {
     await validateSVG(response, 0);
   });
 
-  it("Returns a badge with contributor count when repo exists", async () => {
+  it('Returns a badge with contributor count when repo exists', async () => {
     const response = await fetch(`${PUBLIC_API_URL}/v1/repo/org43/repo34/badge`);
 
     expect(response.status).toBeLessThan(400);
