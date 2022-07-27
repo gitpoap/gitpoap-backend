@@ -35,6 +35,7 @@ export const mapsClaimsToGitPOAPResults = async (
 
   for (const claim of claims) {
     const poapData = await retrievePOAPInfo(<string>claim.poapTokenId);
+
     if (poapData === null) {
       const msg = `Failed to query POAP ID "${claim.gitPOAP.poapEventId}" data from POAP API`;
       logger.error(msg);
