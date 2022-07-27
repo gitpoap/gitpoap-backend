@@ -11,7 +11,10 @@ import {
   Repo,
   User,
 } from '@prisma/client';
+import { createScopedLogger } from '../src/logging';
 import { prisma } from './seed';
+
+const logger = createScopedLogger('factories');
 
 export class ClaimFactory {
   static createClaim = async (
@@ -40,7 +43,7 @@ export class ClaimFactory {
         mintedAt,
       },
     });
-    console.log(`Creating claim with id: ${claim.id}`);
+    logger.debug(`Creating claim with id: ${claim.id}`);
 
     return claim;
   };
@@ -54,7 +57,7 @@ export class UserFactory {
         githubHandle,
       },
     });
-    console.log(`Creating user with id: ${user.id}`);
+    logger.debug(`Creating user with id: ${user.id}`);
 
     return user;
   };
@@ -77,7 +80,7 @@ export class OrganizationFactory {
         url,
       },
     });
-    console.log(`Creating organization with id: ${org.id}`);
+    logger.debug(`Creating organization with id: ${org.id}`);
 
     return org;
   };
@@ -86,7 +89,7 @@ export class OrganizationFactory {
 export class ProjectFactory {
   static createProject = async (): Promise<Project> => {
     const project = await prisma.project.create({ data: {} });
-    console.log(`Creating project with id: ${project.id}`);
+    logger.debug(`Creating project with id: ${project.id}`);
 
     return project;
   };
@@ -115,7 +118,7 @@ export class RepoFactory {
         },
       },
     });
-    console.log(`Creating repo with id: ${repo.id}`);
+    logger.debug(`Creating repo with id: ${repo.id}`);
 
     return repo;
   };
@@ -148,7 +151,7 @@ export class GitPOAPFactory {
         },
       },
     });
-    console.log(`Creating gitPOAP with id: ${gitPOAP.id}`);
+    logger.debug(`Creating gitPOAP with id: ${gitPOAP.id}`);
 
     return gitPOAP;
   };
@@ -169,7 +172,7 @@ export class FeaturedPOAPFactory {
         },
       },
     });
-    console.log(`Creating featuredPOAP with id: ${featuredPOAP.id}`);
+    logger.debug(`Creating featuredPOAP with id: ${featuredPOAP.id}`);
 
     return featuredPOAP;
   };
@@ -194,7 +197,7 @@ export class ProfileFactory {
         personalSiteUrl,
       },
     });
-    console.log(`Creating profile with id: ${profile.id}`);
+    logger.debug(`Creating profile with id: ${profile.id}`);
 
     return profile;
   };
@@ -212,7 +215,7 @@ export class RedeemCodeFactory {
         },
       },
     });
-    console.log(`Creating redeemCode with id: ${redeemCode.id}`);
+    logger.debug(`Creating redeemCode with id: ${redeemCode.id}`);
 
     return redeemCode;
   };
@@ -232,7 +235,7 @@ export class RedeemCodeFactory {
         }),
       ),
     );
-    console.log(`Creating redeemCodes with ids: ${redeemCodes.map(c => c.id).join(', ')}`);
+    logger.debug(`Creating redeemCodes with ids: ${redeemCodes.map(c => c.id).join(', ')}`);
 
     return redeemCodes;
   };
