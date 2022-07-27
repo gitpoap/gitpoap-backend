@@ -9,5 +9,5 @@ export type GitPOAPResultType = {
   imageUrl: string;
   repositories: string[];
   earnedAt: string;
-  mintedAt: string;
+  mintedAt: string | null;
 };
