@@ -160,6 +160,8 @@ model RedeemCode {
   gitPOAPId Int
   gitPOAP   GitPOAP @relation(fields: [gitPOAPId], references: [id])
   code      String
+
+  @@unique([gitPOAPId, code])
 }
 
 // Model for coordinating batch processing across nodes

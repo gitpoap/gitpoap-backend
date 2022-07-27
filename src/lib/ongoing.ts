@@ -11,6 +11,7 @@ import {
 import { extractMergeCommitSha, upsertGithubPullRequest } from './pullRequests';
 import { upsertUser } from './users';
 import { createNewClaimsForRepoPR } from './claims';
+import { lookupLastRun, updateLastRun } from './batch';
 
 // The number of pull requests to request in a single page (currently the maximum number)
 const PULL_STEP_SIZE = 100;
@@ -229,33 +230,11 @@ export async function runOngoingIssuanceUpdater() {
 }
 
 export async function updateOngoingIssuanceLastRun() {
-  const now = DateTime.now().toJSDate();
-  await context.prisma.batchTiming.upsert({
-    where: {
-      name: ONGOING_ISSUANCE_BATCH_TIMING_KEY,
-    },
-    update: {
-      lastRun: now,
-    },
-    create: {
-      name: ONGOING_ISSUANCE_BATCH_TIMING_KEY,
-      lastRun: now,
-    },
-  });
+  await updateLastRun(ONGOING_ISSUANCE_BATCH_TIMING_KEY);
 }
 
 export async function lookupLastOngoingIssuanceRun(): Promise<DateTime | null> {
-  const batchTiming = await context.prisma.batchTiming.findUnique({
-    where: {
-      name: ONGOING_ISSUANCE_BATCH_TIMING_KEY,
-    },
-  });
-
-  if (batchTiming === null) {
-    return null;
-  }
-
-  return DateTime.fromJSDate(batchTiming.lastRun);
+  return await lookupLastRun(ONGOING_ISSUANCE_BATCH_TIMING_KEY);
 }
 
 // Try to run ongoing issuance updater if there has been enough time elapsed since
