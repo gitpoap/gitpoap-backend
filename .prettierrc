@@ -12,7 +12,7 @@
     {
       "files": "prisma/seed.ts",
       "options": {
-        "printWidth": 160
+        "printWidth": 170
       }
     },
     {
