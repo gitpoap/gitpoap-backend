@@ -1,7 +1,7 @@
 import fetch from 'cross-fetch';
-import { ADDRESSES } from '../../../../prisma/constants';
+import { ADDRESSES, GH_HANDLES } from '../../../../prisma/constants';
 import cheerio from 'cheerio';
-import { event29009 } from '../../../../.dockerfiles/fake-poap-api/data';
+import { event29009, event3, event36571 } from '../../../../.dockerfiles/fake-poap-api/data';
 
 const PUBLIC_API_URL = 'http://public-api-server:3122';
 
@@ -135,11 +135,19 @@ describe('public-api/v1/address/:address/gitpoaps', () => {
     expect(data[0].repositories.length).toEqual(1);
     expect(data[0].repositories[0]).toEqual('gitpoap/gitpoap-backend');
     expect(new Date(data[0].earnedAt)).toEqual(todayStart);
-    expect(new Date(data[0].mintedAt)).toEqual(new Date(2020, 1, 9));
+    expect(data[0].mintedAt).toEqual('2020-01-09');
   });
 });
 
 describe('public-api/v1/github/user/:githubHandle/gitpoaps', () => {
+  it('Returns 400 when status is invalid', async () => {
+    const response = await fetch(
+      `${PUBLIC_API_URL}/v1/github/user/${GH_HANDLES.anthony}/gitpoaps?status=fake_status`,
+    );
+
+    expect(response.status).toEqual(400);
+  });
+
   it('Returns empty list when githubHandle has no GitPOAPs', async () => {
     const response = await fetch(`${PUBLIC_API_URL}/v1/github/user/peebeejay1/gitpoaps`);
     expect(response.status).toBeLessThan(400);
@@ -147,27 +155,94 @@ describe('public-api/v1/github/user/:githubHandle/gitpoaps', () => {
     expect(data.length).toEqual(0);
   });
 
-  it("Returns known user's GitPOAPs", async () => {
-    const response = await fetch(`${PUBLIC_API_URL}/v1/github/user/burzzzzz/gitpoaps`);
+  describe('when a status query string parameter is provided', () => {
+    it("Returns all minted gitpoaps when status equals 'claimed'", async () => {
+      const response = await fetch(
+        `${PUBLIC_API_URL}/v1/github/user/${GH_HANDLES.anthony}/gitpoaps?status=claimed`,
+      );
+      expect(response.status).toBeLessThan(400);
+      const data = await response.json();
+
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+
+      expect(data.length).toEqual(3);
+      expect(data[0].gitPoapId).toEqual(8);
+      expect(data[0].gitPoapEventId).toEqual(3);
+      expect(data[0].poapTokenId).toEqual('pizza-pie');
+      expect(data[0].poapEventId).toEqual(3);
+      expect(data[0].name).toEqual(event3.name);
+      expect(data[0].year).toEqual(2015);
+      expect(data[0].description).toEqual(event3.description);
+      expect(data[0].imageUrl).toEqual(event3.image_url);
+      expect(data[0].repositories.length).toEqual(1);
+      expect(data[0].repositories[0]).toEqual('some-other-org/repo568');
+      expect(new Date(data[0].earnedAt)).toEqual(todayStart);
+      expect(data[0].mintedAt).toEqual('2022-04-05');
+    });
+
+    it("Returns all minted gitpoaps when status equals 'unclaimed'", async () => {
+      const response = await fetch(
+        `${PUBLIC_API_URL}/v1/github/user/${GH_HANDLES.anthony}/gitpoaps?status=unclaimed`,
+      );
+      expect(response.status).toBeLessThan(400);
+      const data = await response.json();
+
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+
+      expect(data.length).toEqual(6);
+      expect(data[0].gitPoapId).toEqual(6);
+      expect(data[0].gitPoapEventId).toEqual(2);
+      expect(data[0].poapTokenId).toEqual(null);
+      expect(data[0].poapEventId).toEqual(2);
+      expect(data[0].mintedAt).toBeNull();
+    });
+
+    it("Returns all minted gitpoaps when status equals 'pending'", async () => {
+      const response = await fetch(
+        `${PUBLIC_API_URL}/v1/github/user/${GH_HANDLES.anthony}/gitpoaps?status=pending`,
+      );
+      expect(response.status).toBeLessThan(400);
+      const data = await response.json();
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      expect(data.length).toEqual(0);
+    });
+
+    it("Returns all minted gitpoaps when status equals 'minting'", async () => {
+      const response = await fetch(
+        `${PUBLIC_API_URL}/v1/github/user/${GH_HANDLES.anthony}/gitpoaps?status=minting`,
+      );
+      expect(response.status).toBeLessThan(400);
+      const data = await response.json();
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      expect(data.length).toEqual(0);
+    });
+  });
+
+  it("Returns all known user's GitPOAPs when no status parameter is provided", async () => {
+    const response = await fetch(`${PUBLIC_API_URL}/v1/github/user/${GH_HANDLES.anthony}/gitpoaps`);
     expect(response.status).toBeLessThan(400);
     const data = await response.json();
 
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
 
-    expect(data.length).toEqual(1);
-    expect(data[0].gitPoapId).toEqual(21);
-    expect(data[0].gitPoapEventId).toEqual(5);
-    expect(data[0].poapTokenId).toEqual('123456789');
-    expect(data[0].poapEventId).toEqual(29009);
-    expect(data[0].name).toEqual(event29009.name);
-    expect(data[0].year).toEqual(2020);
-    expect(data[0].description).toEqual(event29009.description);
-    expect(data[0].imageUrl).toEqual(event29009.image_url);
+    expect(data.length).toEqual(9);
+    expect(data[0].gitPoapId).toEqual(35);
+    expect(data[0].gitPoapEventId).toEqual(10);
+    expect(data[0].poapTokenId).toBeNull();
+    expect(data[0].poapEventId).toEqual(36571);
+    expect(data[0].name).toEqual(event36571.name);
+    expect(data[0].year).toEqual(2022);
+    expect(data[0].description).toEqual(event36571.description);
+    expect(data[0].imageUrl).toEqual(event36571.image_url);
     expect(data[0].repositories.length).toEqual(1);
     expect(data[0].repositories[0]).toEqual('gitpoap/gitpoap-backend');
     expect(new Date(data[0].earnedAt)).toEqual(todayStart);
-    expect(new Date(data[0].mintedAt)).toEqual(new Date(2020, 1, 9));
+    expect(data[0].mintedAt).toBeNull();
   });
 });
 
