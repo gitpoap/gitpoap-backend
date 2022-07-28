@@ -1632,7 +1632,7 @@ type Profile {
   githubHandle: String
   twitterHandle: String
   personalSiteUrl: String
-  leaderboardVisible: Boolean!
+  isVisibleOnLeaderboard: Boolean!
   _count: ProfileCount
   featuredPOAPs(
     where: FeaturedPOAPWhereInput
@@ -1678,7 +1678,7 @@ input ProfileWhereInput {
   githubHandle: StringNullableFilter
   twitterHandle: StringNullableFilter
   personalSiteUrl: StringNullableFilter
-  leaderboardVisible: BoolFilter
+  isVisibleOnLeaderboard: BoolFilter
   featuredPOAPs: FeaturedPOAPListRelationFilter
 }
 
@@ -1707,7 +1707,7 @@ input ProfileOrderByWithRelationInput {
   githubHandle: SortOrder
   twitterHandle: SortOrder
   personalSiteUrl: SortOrder
-  leaderboardVisible: SortOrder
+  isVisibleOnLeaderboard: SortOrder
   featuredPOAPs: FeaturedPOAPOrderByRelationAggregateInput
 }
 
@@ -2452,7 +2452,7 @@ enum ProfileScalarFieldEnum {
   githubHandle
   twitterHandle
   personalSiteUrl
-  leaderboardVisible
+  isVisibleOnLeaderboard
 }
 
 type AggregateProfile {
@@ -2475,7 +2475,7 @@ type ProfileCountAggregate {
   githubHandle: Int!
   twitterHandle: Int!
   personalSiteUrl: Int!
-  leaderboardVisible: Int!
+  isVisibleOnLeaderboard: Int!
   _all: Int!
 }
 
@@ -2499,7 +2499,7 @@ type ProfileMinAggregate {
   githubHandle: String
   twitterHandle: String
   personalSiteUrl: String
-  leaderboardVisible: Boolean
+  isVisibleOnLeaderboard: Boolean
 }
 
 type ProfileMaxAggregate {
@@ -2514,7 +2514,7 @@ type ProfileMaxAggregate {
   githubHandle: String
   twitterHandle: String
   personalSiteUrl: String
-  leaderboardVisible: Boolean
+  isVisibleOnLeaderboard: Boolean
 }
 
 type ProfileGroupBy {
@@ -2529,7 +2529,7 @@ type ProfileGroupBy {
   githubHandle: String
   twitterHandle: String
   personalSiteUrl: String
-  leaderboardVisible: Boolean!
+  isVisibleOnLeaderboard: Boolean!
   _count: ProfileCountAggregate
   _avg: ProfileAvgAggregate
   _sum: ProfileSumAggregate
@@ -2549,7 +2549,7 @@ input ProfileOrderByWithAggregationInput {
   githubHandle: SortOrder
   twitterHandle: SortOrder
   personalSiteUrl: SortOrder
-  leaderboardVisible: SortOrder
+  isVisibleOnLeaderboard: SortOrder
   _count: ProfileCountOrderByAggregateInput
   _avg: ProfileAvgOrderByAggregateInput
   _max: ProfileMaxOrderByAggregateInput
@@ -2569,7 +2569,7 @@ input ProfileCountOrderByAggregateInput {
   githubHandle: SortOrder
   twitterHandle: SortOrder
   personalSiteUrl: SortOrder
-  leaderboardVisible: SortOrder
+  isVisibleOnLeaderboard: SortOrder
 }
 
 input ProfileAvgOrderByAggregateInput {
@@ -2588,7 +2588,7 @@ input ProfileMaxOrderByAggregateInput {
   githubHandle: SortOrder
   twitterHandle: SortOrder
   personalSiteUrl: SortOrder
-  leaderboardVisible: SortOrder
+  isVisibleOnLeaderboard: SortOrder
 }
 
 input ProfileMinOrderByAggregateInput {
@@ -2603,7 +2603,7 @@ input ProfileMinOrderByAggregateInput {
   githubHandle: SortOrder
   twitterHandle: SortOrder
   personalSiteUrl: SortOrder
-  leaderboardVisible: SortOrder
+  isVisibleOnLeaderboard: SortOrder
 }
 
 input ProfileSumOrderByAggregateInput {
@@ -2625,7 +2625,7 @@ input ProfileScalarWhereWithAggregatesInput {
   githubHandle: StringNullableWithAggregatesFilter
   twitterHandle: StringNullableWithAggregatesFilter
   personalSiteUrl: StringNullableWithAggregatesFilter
-  leaderboardVisible: BoolWithAggregatesFilter
+  isVisibleOnLeaderboard: BoolWithAggregatesFilter
 }
 
 input ProjectWhereUniqueInput {
@@ -3151,7 +3151,7 @@ type NullableProfile {
   githubHandle: String
   twitterHandle: String
   personalSiteUrl: String
-  leaderboardVisible: Boolean!
+  isVisibleOnLeaderboard: Boolean!
   featuredPOAPs: [FeaturedPOAP!]!
 }
 

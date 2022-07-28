@@ -6,7 +6,7 @@ const ProfileData = z.object({
   bannerImageUrl: z.nullable(z.string()),
   name: z.nullable(z.string()),
   profileImageUrl: z.nullable(z.string()),
-  leaderboardVisible: z.boolean(),
+  isVisibleOnLeaderboard: z.boolean(),
 });
 
 export const UpdateProfileSchema = z.object({

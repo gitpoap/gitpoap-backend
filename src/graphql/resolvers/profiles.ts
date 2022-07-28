@@ -45,7 +45,7 @@ class NullableProfile {
   personalSiteUrl: string | null;
 
   @Field(() => Boolean)
-  leaderboardVisible: boolean;
+  isVisibleOnLeaderboard: boolean;
 
   @Field(() => [FeaturedPOAP])
   featuredPOAPs: FeaturedPOAP[];
@@ -159,7 +159,7 @@ export class CustomProfileResolver {
         githubHandle: null,
         twitterHandle: null,
         personalSiteUrl: null,
-        leaderboardVisible: true,
+        isVisibleOnLeaderboard: true,
         featuredPOAPs: [],
       };
     }
@@ -194,7 +194,7 @@ export class CustomProfileResolver {
       SELECT p.*, COUNT(c.id) AS "claimsCount"
       FROM "Profile" AS p
       JOIN "Claim" AS c ON c.address = p.address
-      WHERE p."leaderboardVisible" IS TRUE
+      WHERE p."isVisibleOnLeaderboard" IS TRUE
       AND c.status = ${ClaimStatus.CLAIMED}
       GROUP BY p.id
       ORDER BY "claimsCount" DESC
@@ -239,7 +239,7 @@ export class CustomProfileResolver {
       INNER JOIN "GitPOAP" AS gp ON gp.id = c."gitPOAPId"
       INNER JOIN "Project" AS pr ON pr.id = gp."projectId"
       INNER JOIN "Repo" AS r ON r."projectId" = pr.id
-      WHERE pf."leaderboardVisible" IS TRUE
+      WHERE pf."isVisibleOnLeaderboard" IS TRUE
       AND c.status = ${ClaimStatus.CLAIMED} AND r.id = ${repoId}
       GROUP BY pf.id
       ORDER BY "claimsCount" DESC

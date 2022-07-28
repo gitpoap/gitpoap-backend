@@ -44,7 +44,7 @@ profilesRouter.post('/', async function (req, res) {
     return res.status(401).send({ msg: 'The signature is not valid for this address and data' });
   }
 
-  const address = (<string>resolvedAddress).toLowerCase();
+  const address = resolvedAddress.toLowerCase();
 
   await context.prisma.profile.upsert({
     where: { address },

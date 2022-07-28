@@ -55,7 +55,7 @@ describe('CustomProfileResolver', () => {
           address
           name
           githubHandle
-          leaderboardVisible
+          isVisibleOnLeaderboard
         }
       }
     `);
@@ -65,7 +65,7 @@ describe('CustomProfileResolver', () => {
     expect(data.profileData.address).toEqual(address);
     expect(data.profileData.name).toEqual(null);
     expect(data.profileData.githubHandle).toEqual(null);
-    expect(data.profileData.leaderboardVisible).toEqual(true);
+    expect(data.profileData.isVisibleOnLeaderboard).toEqual(true);
   });
 
   it('mostHonoredContributors', async () => {
@@ -89,16 +89,16 @@ describe('CustomProfileResolver', () => {
     expect(data.mostHonoredContributors[1].claimsCount).toEqual(4);
   });
 
-  const setAddressVisibility = async (address: string, leaderboardVisible: boolean) => {
+  const setAddressVisibility = async (address: string, isVisibleOnLeaderboard: boolean) => {
     await context.prisma.profile.update({
       where: {
         address: address.toLowerCase(),
       },
-      data: { leaderboardVisible },
+      data: { isVisibleOnLeaderboard },
     });
   };
 
-  it('mostHonoredContributors: skips leaderboardVisible=false', async () => {
+  it('mostHonoredContributors: skips isVisibleOnLeaderboard=false', async () => {
     await setAddressVisibility(ADDRESSES.anthony, false);
 
     const data = await client.request(gql`
@@ -138,7 +138,7 @@ describe('CustomProfileResolver', () => {
     expect(data.repoMostHonoredContributors[0].claimsCount).toEqual(1);
   });
 
-  it('repoMostHonoredContributors: skips leaderboardVisible=false', async () => {
+  it('repoMostHonoredContributors: skips isVisibleOnLeaderboard=false', async () => {
     await setAddressVisibility(ADDRESSES.jay, false);
 
     const data = await client.request(gql`
