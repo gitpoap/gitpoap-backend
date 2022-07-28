@@ -44,22 +44,16 @@ profilesRouter.post('/', async function (req, res) {
     return res.status(401).send({ msg: 'The signature is not valid for this address and data' });
   }
 
-  try {
-    await context.prisma.profile.upsert({
-      where: {
-        address: (<string>resolvedAddress).toLowerCase(),
-      },
-      update: req.body.data,
-      create: {
-        ...req.body.data,
-        address: (<string>resolvedAddress).toLowerCase(),
-      },
-    });
-  } catch (err) {
-    logger.warn(`No profile for address ${req.body.address}`);
-    endTimer({ status: 404 });
-    return res.status(404).send({ msg: `No profile found for address: ${req.body.address}` });
-  }
+  const address = (<string>resolvedAddress).toLowerCase();
+
+  await context.prisma.profile.upsert({
+    where: { address },
+    update: req.body.data,
+    create: {
+      address,
+      ...req.body.data,
+    },
+  });
 
   logger.debug(`Completed request to update profile for address: ${req.body.address}`);
 
