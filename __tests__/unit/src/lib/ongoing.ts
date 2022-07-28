@@ -1,5 +1,5 @@
-import { jest } from '@jest/globals';
 import { contextMock } from '../../../../__mocks__/src/context';
+import { mockedLogger } from '../../../../__mocks__/src/logging';
 import { handleNewPull, RepoReturnType } from '../../../../src/lib/ongoing';
 import { GithubPullRequestData } from '../../../../src/external/github';
 import { upsertUser } from '../../../../src/lib/users';
@@ -8,18 +8,6 @@ import { User } from '@generated/type-graphql';
 import { createNewClaimsForRepoPR } from '../../../../src/lib/claims';
 
 jest.mock('../../../../src/lib/users');
-
-const mockedLogger = {
-  error: jest.fn(),
-  warn: jest.fn(),
-  info: jest.fn(),
-  debug: jest.fn(),
-};
-
-jest.mock('../../../../src/logging', () => ({
-  __esModule: true,
-  createScopedLogger: () => mockedLogger,
-}));
 
 jest.mock('../../../../src/lib/pullRequests', () => ({
   __esModule: true,
