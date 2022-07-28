@@ -31,20 +31,20 @@ export async function upsertCode(gitPOAPId: number, code: string): Promise<Redee
   });
 }
 
-async function countCodes(gitPOAPId: number) {
+async function countCodes(gitPOAPId: number): Promise<number> {
   return await context.prisma.redeemCode.count({
     where: { gitPOAPId },
   });
 }
 
-type GitPOAPWithSecret = {
+export type GitPOAPWithSecret = {
   id: number;
   status: string;
   poapEventId: number;
   poapSecret: string;
 };
 
-async function checkGitPOAPForNewCodes(gitPOAP: GitPOAPWithSecret) {
+export async function checkGitPOAPForNewCodes(gitPOAP: GitPOAPWithSecret) {
   const logger = createScopedLogger('checkGitPOAPForNewCodes');
 
   logger.info(`Checking GitPOAP ID ${gitPOAP.id} with status ${gitPOAP.status} for new codes`);
@@ -54,7 +54,6 @@ async function checkGitPOAPForNewCodes(gitPOAP: GitPOAPWithSecret) {
   logger.info(`GitPOAP ID currently has ${startingCount} codes`);
 
   const unusedCodes = await retrieveUnusedPOAPCodes(gitPOAP.poapEventId, gitPOAP.poapSecret);
-
   if (unusedCodes === null) {
     logger.warn(`Failed to retrieve unused codes from POAP API for GitPOAP ID ${gitPOAP.id}`);
     return;
