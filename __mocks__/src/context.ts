@@ -1,4 +1,3 @@
-import { jest } from '@jest/globals';
 import { PrismaClient } from '@prisma/client';
 import { Provider } from '@ethersproject/providers';
 import { RedisClient } from '../../src/redis/client';
