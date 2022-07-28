@@ -1,2 +1,2 @@
 -- AlterTable
-ALTER TABLE "Profile" ADD COLUMN     "leaderboardVisible" BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE "Profile" ADD COLUMN     "isVisibleOnLeaderboard" BOOLEAN NOT NULL DEFAULT true;
