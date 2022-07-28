@@ -114,7 +114,7 @@ describe('POST /profiles', () => {
       githubHandle: 'obi',
       twitterHandle: 'wan',
       personalSiteUrl: 'kenobi',
-      leaderboardVisible: true,
+      isVisibleOnLeaderboard: true,
     };
 
     const result = await request(await setupApp()).post('/profiles').send({
@@ -162,7 +162,7 @@ describe('POST /profiles', () => {
     mockedResolveENS.mockResolvedValue(goodAddress);
 
     let data = {
-      leaderboardVisible: false,
+      isVisibleOnLeaderboard: false,
     };
 
     let result = await request(await setupApp()).post('/profiles').send({
@@ -177,7 +177,7 @@ describe('POST /profiles', () => {
 
     validateUpsert(data);
 
-    data.leaderboardVisible = true;
+    data.isVisibleOnLeaderboard = true;
 
     result = await request(await setupApp()).post('/profiles').send({
       address: goodAddress,
