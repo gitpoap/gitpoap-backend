@@ -194,8 +194,8 @@ export class CustomProfileResolver {
       SELECT p.*, COUNT(c.id) AS "claimsCount"
       FROM "Profile" AS p
       JOIN "Claim" AS c ON c.address = p.address
-      WHERE c.status = ${ClaimStatus.CLAIMED}
-      AND p."leaderboardVisible" = true
+      WHERE p."leaderboardVisible" IS TRUE
+      AND c.status = ${ClaimStatus.CLAIMED}
       GROUP BY p.id
       ORDER BY "claimsCount" DESC
       LIMIT ${count}
@@ -239,8 +239,8 @@ export class CustomProfileResolver {
       INNER JOIN "GitPOAP" AS gp ON gp.id = c."gitPOAPId"
       INNER JOIN "Project" AS pr ON pr.id = gp."projectId"
       INNER JOIN "Repo" AS r ON r."projectId" = pr.id
-      WHERE c.status = ${ClaimStatus.CLAIMED} AND r.id = ${repoId}
-      AND pf."leaderboardVisible" = true
+      WHERE pf."leaderboardVisible" IS TRUE
+      AND c.status = ${ClaimStatus.CLAIMED} AND r.id = ${repoId}
       GROUP BY pf.id
       ORDER BY "claimsCount" DESC
       LIMIT ${count}
