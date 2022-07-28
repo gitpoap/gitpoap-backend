@@ -26,6 +26,7 @@
     "docker:public-api": "yarn docker:build-public-api && yarn docker:run-public-api",
     "docker:build-integration-tests": "docker-compose --profile integration-tests build --parallel",
     "docker:run-integration-tests": "docker-compose --profile integration-tests up --force-recreate --renew-anon-volumes --abort-on-container-exit",
+    "quick-integration-test": "docker-compose up --no-deps --build integration-tests",
     "integration-test": "yarn docker:build-integration-tests && yarn docker:run-integration-tests"
   },
   "devDependencies": {
