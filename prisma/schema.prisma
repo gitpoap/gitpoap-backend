@@ -32,19 +32,19 @@ model User {
 }
 
 model Profile {
-  id                 Int            @id @default(autoincrement())
-  address            String         @unique @db.VarChar(255)
-  createdAt          DateTime       @default(now())
-  updatedAt          DateTime       @updatedAt
-  bio                String?
-  bannerImageUrl     String?        @db.VarChar(255)
-  name               String?        @db.VarChar(255)
-  profileImageUrl    String?        @db.VarChar(255)
-  githubHandle       String?        @db.VarChar(255)
-  twitterHandle      String?        @db.VarChar(255)
-  personalSiteUrl    String?        @db.VarChar(255)
-  leaderboardVisible Boolean        @default(true)
-  featuredPOAPs      FeaturedPOAP[]
+  id                     Int            @id @default(autoincrement())
+  address                String         @unique @db.VarChar(255)
+  createdAt              DateTime       @default(now())
+  updatedAt              DateTime       @updatedAt
+  bio                    String?
+  bannerImageUrl         String?        @db.VarChar(255)
+  name                   String?        @db.VarChar(255)
+  profileImageUrl        String?        @db.VarChar(255)
+  githubHandle           String?        @db.VarChar(255)
+  twitterHandle          String?        @db.VarChar(255)
+  personalSiteUrl        String?        @db.VarChar(255)
+  isVisibleOnLeaderboard Boolean        @default(true)
+  featuredPOAPs          FeaturedPOAP[]
 }
 
 model Organization {
