@@ -9,7 +9,7 @@ import { createScopedLogger, updateLogLevel } from './logging';
 import minimist from 'minimist';
 import { startMetricsServer } from './metrics';
 import { setupApp } from './app';
-import { startBatchProcesses } from './batch';
+import { startBatchProcesses } from './batchProcessing';
 
 const main = async () => {
   const logger = createScopedLogger('main');
