@@ -108,6 +108,9 @@ model Claim {
 model GitPOAP {
   id          Int           @id @default(autoincrement())
   type        ClaimType     @default(ANNUAL)
+  name        String?       @db.VarChar(255)
+  imageUrl    String?
+  description String?
   year        Int
   poapEventId Int           @unique
   createdAt   DateTime      @default(now())

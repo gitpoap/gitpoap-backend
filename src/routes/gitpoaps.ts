@@ -140,6 +140,9 @@ gitpoapsRouter.post(
 
     await context.prisma.gitPOAP.create({
       data: {
+        name: poapInfo.name,
+        imageUrl: poapInfo.image_url,
+        description: poapInfo.description,
         year: poapInfo.year,
         poapEventId: poapInfo.id,
         project: {
