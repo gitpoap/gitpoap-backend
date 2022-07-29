@@ -65,8 +65,9 @@ async function ensureRedeemCodeThreshold(gitPOAP: GitPOAP) {
     logger.info(`Requesting additional codes for GitPOAP ID: ${gitPOAP.id}`);
 
     // Note that this function does not return any codes.
-    // Instead we need to wait for them to be sent to our email,
-    // so while waiting we marked the GitPOAP's status as REDEEM_REQUEST_PENDING
+    // Instead we need to wait for them with our background process for checking
+    // for new codes, so while waiting we have marked the GitPOAP's status
+    // as REDEEM_REQUEST_PENDING
     const poapResponse = await requestPOAPCodes(
       gitPOAP.poapEventId,
       gitPOAP.poapSecret,

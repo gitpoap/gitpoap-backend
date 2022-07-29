@@ -11,7 +11,7 @@ import {
 import { extractMergeCommitSha, upsertGithubPullRequest } from './pullRequests';
 import { upsertUser } from './users';
 import { createNewClaimsForRepoPR } from './claims';
-import { lookupLastRun, updateLastRun } from './batch';
+import { lookupLastRun, updateLastRun } from './batchProcessing';
 
 // The number of pull requests to request in a single page (currently the maximum number)
 const PULL_STEP_SIZE = 100;
