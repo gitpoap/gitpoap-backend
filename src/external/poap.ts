@@ -216,12 +216,7 @@ export async function retrieveUnusedPOAPCodes(
     return null;
   }
 
-  return data.reduce((results, datum) => {
-    if (!datum.claimed) {
-      results.push(datum.qr_hash);
-    }
-    return results;
-  }, <string[]>[]);
+  return data.filter(x => !x.claimed).map(x => x.qr_hash);
 }
 
 export async function retrieveClaimInfo(qr_hash: string) {

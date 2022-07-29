@@ -3,7 +3,7 @@ import { GitPOAPStatus, RedeemCode } from '@generated/type-graphql';
 import { createScopedLogger } from '../logging';
 import { retrieveUnusedPOAPCodes } from '../external/poap';
 import { DateTime } from 'luxon';
-import { lookupLastRun, updateLastRun } from './batch';
+import { lookupLastRun, updateLastRun } from './batchProcessing';
 
 // The name of the row in the BatchTiming table used for checking for new codes
 const CHECK_FOR_CODES_BATCH_TIMING_KEY = 'check-for-codes';
