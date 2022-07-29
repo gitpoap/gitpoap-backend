@@ -20,7 +20,7 @@ describe('CustomClaimResolver', () => {
       }
     `);
 
-    expect(data.totalGitPOAPs).toEqual(12);
+    expect(data.totalGitPOAPs).toEqual(16);
   });
 
   it('lastMonthGitPOAPs', async () => {
@@ -30,7 +30,7 @@ describe('CustomClaimResolver', () => {
       }
     `);
 
-    expect(data.lastMonthGitPOAPs).toEqual(12);
+    expect(data.lastMonthGitPOAPs).toEqual(16);
   });
 
   it('gitPOAPEvent', async () => {
