@@ -384,9 +384,9 @@ enum ClaimStatus {
 type GitPOAP {
   id: Int!
   type: ClaimType!
-  name: String
-  imageUrl: String
-  description: String
+  name: String!
+  imageUrl: String!
+  description: String!
   year: Int!
   poapEventId: Int!
   createdAt: DateTime!
@@ -782,9 +782,9 @@ input GitPOAPWhereInput {
   NOT: [GitPOAPWhereInput!]
   id: IntFilter
   type: EnumClaimTypeFilter
-  name: StringNullableFilter
-  imageUrl: StringNullableFilter
-  description: StringNullableFilter
+  name: StringFilter
+  imageUrl: StringFilter
+  description: StringFilter
   year: IntFilter
   poapEventId: IntFilter
   createdAt: DateTimeFilter
@@ -1970,9 +1970,9 @@ type GitPOAPMaxAggregate {
 type GitPOAPGroupBy {
   id: Int!
   type: ClaimType!
-  name: String
-  imageUrl: String
-  description: String
+  name: String!
+  imageUrl: String!
+  description: String!
   year: Int!
   poapEventId: Int!
   createdAt: DateTime!
@@ -2094,9 +2094,9 @@ input GitPOAPScalarWhereWithAggregatesInput {
   NOT: [GitPOAPScalarWhereWithAggregatesInput!]
   id: IntWithAggregatesFilter
   type: EnumClaimTypeWithAggregatesFilter
-  name: StringNullableWithAggregatesFilter
-  imageUrl: StringNullableWithAggregatesFilter
-  description: StringNullableWithAggregatesFilter
+  name: StringWithAggregatesFilter
+  imageUrl: StringWithAggregatesFilter
+  description: StringWithAggregatesFilter
   year: IntWithAggregatesFilter
   poapEventId: IntWithAggregatesFilter
   createdAt: DateTimeWithAggregatesFilter
