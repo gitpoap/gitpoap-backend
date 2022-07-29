@@ -4,6 +4,7 @@ import { createScopedLogger } from '../logging';
 import { retrieveUnusedPOAPCodes } from '../external/poap';
 import { DateTime } from 'luxon';
 import { lookupLastRun, updateLastRun } from './batchProcessing';
+import { backloadGithubPullRequestData } from './pullRequests';
 
 // The name of the row in the BatchTiming table used for checking for new codes
 const CHECK_FOR_CODES_BATCH_TIMING_KEY = 'check-for-codes';
@@ -44,7 +45,34 @@ export type GitPOAPWithSecret = {
   poapSecret: string;
 };
 
-export async function checkGitPOAPForNewCodes(gitPOAP: GitPOAPWithSecret) {
+async function lookupRepoIds(gitPOAPId: number): Promise<number[]> {
+  const logger = createScopedLogger('backloadRepoData');
+
+  const gitPOAPRepoData = await context.prisma.gitPOAP.findUnique({
+    where: {
+      id: gitPOAPId,
+    },
+    select: {
+      project: {
+        select: {
+          repos: {
+            select: {
+              id: true,
+            },
+          },
+        },
+      },
+    },
+  });
+  if (gitPOAPRepoData === null) {
+    logger.error(`Failed to lookup repos for GitPOAP ID ${gitPOAPId}`);
+    return [];
+  }
+
+  return gitPOAPRepoData.project.repos.map(r => r.id);
+}
+
+export async function checkGitPOAPForNewCodes(gitPOAP: GitPOAPWithSecret): Promise<number[]> {
   const logger = createScopedLogger('checkGitPOAPForNewCodes');
 
   logger.info(`Checking GitPOAP ID ${gitPOAP.id} with status ${gitPOAP.status} for new codes`);
@@ -56,7 +84,7 @@ export async function checkGitPOAPForNewCodes(gitPOAP: GitPOAPWithSecret) {
   const unusedCodes = await retrieveUnusedPOAPCodes(gitPOAP.poapEventId, gitPOAP.poapSecret);
   if (unusedCodes === null) {
     logger.warn(`Failed to retrieve unused codes from POAP API for GitPOAP ID ${gitPOAP.id}`);
-    return;
+    return [];
   }
 
   logger.debug(`Received ${unusedCodes.length} unused codes from POAP API`);
@@ -82,7 +110,15 @@ export async function checkGitPOAPForNewCodes(gitPOAP: GitPOAPWithSecret) {
         status: GitPOAPStatus.APPROVED,
       },
     });
+
+    // If we just got the first codes for a GitPOAP, we need to backload
+    // its repos so that claims are created
+    if (gitPOAP.status === GitPOAPStatus.UNAPPROVED) {
+      return lookupRepoIds(gitPOAP.id);
+    }
   }
+
+  return [];
 }
 
 export async function checkForNewPOAPCodes() {
@@ -105,8 +141,15 @@ export async function checkForNewPOAPCodes() {
 
   logger.info(`Found ${gitPOAPsAwaitingCodes.length} GitPOAPs awaiting new codes`);
 
+  let repoIds = new Set<number>();
+
   for (const gitPOAP of gitPOAPsAwaitingCodes) {
-    await checkGitPOAPForNewCodes(gitPOAP);
+    (await checkGitPOAPForNewCodes(gitPOAP)).forEach(r => repoIds.add(r));
+  }
+
+  // Backload any new repoIds
+  for (const repoId of repoIds) {
+    await backloadGithubPullRequestData(repoId);
   }
 
   logger.debug(`Finished checking ${gitPOAPsAwaitingCodes.length} GitPOAPs for new codes`);
