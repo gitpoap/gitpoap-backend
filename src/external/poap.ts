@@ -201,7 +201,7 @@ async function retrievePOAPCodes(
   secret_code: string,
 ): Promise<RetrievePOAPCodesResponse | null> {
   return await makePOAPRequest(
-    `${POAP_API_URL}/event/{event_id}/qr-codes`,
+    `${POAP_API_URL}/event/${event_id}/qr-codes`,
     'POST',
     JSON.stringify({ secret_code }),
   );
