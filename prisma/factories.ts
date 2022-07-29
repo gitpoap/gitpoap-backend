@@ -126,6 +126,9 @@ export class RepoFactory {
 
 export class GitPOAPFactory {
   static createGitPOAP = async (
+    name: string,
+    imageUrl: string,
+    description: string,
     year: number,
     poapEventId: number,
     projectId: number,
@@ -137,6 +140,9 @@ export class GitPOAPFactory {
   ): Promise<GitPOAP> => {
     const gitPOAP = await prisma.gitPOAP.create({
       data: <Prisma.GitPOAPCreateInput>{
+        name,
+        imageUrl,
+        description,
         year,
         poapEventId,
         poapSecret,
