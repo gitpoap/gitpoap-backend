@@ -384,6 +384,9 @@ enum ClaimStatus {
 type GitPOAP {
   id: Int!
   type: ClaimType!
+  name: String
+  imageUrl: String
+  description: String
   year: Int!
   poapEventId: Int!
   createdAt: DateTime!
@@ -779,6 +782,9 @@ input GitPOAPWhereInput {
   NOT: [GitPOAPWhereInput!]
   id: IntFilter
   type: EnumClaimTypeFilter
+  name: StringNullableFilter
+  imageUrl: StringNullableFilter
+  description: StringNullableFilter
   year: IntFilter
   poapEventId: IntFilter
   createdAt: DateTimeFilter
@@ -1067,6 +1073,9 @@ input ClaimOrderByWithRelationInput {
 input GitPOAPOrderByWithRelationInput {
   id: SortOrder
   type: SortOrder
+  name: SortOrder
+  imageUrl: SortOrder
+  description: SortOrder
   year: SortOrder
   poapEventId: SortOrder
   createdAt: SortOrder
@@ -1188,6 +1197,9 @@ input GitPOAPWhereUniqueInput {
 enum GitPOAPScalarFieldEnum {
   id
   type
+  name
+  imageUrl
+  description
   year
   poapEventId
   createdAt
@@ -1880,6 +1892,9 @@ type AggregateGitPOAP {
 type GitPOAPCountAggregate {
   id: Int!
   type: Int!
+  name: Int!
+  imageUrl: Int!
+  description: Int!
   year: Int!
   poapEventId: Int!
   createdAt: Int!
@@ -1917,6 +1932,9 @@ type GitPOAPSumAggregate {
 type GitPOAPMinAggregate {
   id: Int
   type: ClaimType
+  name: String
+  imageUrl: String
+  description: String
   year: Int
   poapEventId: Int
   createdAt: DateTime
@@ -1933,6 +1951,9 @@ type GitPOAPMinAggregate {
 type GitPOAPMaxAggregate {
   id: Int
   type: ClaimType
+  name: String
+  imageUrl: String
+  description: String
   year: Int
   poapEventId: Int
   createdAt: DateTime
@@ -1949,6 +1970,9 @@ type GitPOAPMaxAggregate {
 type GitPOAPGroupBy {
   id: Int!
   type: ClaimType!
+  name: String
+  imageUrl: String
+  description: String
   year: Int!
   poapEventId: Int!
   createdAt: DateTime!
@@ -1970,6 +1994,9 @@ type GitPOAPGroupBy {
 input GitPOAPOrderByWithAggregationInput {
   id: SortOrder
   type: SortOrder
+  name: SortOrder
+  imageUrl: SortOrder
+  description: SortOrder
   year: SortOrder
   poapEventId: SortOrder
   createdAt: SortOrder
@@ -1990,6 +2017,9 @@ input GitPOAPOrderByWithAggregationInput {
 input GitPOAPCountOrderByAggregateInput {
   id: SortOrder
   type: SortOrder
+  name: SortOrder
+  imageUrl: SortOrder
+  description: SortOrder
   year: SortOrder
   poapEventId: SortOrder
   createdAt: SortOrder
@@ -2015,6 +2045,9 @@ input GitPOAPAvgOrderByAggregateInput {
 input GitPOAPMaxOrderByAggregateInput {
   id: SortOrder
   type: SortOrder
+  name: SortOrder
+  imageUrl: SortOrder
+  description: SortOrder
   year: SortOrder
   poapEventId: SortOrder
   createdAt: SortOrder
@@ -2030,6 +2063,9 @@ input GitPOAPMaxOrderByAggregateInput {
 input GitPOAPMinOrderByAggregateInput {
   id: SortOrder
   type: SortOrder
+  name: SortOrder
+  imageUrl: SortOrder
+  description: SortOrder
   year: SortOrder
   poapEventId: SortOrder
   createdAt: SortOrder
@@ -2058,6 +2094,9 @@ input GitPOAPScalarWhereWithAggregatesInput {
   NOT: [GitPOAPScalarWhereWithAggregatesInput!]
   id: IntWithAggregatesFilter
   type: EnumClaimTypeWithAggregatesFilter
+  name: StringNullableWithAggregatesFilter
+  imageUrl: StringNullableWithAggregatesFilter
+  description: StringNullableWithAggregatesFilter
   year: IntWithAggregatesFilter
   poapEventId: IntWithAggregatesFilter
   createdAt: DateTimeWithAggregatesFilter
