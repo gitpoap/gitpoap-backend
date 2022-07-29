@@ -423,8 +423,8 @@ export class CustomGitPOAPResolver {
         // Note that we create claim placeholders before they are
         // actually initiated by the user so the claim time is
         // the updatedAt time
-        const leftDate = new Date(left.gitPOAP.updatedAt);
-        const rightDate = new Date(right.gitPOAP.updatedAt);
+        const leftDate = new Date(left.gitPOAP.createdAt);
+        const rightDate = new Date(right.gitPOAP.createdAt);
         if (leftDate < rightDate) {
           return 1;
         }
