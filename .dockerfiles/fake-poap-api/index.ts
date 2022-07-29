@@ -437,8 +437,8 @@ function generateFakeQRCodes() {
   return codes;
 }
 
-app.get('/event/:id/qr-codes', async (req, res) => {
-  logger.info('Received GET /event/:id/qr-codes request');
+app.post('/event/:id/qr-codes', async (req, res) => {
+  logger.info('Received POST /event/:id/qr-codes request');
 
   const schemaResult = GetEventCodesSchema.safeParse(req.body);
   if (!schemaResult.success) {
