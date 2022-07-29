@@ -11,7 +11,7 @@
     "start": "node -r dotenv/config ./dist/src/server.js",
     "start-api": "node -r dotenv/config ./dist/src/public-api/server.js",
     "postinstall": "npx prisma generate",
-    "gql:build-schema": "npx prisma generate; ts-node-dev ./scripts/build-gql-schema.ts",
+    "gql:build-schema": "npx prisma generate && ts-node-dev ./scripts/build-gql-schema.ts",
     "pr-backload": "APP_NAME=pr-backload ts-node-dev ./scripts/backload-pr-data.ts",
     "prepare": "husky install",
     "test": "jest --setupFiles dotenv/config --testPathPattern '/unit/'",
@@ -27,8 +27,7 @@
     "docker:build-integration-tests": "docker-compose --profile integration-tests build --parallel",
     "docker:run-integration-tests": "docker-compose --profile integration-tests up --force-recreate --renew-anon-volumes --abort-on-container-exit",
     "quick-integration-test": "docker-compose up --no-deps --build integration-tests",
-    "integration-test": "yarn docker:build-integration-tests && yarn docker:run-integration-tests",
-    "poap-backload": "APP_NAME=poap-backload ts-node-dev ./scripts/backload-poap-data.ts"
+    "integration-test": "yarn docker:build-integration-tests && yarn docker:run-integration-tests"
   },
   "devDependencies": {
     "@types/badgen": "^2.7.1",
