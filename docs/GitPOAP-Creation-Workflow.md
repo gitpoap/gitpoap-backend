@@ -9,7 +9,8 @@ things related to GitPOAP creation or the various automation steps handled by th
    repos in their GitHub organizations. If they confirm they want to include additional forks we can
    can perform we can add them during step 5 or 8 after the General Steps are completed.
 2. Open up a shell terminal.
-4. [Choose how]() to set `GITHUB_ACCESS_TOKEN` in the ENV.
+4. [Choose how](https://github.com/gitpoap/gitpoap-backend/blob/main/docs/GitPOAP-Creation-Workflow.md#setting-env-variables)
+    to set `GITHUB_ACCESS_TOKEN` in the ENV.
 5. Clone [`count-yearly-contributors`](https://github.com/gitpoap/count-yearly-contributors), and for:
     * A set of repos like `foo/bar gitpoap/gitpoap-backend` (or just one), run the command:
         ```sh
@@ -44,13 +45,14 @@ things related to GitPOAP creation or the various automation steps handled by th
     2. Left clicking anywhere and selecting something like the option "Inspect"
     3. Clicking on the "Storage" tab and then the "Local Storage"
     4. Copying the value (with parentheses included) for the key "accessToken"
-10. [Set]() `GITPOAP_ACCESS_TOKEN` in the ENV (*don't* put this one in `~/.bashrc` since it expires every 10 minutes)
+10. [Set](https://github.com/gitpoap/gitpoap-backend/blob/main/docs/GitPOAP-Creation-Workflow.md#setting-env-variables)
+    `GITPOAP_ACCESS_TOKEN` in the ENV (*don't* put this one in `~/.bashrc` since it expires every 10 minutes)
 11. Run [`add-repos-to-project`](https://github.com/gitpoap/add-repos-to-project) with the repos from step 8 to add the
-     repos to an existing project (it will confirm that everything looks right). You should use the `--repo-path` option
-     to help pick the correct Project and supply it the repo name from step 7:
-     ```sh
-     ./add-repos-to-project.py -b https://api.gitpoap.io --repo-path step-7/repo-name --new-repos new/repos go/here
-     ```
+    repos to an existing project (it will confirm that everything looks right). You should use the `--repo-path` option
+    to help pick the correct Project and supply it the repo name from step 7:
+    ```sh
+    ./add-repos-to-project.py -b https://api.gitpoap.io --repo-path step-7/repo-name --new-repos new/repos go/here
+    ```
 
 ## Creating New Claims for a Custom List of Users
 
@@ -59,7 +61,8 @@ We can create Claims for a custom list of Users for some Project using the
 have at minimum a CSV containing:
 * The first two columns `year` and `githubHandle` (using the `--claims-by-handle` flag)
 * The first two columns `year` and `githubId` (using the `--claims-by-id` flag)
-See [the appendix]() for how to extract this from larger sets of data.
+See [the appendix](https://github.com/gitpoap/gitpoap-backend/blob/main/docs/GitPOAP-Creation-Workflow.md#extracting-or-rearranging-columns-in-csv-files)
+for how to extract this from larger sets of data.
 
 Note that both `GITHUB_ACCESS_TOKEN` and `GITPOAP_ACCESS_TOKEN` must be set in the ENV. Given:
 * Some Repo ID:
