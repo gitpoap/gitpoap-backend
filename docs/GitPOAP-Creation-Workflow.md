@@ -52,6 +52,25 @@ things related to GitPOAP creation or the various automation steps handled by th
      ./add-repos-to-project.py -b https://api.gitpoap.io --repo-path step-7/repo-name --new-repos new/repos go/here
      ```
 
+## Creating New Claims for a Custom List of Users
+
+We can create Claims for a custom list of Users for some Project using the
+[`create-claims`](https://github.com/gitpoap/create-claims) tool so long as we
+have at minimum a CSV containing:
+* The first two columns `year` and `githubHandle` (using the `--claims-by-handle` flag)
+* The first two columns `year` and `githubId` (using the `--claims-by-id` flag)
+See [the appendix]() for how to extract this from larger sets of data.
+
+Note that both `GITHUB_ACCESS_TOKEN` and `GITPOAP_ACCESS_TOKEN` must be set in the ENV. Given:
+* Some Repo ID:
+    ```sh
+    ./create.py -u https://api.gitpoap.io -repo-id 34 --claims-by-id claims-by-id-file.csv
+    ```
+* Some Repo name in the Project:
+    ```sh
+    ./create.py -u https://api.gitpoap.io -repo-name some/repo --claims-by-id claims-by-id-file.csv
+    ```
+
 ## Appendix
 
 ### Setting ENV variables
@@ -75,3 +94,15 @@ There's a few ways that one can set environment variables in the shell:
 * Setting the ENV variable in `~/.bashrc`, by adding the line `export SOME_VAR=foo`: By doing this
     the command will already be set every time you open the shell. Note that this is probably best
     not to do with variable that will need to be reset frequently.
+
+### Extracting or rearranging columns in CSV files
+
+To extract specific columns in a CSV file we can use the tool `awk` in a shell terminal. For instance:
+* Selecting only columns 1 and 7:
+    ```sh
+    cat some-file.csv | awk -F, '{OFS=",";print $1, $7}' > some-new-file.csv
+    ```
+* Selecting only columns 1 and 7 (but in opposite order):
+    ```sh
+    cat some-file.csv | awk -F, '{OFS=",";print $7, $1}' > some-new-file.csv
+    ```
