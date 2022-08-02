@@ -14,10 +14,12 @@ export const GH_HANDLES = {
   colfax: 'colfax23',
   vitalik: 'vbuterin',
   aldo: 'aldolamb',
+  tyler: 'tyler415git',
 };
 
 export const GH_IDS = {
   jay: 8076957,
   anthony: 1555326,
   aldo: 19416312,
+  tyler: 110413633,
 };
