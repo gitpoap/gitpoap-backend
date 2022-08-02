@@ -61,6 +61,7 @@ We can create Claims for a custom list of Users for some Project using the
 [`create-claims`](https://github.com/gitpoap/create-claims) tool so long as we have at minimum a CSV containing:
 * The first two columns `year` and `githubHandle` (using the `--claims-by-handle` flag)
 * The first two columns `year` and `githubId` (using the `--claims-by-id` flag)
+
 See [the appendix](https://github.com/gitpoap/gitpoap-backend/blob/main/docs/GitPOAP-Creation-Workflow.md#extracting-or-rearranging-columns-in-csv-files)
 for info on how to extract this from larger sets of data (possibly in the incorrect order).
 
@@ -73,6 +74,7 @@ For this script to run, both `GITHUB_ACCESS_TOKEN` and `GITPOAP_ACCESS_TOKEN` mu
     ```sh
     ./create.py -u https://api.gitpoap.io -repo-name some/repo --claims-by-id claims-by-id-file.csv
     ```
+
 Note that the both these options require that the CSV file have headers describing the columns (if not, the tool will
 exit and it should be obvious what to fix from the printout).
 
