@@ -55,6 +55,10 @@ things related to GitPOAP creation or the various automation steps handled by th
     ./add-repos-to-project.py -b https://api.gitpoap.io --repo-path step-6/repo-name --new-repos new/repos go/here
     ```
     The background backloading process on the backend will automatically create claims for these repos.
+    
+    **Note**: If some previously added repo is accidentally left in the list, the server will return a 500 error, but fret not:
+    all the other repos besides the accidentally duplicated one *will* still be added (feel free to check the
+    [admin repos page](https://www.gitpoap.io/admin/repos) as a sanity check.
 
 ## Creating New Claims for a Custom List of Users
 
