@@ -5,43 +5,42 @@ things related to GitPOAP creation or the various automation steps handled by th
 
 ## General Steps
 
-1. Ensure that the project knows that we will be skipping all forks if they choose to include all the
-   repos in their GitHub organizations. If they confirm they want to include additional forks we can
-   can perform we can add them during step 5 or 8 after the General Steps are completed.
+1. Ensure that the Project owners know that we will be skipping all forks if they choose to include "all" of
+   the repos in their GitHub organizations. If they confirm they want to include additional forks we can
+   can perform we can add them during step 5 (if using the second bullet) or during step 8.
 2. Open up a shell terminal.
 4. [Choose how](https://github.com/gitpoap/gitpoap-backend/blob/main/docs/GitPOAP-Creation-Workflow.md#setting-env-variables)
     to set `GITHUB_ACCESS_TOKEN` in the ENV.
-5. Clone [`count-yearly-contributors`](https://github.com/gitpoap/count-yearly-contributors), and for:
-    * A set of repos like `foo/bar gitpoap/gitpoap-backend` (or just one), run the command:
+5. Clone [`count-yearly-contributors`](https://github.com/gitpoap/count-yearly-contributors), and:
+    * For a set of repos like `foo/bar gitpoap/gitpoap-backend` (or just one), run the command:
         ```sh
         ./count.py --repos foo/bar gitpoap/gitpoap-backend
         ```
-    * A set of orgs like `foo gitpoap` (or just one), run the command:
+    * For a set of orgs like `foo gitpoap` (or just one), run the command:
         ```sh
         ./count.py --orgs foo gitpoap
         ```
 6. This command will output (in a new folder) two files. One will be named something like `*counts.csv`.
-    Within this file is contained a listing of the number of contributors for each year to what
-    was specified like:
+    Within this file there is a listing of the number of contributors for each year to the repos/orgs that
+    were specified like:
     ```csv
     year,contributorCount
     2021,3
     2022,6
     ```
 7. Head over to the [admin page for creating multiple GitPOAPs](https://www.gitpoap.io/admin/gitpoap/create-multiple),
-    and create a GitPOAP for each year that was output, using the output `contributorCount` for that year as a guide.
+    and create a GitPOAP for each year that was output, using the corresponding `contributorCount` for that year as a guide.
     It is good practice to add 10-20 extra codes as a buffer for a previous year and 40-50 for the current year. **Ensure
     that the current year is marked as "ongoing"!**
-    and replacing the `repo` and `organization` name to be the one that was used in step 7.
-8. Since the current admin UI only lets a single repo be added per GitPOAP at this time (this will be updated), we need to
-    now add the remaining repositories to the repository. If you started with a set of repos already, you can skip this step.
-    If not, we need to use the script from [`organization-repos`](https://github.com/gitpoap/organization-repos) to collect
-    all the repositories that are not forks:
+8. Since the current admin UI only lets a single repo be added per GitPOAP at this time (this will be updated at some point),
+    we need to now add the remaining repositories to the repository. If you started with a set of repos already, you can
+    skip this step. If not, we need to use the script from [`organization-repos`](https://github.com/gitpoap/organization-repos)
+    to collect all the repositories that are not forks:
     ```sh
     ./repos.py foo gitpoap
     ```
-    which outputs a list of repos on separate lines.
-9. Now grab a GitPOAP JWT token by (assuming firefox or chrome):
+    which will output a list of repos on separate lines.
+9. Now grab a GitPOAP JWT token by (assuming firefox or chrome) by:
     1. Navigating to https://gitpoap.io (or **refreshing** an open page)
     2. Left clicking anywhere and selecting something like the option "Inspect"
     3. Clicking on the "Storage" tab and then the "Local Storage"
@@ -54,18 +53,18 @@ things related to GitPOAP creation or the various automation steps handled by th
     ```sh
     ./add-repos-to-project.py -b https://api.gitpoap.io --repo-path step-7/repo-name --new-repos new/repos go/here
     ```
+    The background backloading process on the backend will automatically create claims for these repos.
 
 ## Creating New Claims for a Custom List of Users
 
 We can create Claims for a custom list of Users for some Project using the
-[`create-claims`](https://github.com/gitpoap/create-claims) tool so long as we
-have at minimum a CSV containing:
+[`create-claims`](https://github.com/gitpoap/create-claims) tool so long as we have at minimum a CSV containing:
 * The first two columns `year` and `githubHandle` (using the `--claims-by-handle` flag)
 * The first two columns `year` and `githubId` (using the `--claims-by-id` flag)
 See [the appendix](https://github.com/gitpoap/gitpoap-backend/blob/main/docs/GitPOAP-Creation-Workflow.md#extracting-or-rearranging-columns-in-csv-files)
-for how to extract this from larger sets of data.
+for info on how to extract this from larger sets of data (possibly in the incorrect order).
 
-Note that both `GITHUB_ACCESS_TOKEN` and `GITPOAP_ACCESS_TOKEN` must be set in the ENV. Given:
+For this script to run, both `GITHUB_ACCESS_TOKEN` and `GITPOAP_ACCESS_TOKEN` must be set in the ENV. Given:
 * Some Repo ID:
     ```sh
     ./create.py -u https://api.gitpoap.io -repo-id 34 --claims-by-id claims-by-id-file.csv
@@ -74,13 +73,14 @@ Note that both `GITHUB_ACCESS_TOKEN` and `GITPOAP_ACCESS_TOKEN` must be set in t
     ```sh
     ./create.py -u https://api.gitpoap.io -repo-name some/repo --claims-by-id claims-by-id-file.csv
     ```
+Note that the both these options require that the CSV file have headers describing the columns (if not, the tool will
+exit and it should be obvious what to fix from the printout).
 
 ## Appendix
 
 ### Setting ENV variables
 
 There's a few ways that one can set environment variables in the shell:
-
 * Prefixing the command with the environment:
     ```sh
     SOME_VAR=foo ./command.sh ...
