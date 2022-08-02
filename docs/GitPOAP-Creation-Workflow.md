@@ -35,9 +35,10 @@ things related to GitPOAP creation or the various automation steps handled by th
     and replacing the `repo` and `organization` name to be the one that was used in step 7.
 8. Since the current admin UI only lets a single repo be added per GitPOAP at this time (this will be updated), we need to
     now add the remaining repositories to the repository. If you started with a set of repos already, you can skip this step.
-    If not, we need to run the [`organization-repos`]() to collect all the repositories that are not forks:
+    If not, we need to use the script from [`organization-repos`](https://github.com/gitpoap/organization-repos) to collect
+    all the repositories that are not forks:
     ```sh
-    ./organization-repos.py --orgs foo gitpoap
+    ./repos.py foo gitpoap
     ```
     which outputs a list of repos on separate lines.
 9. Now grab a GitPOAP JWT token by (assuming firefox or chrome):
@@ -103,9 +104,9 @@ There's a few ways that one can set environment variables in the shell:
 To extract specific columns in a CSV file we can use the tool `awk` in a shell terminal. For instance:
 * Selecting only columns 1 and 7:
     ```sh
-    cat some-file.csv | awk -F, '{OFS=",";print $1, $7}' > some-new-file.csv
+    cat some-file.csv | awk -F, '{OFS=","; print $1, $7}' > some-new-file.csv
     ```
 * Selecting only columns 1 and 7 (but in opposite order):
     ```sh
-    cat some-file.csv | awk -F, '{OFS=",";print $7, $1}' > some-new-file.csv
+    cat some-file.csv | awk -F, '{OFS=","; print $7, $1}' > some-new-file.csv
     ```
