@@ -6,6 +6,7 @@ export const ADDRESSES = {
   colfax: '0x56d389C4E07A48d429035532402301310B8143A0'.toLowerCase(),
   vitalik: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'.toLowerCase(),
   aldo: '0x02738d122e0970aAf8DEADf0c6A217a1923E1e99'.toLowerCase(),
+  tyler: '0x8404DDF7ed9Cce1EFDC14f3Af4c8eD0015d28937'.toLowerCase(),
 };
 
 export const GH_HANDLES = {
