@@ -1,4 +1,3 @@
-import { GitPOAP, Organization, Repo } from '@generated/type-graphql';
 import { context } from '../context';
 import { createScopedLogger } from '../logging';
 import { GithubPullRequestData, getGithubRepositoryPullsAsAdmin } from '../external/github';
@@ -91,8 +90,8 @@ export async function handleNewPull(
 
   const mergedAt = DateTime.fromISO(pull.merged_at);
 
-  // If there are PR-based gitPOAPs
-  if (repo.project.gitPOAPs.length == 0) {
+  // If there are no PR-based gitPOAPs, then skip creating new claims for repo
+  if (repo.project.gitPOAPs.length === 0) {
     logger.warn(`Repo ID ${repo.id} has no GitPOAPs (Possibly because none are PR-based)`);
   } else {
     // We assume here that all the ongoing GitPOAPs have the same year
