@@ -397,6 +397,7 @@ type GitPOAP {
   eventId: Int
   level: Int!
   threshold: Int!
+  isPRBased: Boolean!
   _count: GitPOAPCount
   project: Project!
   claims(
@@ -799,6 +800,7 @@ input GitPOAPWhereInput {
   event: EventRelationFilter
   level: IntFilter
   threshold: IntFilter
+  isPRBased: BoolFilter
 }
 
 input EnumClaimTypeFilter {
@@ -1090,6 +1092,7 @@ input GitPOAPOrderByWithRelationInput {
   event: EventOrderByWithRelationInput
   level: SortOrder
   threshold: SortOrder
+  isPRBased: SortOrder
 }
 
 input ClaimOrderByRelationAggregateInput {
@@ -1211,6 +1214,7 @@ enum GitPOAPScalarFieldEnum {
   eventId
   level
   threshold
+  isPRBased
 }
 
 type RedeemCode {
@@ -1906,6 +1910,7 @@ type GitPOAPCountAggregate {
   eventId: Int!
   level: Int!
   threshold: Int!
+  isPRBased: Int!
   _all: Int!
 }
 
@@ -1946,6 +1951,7 @@ type GitPOAPMinAggregate {
   eventId: Int
   level: Int
   threshold: Int
+  isPRBased: Boolean
 }
 
 type GitPOAPMaxAggregate {
@@ -1965,6 +1971,7 @@ type GitPOAPMaxAggregate {
   eventId: Int
   level: Int
   threshold: Int
+  isPRBased: Boolean
 }
 
 type GitPOAPGroupBy {
@@ -1984,6 +1991,7 @@ type GitPOAPGroupBy {
   eventId: Int
   level: Int!
   threshold: Int!
+  isPRBased: Boolean!
   _count: GitPOAPCountAggregate
   _avg: GitPOAPAvgAggregate
   _sum: GitPOAPSumAggregate
@@ -2007,6 +2015,7 @@ input GitPOAPOrderByWithAggregationInput {
   eventId: SortOrder
   level: SortOrder
   threshold: SortOrder
+  isPRBased: SortOrder
   _count: GitPOAPCountOrderByAggregateInput
   _avg: GitPOAPAvgOrderByAggregateInput
   _max: GitPOAPMaxOrderByAggregateInput
@@ -2030,6 +2039,7 @@ input GitPOAPCountOrderByAggregateInput {
   eventId: SortOrder
   level: SortOrder
   threshold: SortOrder
+  isPRBased: SortOrder
 }
 
 input GitPOAPAvgOrderByAggregateInput {
@@ -2058,6 +2068,7 @@ input GitPOAPMaxOrderByAggregateInput {
   eventId: SortOrder
   level: SortOrder
   threshold: SortOrder
+  isPRBased: SortOrder
 }
 
 input GitPOAPMinOrderByAggregateInput {
@@ -2076,6 +2087,7 @@ input GitPOAPMinOrderByAggregateInput {
   eventId: SortOrder
   level: SortOrder
   threshold: SortOrder
+  isPRBased: SortOrder
 }
 
 input GitPOAPSumOrderByAggregateInput {
@@ -2107,6 +2119,7 @@ input GitPOAPScalarWhereWithAggregatesInput {
   eventId: IntNullableWithAggregatesFilter
   level: IntWithAggregatesFilter
   threshold: IntWithAggregatesFilter
+  isPRBased: BoolWithAggregatesFilter
 }
 
 input EnumClaimTypeWithAggregatesFilter {

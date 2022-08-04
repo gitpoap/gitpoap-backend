@@ -91,19 +91,22 @@ export async function handleNewPull(
 
   const mergedAt = DateTime.fromISO(pull.merged_at);
 
-  // We assume here that all the ongoing GitPOAPs have the same year
-  const year = repo.project.gitPOAPs[0].year;
+  // If there are PR-based gitPOAPs
+  if (repo.project.gitPOAPs.length > 0) {
+    // We assume here that all the ongoing GitPOAPs have the same year
+    const year = repo.project.gitPOAPs[0].year;
 
-  // Log an error if we haven't figured out what to do in the new years
-  if (mergedAt.year > year) {
-    logger.error(`Found a merged PR for repo ID ${repo.id} for a new year`);
-    return { finished: false, updatedAt: updatedAt };
-    // Don't handle previous years (note we still handle an updated title)
-  } else if (mergedAt.year < year) {
-    return { finished: false, updatedAt: updatedAt };
+    // Log an error if we haven't figured out what to do in the new years
+    if (mergedAt.year > year) {
+      logger.error(`Found a merged PR for repo ID ${repo.id} for a new year`);
+      return { finished: false, updatedAt: updatedAt };
+      // Don't handle previous years (note we still handle an updated title)
+    } else if (mergedAt.year < year) {
+      return { finished: false, updatedAt: updatedAt };
+    }
+
+    await createNewClaimsForRepoPR(user, repo, githubPullRequest);
   }
-
-  await createNewClaimsForRepoPR(user, repo, githubPullRequest);
 
   return { finished: false, updatedAt: updatedAt };
 }
@@ -187,6 +190,7 @@ export async function runOngoingIssuanceUpdater() {
             gitPOAPs: {
               where: {
                 ongoing: true,
+                isPRBased: true,
               },
               select: {
                 id: true,
