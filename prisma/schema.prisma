@@ -130,7 +130,7 @@ model GitPOAP {
   event       Event?        @relation(fields: [eventId], references: [id])
   level       Int           @default(1)
   threshold   Int           @default(1)
-  isPRBased   Boolean       @default(false)
+  isPRBased   Boolean       @default(true)
 }
 
 model AuthToken {
