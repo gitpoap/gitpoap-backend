@@ -92,7 +92,9 @@ export async function handleNewPull(
   const mergedAt = DateTime.fromISO(pull.merged_at);
 
   // If there are PR-based gitPOAPs
-  if (repo.project.gitPOAPs.length > 0) {
+  if (repo.project.gitPOAPs.length == 0) {
+    logger.warn(`Repo ID ${repo.id} has no GitPOAPs (Possibly because none are PR-based)`);
+  } else {
     // We assume here that all the ongoing GitPOAPs have the same year
     const year = repo.project.gitPOAPs[0].year;
 
