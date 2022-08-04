@@ -17,6 +17,7 @@ import { gitpoapsRouter } from './routes/gitpoaps';
 import { profilesRouter } from './routes/profiles';
 import { projectsRouter } from './routes/projects';
 import { organizationsRouter } from './routes/organizations';
+import { onboardingRouter } from './routes/onboarding';
 import { triggersRouter } from './routes/triggers';
 import { vitalsRouter } from './routes/vitals';
 import { NODE_ENV, SENTRY_DSN } from './environment';
@@ -69,6 +70,7 @@ export async function setupApp() {
   app.use('/claims', claimsRouter);
   app.use('/featured', featuredRouter);
   app.use('/gitpoaps', gitpoapsRouter);
+  app.use('/onboarding', onboardingRouter);
   app.use('/profiles', profilesRouter);
   app.use('/projects', projectsRouter);
   app.use('/organizations', organizationsRouter);
