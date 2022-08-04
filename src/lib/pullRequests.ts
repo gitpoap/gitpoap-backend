@@ -24,6 +24,9 @@ async function getRepoInfo(repoId: number) {
       project: {
         select: {
           gitPOAPs: {
+            where: {
+              isPRBased: true,
+            },
             select: {
               id: true,
               year: true,
@@ -174,7 +177,9 @@ export async function backloadGithubPullRequestData(repoId: number) {
   );
 
   if (repoInfo.project.gitPOAPs.length === 0) {
-    logger.warn(`No GitPOAPs found for repo with ID ${repoId}`);
+    logger.warn(
+      `No GitPOAPs found for repo with ID ${repoId} (Possibly since they are not PR-based)`,
+    );
     return;
   }
 

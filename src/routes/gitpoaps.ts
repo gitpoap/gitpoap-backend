@@ -152,6 +152,7 @@ gitpoapsRouter.post(
         },
         poapSecret: secretCode,
         ongoing: req.body.ongoing === 'true',
+        isPRBased: req.body.isPRBased !== 'false',
       },
     });
 
