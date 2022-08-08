@@ -4,7 +4,14 @@ import { CONTACTS_TABLE_NAME } from './external/dynamo';
 import { PORT } from './constants';
 import { context } from './context';
 import { registerHandler } from 'segfault-handler';
-import { NODE_ENV, JWT_SECRET, AWS_PROFILE, MAILCHIMP_API_KEY, SENTRY_DSN } from './environment';
+import {
+  NODE_ENV,
+  JWT_SECRET,
+  AWS_PROFILE,
+  MAILCHIMP_API_KEY,
+  SENTRY_DSN,
+  POSTMARK_SERVER_TOKEN,
+} from './environment';
 import { createScopedLogger, updateLogLevel } from './logging';
 import minimist from 'minimist';
 import { startMetricsServer } from './metrics';
@@ -41,6 +48,7 @@ const main = async () => {
     logger.debug(`Using AWS Profile: ${AWS_PROFILE}`);
     logger.debug(`MailChimp API Key: ${MAILCHIMP_API_KEY}`);
     logger.debug(`Sentry DSN:        ${SENTRY_DSN}`);
+    logger.debug(`Postmark API Key:  ${POSTMARK_SERVER_TOKEN}`);
   });
 
   startMetricsServer();
