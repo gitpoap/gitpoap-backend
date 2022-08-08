@@ -7,7 +7,7 @@ import { createScopedLogger } from '../logging';
 import { httpRequestDurationSeconds } from '../metrics';
 import { jwtWithOAuth } from '../middleware';
 import { AccessTokenPayloadWithOAuth } from '../types/tokens';
-import { sendEmail } from '../external/postmark';
+import { postmarkClient } from '../external/postmark';
 
 type Repo = {
   name: string;
@@ -121,7 +121,7 @@ onboardingRouter.post<'/intake-form', {}, {}, IntakeForm>(
 
     /* If successful, then dispatch confirmation email to user via PostMark */
     try {
-      const emailResponse = await sendEmail({
+      const emailResponse = await postmarkClient.sendEmail({
         From: 'jay@gitpoap.io',
         To: req.body.email,
         Subject: 'GitPoap - Thank you for your interest in GitPoap',
