@@ -22,6 +22,7 @@ declare global {
       REDIS_URL: string;
       MAILCHIMP_API_KEY: string;
       SENTRY_DSN: string;
+      POSTMARK_SERVER_TOKEN: string;
     }
   }
 }
