@@ -28,3 +28,4 @@ export const GITHUB_APP_REDIRECT_URL = env.get('GITHUB_APP_REDIRECT_URL').requir
 export const REDIS_URL = env.get('REDIS_URL').required().asString();
 export const MAILCHIMP_API_KEY = env.get('MAILCHIMP_API_KEY').required().asString();
 export const SENTRY_DSN = env.get('SENTRY_DSN').asString();
+export const POSTMARK_SERVER_TOKEN = env.get('POSTMARK_SERVER_TOKEN').required().asString();
