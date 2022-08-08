@@ -1,7 +1,7 @@
 import { PutItemCommand } from '@aws-sdk/client-dynamodb';
 import { Router } from 'express';
 import jwt from 'express-jwt';
-import { dynamoDB, SUGGESTIONS_TABLE_NAME } from '../dynamo';
+import { dynamoDBClient, SUGGESTIONS_TABLE_NAME } from '../external/dynamo';
 import { JWT_SECRET } from '../environment';
 import { createScopedLogger } from '../logging';
 import { httpRequestDurationSeconds } from '../metrics';
@@ -47,7 +47,7 @@ suggestRouter.post(
         },
       };
       try {
-        await dynamoDB.send(new PutItemCommand(params));
+        await dynamoDBClient.send(new PutItemCommand(params));
       } catch (err) {
         logger.warn(`Got error from dynamo DB send: ${err}`);
       }
