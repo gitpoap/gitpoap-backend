@@ -22,7 +22,7 @@ const DYNAMO_CONFIG_PROFILES: DynamoConfigProfiles = {
     tables: {
       contact: 'contact-local',
       suggestions: 'suggestions-local',
-      intakeForm: 'intake-form',
+      intakeForm: 'intake-form-test',
     },
   },
   prod: {
