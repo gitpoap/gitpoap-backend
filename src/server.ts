@@ -1,6 +1,6 @@
 require('dotenv').config();
 import 'reflect-metadata';
-import { CONTACTS_TABLE_NAME } from './dynamo';
+import { CONTACTS_TABLE_NAME } from './external/dynamo';
 import { PORT } from './constants';
 import { context } from './context';
 import { registerHandler } from 'segfault-handler';
