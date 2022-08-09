@@ -167,6 +167,7 @@ const sendInternalConfirmationEmail = async (
 
 onboardingRouter.post<'/intake-form', {}, {}, IntakeForm>(
   '/intake-form',
+  jwtWithOAuth(),
   upload.array('images', 5),
   async (req, res) => {
     const logger = createScopedLogger('GET /onboarding/intake-form');
