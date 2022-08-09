@@ -3,7 +3,7 @@ import { Octokit } from 'octokit';
 import { z } from 'zod';
 import multer from 'multer';
 import { uploadMulterFile, s3configProfile } from '../external/s3';
-import { PutItemCommand, PutItemCommandInput } from '@aws-sdk/client-dynamodb';
+import { PutItemCommand, PutItemCommandInput, ScanCommand } from '@aws-sdk/client-dynamodb';
 import { configProfile, dynamoDBClient } from '../external/dynamo';
 import { createScopedLogger } from '../logging';
 import { httpRequestDurationSeconds } from '../metrics';
@@ -46,9 +46,9 @@ const upload = multer();
 const createIntakeFormDocForDynamo = (formData: IntakeForm): PutItemCommandInput => ({
   TableName: configProfile.tables.intakeForm,
   Item: {
-    name: { S: formData.name },
+    name: { S: formData.name ?? '' },
     email: { S: formData.email },
-    notes: { S: formData.notes },
+    notes: { S: formData.notes ?? '' },
     githubHandle: { S: formData.githubHandle },
     shouldGitPOAPDesign: { BOOL: Boolean(formData.shouldGitPOAPDesign) },
     isOneGitPOAPPerRepo: { BOOL: Boolean(formData.isOneGitPOAPPerRepo) },
@@ -187,17 +187,22 @@ onboardingRouter.post<'/intake-form', {}, {}, IntakeForm>(
       logger.info(`No images found to upload to S3. Skipping S3 upload step.`);
     }
 
-    /* If successful, then dispatch confirmation email to user via PostMark */
+    let tableCount = undefined;
+    /* If successful, then dispatch confirmation email to user via PostMark. Also fetch the DynamoDB item count as a proxy for queue number */
     try {
-      const emailResponse = await postmarkClient.sendEmail({
-        From: 'jay@gitpoap.io',
-        To: req.body.email,
-        Subject: 'GitPoap - Thank you for your interest in GitPoap',
-        HtmlBody: `<p>Thank you for your interest in GitPoap. We will be in touch soon!</p>`,
-      });
+      /* Get the count of all items within the dynamo DB table */
+      const dynamoRes = await dynamoDBClient.send(
+        new ScanCommand({
+          TableName: configProfile.tables.intakeForm,
+        }),
+      );
+      tableCount = dynamoRes.Count;
+      logger.info(
+        `Successfully retrieved count of all items in DynamoDB table ${configProfile.tables.intakeForm} - ${dynamoRes.Count}`,
+      );
 
-      /* @TODO: IMPORTANT: send over a copy of the information that was submitted */
-      /* @TODO: IMPORTANT: send over their # in the queue */
+      sendConfirmationEmail(req.body, req.body.email, tableCount);
+
       logger.info(`Successfully sent confirmation email to ${req.body.email}`);
     } catch (err) {
       /* Log error, but don't return error to user. Sending the email is secondary to storing the form data */
