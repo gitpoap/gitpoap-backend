@@ -14,9 +14,9 @@ const ImageFileSchema = z
 export const IntakeFormImageFilesSchema = z.array(ImageFileSchema);
 
 export const IntakeFormSchema = z.object({
-  name: z.string(),
+  name: z.string().optional(),
   email: z.string(),
-  notes: z.string(),
+  notes: z.string().optional(),
   githubHandle: z.string(),
   shouldGitPOAPDesign: z.enum(['true', 'false']),
   isOneGitPOAPPerRepo: z.enum(['true', 'false']),
