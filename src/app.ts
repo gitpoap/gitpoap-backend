@@ -33,7 +33,8 @@ const initializeSentry = (app: Express) => {
         new Sentry.Integrations.Http({ tracing: true }),
         new Tracing.Integrations.Express({ app }),
       ],
-      tracesSampleRate: 1.0,
+      tracesSampleRate: 0.2,
+      attachStacktrace: true,
     });
 
     // RequestHandler creates a separate execution context using domains, so that every
