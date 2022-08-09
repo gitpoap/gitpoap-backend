@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import { Octokit } from 'octokit';
 import { z } from 'zod';
+import multer from 'multer';
+import { uploadMulterFile, s3configProfile } from '../external/s3';
 import { PutItemCommand, PutItemCommandInput } from '@aws-sdk/client-dynamodb';
 import { configProfile, dynamoDBClient } from '../external/dynamo';
 import { createScopedLogger } from '../logging';
@@ -8,6 +10,11 @@ import { httpRequestDurationSeconds } from '../metrics';
 import { jwtWithOAuth } from '../middleware';
 import { AccessTokenPayloadWithOAuth } from '../types/tokens';
 import { postmarkClient } from '../external/postmark';
+import {
+  IntakeFormImageFilesSchema,
+  IntakeFormReposSchema,
+  IntakeFormSchema,
+} from '../schemas/onboarding';
 
 type Repo = {
   name: string;
@@ -30,31 +37,12 @@ type Repo = {
   };
 };
 
-const IntakeFormSchema = z.object({
-  name: z.string(),
-  email: z.string(),
-  notes: z.string(),
-  githubHandle: z.string(),
-  shouldGitPOAPDesign: z.boolean(),
-  isOneGitPOAPPerRepo: z.boolean(),
-  repos: z.array(
-    z.object({
-      full_name: z.string(),
-      githubRepoId: z.string(),
-      permissions: z.object({
-        admin: z.boolean(),
-        maintain: z.boolean().optional(),
-        push: z.boolean(),
-        triage: z.boolean().optional(),
-        pull: z.boolean(),
-      }),
-    }),
-  ),
-});
-
 type IntakeForm = z.infer<typeof IntakeFormSchema>;
 
 export const onboardingRouter = Router();
+
+const upload = multer();
+
 const createIntakeFormDocForDynamo = (formData: IntakeForm): PutItemCommandInput => ({
   TableName: configProfile.tables.intakeForm,
   Item: {
@@ -62,10 +50,10 @@ const createIntakeFormDocForDynamo = (formData: IntakeForm): PutItemCommandInput
     email: { S: formData.email },
     notes: { S: formData.notes },
     githubHandle: { S: formData.githubHandle },
-    shouldGitPOAPDesign: { BOOL: formData.shouldGitPOAPDesign },
-    isOneGitPOAPPerRepo: { BOOL: formData.isOneGitPOAPPerRepo },
+    shouldGitPOAPDesign: { BOOL: Boolean(formData.shouldGitPOAPDesign) },
+    isOneGitPOAPPerRepo: { BOOL: Boolean(formData.isOneGitPOAPPerRepo) },
     repos: {
-      L: formData.repos.map(repo => ({
+      L: JSON.parse(formData.repos).map((repo: z.infer<typeof IntakeFormReposSchema>[0]) => ({
         M: {
           full_name: { S: repo.full_name },
           githubRepoId: { S: repo.githubRepoId },
@@ -87,7 +75,7 @@ const createIntakeFormDocForDynamo = (formData: IntakeForm): PutItemCommandInput
 
 onboardingRouter.post<'/intake-form', {}, {}, IntakeForm>(
   '/intake-form',
-  jwtWithOAuth(),
+  upload.array('images', 5),
   async (req, res) => {
     const logger = createScopedLogger('GET /onboarding/intake-form');
     logger.debug(`Body: ${JSON.stringify(req.body)}`);
@@ -107,16 +95,63 @@ onboardingRouter.post<'/intake-form', {}, {}, IntakeForm>(
       return res.status(400).send({ issues: schemaResult.error.issues });
     }
 
+    const reposSchemaResult = IntakeFormReposSchema.safeParse(JSON.parse(req.body.repos));
+    if (!reposSchemaResult.success) {
+      logger.warn(
+        `Missing/invalid body fields in request: ${JSON.stringify(reposSchemaResult.error.issues)}`,
+      );
+      endTimer({ status: 400 });
+      return res.status(400).send({ issues: reposSchemaResult.error.issues });
+    }
+
+    const imageSchemaResult = IntakeFormImageFilesSchema.safeParse(req.files);
+    if (!imageSchemaResult.success) {
+      logger.warn(
+        `Missing/invalid body fields in request: ${JSON.stringify(imageSchemaResult.error.issues)}`,
+      );
+      endTimer({ status: 400 });
+      return res.status(400).send({ issues: imageSchemaResult.error.issues });
+    }
+
     /* Push results to Dynamo DB */
     try {
       const params = createIntakeFormDocForDynamo(req.body);
       await dynamoDBClient.send(new PutItemCommand(params));
-      logger.info(`Successfully submitted intake form for GitHub user - ${req.body.githubHandle}.`);
+      logger.info(
+        `Successfully submitted intake form for GitHub user - ${req.body.githubHandle} to DynamoDB table ${configProfile.tables.intakeForm}`,
+      );
     } catch (err) {
       logger.error(
-        `Received error when pushing new item to dynamoDB table ${configProfile.tables.intakeForm} - ${err} `,
+        `Received error when pushing new item to DynamoDB table ${configProfile.tables.intakeForm} - ${err} `,
       );
       return res.status(400).send({ msg: 'Failed to submit intake form' });
+    }
+
+    /* Push images to S3 */
+    const images = req.files;
+
+    if (images && Array.isArray(images) && images?.length > 0) {
+      logger.info(`Found ${images.length} images to upload to S3. Attempting to upload.`);
+      for (const [index, image] of images.entries()) {
+        try {
+          await uploadMulterFile(
+            image,
+            s3configProfile.buckets.intakeForm,
+            `${req.body.email}-${req.body.githubHandle}-${index}`,
+          );
+          logger.info(
+            `Successfully uploaded image ${index + 1} to S3 bucket ${
+              s3configProfile.buckets.intakeForm
+            }`,
+          );
+        } catch (err) {
+          logger.error(`Received error when uploading image to S3 - ${err}`);
+          return res.status(400).send({ msg: 'Failed to submit intake form assets to S3' });
+        }
+      }
+      logger.info(`Successfully uploaded ${images.length}/${images.length} images to S3.`);
+    } else {
+      logger.info(`No images found to upload to S3. Skipping S3 upload step.`);
     }
 
     /* If successful, then dispatch confirmation email to user via PostMark */
@@ -130,10 +165,10 @@ onboardingRouter.post<'/intake-form', {}, {}, IntakeForm>(
 
       /* @TODO: IMPORTANT: send over a copy of the information that was submitted */
       /* @TODO: IMPORTANT: send over their # in the queue */
-      logger.info(`Successfully sent email to ${req.body.email}`);
+      logger.info(`Successfully sent confirmation email to ${req.body.email}`);
     } catch (err) {
       /* Log error, but don't return error to user. Sending the email is secondary to storing the form data */
-      logger.error(`Received error when sending email to ${req.body.email} - ${err} `);
+      logger.error(`Received error when sending confirmation email to ${req.body.email} - ${err} `);
     }
 
     return res.status(201).send('CREATED');
