@@ -70,8 +70,41 @@ const createIntakeFormDocForDynamo = (formData: IntakeForm): PutItemCommandInput
       })),
     },
     timestamp: { S: new Date().toISOString() },
+    isComplete: { BOOL: false },
   },
 });
+
+const sendConfirmationEmail = async (
+  formData: IntakeForm,
+  to: string,
+  queueNumber: number | undefined,
+) => {
+  postmarkClient.sendEmailWithTemplate({
+    From: 'team@gitpoap.io',
+    To: 'recipient@example.com',
+    TemplateAlias: 'welcome-1',
+    TemplateModel: {
+      product_url: 'gitpoap.io',
+      product_name: 'GitPOAP',
+      queue_number: queueNumber ?? '',
+      email: 'email_Value',
+      githubHandle: 'githubHandle_Value',
+      repoCount: JSON.parse(formData.repos).length,
+      support_email: 'team@gitpoap.io',
+      company_name: 'MetaRep Labs Inc',
+      company_address: 'One Broadway, Cambridge MA 02142',
+      name: 'name_Value',
+      action_url: 'action_url_Value',
+      login_url: 'login_url_Value',
+      username: 'username_Value',
+      trial_length: 'trial_length_Value',
+      trial_start_date: 'trial_start_date_Value',
+      trial_end_date: 'trial_end_date_Value',
+      sender_name: 'GitPOAP Team',
+      help_url: 'help_url_Value',
+    },
+  });
+};
 
 onboardingRouter.post<'/intake-form', {}, {}, IntakeForm>(
   '/intake-form',
