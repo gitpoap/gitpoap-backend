@@ -171,7 +171,14 @@ onboardingRouter.post<'/intake-form', {}, {}, IntakeForm>(
       logger.error(`Received error when sending confirmation email to ${req.body.email} - ${err} `);
     }
 
-    return res.status(201).send('CREATED');
+    endTimer({ status: 200 });
+
+    /* Return form data, the queue number, and a confirmation message to the user */
+    return res.status(200).send({
+      formData: req.body,
+      queueNumber: tableCount,
+      msg: 'Successfully submitted intake form',
+    });
   },
 );
 
