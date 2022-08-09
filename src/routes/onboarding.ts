@@ -221,6 +221,7 @@ onboardingRouter.post<'/intake-form', {}, {}, IntakeForm>(
       logger.error(
         `Received error when pushing new item to DynamoDB table ${intakeFormTable} - ${err} `,
       );
+      endTimer({ status: 400 });
       return res.status(400).send({ msg: 'Failed to submit intake form' });
     }
 
@@ -241,6 +242,7 @@ onboardingRouter.post<'/intake-form', {}, {}, IntakeForm>(
           );
         } catch (err) {
           logger.error(`Received error when uploading image to S3 - ${err}`);
+          endTimer({ status: 400 });
           return res.status(400).send({ msg: 'Failed to submit intake form assets to S3' });
         }
       }
@@ -259,6 +261,7 @@ onboardingRouter.post<'/intake-form', {}, {}, IntakeForm>(
         );
       } catch (err) {
         logger.error(`Received error when updating DynamoDB table ${intakeFormTable} - ${err} `);
+        endTimer({ status: 400 });
         return res.status(400).send({ msg: 'Failed to submit image URLs to DynamoDB' });
       }
     } else {
