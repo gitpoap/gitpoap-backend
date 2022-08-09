@@ -60,7 +60,7 @@ const createIntakeFormDocForDynamo = (formData: IntakeForm): PutItemCommandInput
     shouldGitPOAPDesign: { BOOL: Boolean(formData.shouldGitPOAPDesign) },
     isOneGitPOAPPerRepo: { BOOL: Boolean(formData.isOneGitPOAPPerRepo) },
     repos: {
-      L: JSON.parse(formData.repos).map((repo: z.infer<typeof IntakeFormReposSchema>[0]) => ({
+      L: JSON.parse(formData.repos).map((repo: z.infer<typeof IntakeFormReposSchema>[number]) => ({
         M: {
           full_name: { S: repo.full_name },
           githubRepoId: { S: repo.githubRepoId },
@@ -135,6 +135,36 @@ const sendConfirmationEmail = async (
   });
 };
 
+const sendInternalConfirmationEmail = async (
+  formData: IntakeForm,
+  queueNumber: number | undefined,
+  urls: string[],
+) => {
+  postmarkClient.sendEmail({
+    From: 'team@gitpoap.io',
+    To: 'team@gitpoap.io',
+    Subject: `New intake form submission from ${formData.githubHandle} / ${formData.email} `,
+    TextBody: `
+      New intake form submission from ${formData.githubHandle} / ${formData.email}
+      Queue number: ${queueNumber ?? ''}
+      Name: ${formData.name}
+      Email: ${formData.email}
+      Notes: ${formData.notes}
+      Github Handle: ${formData.githubHandle}
+      Should GitPOAP Design: ${formData.shouldGitPOAPDesign}
+      Is One GitPOAP Per Repo: ${formData.isOneGitPOAPPerRepo}
+      \n
+      Repos:
+      ${JSON.parse(formData.repos).map(
+        (repo: z.infer<typeof IntakeFormReposSchema>[number]) => repo.full_name,
+      )}
+      \n
+      Images:
+      ${urls.join('\n')}
+      `,
+  });
+};
+
 onboardingRouter.post<'/intake-form', {}, {}, IntakeForm>(
   '/intake-form',
   upload.array('images', 5),
@@ -196,9 +226,9 @@ onboardingRouter.post<'/intake-form', {}, {}, IntakeForm>(
 
     /* Push images to S3 */
     const images = req.files;
+    const urls = [];
     if (images && Array.isArray(images) && images?.length > 0) {
       logger.info(`Found ${images.length} images to upload to S3. Attempting to upload.`);
-      const urls = [];
       for (const [index, image] of images.entries()) {
         try {
           const key = `${unixTime}-${req.body.githubHandle}-${req.body.email}-${index}`;
@@ -249,9 +279,10 @@ onboardingRouter.post<'/intake-form', {}, {}, IntakeForm>(
         `Retrieved count of all items in DynamoDB table ${intakeFormTable} - ${dynamoRes.Count}`,
       );
 
-      sendConfirmationEmail(req.body, req.body.email, tableCount);
-
+      await sendConfirmationEmail(req.body, req.body.email, tableCount);
       logger.info(`Sent confirmation email to ${req.body.email}`);
+      await sendInternalConfirmationEmail(req.body, tableCount, urls);
+      logger.info(`Sent internal confirmation email to team@gitpoap.io`);
     } catch (err) {
       /* Log error, but don't return error to user. Sending the email is secondary to storing the form data */
       logger.error(`Received error when sending confirmation email to ${req.body.email} - ${err} `);
