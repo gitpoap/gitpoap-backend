@@ -22,7 +22,7 @@ const S3_CONFIG_PROFILES: Record<'local' | 'prod', S3ClientConfigProfile> = {
   prod: {
     region: 'us-east-2',
     buckets: {
-      intakeForm: 'intake-form',
+      intakeForm: 'intake-form-prod',
     },
   },
 };
