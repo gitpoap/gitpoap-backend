@@ -275,6 +275,100 @@ Data:
 
 Note that the user submitting the request must have Admin credentials.
 
+## Submit an onboarding request via the onboarding intake form
+
+`POST /onboarding/intake-form`
+
+This endpoint should receive the data as `multipart/form-data` with fields like the following:
+
+Data:
+
+```json
+{
+  "name": "John Doe",
+  "email": "blah@gitpoap.io",
+  "notes": "I am a cool person",
+  "githubHandle": "johndoe",
+  "shouldGitPOAPDesign": "true",
+  "isOneGitPOAPPerRepo": "true",
+  "repos": [
+    {
+      "full_name": "gitpoap/gitpoap-backend",
+      "githubRepoId": "123456789",
+      "permissions": {
+        "admin": true,
+        "maintain": true,
+        "push": true,
+        "triage": true,
+        "pull": true
+      }
+    },
+    {
+      "full_name": "gitpoap/gitpoap-frontend",
+      "githubRepoId": "987654321",
+      "permissions": {
+        "admin": true,
+        "maintain": true,
+        "push": true,
+        "triage": true,
+        "pull": true
+      }
+    }
+  ],
+  "images": [
+    {
+      "filename": "image.png",
+      "content": "base64-encoded-image-data"
+    }
+  ]
+}
+```
+
+```json
+{
+  "formData": <form-data>,
+  "queueNumber": 10,
+  "msg": "Successfully submitted intake form"
+}
+```
+
+## Fetch the repos that a user is an admin or maintainer of
+
+`GET /onboarding/github/repos`
+
+This endpoint fetches these repos using the provided accessToken which maps to a GitHub OAuth token stored for the user on the backend.
+
+Data:
+
+```json
+{
+  "repos": [
+    {
+      "full_name": "gitpoap/gitpoap-backend",
+      "githubRepoId": "123456789",
+      "permissions": {
+        "admin": true,
+        "maintain": true,
+        "push": true,
+        "triage": true,
+        "pull": true
+      }
+    },
+    {
+      "full_name": "gitpoap/gitpoap-frontend",
+      "githubRepoId": "987654321",
+      "permissions": {
+        "admin": true,
+        "maintain": true,
+        "push": true,
+        "triage": true,
+        "pull": true
+      }
+    }
+  ]
+}
+```
+
 ## Appendix
 
 ### Generating Signatures
