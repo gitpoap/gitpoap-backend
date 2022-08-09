@@ -72,6 +72,7 @@ const createIntakeFormDocForDynamo = (formData: IntakeForm): PutItemCommandInput
     timestamp: { S: new Date().toISOString() },
     isComplete: { BOOL: false },
   },
+  ConditionExpression: 'attribute_not_exists(email)',
 });
 
 const sendConfirmationEmail = async (
