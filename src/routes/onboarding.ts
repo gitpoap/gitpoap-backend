@@ -3,8 +3,14 @@ import { Octokit } from 'octokit';
 import { z } from 'zod';
 import multer from 'multer';
 import { DateTime } from 'luxon';
-import { uploadMulterFile, s3configProfile } from '../external/s3';
-import { PutItemCommand, PutItemCommandInput, ScanCommand } from '@aws-sdk/client-dynamodb';
+import { uploadMulterFile, s3configProfile, s3 } from '../external/s3';
+import {
+  PutItemCommand,
+  PutItemCommandInput,
+  ScanCommand,
+  UpdateItemCommand,
+  UpdateItemCommandInput,
+} from '@aws-sdk/client-dynamodb';
 import { configProfile, dynamoDBClient } from '../external/dynamo';
 import { createScopedLogger } from '../logging';
 import { httpRequestDurationSeconds } from '../metrics';
@@ -76,6 +82,27 @@ const createIntakeFormDocForDynamo = (formData: IntakeForm): PutItemCommandInput
   ConditionExpression: 'attribute_not_exists(email)',
 });
 
+const createUpdateItemParamsForImages = (
+  githubHandle: string,
+  email: string,
+  imageUrls: string[],
+): UpdateItemCommandInput => {
+  return {
+    TableName: configProfile.tables.intakeForm,
+    Key: {
+      githubHandle: { S: githubHandle },
+      email: { S: email },
+    },
+    UpdateExpression: 'set images = :images',
+    ExpressionAttributeValues: {
+      ':images': {
+        L: imageUrls.map(url => ({ S: url })),
+      },
+    },
+    ReturnValues: 'UPDATED_NEW',
+  };
+};
+
 const sendConfirmationEmail = async (
   formData: IntakeForm,
   to: string,
@@ -117,6 +144,7 @@ onboardingRouter.post<'/intake-form', {}, {}, IntakeForm>(
 
     const endTimer = httpRequestDurationSeconds.startTimer('GET', '/onboarding/intake-form');
     const unixTime = DateTime.local().toUnixInteger();
+    const intakeFormTable = configProfile.tables.intakeForm;
 
     logger.info(
       `Request from GitHub handle ${req.body.githubHandle} to onboard via the intake form`,
@@ -157,27 +185,27 @@ onboardingRouter.post<'/intake-form', {}, {}, IntakeForm>(
       const params = createIntakeFormDocForDynamo(req.body);
       await dynamoDBClient.send(new PutItemCommand(params));
       logger.info(
-        `Submitted intake form for GitHub user - ${req.body.githubHandle} to DynamoDB table ${configProfile.tables.intakeForm}`,
+        `Submitted intake form for GitHub user - ${req.body.githubHandle} to DynamoDB table ${intakeFormTable}`,
       );
     } catch (err) {
       logger.error(
-        `Received error when pushing new item to DynamoDB table ${configProfile.tables.intakeForm} - ${err} `,
+        `Received error when pushing new item to DynamoDB table ${intakeFormTable} - ${err} `,
       );
       return res.status(400).send({ msg: 'Failed to submit intake form' });
     }
 
     /* Push images to S3 */
     const images = req.files;
-
     if (images && Array.isArray(images) && images?.length > 0) {
       logger.info(`Found ${images.length} images to upload to S3. Attempting to upload.`);
+      const urls = [];
       for (const [index, image] of images.entries()) {
         try {
-          await uploadMulterFile(
-            image,
-            s3configProfile.buckets.intakeForm,
-            `${unixTime}-${req.body.email}-${req.body.githubHandle}-${index}`,
-          );
+          const key = `${unixTime}-${req.body.githubHandle}-${req.body.email}-${index}`;
+          await uploadMulterFile(image, s3configProfile.buckets.intakeForm, key);
+          /* Get s3 file URL */
+          const url = `https://${s3configProfile.buckets.intakeForm}.s3.${s3configProfile.region}.amazonaws.com/${key}`;
+          urls.push(url);
           logger.info(
             `Uploaded image ${index + 1} to S3 bucket ${s3configProfile.buckets.intakeForm}`,
           );
@@ -187,6 +215,22 @@ onboardingRouter.post<'/intake-form', {}, {}, IntakeForm>(
         }
       }
       logger.info(`Uploaded ${images.length}/${images.length} images to S3.`);
+
+      /* Update new s3 image urls to the dynamo DB record with the associated private key  */
+      const updateParams = createUpdateItemParamsForImages(
+        req.body.githubHandle,
+        req.body.email,
+        urls,
+      );
+      try {
+        await dynamoDBClient.send(new UpdateItemCommand(updateParams));
+        logger.info(
+          `Updated DynamoDB table ${intakeFormTable} record with key: ${req.body.githubHandle} with new image URLs`,
+        );
+      } catch (err) {
+        logger.error(`Received error when updating DynamoDB table ${intakeFormTable} - ${err} `);
+        return res.status(400).send({ msg: 'Failed to submit image URLs to DynamoDB' });
+      }
     } else {
       logger.info(`No images found to upload to S3. Skipping S3 upload step.`);
     }
@@ -197,12 +241,12 @@ onboardingRouter.post<'/intake-form', {}, {}, IntakeForm>(
       /* Get the count of all items within the dynamo DB table */
       const dynamoRes = await dynamoDBClient.send(
         new ScanCommand({
-          TableName: configProfile.tables.intakeForm,
+          TableName: intakeFormTable,
         }),
       );
       tableCount = dynamoRes.Count;
       logger.info(
-        `Retrieved count of all items in DynamoDB table ${configProfile.tables.intakeForm} - ${dynamoRes.Count}`,
+        `Retrieved count of all items in DynamoDB table ${intakeFormTable} - ${dynamoRes.Count}`,
       );
 
       sendConfirmationEmail(req.body, req.body.email, tableCount);
