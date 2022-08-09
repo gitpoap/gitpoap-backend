@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { Octokit } from 'octokit';
 import { z } from 'zod';
 import multer from 'multer';
+import { DateTime } from 'luxon';
 import { uploadMulterFile, s3configProfile } from '../external/s3';
 import { PutItemCommand, PutItemCommandInput, ScanCommand } from '@aws-sdk/client-dynamodb';
 import { configProfile, dynamoDBClient } from '../external/dynamo';
@@ -115,11 +116,13 @@ onboardingRouter.post<'/intake-form', {}, {}, IntakeForm>(
     logger.debug(`Body: ${JSON.stringify(req.body)}`);
 
     const endTimer = httpRequestDurationSeconds.startTimer('GET', '/onboarding/intake-form');
+    const unixTime = DateTime.local().toUnixInteger();
 
     logger.info(
       `Request from GitHub handle ${req.body.githubHandle} to onboard via the intake form`,
     );
 
+    /* Validate form data */
     const schemaResult = IntakeFormSchema.safeParse(req.body);
     if (!schemaResult.success) {
       logger.warn(
@@ -129,6 +132,7 @@ onboardingRouter.post<'/intake-form', {}, {}, IntakeForm>(
       return res.status(400).send({ issues: schemaResult.error.issues });
     }
 
+    /* Validate repos array */
     const reposSchemaResult = IntakeFormReposSchema.safeParse(JSON.parse(req.body.repos));
     if (!reposSchemaResult.success) {
       logger.warn(
@@ -138,6 +142,7 @@ onboardingRouter.post<'/intake-form', {}, {}, IntakeForm>(
       return res.status(400).send({ issues: reposSchemaResult.error.issues });
     }
 
+    /* Validate image files array */
     const imageSchemaResult = IntakeFormImageFilesSchema.safeParse(req.files);
     if (!imageSchemaResult.success) {
       logger.warn(
@@ -152,7 +157,7 @@ onboardingRouter.post<'/intake-form', {}, {}, IntakeForm>(
       const params = createIntakeFormDocForDynamo(req.body);
       await dynamoDBClient.send(new PutItemCommand(params));
       logger.info(
-        `Successfully submitted intake form for GitHub user - ${req.body.githubHandle} to DynamoDB table ${configProfile.tables.intakeForm}`,
+        `Submitted intake form for GitHub user - ${req.body.githubHandle} to DynamoDB table ${configProfile.tables.intakeForm}`,
       );
     } catch (err) {
       logger.error(
@@ -171,25 +176,23 @@ onboardingRouter.post<'/intake-form', {}, {}, IntakeForm>(
           await uploadMulterFile(
             image,
             s3configProfile.buckets.intakeForm,
-            `${req.body.email}-${req.body.githubHandle}-${index}`,
+            `${unixTime}-${req.body.email}-${req.body.githubHandle}-${index}`,
           );
           logger.info(
-            `Successfully uploaded image ${index + 1} to S3 bucket ${
-              s3configProfile.buckets.intakeForm
-            }`,
+            `Uploaded image ${index + 1} to S3 bucket ${s3configProfile.buckets.intakeForm}`,
           );
         } catch (err) {
           logger.error(`Received error when uploading image to S3 - ${err}`);
           return res.status(400).send({ msg: 'Failed to submit intake form assets to S3' });
         }
       }
-      logger.info(`Successfully uploaded ${images.length}/${images.length} images to S3.`);
+      logger.info(`Uploaded ${images.length}/${images.length} images to S3.`);
     } else {
       logger.info(`No images found to upload to S3. Skipping S3 upload step.`);
     }
 
-    let tableCount = undefined;
     /* If successful, then dispatch confirmation email to user via PostMark. Also fetch the DynamoDB item count as a proxy for queue number */
+    let tableCount = undefined;
     try {
       /* Get the count of all items within the dynamo DB table */
       const dynamoRes = await dynamoDBClient.send(
@@ -199,16 +202,20 @@ onboardingRouter.post<'/intake-form', {}, {}, IntakeForm>(
       );
       tableCount = dynamoRes.Count;
       logger.info(
-        `Successfully retrieved count of all items in DynamoDB table ${configProfile.tables.intakeForm} - ${dynamoRes.Count}`,
+        `Retrieved count of all items in DynamoDB table ${configProfile.tables.intakeForm} - ${dynamoRes.Count}`,
       );
 
       sendConfirmationEmail(req.body, req.body.email, tableCount);
 
-      logger.info(`Successfully sent confirmation email to ${req.body.email}`);
+      logger.info(`Sent confirmation email to ${req.body.email}`);
     } catch (err) {
       /* Log error, but don't return error to user. Sending the email is secondary to storing the form data */
       logger.error(`Received error when sending confirmation email to ${req.body.email} - ${err} `);
     }
+
+    logger.info(
+      `Successfully submitted intake form for GitHub user - ${req.body.githubHandle} and email - ${req.body.email}`,
+    );
 
     endTimer({ status: 200 });
 
