@@ -339,3 +339,60 @@ v1Router.get('/repo/:owner/:name/badge', async (req, res) => {
 
   return res.status(200).send(badgeSvg);
 });
+
+v1Router.get('/gitpoaps', async (req, res) => {
+  const logger = createScopedLogger('GET /v1/gitpoaps');
+
+  logger.info('Request for all GitPOAPs');
+
+  const endTimer = httpRequestDurationSeconds.startTimer('GET', '/v1/gitpoaps');
+
+  const gitPOAPs = await context.prisma.gitPOAP.findMany({
+    select: {
+      id: true,
+      poapEventId: true,
+      name: true,
+      year: true,
+      description: true,
+      imageUrl: true,
+      project: {
+        select: {
+          repos: {
+            select: {
+              name: true,
+              organization: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
+        },
+      },
+      // Would have used _count but we can't have a where
+      claims: {
+        where: {
+          status: ClaimStatus.CLAIMED,
+        },
+        select: {
+          id: true,
+        },
+      },
+    },
+  });
+
+  const results = gitPOAPs.map(gitPOAP => ({
+    gitPoapEventId: gitPOAP.id,
+    poapEventId: gitPOAP.poapEventId,
+    name: gitPOAP.name,
+    year: gitPOAP.year,
+    description: gitPOAP.description,
+    imageUrl: gitPOAP.imageUrl,
+    repositories: gitPOAP.project.repos.map(r => `${r.organization.name}/${r.name}`),
+    mintedCount: gitPOAP.claims.length,
+  }));
+
+  logger.debug('Completed request for all GitPOAPs');
+
+  return res.status(200).send(results);
+});
