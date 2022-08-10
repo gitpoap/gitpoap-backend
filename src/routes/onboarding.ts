@@ -79,7 +79,8 @@ const createIntakeFormDocForDynamo = (formData: IntakeForm): PutItemCommandInput
     timestamp: { S: new Date().toISOString() },
     isComplete: { BOOL: false },
   },
-  ConditionExpression: 'attribute_not_exists(email)',
+  /* @TODO: remove this once testing is complete ~ JPB Aug 10, 2022 */
+  // ConditionExpression: 'attribute_not_exists(email)',
 });
 
 const createUpdateItemParamsForImages = (
