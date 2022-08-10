@@ -8,77 +8,13 @@ import { badgen } from 'badgen';
 import { GitPOAPMiniLogo } from './constants';
 import { mapClaimsToGitPOAPResults } from './helpers';
 import { z } from 'zod';
+import { poapRouter } from './routes/poap';
+import { poapEventRouter } from './routes/poapEvent';
 
 export const v1Router = Router();
 
-v1Router.get('/poap/:poapTokenId/is-gitpoap', async function (req, res) {
-  const logger = createScopedLogger('GET /v1/poap/:poapTokenId/is-gitpoap');
-
-  logger.info(`Request to check it POAP token id ${req.params.poapTokenId} is a GitPOAP`);
-
-  const endTimer = httpRequestDurationSeconds.startTimer('GET', '/v1/poap/:poapTokenId/is-gitpoap');
-
-  const gitPOAP = await context.prisma.claim.findUnique({
-    where: {
-      poapTokenId: req.params.poapTokenId,
-    },
-    select: {
-      gitPOAPId: true,
-    },
-  });
-
-  endTimer({ status: 200 });
-
-  logger.debug(
-    `Completed request to check it POAP token id ${req.params.poapTokenId} is a GitPOAP`,
-  );
-
-  if (gitPOAP === null) {
-    return res.status(200).send({ isGitPOAP: false });
-  }
-
-  return res.status(200).send({
-    isGitPOAP: true,
-    gitPOAPId: gitPOAP.gitPOAPId,
-  });
-});
-
-v1Router.get('/poap-event/:poapEventId/is-gitpoap', async function (req, res) {
-  const logger = createScopedLogger('GET /v1/poap-event/:poapEventId/is-gitpoap');
-
-  logger.info(
-    `Request to check it POAP event id ${req.params.poapEventId} is a GitPOAP project contribution level`,
-  );
-
-  const endTimer = httpRequestDurationSeconds.startTimer(
-    'GET',
-    '/v1/poap-event/:poapEventId/is-gitpoap',
-  );
-
-  const gitPOAP = await context.prisma.gitPOAP.findUnique({
-    where: {
-      poapEventId: parseInt(req.params.poapEventId, 10),
-    },
-    select: {
-      id: true,
-    },
-  });
-
-  endTimer({ status: 200 });
-
-  logger.info(
-    `Completed request to check it POAP event id ${req.params.poapEventId} is a GitPOAP project contribution level`,
-  );
-
-  if (gitPOAP === null) {
-    return res.status(200).send({ isGitPOAP: false });
-  }
-
-  return res.status(200).send({
-    isGitPOAP: true,
-    gitPOAPId: gitPOAP.id,
-  });
-});
+v1Router.use('/poap', poapRouter);
+v1Router.use('/poap-event', poapEventRouter);
 
 v1Router.get('/gitpoaps/:gitpoapId/addresses', async function (req, res) {
   const logger = createScopedLogger('GET /v1/gitpoaps/:gitpoapId/addresses');
@@ -340,12 +276,12 @@ v1Router.get('/repo/:owner/:name/badge', async (req, res) => {
   return res.status(200).send(badgeSvg);
 });
 
-v1Router.get('/gitpoaps', async (req, res) => {
+v1Router.get('/gitpoap-events', async (req, res) => {
   const logger = createScopedLogger('GET /v1/gitpoaps');
 
-  logger.info('Request for all GitPOAPs');
+  logger.info('Request for all GitPOAP events');
 
-  const endTimer = httpRequestDurationSeconds.startTimer('GET', '/v1/gitpoaps');
+  const endTimer = httpRequestDurationSeconds.startTimer('GET', '/v1/gitpoap-events');
 
   const gitPOAPs = await context.prisma.gitPOAP.findMany({
     select: {
@@ -392,7 +328,9 @@ v1Router.get('/gitpoaps', async (req, res) => {
     mintedCount: gitPOAP.claims.length,
   }));
 
-  logger.debug('Completed request for all GitPOAPs');
+  endTimer({ status: 200 });
+
+  logger.debug('Completed request for all GitPOAP events');
 
   return res.status(200).send(results);
 });
