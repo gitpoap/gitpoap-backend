@@ -11,8 +11,10 @@ import {
   Repo,
   User,
 } from '@prisma/client';
+import { POAPEvent } from '../.dockerfiles/fake-poap-api/poap';
 import { createScopedLogger } from '../src/logging';
 import { prisma } from './seed';
+import { generatePOAPSecret } from '../src/lib/secrets';
 
 const logger = createScopedLogger('factories');
 
@@ -161,6 +163,29 @@ export class GitPOAPFactory {
 
     return gitPOAP;
   };
+
+  static createGitPOAPFromEvent = async (
+    projectId: number,
+    event: POAPEvent,
+    status?: GitPOAPStatus,
+    ongoing?: boolean,
+    level?: number,
+    threshold?: number,
+  ): Promise<GitPOAP> => {
+    return await GitPOAPFactory.createGitPOAP(
+      event.name,
+      event.image_url,
+      event.description,
+      event.year,
+      event.id,
+      projectId,
+      generatePOAPSecret(),
+      status,
+      ongoing,
+      level,
+      threshold,
+    );
+  }
 }
 
 export class FeaturedPOAPFactory {

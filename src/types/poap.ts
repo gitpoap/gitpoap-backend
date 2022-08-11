@@ -3,7 +3,7 @@ import { Field, ObjectType } from 'type-graphql';
 @ObjectType()
 export class POAPEvent {
   @Field()
-  id: Number;
+  id: number;
 
   @Field()
   fancy_id: string;
@@ -39,7 +39,7 @@ export class POAPEvent {
   expiry_date: string;
 
   @Field()
-  supply: Number;
+  supply: number;
 }
 
 @ObjectType()
