@@ -45,7 +45,7 @@ describe('public-api/v1/address/:address/gitpoaps', () => {
     expect(data[0].poapTokenId).toEqual('123456789');
     expect(data[0].poapEventId).toEqual(29009);
     expect(data[0].name).toEqual(event29009.name);
-    expect(data[0].year).toEqual(2020);
+    expect(data[0].year).toEqual(event29009.year);
     expect(data[0].description).toEqual(event29009.description);
     expect(data[0].imageUrl).toEqual(event29009.image_url);
     expect(data[0].repositories.length).toEqual(1);
@@ -88,7 +88,7 @@ describe('public-api/v1/github/user/:githubHandle/gitpoaps', () => {
       expect(data[0].poapTokenId).toEqual('pizza-pie');
       expect(data[0].poapEventId).toEqual(3);
       expect(data[0].name).toEqual(event3.name);
-      expect(data[0].year).toEqual(2015);
+      expect(data[0].year).toEqual(event3.year);
       expect(data[0].description).toEqual(event3.description);
       expect(data[0].imageUrl).toEqual(event3.image_url);
       expect(data[0].repositories.length).toEqual(1);
@@ -152,7 +152,7 @@ describe('public-api/v1/github/user/:githubHandle/gitpoaps', () => {
     expect(data[0].poapTokenId).toBeNull();
     expect(data[0].poapEventId).toEqual(36571);
     expect(data[0].name).toEqual(event36571.name);
-    expect(data[0].year).toEqual(2022);
+    expect(data[0].year).toEqual(event36571.year);
     expect(data[0].description).toEqual(event36571.description);
     expect(data[0].imageUrl).toEqual(event36571.image_url);
     expect(data[0].repositories.length).toEqual(1);
