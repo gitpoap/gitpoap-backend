@@ -129,5 +129,5 @@ gitpoapsRouter.get('/events', async (req, res) => {
 
   logger.debug('Completed request for all GitPOAP events');
 
-  return res.status(200).send({ gitPOAPEvents: results });
+  return res.status(200).send({ gitPoapEvents: results });
 });
