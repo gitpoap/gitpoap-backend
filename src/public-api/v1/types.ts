@@ -11,3 +11,14 @@ export type GitPOAPResultType = {
   earnedAt: string;
   mintedAt: string | null;
 };
+
+export type GitPOAPEventResultType = {
+  gitPoapEventId: number;
+  poapEventId: number;
+  name: string;
+  year: number;
+  description: string;
+  imageUrl: string;
+  repositories: string[];
+  mintedCount: number;
+};
