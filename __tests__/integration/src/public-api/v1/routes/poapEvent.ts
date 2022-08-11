@@ -1,4 +1,22 @@
 import fetch from 'cross-fetch';
+import {
+  event1,
+  event2,
+  event3,
+  event19375,
+  event29009,
+  event34634,
+  event36568,
+  event36569,
+  event36570,
+  event36571,
+  event36572,
+  event37428,
+  event37429,
+  event37430,
+  event36573,
+  event36574,
+} from '../../../../../../.dockerfiles/fake-poap-api/data';
 
 const PUBLIC_API_URL = 'http://public-api-server:3122';
 
@@ -25,3 +43,30 @@ describe('public-api/v1/poap-event/:poapEventId/is-gitpoap', () => {
   });
 });
 
+describe('public-api/v1/poap-event/gitpoap-event-ids', () => {
+  it('Returns IDs for all GitPOAPs', async () => {
+    const response = await fetch(`${PUBLIC_API_URL}/v1/poap-event/gitpoap-event-ids`);
+
+    expect(response.status).toBeLessThan(400);
+
+    const data = await response.json();
+
+    expect(data.length).toEqual(16);
+    expect(data).toContainEqual(event1.id);
+    expect(data).toContainEqual(event2.id);
+    expect(data).toContainEqual(event3.id);
+    expect(data).toContainEqual(event19375.id);
+    expect(data).toContainEqual(event29009.id);
+    expect(data).toContainEqual(event34634.id);
+    expect(data).toContainEqual(event36568.id);
+    expect(data).toContainEqual(event36569.id);
+    expect(data).toContainEqual(event36570.id);
+    expect(data).toContainEqual(event36571.id);
+    expect(data).toContainEqual(event36572.id);
+    expect(data).toContainEqual(event37428.id);
+    expect(data).toContainEqual(event37429.id);
+    expect(data).toContainEqual(event37430.id);
+    expect(data).toContainEqual(event36573.id);
+    expect(data).toContainEqual(event36574.id);
+  });
+});
