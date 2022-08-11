@@ -64,5 +64,5 @@ poapEventRouter.get('/gitpoap-event-ids', async function (req, res) {
 
   logger.debug('Completed request for all the POAP Event IDs that are GitPOAPs');
 
-  return res.status(200).send(results);
+  return res.status(200).send({ poapEventIds: results });
 });

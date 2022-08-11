@@ -33,21 +33,22 @@ describe('public-api/v1/poap/gitpoap-ids', () => {
 
     const data = await response.json();
 
-    expect(data.length).toEqual(13);
+    expect(data.poapIds).not.toEqual(null);
+    expect(data.poapIds.length).toEqual(13);
 
     // names are from variables in prisma/seed.ts
-    expect(data).toContainEqual('thunderdome'); // claim1
-    expect(data).toContainEqual('4068606');     // claim2
-    expect(data).toContainEqual('ethdenver');   // claim4
-    expect(data).toContainEqual('4078452');     // claim5
-    expect(data).toContainEqual('pizza-pie');   // claim8
-    expect(data).toContainEqual('4082459');     // claim9
-    expect(data).toContainEqual('3217451');     // claim14
-    expect(data).toContainEqual('3973554');     // claim16
-    expect(data).toContainEqual('4126448');     // claim17
-    expect(data).toContainEqual('123456789');   // claim21
-    expect(data).toContainEqual('1234567891');  // claim9B
-    expect(data).toContainEqual('1234567892');  // claim9C
-    expect(data).toContainEqual('1234567893');  // claim10C
+    expect(data.poapIds).toContainEqual('thunderdome'); // claim1
+    expect(data.poapIds).toContainEqual('4068606');     // claim2
+    expect(data.poapIds).toContainEqual('ethdenver');   // claim4
+    expect(data.poapIds).toContainEqual('4078452');     // claim5
+    expect(data.poapIds).toContainEqual('pizza-pie');   // claim8
+    expect(data.poapIds).toContainEqual('4082459');     // claim9
+    expect(data.poapIds).toContainEqual('3217451');     // claim14
+    expect(data.poapIds).toContainEqual('3973554');     // claim16
+    expect(data.poapIds).toContainEqual('4126448');     // claim17
+    expect(data.poapIds).toContainEqual('123456789');   // claim21
+    expect(data.poapIds).toContainEqual('1234567891');  // claim9B
+    expect(data.poapIds).toContainEqual('1234567892');  // claim9C
+    expect(data.poapIds).toContainEqual('1234567893');  // claim10C
   });
 });

@@ -60,5 +60,5 @@ poapRouter.get('/gitpoap-ids', async function (req, res) {
 
   logger.info('Completed request for all the POAP Token IDs that are GitPOAPs');
 
-  return res.status(200).send(results);
+  return res.status(200).send({ poapIds: results });
 });

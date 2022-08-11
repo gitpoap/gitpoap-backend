@@ -1,5 +1,24 @@
 import fetch from 'cross-fetch';
 import { ADDRESSES } from '../../../../../../prisma/constants';
+import {
+  event1,
+  event2,
+  event3,
+  event19375,
+  event29009,
+  event34634,
+  event36568,
+  event36569,
+  event36570,
+  event36571,
+  event36572,
+  event37428,
+  event37429,
+  event37430,
+  event36573,
+  event36574,
+} from '../../../../../../.dockerfiles/fake-poap-api/data';
+import { POAPEvent } from '../../../../../../.dockerfiles/fake-poap-api/poap';
 
 const PUBLIC_API_URL = 'http://public-api-server:3122';
 
@@ -38,5 +57,130 @@ describe('public-api/v1/gitpoaps/addresses', () => {
     expect(data.addresses).toContain(ADDRESSES.jay);
     expect(data.addresses).toContain(ADDRESSES.colfax);
     expect(data.addresses).toContain(ADDRESSES.anthony2);
+  });
+});
+
+describe('public-api/v1/gitpoaps/events', () => {
+  const genExpectedDataFromEvent = (
+    gitPoapEventId: number,
+    event: POAPEvent,
+    repositories: string[],
+    mintedCount: number,
+  ) => ({
+    gitPoapEventId,
+    poapEventId: event.id,
+    name: event.name,
+    year: event.year,
+    description: event.description,
+    imageUrl: event.image_url,
+    repositories,
+    mintedCount,
+  });
+
+  it('Returns all the GitPOAP events', async () => {
+    const response = await fetch(`${PUBLIC_API_URL}/v1/gitpoaps/events`);
+
+    expect(response.status).toBeLessThan(400);
+
+    const data = await response.json();
+
+    expect(data.gitPOAPEvents).not.toEqual(null);
+    expect(data.gitPOAPEvents.length).toEqual(16);
+    expect(data.gitPOAPEvents).toContainEqual(genExpectedDataFromEvent(
+      1,
+      event1,
+      ['org43/repo34'],
+      2,
+    ));
+    expect(data.gitPOAPEvents).toContainEqual(genExpectedDataFromEvent(
+      2,
+      event2,
+      ['seven-heaven/repo7'],
+      2,
+    ));
+    expect(data.gitPOAPEvents).toContainEqual(genExpectedDataFromEvent(
+      3,
+      event3,
+      ['some-other-org/repo568'],
+      2,
+    ));
+    expect(data.gitPOAPEvents).toContainEqual(genExpectedDataFromEvent(
+      4,
+      event19375,
+      ['gitpoap/gitpoap-fe'],
+      1,
+    ));
+    expect(data.gitPOAPEvents).toContainEqual(genExpectedDataFromEvent(
+      5,
+      event29009,
+      ['gitpoap/gitpoap-backend'],
+      3,
+    ));
+    expect(data.gitPOAPEvents).toContainEqual(genExpectedDataFromEvent(
+      6,
+      event34634,
+      ['burz/dopex'],
+      0,
+    ));
+    expect(data.gitPOAPEvents).toContainEqual(genExpectedDataFromEvent(
+      7,
+      event36568,
+      ['gitpoap/gitpoap-fe'],
+      0,
+    ));
+    expect(data.gitPOAPEvents).toContainEqual(genExpectedDataFromEvent(
+      8,
+      event36569,
+      ['gitpoap/gitpoap-fe'],
+      0,
+    ));
+    expect(data.gitPOAPEvents).toContainEqual(genExpectedDataFromEvent(
+      9,
+      event36570,
+      ['gitpoap/gitpoap-backend'],
+      2,
+    ));
+    expect(data.gitPOAPEvents).toContainEqual(genExpectedDataFromEvent(
+      10,
+      event36571,
+      ['gitpoap/gitpoap-backend'],
+      1,
+    ));
+    expect(data.gitPOAPEvents).toContainEqual(genExpectedDataFromEvent(
+      11,
+      event36572,
+      ['gitpoap/gitpoap-backend'],
+      0,
+    ));
+    expect(data.gitPOAPEvents).toContainEqual(genExpectedDataFromEvent(
+      12,
+      event37428,
+      ['stake-house/wagyu-installer'],
+      0,
+    ));
+    expect(data.gitPOAPEvents).toContainEqual(genExpectedDataFromEvent(
+      13,
+      event37429,
+      ['stake-house/wagyu-installer'],
+      0,
+    ));
+    expect(data.gitPOAPEvents).toContainEqual(genExpectedDataFromEvent(
+      14,
+      event37430,
+      ['stake-house/wagyu-installer'],
+      0,
+    ));
+    expect(data.gitPOAPEvents).toContainEqual(genExpectedDataFromEvent(
+      15,
+      event36573,
+      ['gitpoap/gitpoap-bot-test-repo'],
+      0,
+    ));
+    expect(data.gitPOAPEvents).toContainEqual(genExpectedDataFromEvent(
+      16,
+      event36574,
+      ['gitpoap/gitpoap-bot-test-repo'],
+      0,
+    ));
   });
 });

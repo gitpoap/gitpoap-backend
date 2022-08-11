@@ -27,7 +27,7 @@ export class POAPEvent {
   description: string;
 
   @Field()
-  year: Number;
+  year: number;
 
   @Field()
   start_date: string;
