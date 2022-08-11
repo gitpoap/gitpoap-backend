@@ -19,6 +19,7 @@ import {
   event36574,
 } from '../../../../../../.dockerfiles/fake-poap-api/data';
 import { POAPEvent } from '../../../../../../.dockerfiles/fake-poap-api/poap';
+import { GitPOAPEventResultType } from '../../../../../../src/public-api/v1/types';
 
 const PUBLIC_API_URL = 'http://public-api-server:3122';
 
@@ -66,7 +67,7 @@ describe('public-api/v1/gitpoaps/events', () => {
     event: POAPEvent,
     repositories: string[],
     mintedCount: number,
-  ) => ({
+  ): GitPOAPEventResultType => ({
     gitPoapEventId,
     poapEventId: event.id,
     name: event.name,
