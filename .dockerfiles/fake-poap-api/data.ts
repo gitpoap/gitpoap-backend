@@ -25,7 +25,7 @@ export const event2: POAPEvent = {
   country: '',
   city: '',
   description: '#eth #denver #2022',
-  year: 2022,
+  year: 2024,
   start_date: '2022-02-11',
   end_date: '2022-02-23',
   expiry_date: '2022-03-28',
