@@ -46,7 +46,7 @@ export class CustomOrganizationResolver {
       SELECT o.*,
         COUNT(DISTINCT c."userId") AS "contributorCount",
         COUNT(DISTINCT g.id) AS "gitPOAPCount",
-        COUNT(c.id) AS "mintedGitPOAPCount",
+        COUNT(DISTINCT c.id) AS "mintedGitPOAPCount",
         COUNT(DISTINCT r.id) AS "repoCount"
       FROM "Organization" as o
       INNER JOIN "Repo" AS r ON r."organizationId" = o.id
@@ -177,7 +177,7 @@ export class CustomOrganizationResolver {
       SELECT r.*,
         COUNT(DISTINCT c."userId") AS "contributorCount",
         COUNT(DISTINCT g.id) AS "gitPOAPCount",
-        COUNT(c.id) AS "mintedGitPOAPCount"
+        COUNT(DISTINCT c.id) AS "mintedGitPOAPCount"
       FROM "Repo" as r
       INNER JOIN "Project" AS p ON p.id = r."projectId"
       INNER JOIN "GitPOAP" AS g ON g."projectId" = p.id
