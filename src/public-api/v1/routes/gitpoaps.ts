@@ -3,6 +3,7 @@ import { context } from '../../../context';
 import { httpRequestDurationSeconds } from '../../../metrics';
 import { createScopedLogger } from '../../../logging';
 import { ClaimStatus } from '@generated/type-graphql';
+import { GitPOAPEventResultType } from '../types';
 
 export const gitpoapsRouter = Router();
 
@@ -114,7 +115,7 @@ gitpoapsRouter.get('/events', async (req, res) => {
     },
   });
 
-  const results = gitPOAPs.map(gitPOAP => ({
+  const results: GitPOAPEventResultType[] = gitPOAPs.map(gitPOAP => ({
     gitPoapEventId: gitPOAP.id,
     poapEventId: gitPOAP.poapEventId,
     name: gitPOAP.name,
