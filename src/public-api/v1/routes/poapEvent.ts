@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { context } from '../../../context';
 import { httpRequestDurationSeconds } from '../../../metrics';
 import { createScopedLogger } from '../../../logging';
+import { retrievePOAPEventInfo } from '../../../external/poap';
 
 export const poapEventRouter = Router();
 
@@ -65,4 +66,44 @@ poapEventRouter.get('/gitpoap-event-ids', async function (req, res) {
   logger.debug('Completed request for all the POAP Event IDs that are GitPOAPs');
 
   return res.status(200).send({ poapEventIds: results });
+});
+
+poapEventRouter.get('/gitpoap-event-fancy-ids', async function (req, res) {
+  const logger = createScopedLogger('GET /v1/poap-event/gitpoap-event-fancy-ids');
+
+  logger.info('Request for all the POAP Event Fancy IDs that are GitPOAPs');
+
+  const endTimer = httpRequestDurationSeconds.startTimer(
+    'GET',
+    '/v1/poap-event/gitpoap-event-fancy-ids',
+  );
+
+  // Note that we don't need to restrict to [APPROVED, REDEEM_REQUEST_PENDING], since
+  // UNAPPROVED just means that the codes haven't been approved yet, the event still exists.
+  // Presumably we will never run into a case where they don't approve our codes request
+  const gitPOAPs = await context.prisma.gitPOAP.findMany({
+    select: {
+      id: true,
+      poapEventId: true,
+    },
+  });
+
+  const results: string[] = [];
+  for (const gitPOAP of gitPOAPs) {
+    const poapEventData = await retrievePOAPEventInfo(gitPOAP.poapEventId);
+    if (poapEventData === null) {
+      const msg = `Failed to retrieve POAP Event Info (ID: ${gitPOAP.poapEventId}) for GitPOAP ID ${gitPOAP.id}`;
+      logger.error(msg);
+      endTimer({ status: 500 });
+      return res.status(500).send({ msg });
+    }
+
+    results.push(poapEventData.fancy_id);
+  }
+
+  endTimer({ status: 200 });
+
+  logger.debug('Completed request for all the POAP Event Fancy IDs that are GitPOAPs');
+
+  return res.status(200).send({ poapEventFancyIds: results });
 });
