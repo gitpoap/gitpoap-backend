@@ -71,3 +71,32 @@ describe('public-api/v1/poap-event/gitpoap-event-ids', () => {
     expect(data.poapEventIds).toContainEqual(event36574.id);
   });
 });
+
+describe('public-api/v1/poap-event/gitpoap-event-fancy-ids', () => {
+  it('Returns Fancy IDs for all GitPOAPs', async () => {
+    const response = await fetch(`${PUBLIC_API_URL}/v1/poap-event/gitpoap-event-fancy-ids`);
+
+    expect(response.status).toBeLessThan(400);
+
+    const data = await response.json();
+
+    expect(data.poapEventFancyIds).not.toEqual(null);
+    expect(data.poapEventFancyIds.length).toEqual(16);
+    expect(data.poapEventFancyIds).toContainEqual(event1.fancy_id);
+    expect(data.poapEventFancyIds).toContainEqual(event2.fancy_id);
+    expect(data.poapEventFancyIds).toContainEqual(event3.fancy_id);
+    expect(data.poapEventFancyIds).toContainEqual(event19375.fancy_id);
+    expect(data.poapEventFancyIds).toContainEqual(event29009.fancy_id);
+    expect(data.poapEventFancyIds).toContainEqual(event34634.fancy_id);
+    expect(data.poapEventFancyIds).toContainEqual(event36568.fancy_id);
+    expect(data.poapEventFancyIds).toContainEqual(event36569.fancy_id);
+    expect(data.poapEventFancyIds).toContainEqual(event36570.fancy_id);
+    expect(data.poapEventFancyIds).toContainEqual(event36571.fancy_id);
+    expect(data.poapEventFancyIds).toContainEqual(event36572.fancy_id);
+    expect(data.poapEventFancyIds).toContainEqual(event37428.fancy_id);
+    expect(data.poapEventFancyIds).toContainEqual(event37429.fancy_id);
+    expect(data.poapEventFancyIds).toContainEqual(event37430.fancy_id);
+    expect(data.poapEventFancyIds).toContainEqual(event36573.fancy_id);
+    expect(data.poapEventFancyIds).toContainEqual(event36574.fancy_id);
+  });
+});
