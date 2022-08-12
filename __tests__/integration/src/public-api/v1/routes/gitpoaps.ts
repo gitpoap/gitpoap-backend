@@ -70,6 +70,7 @@ describe('public-api/v1/gitpoaps/events', () => {
   ): GitPOAPEventResultType => ({
     gitPoapEventId,
     poapEventId: event.id,
+    poapEventFancyId: event.fancy_id,
     name: event.name,
     year: event.year,
     description: event.description,
