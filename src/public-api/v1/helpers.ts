@@ -2,7 +2,7 @@ import { GithubPullRequest } from '@prisma/client';
 import { DateTime } from 'luxon';
 import { retrievePOAPEventInfo } from '../../external/poap';
 import { createScopedLogger } from '../../logging';
-import { GitPOAPResultType } from './types';
+import { GitPOAPResultType, GitPOAPEventResultType } from './types';
 
 type Claim = {
   poapTokenId: string | null;
@@ -17,12 +17,27 @@ type Claim = {
         };
       }[];
     };
-    year: number;
   };
   pullRequestEarned: GithubPullRequest | null;
   id: number;
   createdAt: Date;
   mintedAt: Date | null;
+};
+
+type GitPOAP = {
+  id: number;
+  poapEventId: number;
+  project: {
+    repos: {
+      name: string;
+      organization: {
+        name: string;
+      };
+    }[];
+  };
+  claims: {
+    id: number;
+  }[];
 };
 
 export const mapClaimsToGitPOAPResults = async (
@@ -57,8 +72,9 @@ export const mapClaimsToGitPOAPResults = async (
       gitPoapEventId: claim.gitPOAP.id,
       poapTokenId: <string>claim.poapTokenId,
       poapEventId: claim.gitPOAP.poapEventId,
+      poapEventFancyId: poapEventData.fancy_id,
       name: poapEventData.name,
-      year: claim.gitPOAP.year,
+      year: poapEventData.year,
       description: poapEventData.description,
       imageUrl: poapEventData.image_url,
       repositories,
@@ -69,3 +85,35 @@ export const mapClaimsToGitPOAPResults = async (
 
   return results;
 };
+
+export async function mapGitPOAPsToGitPOAPResults(
+  gitPOAPs: GitPOAP[],
+): Promise<GitPOAPEventResultType[] | null> {
+  const logger = createScopedLogger('mapGitPOAPsToGitPOAPResults');
+
+  let results: GitPOAPEventResultType[] = [];
+
+  for (const gitPOAP of gitPOAPs) {
+    const poapEventData = await retrievePOAPEventInfo(gitPOAP.poapEventId);
+    if (poapEventData === null) {
+      logger.error(
+        `Failed to retrieve POAP Event (ID: ${gitPOAP.poapEventId}) for GitPOAP ID ${gitPOAP.id}`,
+      );
+      return null;
+    }
+
+    results.push({
+      gitPoapEventId: gitPOAP.id,
+      poapEventId: gitPOAP.poapEventId,
+      poapEventFancyId: poapEventData.fancy_id,
+      name: poapEventData.name,
+      year: poapEventData.year,
+      description: poapEventData.description,
+      imageUrl: poapEventData.image_url,
+      repositories: gitPOAP.project.repos.map(r => `${r.organization.name}/${r.name}`),
+      mintedCount: gitPOAP.claims.length,
+    });
+  }
+
+  return results;
+}
