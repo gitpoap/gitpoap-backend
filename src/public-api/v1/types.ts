@@ -3,6 +3,7 @@ export type GitPOAPResultType = {
   gitPoapEventId: number;
   poapTokenId: string;
   poapEventId: number;
+  poapEventFancyId: string;
   name: string;
   year: number;
   description: string;
@@ -15,6 +16,7 @@ export type GitPOAPResultType = {
 export type GitPOAPEventResultType = {
   gitPoapEventId: number;
   poapEventId: number;
+  poapEventFancyId: string;
   name: string;
   year: number;
   description: string;

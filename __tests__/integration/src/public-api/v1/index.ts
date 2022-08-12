@@ -1,7 +1,12 @@
 import fetch from 'cross-fetch';
 import { ADDRESSES, GH_HANDLES } from '../../../../../prisma/constants';
 import cheerio from 'cheerio';
-import { event29009, event3, event36571 } from '../../../../../.dockerfiles/fake-poap-api/data';
+import {
+  event2,
+  event3,
+  event29009,
+  event36571,
+} from '../../../../../.dockerfiles/fake-poap-api/data';
 
 const PUBLIC_API_URL = 'http://public-api-server:3122';
 
@@ -43,7 +48,8 @@ describe('public-api/v1/address/:address/gitpoaps', () => {
     expect(data[0].gitPoapId).toEqual(21);
     expect(data[0].gitPoapEventId).toEqual(5);
     expect(data[0].poapTokenId).toEqual('123456789');
-    expect(data[0].poapEventId).toEqual(29009);
+    expect(data[0].poapEventId).toEqual(event29009.id);
+    expect(data[0].poapEventFancyId).toEqual(event29009.fancy_id);
     expect(data[0].name).toEqual(event29009.name);
     expect(data[0].year).toEqual(event29009.year);
     expect(data[0].description).toEqual(event29009.description);
@@ -86,7 +92,8 @@ describe('public-api/v1/github/user/:githubHandle/gitpoaps', () => {
       expect(data[0].gitPoapId).toEqual(8);
       expect(data[0].gitPoapEventId).toEqual(3);
       expect(data[0].poapTokenId).toEqual('pizza-pie');
-      expect(data[0].poapEventId).toEqual(3);
+      expect(data[0].poapEventId).toEqual(event3.id);
+      expect(data[0].poapEventFancyId).toEqual(event3.fancy_id);
       expect(data[0].name).toEqual(event3.name);
       expect(data[0].year).toEqual(event3.year);
       expect(data[0].description).toEqual(event3.description);
@@ -111,7 +118,8 @@ describe('public-api/v1/github/user/:githubHandle/gitpoaps', () => {
       expect(data[0].gitPoapId).toEqual(6);
       expect(data[0].gitPoapEventId).toEqual(2);
       expect(data[0].poapTokenId).toEqual(null);
-      expect(data[0].poapEventId).toEqual(2);
+      expect(data[0].poapEventId).toEqual(event2.id);
+      expect(data[0].poapEventFancyId).toEqual(event2.fancy_id);
       expect(data[0].mintedAt).toBeNull();
     });
 
@@ -150,7 +158,8 @@ describe('public-api/v1/github/user/:githubHandle/gitpoaps', () => {
     expect(data[0].gitPoapId).toEqual(35);
     expect(data[0].gitPoapEventId).toEqual(10);
     expect(data[0].poapTokenId).toBeNull();
-    expect(data[0].poapEventId).toEqual(36571);
+    expect(data[0].poapEventId).toEqual(event36571.id);
+    expect(data[0].poapEventFancyId).toEqual(event36571.fancy_id);
     expect(data[0].name).toEqual(event36571.name);
     expect(data[0].year).toEqual(event36571.year);
     expect(data[0].description).toEqual(event36571.description);
