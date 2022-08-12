@@ -4,6 +4,7 @@ import { httpRequestDurationSeconds } from '../../../metrics';
 import { createScopedLogger } from '../../../logging';
 import { ClaimStatus } from '@generated/type-graphql';
 import { GitPOAPEventResultType } from '../types';
+import { mapGitPOAPsToGitPOAPResults } from '../helpers';
 
 export const gitpoapsRouter = Router();
 
@@ -85,10 +86,6 @@ gitpoapsRouter.get('/events', async (req, res) => {
     select: {
       id: true,
       poapEventId: true,
-      name: true,
-      year: true,
-      description: true,
-      imageUrl: true,
       project: {
         select: {
           repos: {
@@ -115,16 +112,14 @@ gitpoapsRouter.get('/events', async (req, res) => {
     },
   });
 
-  const results: GitPOAPEventResultType[] = gitPOAPs.map(gitPOAP => ({
-    gitPoapEventId: gitPOAP.id,
-    poapEventId: gitPOAP.poapEventId,
-    name: gitPOAP.name,
-    year: gitPOAP.year,
-    description: gitPOAP.description,
-    imageUrl: gitPOAP.imageUrl,
-    repositories: gitPOAP.project.repos.map(r => `${r.organization.name}/${r.name}`),
-    mintedCount: gitPOAP.claims.length,
-  }));
+  const results = await mapGitPOAPsToGitPOAPResults(gitPOAPs);
+
+  if (results === null) {
+    const msg = 'Failed to query POAP data for claims';
+    logger.error(msg);
+    endTimer({ status: 500 });
+    return res.status(500).send({ msg });
+  }
 
   endTimer({ status: 200 });
 
