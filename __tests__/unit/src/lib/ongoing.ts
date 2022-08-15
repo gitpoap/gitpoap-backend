@@ -54,6 +54,7 @@ describe('handleNewPull', () => {
       user: {
         id: user.githubId,
         login: user.githubHandle,
+        type: 'User',
       },
       merged_at: null,
       updated_at: '2022-06-13',
@@ -78,6 +79,7 @@ describe('handleNewPull', () => {
       user: {
         id: user.githubId,
         login: user.githubHandle,
+        type: 'User',
       },
       merged_at: '2022-06-09',
       updated_at: '2022-06-09',
@@ -104,6 +106,7 @@ describe('handleNewPull', () => {
       user: {
         id: user.githubId,
         login: user.githubHandle,
+        type: 'User',
       },
       merged_at: '2023-06-09',
       updated_at: '2023-06-09',
@@ -145,6 +148,7 @@ describe('handleNewPull', () => {
       user: {
         id: user.githubId,
         login: user.githubHandle,
+        type: 'User',
       },
       merged_at: '2021-04-19',
       updated_at: '2022-06-13',
@@ -186,6 +190,7 @@ describe('handleNewPull', () => {
       user: {
         id: user.githubId,
         login: user.githubHandle,
+        type: 'User',
       },
       merged_at: '2022-06-13',
       updated_at: '2022-06-13',
@@ -229,5 +234,46 @@ describe('handleNewPull', () => {
 
     expect(createNewClaimsForRepoPR).toHaveBeenCalledTimes(1);
     expect(createNewClaimsForRepoPR).toHaveBeenCalledWith(user, repo, pr);
+  });
+
+  it('Skips creating claims for bots', async () => {
+    mockedUpsertUser.mockResolvedValue(user);
+
+    const pull: GithubPullRequestData = {
+      number: 29004,
+      title: 'Some just merged PR',
+      user: {
+        id: user.githubId,
+        login: user.githubHandle,
+        type: 'Bot',
+      },
+      merged_at: '2022-06-13',
+      updated_at: '2022-06-13',
+      merge_commit_sha: '444aaaa4fjalskjfdlkajs',
+      head: {
+        sha: 'kq555555555l333',
+      },
+    };
+
+    const pr = {
+      id: 233,
+      createdAt: new Date('2022-06-13'),
+      updatedAt: new Date('2022-06-13'),
+      githubPullNumber: pull.number,
+      githubTitle: pull.title,
+      githubMergedAt: new Date(<string>pull.merged_at),
+      githubMergeCommitSha: pull.merge_commit_sha,
+      repoId: repo.id,
+      userId: user.id,
+    };
+
+    mockedUpsertGithubPullRequest.mockResolvedValue(pr);
+
+    const result = await handleNewPull(repo, pull);
+
+    expect(result.finished).toEqual(false);
+    expect(result.updatedAt).toEqual(new Date(pull.updated_at));
+
+    expect(upsertUser).toHaveBeenCalledTimes(0);
   });
 });
