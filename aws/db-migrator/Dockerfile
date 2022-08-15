@@ -2,7 +2,7 @@
 
 FROM public.ecr.aws/lambda/provided:al2
 
-RUN yum install -y \
+RUN yum update -y && yum install -y \
   gcc-c++ \
   git \
   gzip \
@@ -24,7 +24,7 @@ RUN curl -L https://raw.githubusercontent.com/tj/n/master/bin/n -o n && \
   bash n lts && \
   rm n
 
-RUN npm install -g npm@8.10.0 yarn
+RUN npm install --location=global npm@8.10.0 yarn
 
 COPY cdk-lambda-bash/bootstrap /var/runtime/bootstrap
 COPY cdk-lambda-bash/function.sh /var/task/function.sh
