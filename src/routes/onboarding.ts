@@ -50,9 +50,18 @@ export const onboardingRouter = Router();
 
 const upload = multer();
 
-const createIntakeFormDocForDynamo = (formData: IntakeForm): PutItemCommandInput => ({
+const createIntakeFormDocForDynamo = (
+  formData: IntakeForm,
+  timestamp: number,
+): PutItemCommandInput => ({
   TableName: configProfile.tables.intakeForm,
   Item: {
+    'email-githubHandle': {
+      S: `${formData.email}-${formData.githubHandle}`,
+    },
+    timestamp: {
+      N: timestamp.toString(),
+    },
     name: { S: formData.name ?? '' },
     email: { S: formData.email },
     notes: { S: formData.notes ?? '' },
@@ -76,7 +85,6 @@ const createIntakeFormDocForDynamo = (formData: IntakeForm): PutItemCommandInput
         },
       })),
     },
-    timestamp: { S: new Date().toISOString() },
     isComplete: { BOOL: false },
   },
   /* @TODO: remove this once testing is complete ~ JPB Aug 10, 2022 */
@@ -84,15 +92,15 @@ const createIntakeFormDocForDynamo = (formData: IntakeForm): PutItemCommandInput
 });
 
 const createUpdateItemParamsForImages = (
-  githubHandle: string,
-  email: string,
+  key: string,
+  timestamp: number,
   imageUrls: string[],
 ): UpdateItemCommandInput => {
   return {
     TableName: configProfile.tables.intakeForm,
     Key: {
-      githubHandle: { S: githubHandle },
-      email: { S: email },
+      'email-githubHandle': { S: key },
+      timestamp: { N: timestamp.toString() },
     },
     UpdateExpression: 'set images = :images',
     ExpressionAttributeValues: {
@@ -214,7 +222,7 @@ onboardingRouter.post<'/intake-form', {}, {}, IntakeForm>(
 
     /* Push results to Dynamo DB */
     try {
-      const params = createIntakeFormDocForDynamo(req.body);
+      const params = createIntakeFormDocForDynamo(req.body, unixTime);
       await dynamoDBClient.send(new PutItemCommand(params));
       logger.info(
         `Submitted intake form for GitHub user - ${req.body.githubHandle} to DynamoDB table ${intakeFormTable}`,
@@ -252,8 +260,8 @@ onboardingRouter.post<'/intake-form', {}, {}, IntakeForm>(
 
       /* Update new s3 image urls to the dynamo DB record with the associated private key  */
       const updateParams = createUpdateItemParamsForImages(
-        req.body.githubHandle,
-        req.body.email,
+        `${req.body.email}-${req.body.githubHandle}`,
+        unixTime,
         urls,
       );
       try {
