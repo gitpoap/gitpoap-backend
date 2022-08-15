@@ -49,6 +49,12 @@ organizationsRouter.post('/', jwtWithOAuth(), async function (req, res) {
     organization.name,
     accessToken.githubOAuthToken,
   );
+  if (members === null) {
+    const msg = `Failed to lookup admins of ${organization.name} via GitHub`;
+    logger.error(msg);
+    endTimer({ status: 500 });
+    return res.status(500).send({ msg });
+  }
   if (!members.map((m: { login: string }) => m.login).includes(accessToken.githubHandle)) {
     logger.warn(
       `Non-member (GitHub handle: ${accessToken.githubHandle} of repo ${organization.name} tried to update its data`,

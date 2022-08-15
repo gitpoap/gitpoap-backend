@@ -14,7 +14,9 @@ import { SECONDS_PER_HOUR } from '../constants';
 
 /** -- Response Types -- **/
 type GithubUserResponse = {
+  id: number;
   login: string;
+  type: string;
 };
 
 export type GithubPullRequestData = {
@@ -23,6 +25,7 @@ export type GithubPullRequestData = {
   user: {
     id: number;
     login: string;
+    type: string;
   };
   merged_at: string | null;
   updated_at: string;
@@ -130,12 +133,23 @@ async function makeAdminGithubAPIRequest(path: string) {
 }
 
 /** -- External Functions -- **/
-export async function getGithubCurrentUserInfo(githubToken: string) {
+export async function getGithubCurrentUserInfo(
+  githubToken: string,
+): Promise<GithubUserResponse | null> {
   return await makeGithubAPIRequest(`/user`, githubToken);
 }
 
-export async function getGithubUser(githubHandle: string, githubToken: string) {
+export async function getGithubUser(
+  githubHandle: string,
+  githubToken: string,
+): Promise<GithubUserResponse | null> {
   return await makeGithubAPIRequest(`/users/${githubHandle}`, githubToken);
+}
+
+export async function getGithubUserAsAdmin(
+  githubHandle: string,
+): Promise<GithubUserResponse | null> {
+  return await makeAdminGithubAPIRequest(`/users/${githubHandle}`);
 }
 
 export async function getGithubUserById(
@@ -206,8 +220,15 @@ export async function getGithubRepositoryStarCount(repoId: number): Promise<numb
   return starsCount;
 }
 
-export async function isOrganizationAUser(githubHandle: string, githubToken: string) {
+async function isOrganizationAUser(
+  githubHandle: string,
+  githubToken: string,
+): Promise<boolean | null> {
   const response = await getGithubUser(githubHandle, githubToken);
+
+  if (response === null) {
+    return null;
+  }
 
   return response.type === 'User';
 }
@@ -215,8 +236,14 @@ export async function isOrganizationAUser(githubHandle: string, githubToken: str
 export async function getGithubOrganizationAdmins(
   organization: string,
   githubToken: string,
-): Promise<[{ login: string }]> {
-  if (await isOrganizationAUser(organization, githubToken)) {
+): Promise<[{ login: string }] | null> {
+  const isAUser = await isOrganizationAUser(organization, githubToken);
+
+  if (isAUser === null) {
+    return null;
+  }
+
+  if (isAUser) {
     // If the organization is actually a user, only allow that user to update the org info
     return [{ login: organization }];
   } else {
