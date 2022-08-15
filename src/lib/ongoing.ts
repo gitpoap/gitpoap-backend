@@ -74,6 +74,11 @@ export async function handleNewPull(
     return { finished: true, updatedAt: updatedAt };
   }
 
+  if (pull.user.type === 'Bot') {
+    logger.info(`Skipping creating claims for bot ${pull.user.login}`);
+    return { finished: false, updatedAt: updatedAt };
+  }
+
   logger.info(`Creating a claims for ${pull.user.login} if they don't exist`);
 
   // Create the User, GithubPullRequest, and Claim if they don't exist
