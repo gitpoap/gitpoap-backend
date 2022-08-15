@@ -24,7 +24,7 @@ async function removeBots() {
 
   for (const user of users) {
     // Sleep so that we don't get rate limited
-    sleep(DELAY_BETWEEN_USER_LOOKUP_SECONDS);
+    await sleep(DELAY_BETWEEN_USER_LOOKUP_SECONDS);
 
     logger.info(`Checking user "${user.githubHandle}"`);
 
