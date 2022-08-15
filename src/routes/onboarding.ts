@@ -87,8 +87,6 @@ const createIntakeFormDocForDynamo = (
     },
     isComplete: { BOOL: false },
   },
-  /* @TODO: remove this once testing is complete ~ JPB Aug 10, 2022 */
-  // ConditionExpression: 'attribute_not_exists(email)',
 });
 
 const createUpdateItemParamsForImages = (
