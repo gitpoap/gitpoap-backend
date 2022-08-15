@@ -51,9 +51,9 @@ organizationsRouter.post('/', jwtWithOAuth(), async function (req, res) {
   );
   if (members === null) {
     const msg = `Failed to lookup admins of ${organization.name} via GitHub`;
-    logger.error(msg);
-    endTimer({ status: 500 });
-    return res.status(500).send({ msg });
+    logger.warn(msg);
+    endTimer({ status: 400 });
+    return res.status(400).send({ msg });
   }
   if (!members.map((m: { login: string }) => m.login).includes(accessToken.githubHandle)) {
     logger.warn(
