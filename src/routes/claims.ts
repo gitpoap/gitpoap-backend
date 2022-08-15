@@ -412,6 +412,11 @@ claimsRouter.post('/create', jwtWithAdminOAuth(), async function (req, res) {
       continue;
     }
 
+    if (githubUserInfo.type === 'Bot') {
+      logger.info(`Skipping creating claims for bot ${githubUserInfo.login}`);
+      continue;
+    }
+
     // Ensure that we've created a user in our
     // system for the claim
     const user = await upsertUser(githubId, githubUserInfo.login);

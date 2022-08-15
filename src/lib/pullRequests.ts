@@ -109,6 +109,11 @@ async function backloadGithubPullRequest(repo: RepoData, pr: GithubPullRequestDa
 
   logger.debug(`Handling PR #${pr.number}`);
 
+  if (pr.user.type === 'Bot') {
+    logger.info(`Skipping creating claims for bot ${pr.user.login}`);
+    return;
+  }
+
   const user = await upsertUser(pr.user.id, pr.user.login);
 
   const mergedAt = new Date(pr.merged_at);
