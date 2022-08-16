@@ -37,16 +37,17 @@ export class CustomRepoResolver {
     if (repoId) {
       results = await prisma.$queryRaw<RepoData[]>`
         SELECT r.*, 
-          COUNT(DISTINCT c."userId") AS "contributorCount",
-          COUNT(DISTINCT g.id) AS "gitPOAPCount",
-          COUNT(c.id) AS "mintedGitPOAPCount"
+          COUNT(DISTINCT c."userId")::INTEGER AS "contributorCount",
+          COUNT(DISTINCT g.id)::INTEGER AS "gitPOAPCount",
+          COUNT(c.id)::INTEGER AS "mintedGitPOAPCount"
         FROM "Repo" as r
         INNER JOIN "Project" AS p ON r."projectId" = p.id
         INNER JOIN "GitPOAP" AS g ON g."projectId" = p.id
         LEFT JOIN 
-          (SELECT * 
-            FROM "Claim" 
-            WHERE status = ${ClaimStatus.CLAIMED}) AS c ON c."gitPOAPId" = g.id
+          (
+            SELECT * FROM "Claim"
+            WHERE status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
+          ) AS c ON c."gitPOAPId" = g.id
         WHERE r.id = ${repoId}
         GROUP BY r.id
       `;
@@ -61,17 +62,18 @@ export class CustomRepoResolver {
     } else if (orgName && repoName) {
       results = await prisma.$queryRaw<RepoData[]>`
         SELECT r.*, 
-          COUNT(DISTINCT c."userId") AS "contributorCount",
-          COUNT(DISTINCT g.id) AS "gitPOAPCount",
-          COUNT(c.id) AS "mintedGitPOAPCount"
+          COUNT(DISTINCT c."userId")::INTEGER AS "contributorCount",
+          COUNT(DISTINCT g.id)::INTEGER AS "gitPOAPCount",
+          COUNT(c.id)::INTEGER AS "mintedGitPOAPCount"
         FROM "Repo" as r
         INNER JOIN "Organization" AS o ON o.id = r."organizationId"
         INNER JOIN "Project" AS p ON r."projectId" = p.id
         INNER JOIN "GitPOAP" AS g ON g."projectId" = p.id
         LEFT JOIN 
-          (SELECT * 
-            FROM "Claim" 
-            WHERE status = ${ClaimStatus.CLAIMED}) AS c ON c."gitPOAPId" = g.id
+          (
+            SELECT * FROM "Claim"
+            WHERE status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
+          ) AS c ON c."gitPOAPId" = g.id
         WHERE o.name = ${orgName} AND r.name = ${repoName}
         GROUP BY r.id
       `;
