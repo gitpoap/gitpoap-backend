@@ -416,8 +416,7 @@ onboardingRouter.get<'/github/repos', {}, Repo[]>(
 
     /* Remove duplicate repos based on githubRepoId */
     const uniqueRepos = allRepos.filter(
-      (repo, i, self) =>
-        i === self.findIndex(t => t.githubRepoId === repo.githubRepoId && t.name === repo.name),
+      (repo, i, self) => i === self.findIndex(t => t.githubRepoId === repo.githubRepoId),
     );
 
     logger.info(`Found ${uniqueRepos.length} applicable repos for GitHub user ${user.data.login}`);
