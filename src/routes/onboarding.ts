@@ -28,6 +28,7 @@ type Repo = {
   full_name: string;
   githubRepoId: number;
   description: string | null;
+  url: string;
   owner: {
     id: number;
     type: string;
@@ -36,11 +37,11 @@ type Repo = {
     url: string;
   };
   permissions?: {
-    admin: boolean;
+    admin?: boolean;
     maintain?: boolean;
-    push: boolean;
+    push?: boolean;
     triage?: boolean;
-    pull: boolean;
+    pull?: boolean;
   };
 };
 
@@ -363,47 +364,59 @@ onboardingRouter.get<'/github/repos', {}, Repo[]>(
 
     logger.info(`Fetching repos list for GitHub user ${user.data.login}`);
 
+    /* Fetch list of repos for authenticated user */
     const repos = await octokit.rest.repos.listForAuthenticatedUser({
       type: 'public',
       per_page: 100,
     });
 
-    const mappedRepos: Repo[] = repos.data
-      .filter(repo => {
-        /* No forks */
-        if (repo.fork) {
-          return false;
-        }
+    /* Fetch list of orgs that the user is a member of */
+    const orgs = await octokit.rest.orgs.listForUser({
+      username: user.data.login,
+      per_page: 100,
+    });
 
-        /* Must have at least one of these permissions */
-        if (!repo.permissions?.admin && !repo.permissions?.maintain && !repo.permissions?.push) {
+    /* Fetch list of repos for each org the user is a member of */
+    const orgsWithRepos = await Promise.all(
+      orgs.data.map(
+        async org =>
+          await octokit.rest.repos.listForOrg({
+            org: org.login,
+            per_page: 100,
+          }),
+      ),
+    );
+
+    /* Combine all org repos into one array */
+    const mappedOrgRepos: Repo[] = orgsWithRepos
+      .map(org => org.data)
+      .reduce((acc, repos) => [...acc, ...repos], [])
+      .filter(repo => {
+        if (repo.fork) return false;
+        if (!repo.permissions?.admin && !repo.permissions?.maintain && !repo.permissions?.push)
           return false;
-        }
 
         return true;
       })
-      .map(repo => {
-        return {
-          name: repo.name,
-          full_name: repo.full_name,
-          githubRepoId: repo.id,
-          description: repo.description,
-          url: repo.html_url,
-          owner: {
-            id: repo.owner.id,
-            type: repo.owner.type,
-            name: repo.owner.login,
-            avatar_url: repo.owner.avatar_url,
-            url: repo.owner.html_url,
-          },
-          permissions: repo.permissions,
-        };
-      });
+      .map(repo => getMappedOrgRepo(repo));
 
-    logger.info(`Found ${mappedRepos.length} applicable repos for GitHub user ${user.data.login}`);
+    /* Combine all public repos into one array */
+    const mappedRepos: Repo[] = repos.data
+      .filter(repo => {
+        if (repo.fork) return false;
+        if (!repo.permissions?.admin && !repo.permissions?.maintain && !repo.permissions?.push)
+          return false;
 
+        return true;
+      })
+      .map(repo => getMappedRepo(repo));
+
+    /* Combine all repos into one array */
+    const allRepos = [...mappedRepos, ...mappedOrgRepos];
+
+    logger.info(`Found ${allRepos.length} applicable repos for GitHub user ${user.data.login}`);
     endTimer({ status: 200 });
 
-    return res.status(200).json(mappedRepos);
+    return res.status(200).json(allRepos);
   },
 );
