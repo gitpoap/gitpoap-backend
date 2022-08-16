@@ -512,6 +512,12 @@ claimsRouter.post(
       return res.status(404).send({ msg });
     }
 
+    if (pull.user.type === 'Bot') {
+      logger.info(`Skipping creating new claims for bot "${pull.user.login}"`);
+      endTimer({ status: 200 });
+      return res.status(200).send({ newClaims: [] });
+    }
+
     // Ensure that we've created a user in our system for the claim
     const user = await upsertUser(pull.user.id, pull.user.login);
 
