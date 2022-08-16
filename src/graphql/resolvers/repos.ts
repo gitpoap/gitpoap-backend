@@ -5,6 +5,7 @@ import { Context } from '../../context';
 import { createScopedLogger } from '../../logging';
 import { gqlRequestDurationSeconds } from '../../metrics';
 import { getGithubRepositoryStarCount } from '../../external/github';
+import { Prisma } from '@prisma/client';
 
 @ObjectType()
 export class RepoData extends Repo {
@@ -213,7 +214,7 @@ export class CustomRepoResolver {
 
     const endTimer = gqlRequestDurationSeconds.startTimer('allRepos');
 
-    let orderBy: RepoOrderByWithRelationInput;
+    let orderBy: RepoOrderByWithRelationInput | undefined = undefined;
     switch (sort) {
       case 'alphabetical':
         orderBy = {
@@ -226,13 +227,6 @@ export class CustomRepoResolver {
         };
         break;
       case 'gitpoap-count':
-        orderBy = {
-          project: {
-            gitPOAPs: {
-              _count: 'desc',
-            },
-          },
-        };
         break;
       case 'organization':
         orderBy = {
@@ -253,14 +247,30 @@ export class CustomRepoResolver {
       return null;
     }
 
-    const results = await prisma.repo.findMany({
-      orderBy,
-      skip: page ? (page - 1) * <number>perPage : undefined,
-      take: perPage ?? undefined,
-    });
+    let results: Repo[];
+    if (sort !== 'gitpoap-count') {
+      results = await prisma.repo.findMany({
+        orderBy,
+        skip: page ? (page - 1) * <number>perPage : undefined,
+        take: perPage ?? undefined,
+      });
+    } else {
+      // Unfortunately prisma doesn't allow us to sort on relations two levels down
+      const skip = page ? Prisma.sql`OFFSET ${(page - 1) * <number>perPage}` : Prisma.empty;
+      const take = perPage ? Prisma.sql`LIMIT ${perPage}` : Prisma.empty;
+      results = await prisma.$queryRaw<Repo[]>`
+        SELECT r.* FROM "Repo" AS r
+        INNER JOIN "Project" AS p ON p.id = r."projectId"
+        INNER JOIN "GitPOAP" AS g ON g."projectId" = p.id
+        LEFT JOIN "Claim" AS c ON c."gitPOAPId" = g.id AND c.status = 'CLAIMED'
+        GROUP BY r.id
+        ORDER BY COUNT(c.id) DESC
+        ${skip} ${take}
+      `;
+    }
 
-    logger.info(
-      `Request for all repos using sort ${sort}, with ${perPage} results per page and page ${page}`,
+    logger.debug(
+      `Completed request for all repos using sort ${sort}, with ${perPage} results per page and page ${page}`,
     );
 
     endTimer({ success: 1 });
