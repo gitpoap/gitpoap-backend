@@ -71,10 +71,10 @@ export class CustomProfileResolver {
     const endTimer = gqlRequestDurationSeconds.startTimer('totalContributors');
 
     const result: { count: number }[] = await prisma.$queryRaw`
-      SELECT COUNT(DISTINCT c.address)
+      SELECT COUNT(DISTINCT c.address)::INTEGER
       FROM "Claim" AS c
       WHERE c.address IS NOT NULL
-        AND c.status = ${ClaimStatus.CLAIMED}
+        AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
     `;
 
     logger.debug('Completed request for total contributors');
@@ -93,10 +93,10 @@ export class CustomProfileResolver {
     const endTimer = gqlRequestDurationSeconds.startTimer('lastMonthContributors');
 
     const result: { count: number }[] = await prisma.$queryRaw`
-      SELECT COUNT(DISTINCT c.address)
+      SELECT COUNT(DISTINCT c.address)::INTEGER
       FROM "Claim" AS c
       WHERE c.address IS NOT NULL
-        AND c.status = ${ClaimStatus.CLAIMED}
+        AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
         AND c."mintedAt" > ${getLastMonthStartDatetime()}
     `;
 
@@ -191,11 +191,11 @@ export class CustomProfileResolver {
     };
 
     const results: ResultType[] = await prisma.$queryRaw`
-      SELECT p.*, COUNT(c.id) AS "claimsCount"
+      SELECT p.*, COUNT(c.id)::INTEGER AS "claimsCount"
       FROM "Profile" AS p
       JOIN "Claim" AS c ON c.address = p.address
       WHERE p."isVisibleOnLeaderboard" IS TRUE
-      AND c.status = ${ClaimStatus.CLAIMED}
+      AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
       GROUP BY p.id
       ORDER BY "claimsCount" DESC
       LIMIT ${count}
@@ -233,14 +233,14 @@ export class CustomProfileResolver {
     };
 
     const results: ResultType[] = await prisma.$queryRaw`
-      SELECT pf.*, COUNT(c.id) AS "claimsCount"
+      SELECT pf.*, COUNT(c.id)::INTEGER AS "claimsCount"
       FROM "Profile" AS pf
       INNER JOIN "Claim" AS c ON c.address = pf.address
       INNER JOIN "GitPOAP" AS gp ON gp.id = c."gitPOAPId"
       INNER JOIN "Project" AS pr ON pr.id = gp."projectId"
       INNER JOIN "Repo" AS r ON r."projectId" = pr.id
       WHERE pf."isVisibleOnLeaderboard" IS TRUE
-      AND c.status = ${ClaimStatus.CLAIMED} AND r.id = ${repoId}
+      AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus" AND r.id = ${repoId}
       GROUP BY pf.id
       ORDER BY "claimsCount" DESC
       LIMIT ${count}

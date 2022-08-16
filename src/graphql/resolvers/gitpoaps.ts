@@ -476,7 +476,7 @@ export class CustomGitPOAPResolver {
     };
 
     const results: ResultType[] = await prisma.$queryRaw`
-      SELECT g.*, COUNT(c.id) AS "claimsCount"
+      SELECT g.*, COUNT(c.id)::INTEGER AS "claimsCount"
       FROM "GitPOAP" AS g
       JOIN "Claim" AS c ON c."gitPOAPId" = g.id
       WHERE c."status" = 'CLAIMED' OR c."status" = 'MINTING'
@@ -615,22 +615,22 @@ export class CustomGitPOAPResolver {
         if (page !== null) {
           results = await prisma.$queryRaw`
             SELECT p.*, u."githubHandle",
-                   (SELECT COUNT(c2.id) FROM "Claim" AS c2 WHERE p.address = c2.address) AS "claimsCount"
+              (SELECT COUNT(c2.id)::INTEGER FROM "Claim" AS c2 WHERE p.address = c2.address) AS "claimsCount"
             FROM "Claim" AS c
             JOIN "Profile" AS p ON c.address = p.address
             JOIN "User" AS u ON u.id = c."userId"
-            WHERE c."gitPOAPId" = ${gitPOAPId} AND c.status = ${ClaimStatus.CLAIMED}
+            WHERE c."gitPOAPId" = ${gitPOAPId} AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
             ORDER BY c."updatedAt" DESC
             LIMIT ${<number>perPage} OFFSET ${(<number>page - 1) * <number>perPage}
           `;
         } else {
           results = await prisma.$queryRaw`
             SELECT p.*, u."githubHandle",
-                   (SELECT COUNT(c2.id) FROM "Claim" AS c2 WHERE p.address = c2.address) AS "claimsCount"
+              (SELECT COUNT(c2.id)::INTEGER FROM "Claim" AS c2 WHERE p.address = c2.address) AS "claimsCount"
             FROM "Claim" AS c
             JOIN "Profile" AS p ON c.address = p.address
             JOIN "User" AS u ON u.id = c."userId"
-            WHERE c."gitPOAPId" = ${gitPOAPId} AND c.status = ${ClaimStatus.CLAIMED}
+            WHERE c."gitPOAPId" = ${gitPOAPId} AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
             ORDER BY c."updatedAt" DESC
           `;
         }
@@ -639,22 +639,22 @@ export class CustomGitPOAPResolver {
         if (page !== null) {
           results = await prisma.$queryRaw`
             SELECT p.*, u."githubHandle",
-                   (SELECT COUNT(c2.id) FROM "Claim" AS c2 WHERE p.address = c2.address) AS "claimsCount"
+              (SELECT COUNT(c2.id)::INTEGER FROM "Claim" AS c2 WHERE p.address = c2.address) AS "claimsCount"
             FROM "Claim" AS c
             JOIN "Profile" AS p ON c.address = p.address
             JOIN "User" AS u ON u.id = c."userId"
-            WHERE c."gitPOAPId" = ${gitPOAPId} AND c.status = ${ClaimStatus.CLAIMED}
+            WHERE c."gitPOAPId" = ${gitPOAPId} AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
             ORDER BY "claimsCount" DESC
             LIMIT ${<number>perPage} OFFSET ${(<number>page - 1) * <number>perPage}
           `;
         } else {
           results = await prisma.$queryRaw`
             SELECT p.*, u."githubHandle",
-                   (SELECT COUNT(c2.id) FROM "Claim" AS c2 WHERE p.address = c2.address) AS "claimsCount"
+              (SELECT COUNT(c2.id)::INTEGER FROM "Claim" AS c2 WHERE p.address = c2.address) AS "claimsCount"
             FROM "Claim" AS c
             JOIN "Profile" AS p ON c.address = p.address
             JOIN "User" AS u ON u.id = c."userId"
-            WHERE c."gitPOAPId" = ${gitPOAPId} AND c.status = ${ClaimStatus.CLAIMED}
+            WHERE c."gitPOAPId" = ${gitPOAPId} AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
             ORDER BY "claimsCount" DESC
           `;
         }
