@@ -44,6 +44,42 @@ type Repo = {
   };
 };
 
+const getMappedOrgRepo = (
+  repo: Awaited<ReturnType<Octokit['rest']['repos']['listForOrg']>>['data'][number],
+): Repo => ({
+  name: repo.name,
+  full_name: repo.full_name,
+  githubRepoId: repo.id,
+  description: repo.description,
+  url: repo.html_url,
+  owner: {
+    id: repo.owner.id,
+    type: repo.owner.type,
+    name: repo.owner.login,
+    avatar_url: repo.owner.avatar_url,
+    url: repo.owner.html_url,
+  },
+  permissions: repo.permissions,
+});
+
+const getMappedRepo = (
+  repo: Awaited<ReturnType<Octokit['rest']['repos']['listForAuthenticatedUser']>>['data'][number],
+): Repo => ({
+  name: repo.name,
+  full_name: repo.full_name,
+  githubRepoId: repo.id,
+  description: repo.description,
+  url: repo.html_url,
+  owner: {
+    id: repo.owner.id,
+    type: repo.owner.type,
+    name: repo.owner.login,
+    avatar_url: repo.owner.avatar_url,
+    url: repo.owner.html_url,
+  },
+  permissions: repo.permissions,
+});
+
 type IntakeForm = z.infer<typeof IntakeFormSchema>;
 
 export const onboardingRouter = Router();
