@@ -44,18 +44,19 @@ export class CustomOrganizationResolver {
 
     let results = await prisma.$queryRaw<OrganizationData[]>`
       SELECT o.*,
-        COUNT(DISTINCT c."userId") AS "contributorCount",
-        COUNT(DISTINCT g.id) AS "gitPOAPCount",
-        COUNT(DISTINCT c.id) AS "mintedGitPOAPCount",
-        COUNT(DISTINCT r.id) AS "repoCount"
+        COUNT(DISTINCT c."userId")::INTEGER AS "contributorCount",
+        COUNT(DISTINCT g.id)::INTEGER AS "gitPOAPCount",
+        COUNT(DISTINCT c.id)::INTEGER AS "mintedGitPOAPCount",
+        COUNT(DISTINCT r.id)::INTEGER AS "repoCount"
       FROM "Organization" as o
       INNER JOIN "Repo" AS r ON r."organizationId" = o.id
       INNER JOIN "Project" AS p ON r."projectId" = p.id
       INNER JOIN "GitPOAP" AS g ON g."projectId" = p.id
       LEFT JOIN
-        (SELECT * 
-          FROM "Claim" 
-          WHERE status = ${ClaimStatus.CLAIMED}) AS c ON c."gitPOAPId" = g.id
+        (
+          SELECT * FROM "Claim"
+          WHERE status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
+        ) AS c ON c."gitPOAPId" = g.id
       WHERE ${orgId ? Prisma.sql`o.id = ${orgId}` : Prisma.sql`o.name = ${orgName}`}
       GROUP BY o.id
     `;
@@ -175,16 +176,17 @@ export class CustomOrganizationResolver {
 
     const results = await prisma.$queryRaw<RepoData[]>`
       SELECT r.*,
-        COUNT(DISTINCT c."userId") AS "contributorCount",
-        COUNT(DISTINCT g.id) AS "gitPOAPCount",
-        COUNT(DISTINCT c.id) AS "mintedGitPOAPCount"
+        COUNT(DISTINCT c."userId")::INTEGER AS "contributorCount",
+        COUNT(DISTINCT g.id)::INTEGER AS "gitPOAPCount",
+        COUNT(DISTINCT c.id)::INTEGER AS "mintedGitPOAPCount"
       FROM "Repo" as r
       INNER JOIN "Project" AS p ON p.id = r."projectId"
       INNER JOIN "GitPOAP" AS g ON g."projectId" = p.id
       LEFT JOIN
-        (SELECT * 
-          FROM "Claim" 
-          WHERE status = ${ClaimStatus.CLAIMED}) AS c ON c."gitPOAPId" = g.id
+        (
+          SELECT * FROM "Claim"
+          WHERE status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
+        ) AS c ON c."gitPOAPId" = g.id
       WHERE r."organizationId" = ${orgId}
       GROUP BY r.id
       ORDER BY ${orderBy}
