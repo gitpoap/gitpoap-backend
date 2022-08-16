@@ -392,9 +392,10 @@ onboardingRouter.get<'/github/repos', {}, Repo[]>(
       .map(org => org.data)
       .reduce((acc, repos) => [...acc, ...repos], [])
       .filter(repo => {
+        const hasPermission =
+          !repo.permissions?.admin && !repo.permissions?.maintain && !repo.permissions?.push;
         if (repo.fork) return false;
-        if (!repo.permissions?.admin && !repo.permissions?.maintain && !repo.permissions?.push)
-          return false;
+        if (hasPermission) return false;
 
         return true;
       })
@@ -403,9 +404,10 @@ onboardingRouter.get<'/github/repos', {}, Repo[]>(
     /* Combine all public repos into one array */
     const mappedRepos: Repo[] = repos.data
       .filter(repo => {
+        const hasPermission =
+          !repo.permissions?.admin && !repo.permissions?.maintain && !repo.permissions?.push;
         if (repo.fork) return false;
-        if (!repo.permissions?.admin && !repo.permissions?.maintain && !repo.permissions?.push)
-          return false;
+        if (hasPermission) return false;
 
         return true;
       })
