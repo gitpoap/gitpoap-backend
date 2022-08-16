@@ -414,9 +414,15 @@ onboardingRouter.get<'/github/repos', {}, Repo[]>(
     /* Combine all repos into one array */
     const allRepos = [...mappedRepos, ...mappedOrgRepos];
 
-    logger.info(`Found ${allRepos.length} applicable repos for GitHub user ${user.data.login}`);
+    /* Remove duplicate repos based on githubRepoId */
+    const uniqueRepos = allRepos.filter(
+      (repo, i, self) =>
+        i === self.findIndex(t => t.githubRepoId === repo.githubRepoId && t.name === repo.name),
+    );
+
+    logger.info(`Found ${uniqueRepos.length} applicable repos for GitHub user ${user.data.login}`);
     endTimer({ status: 200 });
 
-    return res.status(200).json(allRepos);
+    return res.status(200).json(uniqueRepos);
   },
 );
