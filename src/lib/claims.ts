@@ -98,6 +98,7 @@ export async function retrieveClaimsCreatedByPR(pullRequestId: number): Promise<
           id: true,
           poapEventId: true,
           threshold: true,
+          isEnabled: true,
         },
       },
     },
@@ -105,6 +106,11 @@ export async function retrieveClaimsCreatedByPR(pullRequestId: number): Promise<
 
   let claimsData: ClaimData[] = [];
   for (const claim of newClaims) {
+    if (!claim.gitPOAP.isEnabled) {
+      logger.info(`Skipping returning claim for non-enabled GitPOAP ID: ${claim.gitPOAP.id}`);
+      continue;
+    }
+
     const poapEvent = await retrievePOAPEventInfo(claim.gitPOAP.poapEventId);
     if (poapEvent === null) {
       logger.error(

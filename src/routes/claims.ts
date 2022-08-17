@@ -206,8 +206,19 @@ claimsRouter.post(
 
       if (!claim) {
         invalidClaims.push({
-          claimId: claimId,
+          claimId,
           reason: "Claim ID doesn't exist",
+        });
+        continue;
+      }
+
+      const accessTokenPayload = req.user as AccessTokenPayload;
+
+      if (!claim.gitPOAP.isEnabled) {
+        logger.warn(`GitHub user ${accessTokenPayload} attempted to claim a non-enabled GitPOAP`);
+        invalidClaims.push({
+          claimId,
+          reason: `GitPOAP ID ${claim.gitPOAP.id} is not enabled`,
         });
         continue;
       }
@@ -215,16 +226,16 @@ claimsRouter.post(
       // Check to ensure the claim has not already been processed
       if (claim.status !== ClaimStatus.UNCLAIMED) {
         invalidClaims.push({
-          claimId: claimId,
+          claimId,
           reason: `Claim has status '${claim.status}'`,
         });
         continue;
       }
 
       // Ensure the user is the owner of the claim
-      if (claim.user.githubId !== (<AccessTokenPayload>req.user).githubId) {
+      if (claim.user.githubId !== accessTokenPayload.githubId) {
         invalidClaims.push({
-          claimId: claimId,
+          claimId,
           reason: 'User does not own claim',
         });
         continue;
@@ -238,7 +249,7 @@ claimsRouter.post(
       if (redeemCode === null) {
         const msg = `GitPOAP ID ${claim.gitPOAP.id} has no more redeem codes`;
         logger.error(msg);
-        invalidClaims.push({ claimId: claimId, reason: msg });
+        invalidClaims.push({ claimId, reason: msg });
         continue;
       }
       try {
@@ -268,7 +279,7 @@ claimsRouter.post(
         logger.error(`Failed to mint claim ${claimId} via the POAP API`);
 
         invalidClaims.push({
-          claimId: claimId,
+          claimId,
           reason: 'Failed to claim via POAP API',
         });
 
