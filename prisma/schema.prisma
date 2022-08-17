@@ -131,6 +131,7 @@ model GitPOAP {
   level       Int           @default(1)
   threshold   Int           @default(1)
   isPRBased   Boolean       @default(true)
+  isEnabled   Boolean       @default(true)
 }
 
 model AuthToken {
