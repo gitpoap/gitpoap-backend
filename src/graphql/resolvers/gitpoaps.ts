@@ -128,6 +128,7 @@ export class CustomGitPOAPResolver {
 
     const result = await prisma.gitPOAP.count({
       where: {
+        isEnabled: true,
         NOT: {
           status: GitPOAPStatus.UNAPPROVED,
         },
@@ -154,6 +155,7 @@ export class CustomGitPOAPResolver {
         id: true,
       },
       where: {
+        isEnabled: true,
         createdAt: { gt: getLastMonthStartDatetime() },
         NOT: {
           status: GitPOAPStatus.UNAPPROVED,
@@ -404,6 +406,11 @@ export class CustomGitPOAPResolver {
 
     let gitPOAPsWithEvents = [];
     for (const gitPOAP of repo.project.gitPOAPs) {
+      if (!gitPOAP.isEnabled) {
+        logger.info(`Skipping non-enabled GitPOAP ID: ${gitPOAP.id}`);
+        continue;
+      }
+
       const event = await retrievePOAPEventInfo(gitPOAP.poapEventId);
       if (event === null) {
         logger.error(
@@ -479,7 +486,11 @@ export class CustomGitPOAPResolver {
       SELECT g.*, COUNT(c.id)::INTEGER AS "claimsCount"
       FROM "GitPOAP" AS g
       JOIN "Claim" AS c ON c."gitPOAPId" = g.id
-      WHERE c."status" = 'CLAIMED' OR c."status" = 'MINTING'
+      WHERE g."isEnabled" IS TRUE
+        AND c."status" IN (
+          ${ClaimStatus.MINTING}::"ClaimStatus",
+          ${ClaimStatus.CLAIMED}::"ClaimStatus"
+        )
       GROUP BY g.id
       ORDER BY "claimsCount" DESC
       LIMIT ${count}

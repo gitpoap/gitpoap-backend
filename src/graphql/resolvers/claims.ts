@@ -81,6 +81,9 @@ export class CustomClaimResolver {
           githubId: githubId,
         },
         status: ClaimStatus.UNCLAIMED,
+        gitPOAP: {
+          isEnabled: true,
+        },
       },
       include: {
         gitPOAP: {
