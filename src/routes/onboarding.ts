@@ -147,26 +147,22 @@ const createUpdateItemParamsForImages = (
   };
 };
 
-const sendConfirmationEmail = async (
-  formData: IntakeForm,
-  to: string,
-  queueNumber: number | undefined,
-) => {
+const sendConfirmationEmail = async (formData: IntakeForm, queueNumber: number | undefined) => {
   postmarkClient.sendEmailWithTemplate({
     From: 'team@gitpoap.io',
-    To: 'recipient@example.com',
+    To: formData.email,
     TemplateAlias: 'welcome-1',
     TemplateModel: {
       product_url: 'gitpoap.io',
       product_name: 'GitPOAP',
       queue_number: queueNumber ?? '',
-      email: 'email_Value',
-      githubHandle: 'githubHandle_Value',
+      email: formData.email,
+      githubHandle: formData.githubHandle,
       repoCount: JSON.parse(formData.repos).length,
       support_email: 'team@gitpoap.io',
       company_name: 'MetaRep Labs Inc',
       company_address: 'One Broadway, Cambridge MA 02142',
-      name: 'name_Value',
+      name: formData.name,
       action_url: 'action_url_Value',
       login_url: 'login_url_Value',
       username: 'username_Value',
@@ -327,7 +323,7 @@ onboardingRouter.post<'/intake-form', {}, {}, IntakeForm>(
         `Retrieved count of all items in DynamoDB table ${intakeFormTable} - ${dynamoRes.Count}`,
       );
 
-      await sendConfirmationEmail(req.body, req.body.email, tableCount);
+      await sendConfirmationEmail(req.body, tableCount);
       logger.info(`Sent confirmation email to ${req.body.email}`);
       await sendInternalConfirmationEmail(req.body, tableCount, urls);
       logger.info(`Sent internal confirmation email to team@gitpoap.io`);
