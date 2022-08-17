@@ -147,6 +147,19 @@ const createUpdateItemParamsForImages = (
   };
 };
 
+const formatRepos = (repos: Repo[]) => {
+  let response = `${repos[0].full_name.split('/')[1]}`;
+  for (let i = 1; i < repos.length; i++) {
+    if (i + 1 === repos.length) response += `, and ${repos[i].full_name.split('/')[1]}`;
+    else if (i < 5) response += `, ${repos[i].full_name.split('/')[1]}`;
+    else {
+      response += `, and ${repos.length - 5} more`;
+      break;
+    }
+  }
+  return response;
+};
+
 const sendConfirmationEmail = async (formData: IntakeForm, queueNumber: number | undefined) => {
   postmarkClient.sendEmailWithTemplate({
     From: 'team@gitpoap.io',
@@ -156,13 +169,16 @@ const sendConfirmationEmail = async (formData: IntakeForm, queueNumber: number |
       product_url: 'gitpoap.io',
       product_name: 'GitPOAP',
       queue_number: queueNumber ?? '',
+      name: formData.name,
       email: formData.email,
       githubHandle: formData.githubHandle,
-      repoCount: JSON.parse(formData.repos).length,
+      shouldGitPOAPDesign: formData.shouldGitPOAPDesign === 'true' ? 'GitPOAP' : 'You',
+      isOneGitPOAPPerRepo: formData.isOneGitPOAPPerRepo === 'true' ? 'One Per Repo' : 'One For All',
+      notes: formData.notes,
+      repos: formatRepos(JSON.parse(formData.repos)),
       support_email: 'team@gitpoap.io',
       company_name: 'MetaRep Labs Inc',
       company_address: 'One Broadway, Cambridge MA 02142',
-      name: formData.name,
       action_url: 'action_url_Value',
       login_url: 'login_url_Value',
       username: 'username_Value',
@@ -170,7 +186,7 @@ const sendConfirmationEmail = async (formData: IntakeForm, queueNumber: number |
       trial_start_date: 'trial_start_date_Value',
       trial_end_date: 'trial_end_date_Value',
       sender_name: 'GitPOAP Team',
-      help_url: 'help_url_Value',
+      help_url: 'https://docs.gitpoap.io',
     },
   });
 };
