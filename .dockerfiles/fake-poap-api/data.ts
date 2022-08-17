@@ -286,6 +286,23 @@ export const event36574: POAPEvent = {
   supply: 60,
 };
 
+export const event36575: POAPEvent = {
+  id: 36575,
+  fancy_id: 'gitpoap-2022-gitpoap-bot-test-repo-contributor-level-3-2022',
+  name: 'GitPOAP: 2022 gitpoap-bot-test-repo Contributor Level 3',
+  event_url: 'https://github.com/stake-house/wagyu-installer',
+  image_url: 'https://assets.poap.xyz/2022-wagyu-installer-contributor-2022-logo-1649213116205.png',
+  country: '',
+  city: '',
+  description:
+    'You contributed at least three merged pull requests to the Wagyu Installer project in 2022.  Your contributions are greatly valued.',
+  year: 2022,
+  start_date: '01-Jan-2022',
+  end_date: '31-Dec-2022',
+  expiry_date: '01-Apr-2023',
+  supply: 60,
+};
+
 export const event37428: POAPEvent = {
   id: 37428,
   fancy_id: '2022-wagyu-installer-contributor-2022',
