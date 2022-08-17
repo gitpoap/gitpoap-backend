@@ -26,11 +26,12 @@ import {
   event36570,
   event36571,
   event36572,
+  event36573,
+  event36574,
+  event36575,
   event37428,
   event37429,
   event37430,
-  event36573,
-  event36574,
 } from '../.dockerfiles/fake-poap-api/data';
 
 export const prisma = new PrismaClient();
@@ -106,6 +107,8 @@ async function main() {
   // For gitpoap-bot-test-repo (uses random POAP IDs)
   const gitpoap15 = await GitPOAPFactory.createGitPOAPFromEvent(botTestProject.id, event36573, GitPOAPStatus.APPROVED, true);
   const gitpoap16 = await GitPOAPFactory.createGitPOAPFromEvent(botTestProject.id, event36574, GitPOAPStatus.APPROVED, true, 2, 2);
+  // Add one that is NOT enabled
+  const gitpoap17 = await GitPOAPFactory.createGitPOAPFromEvent(botTestProject.id, event36575, GitPOAPStatus.APPROVED, true, 3, 3, false);
 
   /* Add codes */
   await RedeemCodeFactory.addRedeemCodes(['6j8wda', 'tqaq9y', 'd4tdh0', 'o9uorf', 'eeyewe', '09wqld', 'tsl7wt', 'i52wvt', 'mshofb', 'v9cbcd'], gitpoap7.id);
