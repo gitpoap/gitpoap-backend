@@ -16,6 +16,7 @@ export const CreateGitPOAPSchema = z.object({
   city: z.string().optional(),
   country: z.string().optional(),
   isPRBased: z.enum(['true', 'false']).optional(),
+  isEnabled: z.enum(['true', 'false']).optional(),
 });
 
 export const CreateGitPOAPProjectSchema = z.union([
