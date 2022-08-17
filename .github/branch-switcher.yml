@@ -1,0 +1,6 @@
+preferredBranch: develop
+exclude:
+- branch: main
+switchComment: >
+  Hey @{{author}}, the base branch of your PR should be {{preferredBranch}}.
+  I've switched it for you because I love you :heart:
