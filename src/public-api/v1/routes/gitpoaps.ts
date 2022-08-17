@@ -83,6 +83,9 @@ gitpoapsRouter.get('/events', async (req, res) => {
   const endTimer = httpRequestDurationSeconds.startTimer('GET', '/v1/gitpoaps/events');
 
   const gitPOAPs = await context.prisma.gitPOAP.findMany({
+    where: {
+      isEnabled: true,
+    },
     select: {
       id: true,
       poapEventId: true,

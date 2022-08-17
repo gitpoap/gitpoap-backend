@@ -54,6 +54,9 @@ poapEventRouter.get('/gitpoap-event-ids', async function (req, res) {
   // UNAPPROVED just means that the codes haven't been approved yet, the event still exists.
   // Presumably we will never run into a case where they don't approve our codes request
   const gitPOAPs = await context.prisma.gitPOAP.findMany({
+    where: {
+      isEnabled: true,
+    },
     select: {
       poapEventId: true,
     },
@@ -82,6 +85,9 @@ poapEventRouter.get('/gitpoap-event-fancy-ids', async function (req, res) {
   // UNAPPROVED just means that the codes haven't been approved yet, the event still exists.
   // Presumably we will never run into a case where they don't approve our codes request
   const gitPOAPs = await context.prisma.gitPOAP.findMany({
+    where: {
+      isEnabled: true,
+    },
     select: {
       id: true,
       poapEventId: true,
