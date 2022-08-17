@@ -150,9 +150,11 @@ const createUpdateItemParamsForImages = (
 const formatRepos = (repos: Repo[]) => {
   let response = `${repos[0].full_name.split('/')[1]}`;
   for (let i = 1; i < repos.length; i++) {
-    if (i + 1 === repos.length) response += `, and ${repos[i].full_name.split('/')[1]}`;
-    else if (i < 5) response += `, ${repos[i].full_name.split('/')[1]}`;
-    else {
+    if (i + 1 === repos.length) {
+      response += `, and ${repos[i].full_name.split('/')[1]}`;
+    } else if (i < 5) {
+      response += `, ${repos[i].full_name.split('/')[1]}`;
+    } else {
       response += `, and ${repos.length - 5} more`;
       break;
     }
