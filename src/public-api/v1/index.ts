@@ -123,6 +123,9 @@ v1Router.get('/github/user/:githubHandle/gitpoaps', async function (req, res) {
         },
       },
       status,
+      gitPOAP: {
+        isEnabled: true,
+      },
     },
     select: {
       id: true,
