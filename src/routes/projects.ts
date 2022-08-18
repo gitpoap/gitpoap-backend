@@ -80,3 +80,43 @@ projectsRouter.post('/add-repos', jwtWithAdminOAuth(), async (req, res) => {
     backloadGithubPullRequestData(repoId);
   }
 });
+
+projectsRouter.put('/enable/:id', jwtWithAdminOAuth(), async (req, res) => {
+  const logger = createScopedLogger('PUT /projects/enable/:id');
+
+  const endTimer = httpRequestDurationSeconds.startTimer('PUT', '/projects/enable/:id');
+
+  const projectId = parseInt(req.params.id, 10);
+
+  logger.info(`Admin request to enable all GitPOAPs in Project ID ${projectId}`);
+
+  const projectData = await context.prisma.project.findUnique({
+    where: {
+      id: projectId,
+    },
+    select: {
+      id: true,
+    },
+  });
+  if (projectData === null) {
+    const msg = `Failed to find Project with ID ${projectId}`;
+    logger.warn(msg);
+    endTimer({ status: 404 });
+    return res.status(404).send({ msg });
+  }
+
+  await context.prisma.gitPOAP.updateMany({
+    where: {
+      projectId,
+    },
+    data: {
+      isEnabled: true,
+    },
+  });
+
+  logger.debug(`Completed admin request to enable all GitPOAPs in Project ID ${projectId}`);
+
+  endTimer({ status: 200 });
+
+  return res.status(200).send('ENABLED');
+});
