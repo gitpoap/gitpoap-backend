@@ -373,8 +373,18 @@ Data:
 
 `PUT /gitpoaps/enable/:id`
 
-This endpoint enables a GitPOAP. This means that after this action if the GitPOAP were not already enabled then
-users will be able to complete claims on the GitPOAP as well as view the GitPOAP on the site.
+This endpoint enables a GitPOAP. This means that after this action, if the GitPOAP were not already enabled,
+then users will be able to complete claims on the GitPOAP as well as view the GitPOAP on the site.
+
+Note that the caller of this endpoint must have admin privileges.
+
+## Enable all GitPOAPs within a Project
+
+`PUT /projects/enable/:id`
+
+This endpoint enables all GitPOAPs that are associated with an individual Project. This means that after this
+action, if the GitPOAP were not already enabled, then users will be able to complete claims on the GitPOAPs
+within the Project as well as view those GitPOAPs on the site.
 
 Note that the caller of this endpoint must have admin privileges.
 
