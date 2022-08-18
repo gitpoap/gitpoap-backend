@@ -45,6 +45,69 @@ type Repo = {
   };
 };
 
+type PullRequestsRes = {
+  search: {
+    issueCount: number;
+    edges: {
+      node: {
+        number: number;
+        title: string;
+        repository: {
+          name: string;
+          nameWithOwner: string;
+          viewerPermission: string;
+          databaseId: number;
+          description: string;
+          url: string;
+          isFork: boolean;
+          owner: {
+            id: string;
+            __typename: string;
+            avatarUrl: string;
+            login: string;
+            resourcePath: string;
+          };
+        };
+      };
+    }[];
+  };
+};
+
+const publicPRsQuery = (userName: string) => `
+{
+  search(
+    query: "author:${userName} is:pr is:public is:merged"
+    type: ISSUE
+    first: 100
+  ) {
+    issueCount
+    edges {
+      node {
+        ... on PullRequest {
+          title
+          repository {
+            databaseId
+            name
+            nameWithOwner
+            viewerPermission
+            description
+            url
+            isFork
+            owner {
+              id
+              __typename
+              avatarUrl
+              login
+              resourcePath
+            }
+          }
+        }
+      }
+    }
+  }
+}
+`;
+
 const getMappedOrgRepo = (
   repo: Awaited<ReturnType<Octokit['rest']['repos']['listForOrg']>>['data'][number],
 ): Repo => ({
@@ -369,8 +432,12 @@ onboardingRouter.get<'/github/repos', {}, Repo[]>(
     const token = (<AccessTokenPayloadWithOAuth>req.user).githubOAuthToken;
     const octokit = new Octokit({ auth: token });
     const user = await octokit.rest.users.getAuthenticated();
+    const foundPrRepoIds = new Set<number>();
 
-    logger.info(`Fetching repos list for GitHub user ${user.data.login}`);
+    logger.info(`Fetching repos lists for GitHub user ${user.data.login}`);
+
+    /* Fetch first 100 public PRs for a user */
+    const publicPrs = await octokit.graphql<PullRequestsRes>(publicPRsQuery(user.data.login));
 
     /* Fetch list of repos for authenticated user */
     const repos = await octokit.rest.repos.listForAuthenticatedUser({
