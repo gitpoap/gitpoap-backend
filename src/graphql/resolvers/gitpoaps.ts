@@ -486,8 +486,7 @@ export class CustomGitPOAPResolver {
       SELECT g.*, COUNT(c.id)::INTEGER AS "claimsCount"
       FROM "GitPOAP" AS g
       JOIN "Claim" AS c ON c."gitPOAPId" = g.id
-      WHERE g."isEnabled" IS TRUE
-        AND c."status" IN (
+      WHERE c."status" IN (
           ${ClaimStatus.MINTING}::"ClaimStatus",
           ${ClaimStatus.CLAIMED}::"ClaimStatus"
         )
