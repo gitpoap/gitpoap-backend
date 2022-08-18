@@ -30,7 +30,7 @@ type Repo = {
   description: string | null;
   url: string;
   owner: {
-    id: number;
+    id: number | string;
     type: string;
     name: string;
     avatar_url: string;
@@ -142,6 +142,28 @@ const getMappedRepo = (
     url: repo.owner.html_url,
   },
   permissions: repo.permissions,
+});
+
+const getMappedPrRepo = (pr: PullRequestsRes['search']['edges'][number]): Repo => ({
+  name: pr.node.repository.name,
+  full_name: pr.node.repository.nameWithOwner,
+  githubRepoId: pr.node.repository.databaseId,
+  description: pr.node.repository.description,
+  url: pr.node.repository.url,
+  owner: {
+    id: pr.node.repository.owner.id,
+    name: pr.node.repository.owner.login,
+    type: pr.node.repository.owner.__typename,
+    avatar_url: pr.node.repository.owner.avatarUrl,
+    url: pr.node.repository.owner.resourcePath,
+  },
+  permissions: {
+    admin: ['ADMIN'].includes(pr.node.repository.viewerPermission),
+    maintain: ['MAINTAIN', 'ADMIN'].includes(pr.node.repository.viewerPermission),
+    push: ['WRITE', 'MAINTAIN', 'ADMIN'].includes(pr.node.repository.viewerPermission),
+    triage: ['TRIAGE', 'WRITE', 'MAINTAIN', 'ADMIN'].includes(pr.node.repository.viewerPermission),
+    pull: ['READ', 'WRITE', 'MAINTAIN', 'ADMIN'].includes(pr.node.repository.viewerPermission),
+  },
 });
 
 type IntakeForm = z.infer<typeof IntakeFormSchema>;
@@ -432,12 +454,25 @@ onboardingRouter.get<'/github/repos', {}, Repo[]>(
     const token = (<AccessTokenPayloadWithOAuth>req.user).githubOAuthToken;
     const octokit = new Octokit({ auth: token });
     const user = await octokit.rest.users.getAuthenticated();
-    const foundPrRepoIds = new Set<number>();
 
     logger.info(`Fetching repos lists for GitHub user ${user.data.login}`);
 
     /* Fetch first 100 public PRs for a user */
     const publicPrs = await octokit.graphql<PullRequestsRes>(publicPRsQuery(user.data.login));
+
+    const foundPrRepoIds = new Set<number>();
+    const uniquePrRepos = publicPrs.search.edges.filter(repo => {
+      if (repo.node.repository.isFork) {
+        return false;
+      }
+      const isFound = foundPrRepoIds.has(repo.node.repository.databaseId);
+      foundPrRepoIds.add(repo.node.repository.databaseId);
+
+      return !isFound;
+    });
+
+    const mappedPrRepos = uniquePrRepos.map((pr): Repo => getMappedPrRepo(pr));
+    logger.debug(`Found ${mappedPrRepos.length} unique PR-related repos`);
 
     /* Fetch list of repos for authenticated user */
     const repos = await octokit.rest.repos.listForAuthenticatedUser({
@@ -467,38 +502,43 @@ onboardingRouter.get<'/github/repos', {}, Repo[]>(
       .map(org => org.data)
       .reduce((acc, repos) => [...acc, ...repos], [])
       .filter(repo => {
+        if (repo.fork) {
+          return false;
+        }
         const hasPermission =
-          !repo.permissions?.admin && !repo.permissions?.maintain && !repo.permissions?.push;
-        if (repo.fork) return false;
-        if (hasPermission) return false;
-
-        return true;
+          repo.permissions?.admin || repo.permissions?.maintain || repo.permissions?.push;
+        return hasPermission;
       })
       .map(repo => getMappedOrgRepo(repo));
 
     /* Combine all public repos into one array */
     const mappedRepos: Repo[] = repos.data
       .filter(repo => {
+        if (repo.fork) {
+          return false;
+        }
         const hasPermission =
-          !repo.permissions?.admin && !repo.permissions?.maintain && !repo.permissions?.push;
-        if (repo.fork) return false;
-        if (hasPermission) return false;
-
-        return true;
+          repo.permissions?.admin || repo.permissions?.maintain || repo.permissions?.push;
+        return hasPermission;
       })
       .map(repo => getMappedRepo(repo));
 
     /* Combine all repos into one array */
-    const allRepos = [...mappedRepos, ...mappedOrgRepos];
+    const allRepos = [...mappedRepos, ...mappedOrgRepos, ...mappedPrRepos];
 
-    /* Remove duplicate repos based on githubRepoId */
-    const uniqueRepos = allRepos.filter(
-      (repo, i, self) => i === self.findIndex(t => t.githubRepoId === repo.githubRepoId),
+    const foundRepoIds = new Set<number>();
+    const uniqueRepos = allRepos.filter(repo => {
+      const isFound = foundRepoIds.has(repo.githubRepoId);
+      foundRepoIds.add(repo.githubRepoId);
+      return !isFound;
+    });
+
+    logger.info(
+      `Found ${uniqueRepos.length} total applicable repos for GitHub user ${user.data.login}`,
     );
-
-    logger.info(`Found ${uniqueRepos.length} applicable repos for GitHub user ${user.data.login}`);
     endTimer({ status: 200 });
 
-    return res.status(200).json(uniqueRepos);
+    /* Return status 200 and set a stale-while-revalidate cache-control header */
+    return res.status(200).set('Cache-Control', 's-maxage=300, stale-while-revalidate=1800');
   },
 );
