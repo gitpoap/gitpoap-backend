@@ -539,6 +539,7 @@ onboardingRouter.get<'/github/repos', {}, Repo[]>(
     endTimer({ status: 200 });
 
     /* Return status 200 and set a stale-while-revalidate cache-control header */
-    return res.status(200).set('Cache-Control', 's-maxage=300, stale-while-revalidate=1800');
+    res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=1800');
+    return res.status(200).json(uniqueRepos);
   },
 );
