@@ -82,6 +82,27 @@ For this script to run, both `GITHUB_ACCESS_TOKEN` and `GITPOAP_ACCESS_TOKEN` mu
 Note that the both these options require that the CSV file have headers describing the columns (if not, the tool will
 exit and it should be obvious what to fix from the printout).
 
+## Creating Disabled GitPOAPs and then Enabling Them
+
+We can create GitPOAPs in a disabled mode. If the checkbox in the admin UI for creating GitPOAPs is selected to disable
+the GitPOAP after creation:
+* The GitPOAP will not show up in any site-related resolvers that are not automatically generated
+* Users are prevented from claiming in the UI (and they are not returned via the `userClaims` resolver)
+* Claims are still created via the gitpoap-bot but they are not sent back to the bot to be displayed
+* The backloader will still create claims for users
+* Ongoing issuance will continue to run
+
+To enable the GitPOAPs when they are ready we can utilize the [`enable-gitpoaps`](https://github.com/gitpoap/enable-gitpoaps)
+tool and either:
+1. Enable all the GitPOAPs within a Project:
+    ```sh
+    ./enable.py --backend-url https://api.gitpoap.io --project-id 323
+    ```
+2. Enable GitPOAPs individually:
+    ```sh
+    ./enable.py --backend-url https://api.gitpoap.io --gitpoap-id 4324
+    ```
+
 ## Appendix
 
 ### Setting ENV variables
