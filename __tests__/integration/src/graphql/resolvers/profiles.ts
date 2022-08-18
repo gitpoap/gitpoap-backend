@@ -27,8 +27,6 @@ describe('CustomProfileResolver', () => {
   });
 
   it('profileData', async () => {
-    jest.setTimeout(10 * MILLISECONDS_PER_SECOND);
-
     const data = await client.request(gql`
       {
         profileData(address: "${ADDRESSES.anthony}") {
@@ -41,11 +39,9 @@ describe('CustomProfileResolver', () => {
     expect(data.profileData).not.toEqual(null);
     expect(data.profileData.ensName).toEqual('burz.eth');
     expect(data.profileData.githubHandle).toEqual(null);
-  });
+  }, 10 * MILLISECONDS_PER_SECOND);
 
   it('profileData - nullable', async () => {
-    jest.setTimeout(10 * MILLISECONDS_PER_SECOND);
-
     const address = ADDRESSES.jay.substr(0, 5) + 'c' + ADDRESSES.jay.substr(6);
 
     const data = await client.request(gql`
@@ -66,7 +62,7 @@ describe('CustomProfileResolver', () => {
     expect(data.profileData.name).toEqual(null);
     expect(data.profileData.githubHandle).toEqual(null);
     expect(data.profileData.isVisibleOnLeaderboard).toEqual(true);
-  });
+  }, 10 * MILLISECONDS_PER_SECOND);
 
   it('mostHonoredContributors', async () => {
     const data = await client.request(gql`
