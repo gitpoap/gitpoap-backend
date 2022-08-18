@@ -316,3 +316,44 @@ gitpoapsRouter.post(
     }
   },
 );
+
+gitpoapsRouter.put('/enable/:id', jwtWithAdminOAuth(), async (req, res) => {
+  const logger = createScopedLogger('PUT /gitpoaps/enable/:id');
+
+  const endTimer = httpRequestDurationSeconds.startTimer('PUT', '/gitpoaps/enable/:id');
+
+  const gitPOAPId = parseInt(req.params.id, 10);
+
+  logger.info(`Admin request to enable GitPOAP ID ${gitPOAPId}`);
+
+  const gitPOAPInfo = await context.prisma.gitPOAP.findUnique({
+    where: {
+      id: gitPOAPId,
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  if (gitPOAPInfo === null) {
+    const msg = `Failed to find GitPOAP with ID ${gitPOAPId}`;
+    logger.warn(msg);
+    endTimer({ status: 400 });
+    return res.status(400).send({ msg });
+  }
+
+  await context.prisma.gitPOAP.update({
+    where: {
+      id: gitPOAPId,
+    },
+    data: {
+      isEnabled: true,
+    },
+  });
+
+  logger.debug(`Completed admin request to enable GitPOAP ID ${gitPOAPId}`);
+
+  endTimer({ status: 200 });
+
+  return res.status(200).send('ENABLED');
+});

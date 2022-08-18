@@ -369,6 +369,15 @@ Data:
 }
 ```
 
+## Enable a GitPOAP
+
+`PUT /gitpoaps/enable/:id`
+
+This endpoint enables a GitPOAP. This means that after this action if the GitPOAP were not already enabled then
+users will be able to complete claims on the GitPOAP as well as view the GitPOAP on the site.
+
+Note that the caller of this endpoint must have admin privileges.
+
 ## Appendix
 
 ### Generating Signatures
