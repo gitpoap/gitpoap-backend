@@ -5,7 +5,10 @@ import { GithubPullRequestData } from '../../../../src/external/github';
 import { upsertUser } from '../../../../src/lib/users';
 import { upsertGithubPullRequest } from '../../../../src/lib/pullRequests';
 import { User } from '@generated/type-graphql';
-import { createNewClaimsForRepoPR } from '../../../../src/lib/claims';
+import {
+  createNewClaimsForRepoPR,
+  createYearlyGitPOAPsMap,
+} from '../../../../src/lib/claims';
 
 jest.mock('../../../../src/lib/users');
 
@@ -47,6 +50,10 @@ const repo: RepoReturnType = {
 };
 
 describe('handleNewPull', () => {
+  const handleNewPullWrapper = async (repo: RepoReturnType, pull: GithubPullRequestData) => {
+    return await handleNewPull(repo, createYearlyGitPOAPsMap(repo.project.gitPOAPs), pull);
+  };
+
   it('Skips unmerged PRs', async () => {
     const pull: GithubPullRequestData = {
       number: 4,
@@ -64,7 +71,7 @@ describe('handleNewPull', () => {
       },
     };
 
-    const result = await handleNewPull(repo, pull);
+    const result = await handleNewPullWrapper(repo, pull);
 
     expect(result.finished).toEqual(false);
     expect(result.updatedAt).toEqual(new Date(pull.updated_at));
@@ -89,7 +96,7 @@ describe('handleNewPull', () => {
       },
     };
 
-    const result = await handleNewPull(repo, pull);
+    const result = await handleNewPullWrapper(repo, pull);
 
     expect(result.finished).toEqual(true);
     expect(result.updatedAt).toEqual(new Date(pull.updated_at));
@@ -116,7 +123,7 @@ describe('handleNewPull', () => {
       },
     };
 
-    const result = await handleNewPull(repo, pull);
+    const result = await handleNewPullWrapper(repo, pull);
 
     expect(result.finished).toEqual(false);
     expect(result.updatedAt).toEqual(new Date(pull.updated_at));
@@ -158,7 +165,7 @@ describe('handleNewPull', () => {
       },
     };
 
-    const result = await handleNewPull(repo, pull);
+    const result = await handleNewPullWrapper(repo, pull);
 
     expect(result.finished).toEqual(false);
     expect(result.updatedAt).toEqual(new Date(pull.updated_at));
@@ -214,7 +221,9 @@ describe('handleNewPull', () => {
 
     mockedUpsertGithubPullRequest.mockResolvedValue(pr);
 
-    const result = await handleNewPull(repo, pull);
+    const yearlyGitPOAPsMap = createYearlyGitPOAPsMap(repo.project.gitPOAPs);
+
+    const result = await handleNewPull(repo, yearlyGitPOAPsMap, pull);
 
     expect(result.finished).toEqual(false);
     expect(result.updatedAt).toEqual(new Date(pull.updated_at));
@@ -233,7 +242,7 @@ describe('handleNewPull', () => {
     );
 
     expect(createNewClaimsForRepoPR).toHaveBeenCalledTimes(1);
-    expect(createNewClaimsForRepoPR).toHaveBeenCalledWith(user, repo, pr);
+    expect(createNewClaimsForRepoPR).toHaveBeenCalledWith(user, repo, yearlyGitPOAPsMap, pr);
   });
 
   it('Skips creating claims for bots', async () => {
@@ -269,7 +278,7 @@ describe('handleNewPull', () => {
 
     mockedUpsertGithubPullRequest.mockResolvedValue(pr);
 
-    const result = await handleNewPull(repo, pull);
+    const result = await handleNewPullWrapper(repo, pull);
 
     expect(result.finished).toEqual(false);
     expect(result.updatedAt).toEqual(new Date(pull.updated_at));

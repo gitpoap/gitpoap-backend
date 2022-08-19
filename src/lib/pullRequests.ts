@@ -3,7 +3,12 @@ import { context } from '../context';
 import { GithubPullRequestData, getGithubRepositoryPullsAsAdmin } from '../external/github';
 import { pullRequestBackloadDurationSeconds } from '../metrics';
 import { upsertUser } from './users';
-import { RepoData, createNewClaimsForRepoPR } from './claims';
+import {
+  RepoData,
+  YearlyGitPOAPsMap,
+  createNewClaimsForRepoPR,
+  createYearlyGitPOAPsMap,
+} from './claims';
 import { GithubPullRequest } from '@generated/type-graphql';
 
 type ExtraRepoData = RepoData & {
@@ -106,7 +111,11 @@ export async function upsertGithubPullRequest(
   });
 }
 
-async function backloadGithubPullRequest(repo: RepoData, pr: GithubPullRequestData) {
+async function backloadGithubPullRequest(
+  repo: { id: number },
+  yearlyGitPOAPsMap: YearlyGitPOAPsMap,
+  pr: GithubPullRequestData,
+) {
   const logger = createScopedLogger('backloadGithubPullRequest');
 
   if (pr.merged_at === null) {
@@ -136,7 +145,7 @@ async function backloadGithubPullRequest(repo: RepoData, pr: GithubPullRequestDa
     user.id,
   );
 
-  const claims = await createNewClaimsForRepoPR(user, repo, githubPullRequest);
+  const claims = await createNewClaimsForRepoPR(user, repo, yearlyGitPOAPsMap, githubPullRequest);
 
   for (const claim of claims) {
     // If this is the user's first PR set the earned at field
@@ -186,6 +195,8 @@ export async function backloadGithubPullRequestData(repoId: number) {
     return;
   }
 
+  const yearlyGitPOAPsMap = createYearlyGitPOAPsMap(repoInfo.project.gitPOAPs);
+
   let page = 1;
   let isProcessing = true;
 
@@ -213,7 +224,7 @@ export async function backloadGithubPullRequestData(repoId: number) {
 
     // Handle all the PRs individually (and sequentially)
     for (const pr of prData) {
-      await backloadGithubPullRequest(repoInfo, pr);
+      await backloadGithubPullRequest(repoInfo, yearlyGitPOAPsMap, pr);
     }
   }
 
