@@ -3,10 +3,17 @@ import { context } from '../context';
 import { GithubPullRequestData, getGithubRepositoryPullsAsAdmin } from '../external/github';
 import { pullRequestBackloadDurationSeconds } from '../metrics';
 import { upsertUser } from './users';
-import { upsertClaim, RepoData } from './claims';
+import { RepoData, createNewClaimsForRepoPR } from './claims';
 import { GithubPullRequest } from '@generated/type-graphql';
 
-async function getRepoInfo(repoId: number) {
+type ExtraRepoData = RepoData & {
+  name: string;
+  organization: {
+    name: string;
+  };
+};
+
+async function getRepoInfo(repoId: number): Promise<ExtraRepoData | null> {
   const logger = createScopedLogger('getRepoInfo');
 
   const result = await context.prisma.repo.findMany({
@@ -129,37 +136,28 @@ async function backloadGithubPullRequest(repo: RepoData, pr: GithubPullRequestDa
     user.id,
   );
 
-  const relevantGitPOAP = repo.project.gitPOAPs.find(x => x.year === mergedAt.getFullYear());
-  if (!relevantGitPOAP) {
-    logger.warn(
-      `No relevant GitPOAP found for Repo ID ${repo.id} for year ${mergedAt.getFullYear()}`,
-    );
-    return;
-  }
+  const claims = await createNewClaimsForRepoPR(user, repo, githubPullRequest);
 
-  const claim = await upsertClaim(user, relevantGitPOAP, githubPullRequest);
+  for (const claim of claims) {
+    // If this is the user's first PR set the earned at field
+    if (claim.pullRequestEarnedId === null) {
+      logger.info(
+        `Setting pullRequestEarned for Claim ID ${claim.id} to GithubPullRequest ID ${githubPullRequest.id} for user ${pr.user.login}`,
+      );
 
-  // If this is the user's first PR set the earned at field
-  if (claim.pullRequestEarnedId === null) {
-    logger.info(
-      `Setting pullRequestEarned for Claim ID ${claim.id} to GithubPullRequest ID ${githubPullRequest.id} for user ${pr.user.login}`,
-    );
-
-    await context.prisma.claim.update({
-      where: {
-        gitPOAPId_userId: {
-          gitPOAPId: relevantGitPOAP.id,
-          userId: user.id,
+      await context.prisma.claim.update({
+        where: {
+          id: claim.id,
         },
-      },
-      data: {
-        pullRequestEarned: {
-          connect: {
-            id: githubPullRequest.id,
+        data: {
+          pullRequestEarned: {
+            connect: {
+              id: githubPullRequest.id,
+            },
           },
         },
-      },
-    });
+      });
+    }
   }
 }
 

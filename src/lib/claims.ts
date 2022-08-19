@@ -3,14 +3,16 @@ import { createScopedLogger } from '../logging';
 import { retrievePOAPEventInfo } from '../external/poap';
 import { Claim } from '@generated/type-graphql';
 
+type GitPOAPs = {
+  id: number;
+  year: number;
+  threshold: number;
+}[];
+
 export type RepoData = {
   id: number;
   project: {
-    gitPOAPs: {
-      id: number;
-      year: number;
-      threshold: number;
-    }[];
+    gitPOAPs: GitPOAPs;
   };
 };
 
@@ -55,32 +57,65 @@ export async function upsertClaim(
   });
 }
 
-// This should only be used for PRs from the current year!
 export async function createNewClaimsForRepoPR(
   user: { id: number },
   repo: RepoData,
   githubPullRequest: { id: number },
 ) {
-  // We assume here that all the ongoing GitPOAPs have the same year
-  const prCount = await context.prisma.githubPullRequest.count({
-    where: {
-      userId: user.id,
-      repoId: repo.id,
-      githubMergedAt: {
-        gte: new Date(repo.project.gitPOAPs[0].year, 0, 1),
-        lt: new Date(repo.project.gitPOAPs[0].year + 1, 0, 1),
-      },
-    },
-  });
+  const logger = createScopedLogger('createNewClaimsForRepoPR');
 
-  for (const gitPOAP of repo.project.gitPOAPs) {
-    // Skip this GitPOAP if the threshold wasn't reached
-    if (prCount < gitPOAP.threshold) {
-      continue;
+  logger.info(
+    `Handling creating new claims for PR ID ${githubPullRequest.id} for User ID ${user.id}`,
+  );
+
+  let yearlyGitPOAPMap: Record<string, GitPOAPs> = {};
+  for (const gitPOAPInfo of repo.project.gitPOAPs) {
+    const yearString = gitPOAPInfo.year.toString();
+
+    if (!(yearString in yearlyGitPOAPMap)) {
+      yearlyGitPOAPMap[yearString] = [];
     }
 
-    await upsertClaim(user, gitPOAP, githubPullRequest);
+    yearlyGitPOAPMap[yearString].push(gitPOAPInfo);
   }
+
+  const years = Object.keys(yearlyGitPOAPMap);
+
+  logger.debug(`Found ${years.length} years with GitPOAPs`);
+
+  let claims = [];
+  for (const year of years) {
+    const gitPOAPs = yearlyGitPOAPMap[year];
+
+    const prCount = await context.prisma.githubPullRequest.count({
+      where: {
+        userId: user.id,
+        repoId: repo.id,
+        githubMergedAt: {
+          gte: new Date(gitPOAPs[0].year, 0, 1),
+          lt: new Date(gitPOAPs[0].year + 1, 0, 1),
+        },
+      },
+    });
+
+    logger.debug(`User ID ${user.id} has ${prCount} PRs in year ${year}`);
+
+    for (const gitPOAP of repo.project.gitPOAPs) {
+      // Skip this GitPOAP if the threshold wasn't reached
+      if (prCount < gitPOAP.threshold) {
+        logger.info(
+          `User ID ${user.id} misses threshold of ${gitPOAP.threshold} for GitPOAP ID ${gitPOAP.id}`,
+        );
+        continue;
+      }
+
+      logger.info(`Upserting claim for User ID ${user.id} for GitPOAP ID ${gitPOAP.id}`);
+
+      claims.push(await upsertClaim(user, gitPOAP, githubPullRequest));
+    }
+  }
+
+  return claims;
 }
 
 export async function retrieveClaimsCreatedByPR(pullRequestId: number): Promise<ClaimData[]> {
