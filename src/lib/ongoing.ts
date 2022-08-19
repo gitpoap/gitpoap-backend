@@ -9,7 +9,7 @@ import {
 } from '../metrics';
 import { extractMergeCommitSha, upsertGithubPullRequest } from './pullRequests';
 import { upsertUser } from './users';
-import { createNewClaimsForRepoPR } from './claims';
+import { YearlyGitPOAPsMap, createNewClaimsForRepoPR, createYearlyGitPOAPsMap } from './claims';
 import { lookupLastRun, updateLastRun } from './batchProcessing';
 
 // The number of pull requests to request in a single page (currently the maximum number)
@@ -58,6 +58,7 @@ type HandleNewPullReturnType = {
  */
 export async function handleNewPull(
   repo: RepoReturnType,
+  yearlyGitPOAPsMap: YearlyGitPOAPsMap,
   pull: GithubPullRequestData,
 ): Promise<HandleNewPullReturnType> {
   const logger = createScopedLogger('handleNewPull');
@@ -111,7 +112,7 @@ export async function handleNewPull(
       return { finished: false, updatedAt: updatedAt };
     }
 
-    await createNewClaimsForRepoPR(user, repo, githubPullRequest);
+    await createNewClaimsForRepoPR(user, repo, yearlyGitPOAPsMap, githubPullRequest);
   }
 
   return { finished: false, updatedAt: updatedAt };
@@ -124,6 +125,8 @@ export async function checkForNewContributions(repo: RepoReturnType) {
   logger.info(`Checking for new contributions to ${project}`);
 
   const endTimer = ongoingIssuanceProjectDurationSeconds.startTimer(project);
+
+  const yearlyGitPOAPsMap = createYearlyGitPOAPsMap(repo.project.gitPOAPs);
 
   let page = 1;
   let isProcessing = true;
@@ -145,7 +148,7 @@ export async function checkForNewContributions(repo: RepoReturnType) {
     logger.debug(`Retrieved ${pulls.length} pulls for processing`);
 
     for (const pull of pulls) {
-      const result = await handleNewPull(repo, pull);
+      const result = await handleNewPull(repo, yearlyGitPOAPsMap, pull);
 
       // Save the first updatedAt value
       if (lastUpdatedAt === null) {
