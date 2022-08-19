@@ -121,4 +121,38 @@ describe('createNewClaimsForRepoPR', () => {
       fillInUpsert(user.id, repo.project.gitPOAPs[1].id, pr.id),
     );
   });
+
+  it('Creates multiple claims when there are multple GitPOAPs with same threshold', async () => {
+    contextMock.prisma.githubPullRequest.count.mockResolvedValue(1);
+
+    const repo: RepoData = {
+      id: 43,
+      project: {
+        gitPOAPs: [
+          {
+            id: 2,
+            year: 9001,
+            threshold: 1,
+          },
+          {
+            id: 3,
+            year: 9001,
+            threshold: 1,
+          },
+        ],
+      },
+    };
+
+    await createNewClaimsForRepoPR(user, repo, pr);
+
+    expect(contextMock.prisma.githubPullRequest.count).toHaveBeenCalledTimes(1);
+
+    expect(contextMock.prisma.claim.upsert).toHaveBeenCalledTimes(2);
+    expect(contextMock.prisma.claim.upsert).toHaveBeenCalledWith(
+      fillInUpsert(user.id, repo.project.gitPOAPs[0].id, pr.id),
+    );
+    expect(contextMock.prisma.claim.upsert).toHaveBeenCalledWith(
+      fillInUpsert(user.id, repo.project.gitPOAPs[1].id, pr.id),
+    );
+  });
 });
