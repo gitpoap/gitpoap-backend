@@ -9,6 +9,8 @@ type GitPOAPs = {
   threshold: number;
 }[];
 
+export type YearlyGitPOAPsMap = Record<string, GitPOAPs>;
+
 export type RepoData = {
   id: number;
   project: {
@@ -57,35 +59,41 @@ export async function upsertClaim(
   });
 }
 
+export function createYearlyGitPOAPsMap(gitPOAPs: GitPOAPs): YearlyGitPOAPsMap {
+  let yearlyGitPOAPsMap: YearlyGitPOAPsMap = {};
+
+  for (const gitPOAP of gitPOAPs) {
+    const yearString = gitPOAP.year.toString();
+
+    if (!(yearString in yearlyGitPOAPsMap)) {
+      yearlyGitPOAPsMap[yearString] = [];
+    }
+
+    yearlyGitPOAPsMap[yearString].push(gitPOAP);
+  }
+
+  return yearlyGitPOAPsMap;
+}
+
 export async function createNewClaimsForRepoPR(
   user: { id: number },
-  repo: RepoData,
+  repo: { id: number },
+  yearlyGitPOAPsMap: YearlyGitPOAPsMap,
   githubPullRequest: { id: number },
-) {
+): Promise<Claim[]> {
   const logger = createScopedLogger('createNewClaimsForRepoPR');
 
   logger.info(
     `Handling creating new claims for PR ID ${githubPullRequest.id} for User ID ${user.id}`,
   );
 
-  let yearlyGitPOAPMap: Record<string, GitPOAPs> = {};
-  for (const gitPOAPInfo of repo.project.gitPOAPs) {
-    const yearString = gitPOAPInfo.year.toString();
-
-    if (!(yearString in yearlyGitPOAPMap)) {
-      yearlyGitPOAPMap[yearString] = [];
-    }
-
-    yearlyGitPOAPMap[yearString].push(gitPOAPInfo);
-  }
-
-  const years = Object.keys(yearlyGitPOAPMap);
+  const years = Object.keys(yearlyGitPOAPsMap);
 
   logger.debug(`Found ${years.length} years with GitPOAPs`);
 
   let claims = [];
   for (const year of years) {
-    const gitPOAPs = yearlyGitPOAPMap[year];
+    const gitPOAPs = yearlyGitPOAPsMap[year];
 
     const prCount = await context.prisma.githubPullRequest.count({
       where: {
@@ -105,7 +113,7 @@ export async function createNewClaimsForRepoPR(
       continue;
     }
 
-    for (const gitPOAP of repo.project.gitPOAPs) {
+    for (const gitPOAP of gitPOAPs) {
       // Skip this GitPOAP if the threshold wasn't reached
       if (prCount < gitPOAP.threshold) {
         logger.info(
@@ -121,6 +129,19 @@ export async function createNewClaimsForRepoPR(
   }
 
   return claims;
+}
+
+export async function createNewClaimsForRepoPRHelper(
+  user: { id: number },
+  repo: RepoData,
+  githubPullRequest: { id: number },
+): Promise<Claim[]> {
+  return await createNewClaimsForRepoPR(
+    user,
+    repo,
+    createYearlyGitPOAPsMap(repo.project.gitPOAPs),
+    githubPullRequest,
+  );
 }
 
 export async function retrieveClaimsCreatedByPR(pullRequestId: number): Promise<ClaimData[]> {
