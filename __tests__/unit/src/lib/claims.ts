@@ -1,5 +1,5 @@
 import { contextMock } from '../../../../__mocks__/src/context';
-import { createNewClaimsForRepoPR, RepoData } from '../../../../src/lib/claims';
+import { createNewClaimsForRepoPRHelper, RepoData } from '../../../../src/lib/claims';
 
 const user = { id: 4 };
 const pr = { id: 32 };
@@ -50,7 +50,7 @@ describe('createNewClaimsForRepoPR', () => {
       },
     };
 
-    await createNewClaimsForRepoPR(user, repo, pr);
+    await createNewClaimsForRepoPRHelper(user, repo, pr);
 
     expect(contextMock.prisma.githubPullRequest.count).toHaveBeenCalledTimes(1);
 
@@ -73,7 +73,7 @@ describe('createNewClaimsForRepoPR', () => {
       },
     };
 
-    await createNewClaimsForRepoPR(user, repo, pr);
+    await createNewClaimsForRepoPRHelper(user, repo, pr);
 
     expect(contextMock.prisma.githubPullRequest.count).toHaveBeenCalledTimes(1);
 
@@ -109,7 +109,7 @@ describe('createNewClaimsForRepoPR', () => {
       },
     };
 
-    await createNewClaimsForRepoPR(user, repo, pr);
+    await createNewClaimsForRepoPRHelper(user, repo, pr);
 
     expect(contextMock.prisma.githubPullRequest.count).toHaveBeenCalledTimes(1);
 
@@ -143,7 +143,7 @@ describe('createNewClaimsForRepoPR', () => {
       },
     };
 
-    await createNewClaimsForRepoPR(user, repo, pr);
+    await createNewClaimsForRepoPRHelper(user, repo, pr);
 
     expect(contextMock.prisma.githubPullRequest.count).toHaveBeenCalledTimes(1);
 

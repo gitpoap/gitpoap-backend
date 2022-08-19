@@ -25,7 +25,7 @@ import {
   extractMergeCommitSha,
 } from '../lib/pullRequests';
 import { upsertUser } from '../lib/users';
-import { createNewClaimsForRepoPR, RepoData, retrieveClaimsCreatedByPR } from '../lib/claims';
+import { RepoData, createNewClaimsForRepoPRHelper, retrieveClaimsCreatedByPR } from '../lib/claims';
 import { getRepoByName } from '../lib/repos';
 
 export const claimsRouter = Router();
@@ -543,7 +543,7 @@ claimsRouter.post(
     );
 
     // Create any new claims (if they haven't been already)
-    await createNewClaimsForRepoPR(user, repo, githubPullRequest);
+    await createNewClaimsForRepoPRHelper(user, repo, githubPullRequest);
 
     const newClaims = await retrieveClaimsCreatedByPR(githubPullRequest.id);
 
