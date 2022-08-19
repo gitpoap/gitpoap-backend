@@ -100,6 +100,11 @@ export async function createNewClaimsForRepoPR(
 
     logger.debug(`User ID ${user.id} has ${prCount} PRs in year ${year}`);
 
+    // Skip if there are no PRs for this year
+    if (prCount === 0) {
+      continue;
+    }
+
     for (const gitPOAP of repo.project.gitPOAPs) {
       // Skip this GitPOAP if the threshold wasn't reached
       if (prCount < gitPOAP.threshold) {
