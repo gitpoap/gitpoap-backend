@@ -60,6 +60,7 @@ type PullRequestsRes = {
           description: string;
           url: string;
           isFork: boolean;
+          stargazerCount: number;
           owner: {
             id: string;
             __typename: string;
@@ -72,6 +73,12 @@ type PullRequestsRes = {
     }[];
   };
 };
+
+type ErrorMessage = {
+  message: string;
+};
+
+type APIResponseData<T> = T | ErrorMessage;
 
 const publicPRsQuery = (userName: string) => `
 {
@@ -93,6 +100,7 @@ const publicPRsQuery = (userName: string) => `
             description
             url
             isFork
+            stargazerCount
             owner {
               id
               __typename
@@ -444,7 +452,7 @@ onboardingRouter.post<'/intake-form', {}, {}, IntakeForm>(
   },
 );
 
-onboardingRouter.get<'/github/repos', {}, Repo[]>(
+onboardingRouter.get<'/github/repos', {}, APIResponseData<Repo[]>>(
   '/github/repos',
   jwtWithOAuth(),
   async function (req, res) {
@@ -457,71 +465,87 @@ onboardingRouter.get<'/github/repos', {}, Repo[]>(
 
     logger.info(`Fetching repos lists for GitHub user ${user.data.login}`);
 
-    /* Fetch first 100 public PRs for a user */
-    const publicPrs = await octokit.graphql<PullRequestsRes>(publicPRsQuery(user.data.login));
+    let mappedPrRepos: Repo[] = [];
+    let mappedRepos: Repo[] = [];
+    let mappedOrgRepos: Repo[] = [];
 
-    const foundPrRepoIds = new Set<number>();
-    const uniquePrRepos = publicPrs.search.edges.filter(repo => {
-      if (repo.node.repository.isFork) {
-        return false;
-      }
-      const isFound = foundPrRepoIds.has(repo.node.repository.databaseId);
-      foundPrRepoIds.add(repo.node.repository.databaseId);
+    try {
+      /* Fetch first 100 public PRs for a user */
+      const publicPrs = await octokit.graphql<PullRequestsRes>(publicPRsQuery(user.data.login));
 
-      return !isFound;
-    });
-
-    const mappedPrRepos = uniquePrRepos.map((pr): Repo => getMappedPrRepo(pr));
-    logger.debug(`Found ${mappedPrRepos.length} unique PR-related repos`);
-
-    /* Fetch list of repos for authenticated user */
-    const repos = await octokit.rest.repos.listForAuthenticatedUser({
-      type: 'public',
-      per_page: 100,
-    });
-
-    /* Fetch list of orgs that the user is a member of */
-    const orgs = await octokit.rest.orgs.listForUser({
-      username: user.data.login,
-      per_page: 100,
-    });
-
-    /* Fetch list of repos for each org the user is a member of */
-    const orgsWithRepos = await Promise.all(
-      orgs.data.map(
-        async org =>
-          await octokit.rest.repos.listForOrg({
-            org: org.login,
-            per_page: 100,
-          }),
-      ),
-    );
-
-    /* Combine all org repos into one array */
-    const mappedOrgRepos: Repo[] = orgsWithRepos
-      .map(org => org.data)
-      .reduce((acc, repos) => [...acc, ...repos], [])
-      .filter(repo => {
-        if (repo.fork) {
+      const foundPrRepoIds = new Set<number>();
+      const uniquePrRepos = publicPrs.search.edges.filter(repo => {
+        if (repo.node.repository.isFork) {
+          return false;
+        } else if (repo.node.repository.stargazerCount < 2) {
           return false;
         }
-        const hasPermission =
-          repo.permissions?.admin || repo.permissions?.maintain || repo.permissions?.push;
-        return hasPermission;
-      })
-      .map(repo => getMappedOrgRepo(repo));
+        const isFound = foundPrRepoIds.has(repo.node.repository.databaseId);
+        foundPrRepoIds.add(repo.node.repository.databaseId);
 
-    /* Combine all public repos into one array */
-    const mappedRepos: Repo[] = repos.data
-      .filter(repo => {
-        if (repo.fork) {
-          return false;
-        }
-        const hasPermission =
-          repo.permissions?.admin || repo.permissions?.maintain || repo.permissions?.push;
-        return hasPermission;
-      })
-      .map(repo => getMappedRepo(repo));
+        return !isFound;
+      });
+
+      mappedPrRepos = uniquePrRepos.map((pr): Repo => getMappedPrRepo(pr));
+      logger.debug(`Found ${mappedPrRepos.length} unique PR-related repos`);
+
+      /* Fetch list of repos for authenticated user */
+      const repos = await octokit.rest.repos.listForAuthenticatedUser({
+        type: 'public',
+        per_page: 100,
+      });
+
+      /* Fetch list of orgs that the user is a member of */
+      const orgs = await octokit.rest.orgs.listForUser({
+        username: user.data.login,
+        per_page: 100,
+      });
+
+      /* Fetch list of repos for each org the user is a member of */
+      const orgsWithRepos = await Promise.all(
+        orgs.data.map(
+          async org =>
+            await octokit.rest.repos.listForOrg({
+              org: org.login,
+              per_page: 100,
+            }),
+        ),
+      );
+
+      /* Combine all org repos into one array */
+      mappedOrgRepos = orgsWithRepos
+        .map(org => org.data)
+        .reduce((acc, repos) => [...acc, ...repos], [])
+        .filter(repo => {
+          if (repo.fork) {
+            return false;
+          } else if (!repo.stargazers_count || repo.stargazers_count < 2) {
+            return false;
+          }
+          const hasPermission =
+            repo.permissions?.admin || repo.permissions?.maintain || repo.permissions?.push;
+          return hasPermission;
+        })
+        .map(repo => getMappedOrgRepo(repo));
+
+      /* Combine all public repos into one array */
+      mappedRepos = repos.data
+        .filter(repo => {
+          if (repo.fork) {
+            return false;
+          } else if (!repo.stargazers_count || repo.stargazers_count < 2) {
+            return false;
+          }
+          const hasPermission =
+            repo.permissions?.admin || repo.permissions?.maintain || repo.permissions?.push;
+          return hasPermission;
+        })
+        .map(repo => getMappedRepo(repo));
+    } catch (error) {
+      logger.error(`Received error when fetching repos for GitHub user - ${error}`);
+      endTimer({ status: 400 });
+      return res.status(400).send({ message: 'Failed to fetch repos for GitHub user' });
+    }
 
     /* Combine all repos into one array */
     const allRepos = [...mappedRepos, ...mappedOrgRepos, ...mappedPrRepos];
