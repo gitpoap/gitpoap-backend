@@ -22,6 +22,7 @@ type Claim = {
   id: number;
   createdAt: Date;
   mintedAt: Date | null;
+  needsRevalidation: boolean;
 };
 
 type GitPOAP = {
@@ -80,6 +81,7 @@ export const mapClaimsToGitPOAPResults = async (
       repositories,
       earnedAt: DateTime.fromJSDate(earnedAt).toFormat('yyyy-MM-dd'),
       mintedAt: claim.mintedAt ? DateTime.fromJSDate(claim.mintedAt).toFormat('yyyy-MM-dd') : null,
+      needsRevalidation: claim.needsRevalidation,
     });
   }
 
