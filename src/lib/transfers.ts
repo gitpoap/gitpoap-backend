@@ -2,46 +2,36 @@ import { context } from '../context';
 import { clearPOAPTokenInfoCache, retrievePOAPTokenInfo } from '../external/poap';
 import { createScopedLogger } from '../logging';
 import { upsertProfile } from './profiles';
-import { ClaimStatus } from '@prisma/client';
+import { Claim, ClaimStatus } from '@prisma/client';
 
-async function handleTransfer(
+export async function handleGitPOAPTransfer(
   claimId: number,
   poapTokenId: string,
   oldAddress: string,
   newAddress: string,
-) {
+): Promise<Claim> {
   const logger = createScopedLogger('handleTransfer');
 
-  const profileData = await context.prisma.profile.findUnique({
+  // Delete a Feature for this GitPOAP if it exists
+  await context.prisma.featuredPOAP.deleteMany({
     where: {
-      address: oldAddress.toLowerCase(),
-    },
-    select: {
-      id: true,
+      poapTokenId,
+      profile: {
+        address: oldAddress,
+      },
     },
   });
-  if (profileData === null) {
-    logger.warn(`Failed to lookup profile for address with GitPOAP ID ${claimId}: ${oldAddress}`);
-  } else {
-    // Delete the featured status on the old profile if it exists
-    // (use deleteMany so this doesn't throw)
-    await context.prisma.featuredPOAP.deleteMany({
-      where: {
-        poapTokenId,
-        profileId: profileData.id,
-      },
-    });
-  }
 
   // Ensure that a profile exists for the new address
   await upsertProfile(newAddress);
 
-  await context.prisma.claim.update({
+  return await context.prisma.claim.update({
     where: {
       id: claimId,
     },
     data: {
       address: newAddress.toLowerCase(),
+      needsRevalidation: true,
     },
   });
 }
@@ -76,7 +66,7 @@ export async function checkIfClaimTransfered(claimId: number): Promise<string | 
   if (newData.owner !== claimData.address) {
     logger.info(`Found transfered GitPOAP Token ID: ${claimId}`);
 
-    await handleTransfer(
+    await handleGitPOAPTransfer(
       claimId,
       claimData.poapTokenId as string,
       claimData.address as string,
