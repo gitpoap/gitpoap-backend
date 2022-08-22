@@ -377,6 +377,7 @@ type ClaimCountAggregate {
   gitPOAPId: Int!
   userId: Int!
   pullRequestEarnedId: Int!
+  needsRevalidation: Int!
   _all: Int!
 }
 
@@ -406,6 +407,7 @@ type ClaimMinAggregate {
   gitPOAPId: Int
   userId: Int
   pullRequestEarnedId: Int
+  needsRevalidation: Boolean
 }
 
 # The javascript `Date` as string. Type represents date and time as the ISO Date string.
@@ -430,6 +432,7 @@ type ClaimMaxAggregate {
   gitPOAPId: Int
   userId: Int
   pullRequestEarnedId: Int
+  needsRevalidation: Boolean
 }
 
 input ClaimWhereInput {
@@ -449,6 +452,7 @@ input ClaimWhereInput {
   user: UserRelationFilter
   pullRequestEarnedId: IntNullableFilter
   pullRequestEarned: GithubPullRequestRelationFilter
+  needsRevalidation: BoolFilter
 }
 
 input IntFilter {
@@ -876,6 +880,7 @@ input ClaimOrderByWithRelationInput {
   user: UserOrderByWithRelationInput
   pullRequestEarnedId: SortOrder
   pullRequestEarned: GithubPullRequestOrderByWithRelationInput
+  needsRevalidation: SortOrder
 }
 
 enum SortOrder {
@@ -1025,6 +1030,7 @@ type Claim {
   gitPOAPId: Int!
   userId: Int!
   pullRequestEarnedId: Int
+  needsRevalidation: Boolean!
   gitPOAP: GitPOAP!
   user: User!
   pullRequestEarned: GithubPullRequest
@@ -1238,6 +1244,7 @@ enum ClaimScalarFieldEnum {
   gitPOAPId
   userId
   pullRequestEarnedId
+  needsRevalidation
 }
 
 input GithubPullRequestWhereUniqueInput {
@@ -1350,6 +1357,7 @@ type ClaimGroupBy {
   gitPOAPId: Int!
   userId: Int!
   pullRequestEarnedId: Int
+  needsRevalidation: Boolean!
   _count: ClaimCountAggregate
   _avg: ClaimAvgAggregate
   _sum: ClaimSumAggregate
@@ -1368,6 +1376,7 @@ input ClaimOrderByWithAggregationInput {
   gitPOAPId: SortOrder
   userId: SortOrder
   pullRequestEarnedId: SortOrder
+  needsRevalidation: SortOrder
   _count: ClaimCountOrderByAggregateInput
   _avg: ClaimAvgOrderByAggregateInput
   _max: ClaimMaxOrderByAggregateInput
@@ -1386,6 +1395,7 @@ input ClaimCountOrderByAggregateInput {
   gitPOAPId: SortOrder
   userId: SortOrder
   pullRequestEarnedId: SortOrder
+  needsRevalidation: SortOrder
 }
 
 input ClaimAvgOrderByAggregateInput {
@@ -1406,6 +1416,7 @@ input ClaimMaxOrderByAggregateInput {
   gitPOAPId: SortOrder
   userId: SortOrder
   pullRequestEarnedId: SortOrder
+  needsRevalidation: SortOrder
 }
 
 input ClaimMinOrderByAggregateInput {
@@ -1419,6 +1430,7 @@ input ClaimMinOrderByAggregateInput {
   gitPOAPId: SortOrder
   userId: SortOrder
   pullRequestEarnedId: SortOrder
+  needsRevalidation: SortOrder
 }
 
 input ClaimSumOrderByAggregateInput {
@@ -1442,6 +1454,7 @@ input ClaimScalarWhereWithAggregatesInput {
   gitPOAPId: IntWithAggregatesFilter
   userId: IntWithAggregatesFilter
   pullRequestEarnedId: IntNullableWithAggregatesFilter
+  needsRevalidation: BoolWithAggregatesFilter
 }
 
 input IntWithAggregatesFilter {
@@ -1639,6 +1652,22 @@ input NestedFloatNullableFilter {
   gt: Float
   gte: Float
   not: NestedFloatNullableFilter
+}
+
+input BoolWithAggregatesFilter {
+  equals: Boolean
+  not: NestedBoolWithAggregatesFilter
+  _count: NestedIntFilter
+  _min: NestedBoolFilter
+  _max: NestedBoolFilter
+}
+
+input NestedBoolWithAggregatesFilter {
+  equals: Boolean
+  not: NestedBoolWithAggregatesFilter
+  _count: NestedIntFilter
+  _min: NestedBoolFilter
+  _max: NestedBoolFilter
 }
 
 type AggregateFeaturedPOAP {
@@ -2178,22 +2207,6 @@ input NestedEnumGitPOAPStatusWithAggregatesFilter {
   _count: NestedIntFilter
   _min: NestedEnumGitPOAPStatusFilter
   _max: NestedEnumGitPOAPStatusFilter
-}
-
-input BoolWithAggregatesFilter {
-  equals: Boolean
-  not: NestedBoolWithAggregatesFilter
-  _count: NestedIntFilter
-  _min: NestedBoolFilter
-  _max: NestedBoolFilter
-}
-
-input NestedBoolWithAggregatesFilter {
-  equals: Boolean
-  not: NestedBoolWithAggregatesFilter
-  _count: NestedIntFilter
-  _min: NestedBoolFilter
-  _max: NestedBoolFilter
 }
 
 type AggregateGithubPullRequest {
