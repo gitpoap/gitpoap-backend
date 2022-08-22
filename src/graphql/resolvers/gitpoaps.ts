@@ -11,6 +11,7 @@ import {
 } from '../../external/poap';
 import { createScopedLogger } from '../../logging';
 import { gqlRequestDurationSeconds } from '../../metrics';
+import { splitUsersPOAPs } from '../../lib/poaps';
 
 @ObjectType()
 class FullGitPOAPEventData {
@@ -251,58 +252,13 @@ export class CustomGitPOAPResolver {
       return null;
     }
 
-    const poaps = await retrieveUsersPOAPs(resolvedAddress);
-    if (poaps === null) {
-      logger.error(`Failed to query POAPs from POAP API for address: ${resolvedAddress}`);
+    const splitResult = await splitUsersPOAPs(resolvedAddress);
+    if (splitResult === null) {
+      logger.error(`Failed to split Profile ${resolvedAddress}'s POAPs`);
       endTimer({ success: 0 });
       return null;
     }
-
-    const claims = await prisma.claim.findMany({
-      where: {
-        address: resolvedAddress.toLowerCase(),
-        status: { in: [ClaimStatus.CLAIMED, ClaimStatus.MINTING] },
-      },
-      include: {
-        gitPOAP: true,
-      },
-    });
-
-    let gitPOAPsOnly = [];
-    let foundPOAPIds: Record<string, Claim> = {};
-    for (const claim of claims) {
-      if (claim.poapTokenId === null) {
-        if (claim.status !== ClaimStatus.MINTING) {
-          logger.error(`Found a null poapTokenId, but the Claim ID ${claim.id} has status CLAIMED`);
-        } else {
-          const event = await retrievePOAPEventInfo(claim.gitPOAP.poapEventId);
-          if (event === null) {
-            logger.error(
-              `Failed to look up poapEventId: ${claim.gitPOAP.poapEventId} on GitPOAP: ${claim.gitPOAP.id}`,
-            );
-            continue;
-          }
-          gitPOAPsOnly.push({
-            claim,
-            event,
-          });
-        }
-      } else {
-        foundPOAPIds[claim.poapTokenId] = claim;
-      }
-    }
-
-    let poapsOnly = [];
-    for (const poap of poaps) {
-      if (foundPOAPIds.hasOwnProperty(poap.tokenId)) {
-        gitPOAPsOnly.push({
-          claim: foundPOAPIds[poap.tokenId],
-          event: poap.event,
-        });
-      } else {
-        poapsOnly.push(poap);
-      }
-    }
+    const { gitPOAPsOnly, poapsOnly } = splitResult;
 
     if (sort === 'date') {
       // Sort so that most recently claimed comes first
