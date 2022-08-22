@@ -102,6 +102,7 @@ model Claim {
   // Note that not all Claims have pull request they were earned in (e.g. Hackathon GitPOAPs)
   pullRequestEarnedId Int?
   pullRequestEarned   GithubPullRequest? @relation(fields: [pullRequestEarnedId], references: [id])
+  needsRevalidation   Boolean            @default(false)
 
   @@unique([gitPOAPId, userId])
 }
