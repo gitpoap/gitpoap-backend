@@ -88,11 +88,15 @@ export async function splitUsersPOAPs(address: string): Promise<SplitUsersPOAPsR
     return null;
   }
 
+  // All the POAP Event IDs that are GitPOAP Events
   const gitPOAPPOAPEventIdSet = await gitPOAPPOAPEventIdSetPromise;
 
+  // List of POAPs that are NOT GitPOAPs
   const poapsOnly: POAPToken[] = [];
 
+  // All the POAP Token IDs that were found for the address
   const foundPOAPIds = new Set<string>();
+
   for (const poap of poaps) {
     foundPOAPIds.add(poap.tokenId);
 
@@ -122,7 +126,7 @@ export async function splitUsersPOAPs(address: string): Promise<SplitUsersPOAPsR
             claimData.id,
             poap.tokenId,
             claimData.address as string,
-            address,
+            addressLower,
           );
 
           gitPOAPsOnly.push({
@@ -163,6 +167,8 @@ export async function splitUsersPOAPs(address: string): Promise<SplitUsersPOAPsR
       }
     }
 
+    // If some claim that is marked in our DB as belonging to the address is no
+    // longer in their set of POAPs, we need to handle its transfer
     for (const claim of claims) {
       if (claim.poapTokenId !== null && !(claim.poapTokenId in foundPOAPIds)) {
         // Run this in the background
