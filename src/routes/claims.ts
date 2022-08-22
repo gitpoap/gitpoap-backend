@@ -8,12 +8,10 @@ import { context } from '../context';
 import { ClaimStatus, GitPOAP, GitPOAPStatus } from '@prisma/client';
 import { resolveENS } from '../lib/ens';
 import { isSignatureValid } from '../signatures';
-import jwt from 'express-jwt';
-import { jwtWithAdminOAuth, gitpoapBotAuth } from '../middleware';
+import { jwtWithOAuth, jwtWithAdminOAuth, gitpoapBotAuth } from '../middleware';
 import { AccessTokenPayload, AccessTokenPayloadWithOAuth } from '../types/tokens';
 import { redeemPOAP, requestPOAPCodes, retrieveClaimInfo } from '../external/poap';
 import { getSingleGithubRepositoryPullAsAdmin, getGithubUserById } from '../external/github';
-import { JWT_SECRET } from '../environment';
 import { createScopedLogger } from '../logging';
 import { MINIMUM_REMAINING_REDEEM_CODES, REDEEM_CODE_STEP_SIZE } from '../constants';
 import { httpRequestDurationSeconds } from '../metrics';
@@ -27,6 +25,8 @@ import {
 import { upsertUser } from '../lib/users';
 import { RepoData, createNewClaimsForRepoPRHelper, retrieveClaimsCreatedByPR } from '../lib/claims';
 import { getRepoByName } from '../lib/repos';
+import { checkIfClaimTransfered } from '../lib/transfers';
+import { upsertProfile } from '../lib/profiles';
 
 export const claimsRouter = Router();
 
@@ -144,224 +144,208 @@ async function runClaimsPostProcessing(claimIds: number[], qrHashes: string[]) {
   logger.info('Finished claims post processing');
 }
 
-claimsRouter.post(
-  '/',
-  jwt({ secret: JWT_SECRET as string, algorithms: ['HS256'] }),
-  async function (req, res) {
-    const logger = createScopedLogger('POST /claims');
+claimsRouter.post('/', jwtWithOAuth(), async function (req, res) {
+  const logger = createScopedLogger('POST /claims');
 
-    logger.debug(`Body: ${JSON.stringify(req.body)}`);
+  logger.debug(`Body: ${JSON.stringify(req.body)}`);
 
-    const endTimer = httpRequestDurationSeconds.startTimer('POST', '/claims');
+  const endTimer = httpRequestDurationSeconds.startTimer('POST', '/claims');
 
-    if (!req.user) {
-      logger.warn('No access token provided');
-      endTimer({ status: 401 });
-      return res.status(401).send({ message: 'Invalid or missing Access Token' });
-    }
-
-    const schemaResult = ClaimGitPOAPSchema.safeParse(req.body);
-    if (!schemaResult.success) {
-      logger.warn(
-        `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
-      );
-      endTimer({ status: 400 });
-      return res.status(400).send({ issues: schemaResult.error.issues });
-    }
-
-    logger.info(`Request claiming IDs ${req.body.claimIds} for address ${req.body.address}`);
-
-    // Resolve ENS if provided
-    const resolvedAddress = await resolveENS(req.body.address);
-    if (resolvedAddress === null) {
-      logger.warn('Request address is invalid');
-      endTimer({ status: 400 });
-      return res.status(400).send({ msg: `${req.body.address} is not a valid address` });
-    }
-
-    if (
-      !isSignatureValid(resolvedAddress, 'POST /claims', req.body.signature, {
-        claimIds: req.body.claimIds,
-      })
-    ) {
-      logger.warn('Request signature is invalid');
-      endTimer({ status: 401 });
-      return res.status(401).send({ msg: 'The signature is not valid for this address and data' });
-    }
-
-    let foundClaims: number[] = [];
-    let qrHashes: string[] = [];
-    let invalidClaims: { claimId: number; reason: string }[] = [];
-
-    for (const claimId of req.body.claimIds) {
-      const claim = await context.prisma.claim.findUnique({
-        where: {
-          id: claimId,
-        },
-        include: {
-          user: true,
-          gitPOAP: true,
-        },
-      });
-
-      if (!claim) {
-        invalidClaims.push({
-          claimId,
-          reason: "Claim ID doesn't exist",
-        });
-        continue;
-      }
-
-      const accessTokenPayload = req.user as AccessTokenPayload;
-
-      if (!claim.gitPOAP.isEnabled) {
-        logger.warn(`GitHub user ${accessTokenPayload} attempted to claim a non-enabled GitPOAP`);
-        invalidClaims.push({
-          claimId,
-          reason: `GitPOAP ID ${claim.gitPOAP.id} is not enabled`,
-        });
-        continue;
-      }
-
-      // Check to ensure the claim has not already been processed
-      if (claim.status !== ClaimStatus.UNCLAIMED) {
-        invalidClaims.push({
-          claimId,
-          reason: `Claim has status '${claim.status}'`,
-        });
-        continue;
-      }
-
-      // Ensure the user is the owner of the claim
-      if (claim.user.githubId !== accessTokenPayload.githubId) {
-        invalidClaims.push({
-          claimId,
-          reason: 'User does not own claim',
-        });
-        continue;
-      }
-
-      const redeemCode = await context.prisma.redeemCode.findFirst({
-        where: {
-          gitPOAPId: claim.gitPOAP.id,
-        },
-      });
-      if (redeemCode === null) {
-        const msg = `GitPOAP ID ${claim.gitPOAP.id} has no more redeem codes`;
-        logger.error(msg);
-        invalidClaims.push({ claimId, reason: msg });
-        continue;
-      }
-      try {
-        await context.prisma.redeemCode.delete({
-          where: {
-            id: redeemCode.id,
-          },
-        });
-      } catch (err) {
-        logger.error(`Tried to delete a RedeemCode that was already deleted: ${err}`);
-      }
-
-      // Mark that we are processing the claim
-      await context.prisma.claim.update({
-        where: {
-          id: claimId,
-        },
-        data: {
-          status: ClaimStatus.PENDING,
-          address: resolvedAddress.toLowerCase(),
-        },
-      });
-
-      const poapData = await redeemPOAP(req.body.address, redeemCode.code);
-      // If minting the POAP failed we need to revert
-      if (poapData === null) {
-        logger.error(`Failed to mint claim ${claimId} via the POAP API`);
-
-        invalidClaims.push({
-          claimId,
-          reason: 'Failed to claim via POAP API',
-        });
-
-        await context.prisma.redeemCode.create({
-          data: {
-            gitPOAP: {
-              connect: {
-                id: claim.gitPOAP.id,
-              },
-            },
-            code: redeemCode.code,
-          },
-        });
-        await context.prisma.claim.update({
-          where: {
-            id: claimId,
-          },
-          data: {
-            status: ClaimStatus.UNCLAIMED,
-            address: null,
-          },
-        });
-
-        continue;
-      }
-      foundClaims.push(claimId);
-      qrHashes.push(poapData.qr_hash);
-
-      // Mark that the POAP has been claimed
-      await context.prisma.claim.update({
-        where: {
-          id: claimId,
-        },
-        data: {
-          status: ClaimStatus.MINTING,
-          qrHash: poapData.qr_hash,
-        },
-      });
-
-      // Ensure that a profile exists for the address
-      await context.prisma.profile.upsert({
-        where: {
-          address: resolvedAddress.toLowerCase(),
-        },
-        update: {},
-        create: {
-          address: resolvedAddress.toLowerCase(),
-        },
-      });
-
-      // Ensure that we have the minimal number of codes if the GitPOAP
-      // is marked as ongoing. Note that we don't need to block on this
-      // since we don't depend on its result
-      ensureRedeemCodeThreshold(claim.gitPOAP);
-    }
-
-    if (invalidClaims.length > 0) {
-      logger.warn(`Some claims were invalid: ${JSON.stringify(invalidClaims)}`);
-
-      // Return 400 iff no claims were completed
-      if (foundClaims.length === 0) {
-        return res.status(400).send({
-          claimed: foundClaims,
-          invalid: invalidClaims,
-        });
-      }
-    }
-
-    logger.debug(
-      `Completed request claiming IDs ${req.body.claimIds} for address ${req.body.address}`,
+  const schemaResult = ClaimGitPOAPSchema.safeParse(req.body);
+  if (!schemaResult.success) {
+    logger.warn(
+      `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
     );
+    endTimer({ status: 400 });
+    return res.status(400).send({ issues: schemaResult.error.issues });
+  }
 
-    endTimer({ status: 200 });
+  logger.info(`Request claiming IDs ${req.body.claimIds} for address ${req.body.address}`);
 
-    res.status(200).send({
-      claimed: foundClaims,
-      invalid: [],
+  // Resolve ENS if provided
+  const resolvedAddress = await resolveENS(req.body.address);
+  if (resolvedAddress === null) {
+    logger.warn('Request address is invalid');
+    endTimer({ status: 400 });
+    return res.status(400).send({ msg: `${req.body.address} is not a valid address` });
+  }
+
+  if (
+    !isSignatureValid(resolvedAddress, 'POST /claims', req.body.signature, {
+      claimIds: req.body.claimIds,
+    })
+  ) {
+    logger.warn('Request signature is invalid');
+    endTimer({ status: 401 });
+    return res.status(401).send({ msg: 'The signature is not valid for this address and data' });
+  }
+
+  let foundClaims: number[] = [];
+  let qrHashes: string[] = [];
+  let invalidClaims: { claimId: number; reason: string }[] = [];
+
+  for (const claimId of req.body.claimIds) {
+    const claim = await context.prisma.claim.findUnique({
+      where: {
+        id: claimId,
+      },
+      include: {
+        user: true,
+        gitPOAP: true,
+      },
     });
 
-    await runClaimsPostProcessing(foundClaims, qrHashes);
-  },
-);
+    if (!claim) {
+      invalidClaims.push({
+        claimId,
+        reason: "Claim ID doesn't exist",
+      });
+      continue;
+    }
+
+    const accessTokenPayload = req.user as AccessTokenPayload;
+
+    if (!claim.gitPOAP.isEnabled) {
+      logger.warn(
+        `GitHub user ${accessTokenPayload.githubHandle} attempted to claim a non-enabled GitPOAP`,
+      );
+      invalidClaims.push({
+        claimId,
+        reason: `GitPOAP ID ${claim.gitPOAP.id} is not enabled`,
+      });
+      continue;
+    }
+
+    // Check to ensure the claim has not already been processed
+    if (claim.status !== ClaimStatus.UNCLAIMED) {
+      invalidClaims.push({
+        claimId,
+        reason: `Claim has status '${claim.status}'`,
+      });
+      continue;
+    }
+
+    // Ensure the user is the owner of the claim
+    if (claim.user.githubId !== accessTokenPayload.githubId) {
+      invalidClaims.push({
+        claimId,
+        reason: 'User does not own claim',
+      });
+      continue;
+    }
+
+    const redeemCode = await context.prisma.redeemCode.findFirst({
+      where: {
+        gitPOAPId: claim.gitPOAP.id,
+      },
+    });
+    if (redeemCode === null) {
+      const msg = `GitPOAP ID ${claim.gitPOAP.id} has no more redeem codes`;
+      logger.error(msg);
+      invalidClaims.push({ claimId, reason: msg });
+      continue;
+    }
+    try {
+      await context.prisma.redeemCode.delete({
+        where: {
+          id: redeemCode.id,
+        },
+      });
+    } catch (err) {
+      logger.error(`Tried to delete a RedeemCode that was already deleted: ${err}`);
+    }
+
+    // Mark that we are processing the claim
+    await context.prisma.claim.update({
+      where: {
+        id: claimId,
+      },
+      data: {
+        status: ClaimStatus.PENDING,
+        address: resolvedAddress.toLowerCase(),
+      },
+    });
+
+    const poapData = await redeemPOAP(req.body.address, redeemCode.code);
+    // If minting the POAP failed we need to revert
+    if (poapData === null) {
+      logger.error(`Failed to mint claim ${claimId} via the POAP API`);
+
+      invalidClaims.push({
+        claimId,
+        reason: 'Failed to claim via POAP API',
+      });
+
+      await context.prisma.redeemCode.create({
+        data: {
+          gitPOAP: {
+            connect: {
+              id: claim.gitPOAP.id,
+            },
+          },
+          code: redeemCode.code,
+        },
+      });
+      await context.prisma.claim.update({
+        where: {
+          id: claimId,
+        },
+        data: {
+          status: ClaimStatus.UNCLAIMED,
+          address: null,
+        },
+      });
+
+      continue;
+    }
+    foundClaims.push(claimId);
+    qrHashes.push(poapData.qr_hash);
+
+    // Mark that the POAP has been claimed
+    await context.prisma.claim.update({
+      where: {
+        id: claimId,
+      },
+      data: {
+        status: ClaimStatus.MINTING,
+        qrHash: poapData.qr_hash,
+      },
+    });
+
+    // Ensure that a profile exists for the address
+    await upsertProfile(resolvedAddress);
+
+    // Ensure that we have the minimal number of codes if the GitPOAP
+    // is marked as ongoing. Note that we don't need to block on this
+    // since we don't depend on its result
+    ensureRedeemCodeThreshold(claim.gitPOAP);
+  }
+
+  if (invalidClaims.length > 0) {
+    logger.warn(`Some claims were invalid: ${JSON.stringify(invalidClaims)}`);
+
+    // Return 400 iff no claims were completed
+    if (foundClaims.length === 0) {
+      return res.status(400).send({
+        claimed: foundClaims,
+        invalid: invalidClaims,
+      });
+    }
+  }
+
+  logger.debug(
+    `Completed request claiming IDs ${req.body.claimIds} for address ${req.body.address}`,
+  );
+
+  endTimer({ status: 200 });
+
+  res.status(200).send({
+    claimed: foundClaims,
+    invalid: [],
+  });
+
+  await runClaimsPostProcessing(foundClaims, qrHashes);
+});
 
 claimsRouter.post('/create', jwtWithAdminOAuth(), async function (req, res) {
   const logger = createScopedLogger('POST /claims/create');
@@ -556,3 +540,127 @@ claimsRouter.post(
     res.status(200).send({ newClaims });
   },
 );
+
+claimsRouter.post('/revalidate', jwtWithOAuth(), async (req, res) => {
+  const logger = createScopedLogger('POST /claims/revalidate');
+
+  logger.debug(`Body: ${JSON.stringify(req.body)}`);
+
+  const endTimer = httpRequestDurationSeconds.startTimer('POST', '/claims/revalidate');
+
+  // We have the same body requirements here as in the claim endpoint
+  const schemaResult = ClaimGitPOAPSchema.safeParse(req.body);
+  if (!schemaResult.success) {
+    logger.warn(
+      `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
+    );
+    endTimer({ status: 400 });
+    return res.status(400).send({ issues: schemaResult.error.issues });
+  }
+
+  const accessTokenPayload = req.user as AccessTokenPayload;
+
+  logger.info(
+    `Request to revalidate GitPOAP IDs ${req.body.claimIds} by GitHub user ${accessTokenPayload.githubHandle}`,
+  );
+
+  // Resolve ENS if provided
+  const resolvedAddress = await resolveENS(req.body.address);
+  if (resolvedAddress === null) {
+    logger.warn('Request address is invalid');
+    endTimer({ status: 400 });
+    return res.status(400).send({ msg: `${req.body.address} is not a valid address` });
+  }
+
+  if (
+    !isSignatureValid(resolvedAddress, 'POST /claims/revalidate', req.body.signature, {
+      claimIds: req.body.claimIds,
+    })
+  ) {
+    logger.warn('Request signature is invalid');
+    endTimer({ status: 401 });
+    return res.status(401).send({ msg: 'The signature is not valid for this address and data' });
+  }
+
+  let foundClaims: number[] = [];
+  let invalidClaims: { claimId: number; reason: string }[] = [];
+
+  for (const claimId of req.body.claimIds) {
+    const claim = await context.prisma.claim.findUnique({
+      where: {
+        id: claimId,
+      },
+      select: {
+        status: true,
+        address: true,
+        user: {
+          select: {
+            githubId: true,
+          },
+        },
+      },
+    });
+
+    if (!claim) {
+      invalidClaims.push({
+        claimId,
+        reason: "Claim ID doesn't exist",
+      });
+      continue;
+    }
+
+    // If the claim address is not set to the user sending the request,
+    // assume the user is correct and that perhaps we haven't seen the
+    // transfer yet in our backend
+    if (claim.address !== resolvedAddress.toLowerCase()) {
+      const newAddress = await checkIfClaimTransfered(claimId);
+
+      if (newAddress !== resolvedAddress.toLowerCase()) {
+        invalidClaims.push({
+          claimId,
+          reason: "Signer's address is not the current owner",
+        });
+        continue;
+      }
+    }
+
+    if (claim.user.githubId !== accessTokenPayload.githubId) {
+      invalidClaims.push({
+        claimId,
+        reason: 'User does not own claim',
+      });
+    }
+
+    await context.prisma.claim.update({
+      where: {
+        id: claimId,
+      },
+      data: {
+        needsRevalidation: false,
+      },
+    });
+  }
+
+  if (invalidClaims.length > 0) {
+    logger.warn(`Some claim revalidations were invalid: ${JSON.stringify(invalidClaims)}`);
+
+    // Return 400 iff no claim revalidations were completed
+    if (foundClaims.length === 0) {
+      return res.status(400).send({
+        claimed: foundClaims,
+        invalid: invalidClaims,
+      });
+    }
+  }
+
+  logger.debug(
+    `Completed request to revalidate GitPOAP IDs ${req.body.claimIds} by GitHub user ${accessTokenPayload.githubHandle}`,
+  );
+
+  endTimer({ status: 200 });
+
+  res.status(200).send({
+    claimed: foundClaims,
+    invalid: [],
+  });
+});

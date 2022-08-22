@@ -325,13 +325,10 @@ export async function retrieveUsersPOAPs(address: string) {
   return poapResponse;
 }
 
-export async function retrievePOAPInfo(poapTokenId: string) {
-  const logger = createScopedLogger('retrievePOAPInfo');
+export async function retrievePOAPTokenInfo(poapTokenId: string) {
+  const logger = createScopedLogger('retrievePOAPTokenInfo');
 
-  const cacheResponse = await context.redis.getValue(
-    POAP_TOKEN_CACHE_PREFIX,
-    poapTokenId.toString(),
-  );
+  const cacheResponse = await context.redis.getValue(POAP_TOKEN_CACHE_PREFIX, poapTokenId);
 
   if (cacheResponse !== null) {
     logger.debug(`Found POAP token ${poapTokenId} info in cache`);
@@ -345,14 +342,14 @@ export async function retrievePOAPInfo(poapTokenId: string) {
 
   if (poapResponse !== null) {
     // Set no TTL since we assume tokens don't change (e.g. they won't be transferred)
-    context.redis.setValue(
-      POAP_TOKEN_CACHE_PREFIX,
-      poapTokenId.toString(),
-      JSON.stringify(poapResponse),
-    );
+    context.redis.setValue(POAP_TOKEN_CACHE_PREFIX, poapTokenId, JSON.stringify(poapResponse));
   }
 
   return poapResponse;
+}
+
+export async function clearPOAPTokenInfoCache(poapTokenId: string) {
+  await context.redis.deleteKey(POAP_TOKEN_CACHE_PREFIX, poapTokenId);
 }
 
 export async function createPOAPEvent(

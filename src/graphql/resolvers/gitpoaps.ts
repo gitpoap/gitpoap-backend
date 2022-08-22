@@ -4,7 +4,11 @@ import { getLastMonthStartDatetime } from './util';
 import { Context } from '../../context';
 import { POAPEvent, POAPToken } from '../../types/poap';
 import { resolveENS } from '../../lib/ens';
-import { retrievePOAPEventInfo, retrieveUsersPOAPs, retrievePOAPInfo } from '../../external/poap';
+import {
+  retrievePOAPEventInfo,
+  retrieveUsersPOAPs,
+  retrievePOAPTokenInfo,
+} from '../../external/poap';
 import { createScopedLogger } from '../../logging';
 import { gqlRequestDurationSeconds } from '../../metrics';
 
@@ -565,7 +569,7 @@ export class CustomGitPOAPResolver {
     });
 
     for (const poap of poaps) {
-      const poapData = await retrievePOAPInfo(poap.poapTokenId);
+      const poapData = await retrievePOAPTokenInfo(poap.poapTokenId);
       if (poapData === null) {
         logger.error(`Failed to query POAP ${poap.poapTokenId} data from POAP API`);
         endTimer({ success: 0 });
