@@ -11,6 +11,7 @@ export type GitPOAPResultType = {
   repositories: string[];
   earnedAt: string;
   mintedAt: string | null;
+  needsRevalidation: boolean;
 };
 
 export type GitPOAPEventResultType = {

@@ -43,6 +43,7 @@ v1Router.get('/address/:address/gitpoaps', async function (req, res) {
       mintedAt: true,
       poapTokenId: true,
       pullRequestEarned: true,
+      needsRevalidation: true,
       gitPOAP: {
         select: {
           id: true,
@@ -133,6 +134,7 @@ v1Router.get('/github/user/:githubHandle/gitpoaps', async function (req, res) {
       mintedAt: true,
       poapTokenId: true,
       pullRequestEarned: true,
+      needsRevalidation: true,
       gitPOAP: {
         select: {
           id: true,
