@@ -470,18 +470,19 @@ onboardingRouter.get<'/github/repos', {}, APIResponseData<Repo[]>>(
     let mappedOrgRepos: Repo[] = [];
 
     try {
+      const foundRepoIds = new Set<number>();
+
       /* Fetch first 100 public PRs for a user */
       const publicPrs = await octokit.graphql<PullRequestsRes>(publicPRsQuery(user.data.login));
 
-      const foundPrRepoIds = new Set<number>();
       const uniquePrRepos = publicPrs.search.edges.filter(repo => {
         if (repo.node.repository.isFork) {
           return false;
         } else if (repo.node.repository.stargazerCount < 2) {
           return false;
         }
-        const isFound = foundPrRepoIds.has(repo.node.repository.databaseId);
-        foundPrRepoIds.add(repo.node.repository.databaseId);
+        const isFound = foundRepoIds.has(repo.node.repository.databaseId);
+        foundRepoIds.add(repo.node.repository.databaseId);
 
         return !isFound;
       });
@@ -517,7 +518,11 @@ onboardingRouter.get<'/github/repos', {}, APIResponseData<Repo[]>>(
         .map(org => org.data)
         .reduce((acc, repos) => [...acc, ...repos], [])
         .filter(repo => {
-          if (repo.fork) {
+          const isFound = foundRepoIds.has(repo.id);
+          foundRepoIds.add(repo.id);
+          if (isFound) {
+            return false;
+          } else if (repo.fork) {
             return false;
           } else if (!repo.stargazers_count || repo.stargazers_count < 2) {
             return false;
@@ -531,7 +536,11 @@ onboardingRouter.get<'/github/repos', {}, APIResponseData<Repo[]>>(
       /* Combine all public repos into one array */
       mappedRepos = repos.data
         .filter(repo => {
-          if (repo.fork) {
+          const isFound = foundRepoIds.has(repo.id);
+          foundRepoIds.add(repo.id);
+          if (isFound) {
+            return false;
+          } else if (repo.fork) {
             return false;
           } else if (!repo.stargazers_count || repo.stargazers_count < 2) {
             return false;
@@ -550,20 +559,13 @@ onboardingRouter.get<'/github/repos', {}, APIResponseData<Repo[]>>(
     /* Combine all repos into one array */
     const allRepos = [...mappedRepos, ...mappedOrgRepos, ...mappedPrRepos];
 
-    const foundRepoIds = new Set<number>();
-    const uniqueRepos = allRepos.filter(repo => {
-      const isFound = foundRepoIds.has(repo.githubRepoId);
-      foundRepoIds.add(repo.githubRepoId);
-      return !isFound;
-    });
-
     logger.info(
-      `Found ${uniqueRepos.length} total applicable repos for GitHub user ${user.data.login}`,
+      `Found ${allRepos.length} total applicable repos for GitHub user ${user.data.login}`,
     );
     endTimer({ status: 200 });
 
     /* Return status 200 and set a stale-while-revalidate cache-control header */
     res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=1800');
-    return res.status(200).json(uniqueRepos);
+    return res.status(200).json(allRepos);
   },
 );
