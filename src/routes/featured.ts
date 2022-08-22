@@ -3,7 +3,7 @@ import { AddFeaturedSchema, RemoveFeaturedSchema } from '../schemas/featured';
 import { context } from '../context';
 import { resolveENS } from '../lib/ens';
 import { isSignatureValid } from '../signatures';
-import { retrievePOAPInfo } from '../external/poap';
+import { retrievePOAPTokenInfo } from '../external/poap';
 import { createScopedLogger } from '../logging';
 import { httpRequestDurationSeconds } from '../metrics';
 
@@ -56,7 +56,7 @@ featuredRouter.put('/', async function (req, res) {
     },
   });
 
-  const poapData = await retrievePOAPInfo(req.body.poapTokenId);
+  const poapData = await retrievePOAPTokenInfo(req.body.poapTokenId);
   if (poapData === null) {
     logger.error(`Failed to retrieve POAP data (from POAP API) for ID: ${req.body.poapTokenId}`);
     endTimer({ status: 400 });

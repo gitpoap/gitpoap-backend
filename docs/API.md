@@ -388,6 +388,37 @@ within the Project as well as view those GitPOAPs on the site.
 
 Note that the caller of this endpoint must have admin privileges.
 
+## Revalidate GitPOAPs
+
+`POST /claims/revalidate`
+
+Data:
+
+```json
+{
+  "claimIds": [4, 5],
+  "address": "colfax.eth",
+  "signature": {
+    "data": "it is STILL me, silly",
+    "createdAt": 1647987506199
+  }
+}
+```
+
+`"createdAt"` should be the number returned by `Date.now()`.
+
+Also note that the `"signature"`'s `"data"` field should contain the signature created with the
+`"address"` like the following:
+
+```json
+{
+  "site": "gitpoap.io",
+  "method": "POST /claims/revalidate",
+  "createdAt": 1647987506199,
+  "claimIds": [4, 5]
+}
+```
+
 ## Appendix
 
 ### Generating Signatures
