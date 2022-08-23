@@ -64,9 +64,28 @@ featuredRouter.put('/', async function (req, res) {
   }
 
   if (poapData.owner.toLowerCase() !== resolvedAddress.toLowerCase()) {
-    logger.warn('Attempted to feature unowned POAP');
+    logger.warn(`Address ${resolvedAddress} attempted to feature unowned POAP`);
     endTimer({ status: 401 });
     return res.status(401).send({ msg: 'Users cannot feature POAPs they do not own' });
+  }
+
+  // If the POAP is a GitPOAP and it needs revalidation, don't let it be featured
+  const claimData = await context.prisma.claim.findUnique({
+    where: {
+      poapTokenId: req.body.poapTokenId,
+    },
+    select: {
+      needsRevalidation: true,
+    },
+  });
+  if (claimData !== null && claimData.needsRevalidation) {
+    logger.warn(
+      `Address ${resolvedAddress} attempted to feature a GitPOAP that needs revalidation`,
+    );
+    endTimer({ status: 400 });
+    return res.status(400).send({
+      msg: 'You must revalidate yourself as owner of this GitPOAP before you can feature it',
+    });
   }
 
   await context.prisma.featuredPOAP.upsert({
