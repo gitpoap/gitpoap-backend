@@ -349,8 +349,9 @@ type Query {
   profileData(address: String!): NullableProfile
   mostHonoredContributors(count: Float = 10): [ProfileWithClaimsCount!]!
   repoMostHonoredContributors(
+    page: Float = null
+    perPage: Float = null
     repoId: Float!
-    count: Float = 10
   ): [ProfileWithClaimsCount!]!
   search(text: String!): SearchResults!
 }
