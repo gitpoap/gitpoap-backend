@@ -7,7 +7,7 @@ import {
   event29009,
   event36570,
   event36572,
-} from '../../../../../.dockerfiles/fake-poap-api/data';
+} from '../../../../../prisma/data';
 import { ADDRESSES } from '../../../../../prisma/constants';
 
 describe('CustomClaimResolver', () => {

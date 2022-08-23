@@ -32,7 +32,7 @@ import {
   event37428,
   event37429,
   event37430,
-} from '../.dockerfiles/fake-poap-api/data';
+} from './data';
 
 export const prisma = new PrismaClient();
 

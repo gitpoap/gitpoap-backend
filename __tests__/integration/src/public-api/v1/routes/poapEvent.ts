@@ -16,7 +16,7 @@ import {
   event37430,
   event36573,
   event36574,
-} from '../../../../../../.dockerfiles/fake-poap-api/data';
+} from '../../../../../../prisma/data';
 
 const PUBLIC_API_URL = 'http://public-api-server:3122';
 
