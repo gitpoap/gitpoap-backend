@@ -29,7 +29,7 @@ describe('CustomProfileResolver', () => {
   it('profileData', async () => {
     const data = await client.request(gql`
       {
-        profileData(address: "${ADDRESSES.anthony}") {
+        profileData(address: "${ADDRESSES.burz}") {
           ensName
           githubHandle
         }
@@ -78,7 +78,7 @@ describe('CustomProfileResolver', () => {
 
     expect(data.mostHonoredContributors.length).toEqual(2);
 
-    expect(data.mostHonoredContributors[0].profile.address).toEqual(ADDRESSES.anthony);
+    expect(data.mostHonoredContributors[0].profile.address).toEqual(ADDRESSES.burz);
     expect(data.mostHonoredContributors[0].claimsCount).toEqual(5);
 
     expect(data.mostHonoredContributors[1].profile.address).toEqual(ADDRESSES.jay);
@@ -95,7 +95,7 @@ describe('CustomProfileResolver', () => {
   };
 
   it('mostHonoredContributors: skips isVisibleOnLeaderboard=false', async () => {
-    await setAddressVisibility(ADDRESSES.anthony, false);
+    await setAddressVisibility(ADDRESSES.burz, false);
 
     const data = await client.request(gql`
       {
@@ -108,7 +108,7 @@ describe('CustomProfileResolver', () => {
       }
     `);
 
-    await setAddressVisibility(ADDRESSES.anthony, true);
+    await setAddressVisibility(ADDRESSES.burz, true);
 
     expect(data.mostHonoredContributors.length).toEqual(1);
 

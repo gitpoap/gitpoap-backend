@@ -55,7 +55,7 @@ describe('CustomClaimResolver', () => {
   it('userPOAPs - date', async () => {
     const data = await client.request(gql`
       {
-        userPOAPs(address: "${ADDRESSES.anthony}", perPage: 1, page: 1) {
+        userPOAPs(address: "${ADDRESSES.burz}", perPage: 1, page: 1) {
           totalGitPOAPs
           totalPOAPs
           gitPOAPs {
@@ -85,7 +85,7 @@ describe('CustomClaimResolver', () => {
   it('userPOAPs - alphabetical', async () => {
     const data = await client.request(gql`
       {
-        userPOAPs(address: "${ADDRESSES.anthony}", sort: "alphabetical", perPage: 1, page: 1) {
+        userPOAPs(address: "${ADDRESSES.burz}", sort: "alphabetical", perPage: 1, page: 1) {
           totalGitPOAPs
           totalPOAPs
           gitPOAPs {
@@ -181,7 +181,7 @@ describe('CustomClaimResolver', () => {
   it('profileFeaturedPOAPs', async () => {
     const data = await client.request(gql`
       {
-        profileFeaturedPOAPs(address: "${ADDRESSES.anthony}") {
+        profileFeaturedPOAPs(address: "${ADDRESSES.burz}") {
           gitPOAPs {
             claim {
               id
@@ -241,7 +241,7 @@ describe('CustomClaimResolver', () => {
     expect(data.gitPOAPHolders.totalHolders).toEqual(2);
     expect(data.gitPOAPHolders.holders.length).toEqual(1);
 
-    expect(data.gitPOAPHolders.holders[0].address).toEqual(ADDRESSES.anthony);
+    expect(data.gitPOAPHolders.holders[0].address).toEqual(ADDRESSES.burz);
     expect(data.gitPOAPHolders.holders[0].gitPOAPCount).toEqual(5);
   });
 });

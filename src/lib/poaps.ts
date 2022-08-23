@@ -3,7 +3,7 @@ import { retrieveUsersPOAPs, retrievePOAPEventInfo } from '../external/poap';
 import { Claim, ClaimStatus, GitPOAP } from '@generated/type-graphql';
 import { createScopedLogger } from '../logging';
 import { POAPEvent, POAPToken } from '../types/poap';
-import { checkIfClaimTransfered, handleGitPOAPTransfer } from './transfers';
+import { checkIfClaimTransferred, handleGitPOAPTransfer } from './transfers';
 
 type ClaimWithGitPOAP = Claim & {
   gitPOAP: GitPOAP;
@@ -36,6 +36,7 @@ async function generateGitPOAPPOAPEventIdSet() {
   return poapEventIdSet;
 }
 
+// Note that address CANNOT be an ENS
 export async function splitUsersPOAPs(address: string): Promise<SplitUsersPOAPsReturnType | null> {
   const logger = createScopedLogger('splitUsersPOAPs');
 
@@ -65,6 +66,8 @@ export async function splitUsersPOAPs(address: string): Promise<SplitUsersPOAPsR
     if (claim.poapTokenId === null) {
       if (claim.status !== ClaimStatus.MINTING) {
         logger.error(`Found a null poapTokenId, but the Claim ID ${claim.id} has status CLAIMED`);
+        // Skip the Token in a bad state
+        continue;
       } else {
         const event = await retrievePOAPEventInfo(claim.gitPOAP.poapEventId);
         if (event === null) {
@@ -107,7 +110,7 @@ export async function splitUsersPOAPs(address: string): Promise<SplitUsersPOAPsR
       });
     } else {
       // If this POAP belongs to a GitPOAP Event we need to check if it
-      // was just transfered to this account
+      // was just transferred to this account
       if (gitPOAPPOAPEventIdSet.has(poap.event.id)) {
         const claimData = await context.prisma.claim.findUnique({
           where: {
@@ -172,7 +175,7 @@ export async function splitUsersPOAPs(address: string): Promise<SplitUsersPOAPsR
     for (const claim of claims) {
       if (claim.poapTokenId !== null && !(claim.poapTokenId in foundPOAPIds)) {
         // Run this in the background
-        checkIfClaimTransfered(claim.id);
+        checkIfClaimTransferred(claim.id);
       }
     }
   };
