@@ -6,7 +6,7 @@ import {
   event3,
   event29009,
   event36571,
-} from '../../../../../.dockerfiles/fake-poap-api/data';
+} from '../../../../../prisma/data';
 
 const PUBLIC_API_URL = 'http://public-api-server:3122';
 
@@ -58,6 +58,7 @@ describe('public-api/v1/address/:address/gitpoaps', () => {
     expect(data[0].repositories[0]).toEqual('gitpoap/gitpoap-backend');
     expect(new Date(data[0].earnedAt)).toEqual(todayStart);
     expect(data[0].mintedAt).toEqual('2020-01-09');
+    expect(data[0].needsRevalidation).toEqual(false);
   });
 });
 
@@ -102,6 +103,7 @@ describe('public-api/v1/github/user/:githubHandle/gitpoaps', () => {
       expect(data[0].repositories[0]).toEqual('some-other-org/repo568');
       expect(new Date(data[0].earnedAt)).toEqual(todayStart);
       expect(data[0].mintedAt).toEqual('2022-04-05');
+      expect(data[0].needsRevalidation).toEqual(false);
     });
 
     it("Returns all minted gitpoaps when status equals 'unclaimed'", async () => {
