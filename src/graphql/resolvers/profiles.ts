@@ -216,15 +216,18 @@ export class CustomProfileResolver {
     return finalResults;
   }
 
-  @Query(returns => [ProfileWithClaimsCount])
+  @Query(returns => [ProfileWithClaimsCount], { nullable: true })
   async repoMostHonoredContributors(
     @Ctx() { prisma }: Context,
-    @Arg('count', { defaultValue: 10 }) count: Number,
     @Arg('repoId') repoId: number,
+    @Arg('perPage', { defaultValue: 6 }) perPage?: number,
+    @Arg('page', { defaultValue: 1 }) page?: number,
   ): Promise<ProfileWithClaimsCount[]> {
     const logger = createScopedLogger('GQL repoMostHonoredContributors');
 
-    logger.info(`Request for repo ${repoId}'s ${count} most honored contributors `);
+    logger.info(
+      `Request for repo ${repoId}'s most honored contributors, with ${perPage} results per page and page ${page}`,
+    );
 
     const endTimer = gqlRequestDurationSeconds.startTimer('repoMostHonoredContributors');
 
@@ -243,7 +246,7 @@ export class CustomProfileResolver {
       AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus" AND r.id = ${repoId}
       GROUP BY pf.id
       ORDER BY "claimsCount" DESC
-      LIMIT ${count}
+      LIMIT ${<number>perPage} OFFSET ${(<number>page - 1) * <number>perPage}
     `;
 
     let finalResults = [];
@@ -254,7 +257,9 @@ export class CustomProfileResolver {
       finalResults.push({ profile, claimsCount });
     }
 
-    logger.debug(`Completed request for repo ${repoId}'s ${count} most honored contributors`);
+    logger.debug(
+      `Completed request for repo ${repoId}'s most honored contributors, with ${perPage} results per page and page ${page}`,
+    );
 
     endTimer({ success: 1 });
 
