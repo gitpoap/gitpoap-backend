@@ -199,7 +199,8 @@ export class CustomProfileResolver {
       FROM "Profile" AS p
       JOIN "Claim" AS c ON c.address = p.address
       WHERE p."isVisibleOnLeaderboard" IS TRUE
-      AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
+        AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
+        AND c."needsRevalidation" IS FALSE
       GROUP BY p.id
       ORDER BY "claimsCount" DESC
       LIMIT ${count}
@@ -247,7 +248,9 @@ export class CustomProfileResolver {
       INNER JOIN "Project" AS pr ON pr.id = gp."projectId"
       INNER JOIN "Repo" AS r ON r."projectId" = pr.id
       WHERE pf."isVisibleOnLeaderboard" IS TRUE
-      AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus" AND r.id = ${repoId}
+        AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
+        AND c."needsRevalidation" IS FALSE
+        AND AND r.id = ${repoId}
       GROUP BY pf.id
       ORDER BY "claimsCount" DESC
       LIMIT ${<number>perPage} OFFSET ${(<number>page - 1) * <number>perPage}
