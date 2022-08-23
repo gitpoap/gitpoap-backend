@@ -57,6 +57,7 @@ describe('public-api/v1/gitpoaps/addresses', () => {
     expect(data.addresses).toContain(ADDRESSES.test1);
     expect(data.addresses).toContain(ADDRESSES.jay);
     expect(data.addresses).toContain(ADDRESSES.colfax);
+    expect(data.addresses).toContain(ADDRESSES.burz2);
     expect(data.addresses).toContain(ADDRESSES.anthony2);
     expect(data.addresses).toContain(ADDRESSES.aldo);
   });

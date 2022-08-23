@@ -34,7 +34,7 @@ describe('public-api/v1/address/:address/gitpoaps', () => {
   });
 
   it("Returns known user's GitPOAPs", async () => {
-    const response = await fetch(`${PUBLIC_API_URL}/v1/address/${ADDRESSES.anthony2}/gitpoaps`);
+    const response = await fetch(`${PUBLIC_API_URL}/v1/address/${ADDRESSES.burz2}/gitpoaps`);
 
     expect(response.status).toBeLessThan(400);
 
@@ -64,7 +64,7 @@ describe('public-api/v1/address/:address/gitpoaps', () => {
 describe('public-api/v1/github/user/:githubHandle/gitpoaps', () => {
   it('Returns 400 when status is invalid', async () => {
     const response = await fetch(
-      `${PUBLIC_API_URL}/v1/github/user/${GH_HANDLES.anthony}/gitpoaps?status=fake_status`,
+      `${PUBLIC_API_URL}/v1/github/user/${GH_HANDLES.burz}/gitpoaps?status=fake_status`,
     );
 
     expect(response.status).toEqual(400);
@@ -80,7 +80,7 @@ describe('public-api/v1/github/user/:githubHandle/gitpoaps', () => {
   describe('when a status query string parameter is provided', () => {
     it("Returns all minted gitpoaps when status equals 'claimed'", async () => {
       const response = await fetch(
-        `${PUBLIC_API_URL}/v1/github/user/${GH_HANDLES.anthony}/gitpoaps?status=claimed`,
+        `${PUBLIC_API_URL}/v1/github/user/${GH_HANDLES.burz}/gitpoaps?status=claimed`,
       );
       expect(response.status).toBeLessThan(400);
       const data = await response.json();
@@ -106,7 +106,7 @@ describe('public-api/v1/github/user/:githubHandle/gitpoaps', () => {
 
     it("Returns all minted gitpoaps when status equals 'unclaimed'", async () => {
       const response = await fetch(
-        `${PUBLIC_API_URL}/v1/github/user/${GH_HANDLES.anthony}/gitpoaps?status=unclaimed`,
+        `${PUBLIC_API_URL}/v1/github/user/${GH_HANDLES.burz}/gitpoaps?status=unclaimed`,
       );
       expect(response.status).toBeLessThan(400);
       const data = await response.json();
@@ -125,7 +125,7 @@ describe('public-api/v1/github/user/:githubHandle/gitpoaps', () => {
 
     it("Returns all minted gitpoaps when status equals 'pending'", async () => {
       const response = await fetch(
-        `${PUBLIC_API_URL}/v1/github/user/${GH_HANDLES.anthony}/gitpoaps?status=pending`,
+        `${PUBLIC_API_URL}/v1/github/user/${GH_HANDLES.burz}/gitpoaps?status=pending`,
       );
       expect(response.status).toBeLessThan(400);
       const data = await response.json();
@@ -136,7 +136,7 @@ describe('public-api/v1/github/user/:githubHandle/gitpoaps', () => {
 
     it("Returns all minted gitpoaps when status equals 'minting'", async () => {
       const response = await fetch(
-        `${PUBLIC_API_URL}/v1/github/user/${GH_HANDLES.anthony}/gitpoaps?status=minting`,
+        `${PUBLIC_API_URL}/v1/github/user/${GH_HANDLES.burz}/gitpoaps?status=minting`,
       );
       expect(response.status).toBeLessThan(400);
       const data = await response.json();
@@ -147,7 +147,7 @@ describe('public-api/v1/github/user/:githubHandle/gitpoaps', () => {
   });
 
   it("Returns all known user's GitPOAPs when no status parameter is provided", async () => {
-    const response = await fetch(`${PUBLIC_API_URL}/v1/github/user/${GH_HANDLES.anthony}/gitpoaps`);
+    const response = await fetch(`${PUBLIC_API_URL}/v1/github/user/${GH_HANDLES.burz}/gitpoaps`);
     expect(response.status).toBeLessThan(400);
     const data = await response.json();
 
