@@ -11,7 +11,7 @@ import {
   Repo,
   User,
 } from '@prisma/client';
-import { POAPEvent } from '../.dockerfiles/fake-poap-api/poap';
+import { POAPEvent } from '../src/types/poap';
 import { createScopedLogger } from '../src/logging';
 import { prisma } from './seed';
 import { generatePOAPSecret } from '../src/lib/secrets';

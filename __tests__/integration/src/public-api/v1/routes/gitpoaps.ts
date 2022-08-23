@@ -17,8 +17,8 @@ import {
   event37430,
   event36573,
   event36574,
-} from '../../../../../../.dockerfiles/fake-poap-api/data';
-import { POAPEvent } from '../../../../../../.dockerfiles/fake-poap-api/poap';
+} from '../../../../../../prisma/data';
+import { POAPEvent } from '../../../../../../src/types/poap';
 import { GitPOAPEventResultType } from '../../../../../../src/public-api/v1/types';
 
 const PUBLIC_API_URL = 'http://public-api-server:3122';

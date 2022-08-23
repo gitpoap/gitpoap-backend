@@ -1,4 +1,4 @@
-import { POAPEvent } from './poap';
+import { POAPEvent } from '../src/types/poap';
 
 export const event1: POAPEvent = {
   id: 1,
