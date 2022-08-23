@@ -25,7 +25,7 @@ import {
 import { upsertUser } from '../lib/users';
 import { RepoData, createNewClaimsForRepoPRHelper, retrieveClaimsCreatedByPR } from '../lib/claims';
 import { getRepoByName } from '../lib/repos';
-import { checkIfClaimTransfered } from '../lib/transfers';
+import { checkIfClaimTransferred } from '../lib/transfers';
 import { upsertProfile } from '../lib/profiles';
 
 export const claimsRouter = Router();
@@ -613,7 +613,7 @@ claimsRouter.post('/revalidate', jwtWithOAuth(), async (req, res) => {
     // assume the user is correct and that perhaps we haven't seen the
     // transfer yet in our backend
     if (claim.address !== resolvedAddress.toLowerCase()) {
-      const newAddress = await checkIfClaimTransfered(claimId);
+      const newAddress = await checkIfClaimTransferred(claimId);
 
       if (newAddress !== resolvedAddress.toLowerCase()) {
         invalidClaims.push({

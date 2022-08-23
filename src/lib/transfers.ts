@@ -36,8 +36,8 @@ export async function handleGitPOAPTransfer(
   });
 }
 
-export async function checkIfClaimTransfered(claimId: number): Promise<string | null> {
-  const logger = createScopedLogger('checkIfClaimTransfered');
+export async function checkIfClaimTransferred(claimId: number): Promise<string | null> {
+  const logger = createScopedLogger('checkIfClaimTransferred');
 
   const claimData = await context.prisma.claim.findUnique({
     where: {
@@ -64,7 +64,7 @@ export async function checkIfClaimTransfered(claimId: number): Promise<string | 
   const newData = await retrievePOAPTokenInfo(claimData.poapTokenId as string);
 
   if (newData.owner !== claimData.address) {
-    logger.info(`Found transfered GitPOAP Token ID: ${claimId}`);
+    logger.info(`Found transferred GitPOAP Token ID: ${claimId}`);
 
     await handleGitPOAPTransfer(
       claimId,
