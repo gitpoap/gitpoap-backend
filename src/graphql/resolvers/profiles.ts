@@ -4,7 +4,7 @@ import { Context } from '../../context';
 import { resolveENS, resolveAddress } from '../../lib/ens';
 import { createScopedLogger } from '../../logging';
 import { gqlRequestDurationSeconds } from '../../metrics';
-import { getLastMonthStartDatetime } from './util';
+import { getPastStartDatetime } from './util';
 
 @ObjectType()
 class NullableProfile {
@@ -100,7 +100,7 @@ export class CustomProfileResolver {
       FROM "Claim" AS c
       WHERE c.address IS NOT NULL
         AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
-        AND c."mintedAt" > ${getLastMonthStartDatetime()}
+        AND c."mintedAt" > ${getPastStartDatetime(30)}
     `;
 
     logger.debug("Completed request for last month's contributors");
