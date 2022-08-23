@@ -80,7 +80,15 @@ export class CustomClaimResolver {
         user: {
           githubId: githubId,
         },
-        status: ClaimStatus.UNCLAIMED,
+        OR: [
+          {
+            status: ClaimStatus.UNCLAIMED,
+          },
+          {
+            mintedAt: { gt: getLastMonthStartDatetime() },
+            status: ClaimStatus.CLAIMED,
+          },
+        ],
         gitPOAP: {
           isEnabled: true,
         },
