@@ -329,6 +329,7 @@ type Query {
     perPage: Float = null
     sort: String = "alphabetical"
   ): [Repo!]
+  trendingRepos(last: Float = 3, count: Float = 10): [RepoData!]
   organizationData(
     orgName: String = null
     orgId: Float = null

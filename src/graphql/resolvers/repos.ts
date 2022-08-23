@@ -1,6 +1,6 @@
 import { Arg, Ctx, Field, ObjectType, Resolver, Query } from 'type-graphql';
 import { ClaimStatus, Repo, RepoOrderByWithRelationInput } from '@generated/type-graphql';
-import { getLastMonthStartDatetime } from './util';
+import { getPastStartDatetime } from './util';
 import { Context } from '../../context';
 import { createScopedLogger } from '../../logging';
 import { gqlRequestDurationSeconds } from '../../metrics';
@@ -162,7 +162,7 @@ export class CustomRepoResolver {
         id: true,
       },
       where: {
-        createdAt: { gt: getLastMonthStartDatetime() },
+        createdAt: { gt: getPastStartDatetime(30) },
       },
     });
 
@@ -274,6 +274,42 @@ export class CustomRepoResolver {
     logger.debug(
       `Completed request for all repos using sort ${sort}, with ${perPage} results per page and page ${page}`,
     );
+
+    endTimer({ success: 1 });
+
+    return results;
+  }
+
+  @Query(returns => [RepoData], { nullable: true })
+  async trendingRepos(
+    @Ctx() { prisma }: Context,
+    @Arg('count', { defaultValue: 10 }) count: number,
+    @Arg('last', { defaultValue: 3 }) last: number,
+  ): Promise<Repo[] | null> {
+    const logger = createScopedLogger('GQL trendingRepos');
+
+    logger.info(`Request for trending repos form the last ${last} days`);
+
+    const endTimer = gqlRequestDurationSeconds.startTimer('trendingRepos');
+
+    const results = await prisma.$queryRaw<RepoData[]>`
+      SELECT r.*, 
+          COUNT(DISTINCT c."userId") AS "contributorCount",
+          COUNT(DISTINCT g.id) AS "gitPOAPCount",
+          COUNT(c.id) AS "mintedGitPOAPCount"
+        FROM "Repo" as r
+        INNER JOIN "Project" AS p ON r."projectId" = p.id
+        INNER JOIN "GitPOAP" AS g ON g."projectId" = p.id
+        LEFT JOIN 
+          (SELECT * 
+            FROM "Claim" 
+            WHERE status = ${ClaimStatus.CLAIMED} AND "mintedAt" >= ${getPastStartDatetime(
+      last,
+    )}) AS c ON c."gitPOAPId" = g.id
+        GROUP BY r.id
+        ORDER BY "mintedGitPOAPCount" DESC
+        LIMIT ${count}
+    `;
 
     endTimer({ success: 1 });
 

@@ -1,10 +1,10 @@
 import { DateTime } from 'luxon';
 
-export function getLastMonthStartDay(): string {
-  const lastMonth = DateTime.now().minus({ days: 30 });
+export function getPastStartDay(days: number): string {
+  const lastMonth = DateTime.now().minus({ days });
   return lastMonth.toFormat('yyyy-MM-dd');
 }
 
-export function getLastMonthStartDatetime(): Date {
-  return new Date(getLastMonthStartDay());
+export function getPastStartDatetime(days: number): Date {
+  return new Date(getPastStartDay(days));
 }
