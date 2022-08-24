@@ -33,6 +33,7 @@ async function resolveENSAvatar(ensName: string, resolvedAddress: string) {
       avatarURL,
       s3configProfile.buckets.ensAvatarCache,
       addressLower, // Using ENS may cause issues (emoji ENSs/etc)
+      true, // Make the image publically accessible
     );
 
     if (response === null) {
@@ -64,7 +65,7 @@ async function resolveENSAvatar(ensName: string, resolvedAddress: string) {
 export async function resolveENS(ensName: string): Promise<string | null> {
   const result = await resolveENSInternal(ensName);
 
-  if (result !== null) {
+  if (result !== null && ensName.endsWith('.eth')) {
     // Run in the background
     resolveENSAvatar(ensName, result);
   }

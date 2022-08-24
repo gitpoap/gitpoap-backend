@@ -47,6 +47,9 @@ class NullableProfile {
   @Field(() => Boolean)
   isVisibleOnLeaderboard: boolean;
 
+  @Field(() => String, { nullable: true })
+  ensAvatarImageUrl: string | null;
+
   @Field(() => [FeaturedPOAP])
   featuredPOAPs: FeaturedPOAP[];
 }
@@ -160,6 +163,7 @@ export class CustomProfileResolver {
         twitterHandle: null,
         personalSiteUrl: null,
         isVisibleOnLeaderboard: true,
+        ensAvatarImageUrl: null,
         featuredPOAPs: [],
       };
     }

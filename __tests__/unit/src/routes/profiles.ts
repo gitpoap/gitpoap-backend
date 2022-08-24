@@ -2,10 +2,10 @@ import { contextMock } from '../../../../__mocks__/src/context';
 import request from 'supertest';
 import { setupApp } from '../../../../src/app';
 import { isSignatureValid } from '../../../../src/signatures';
-import { resolveENS } from '../../../../src/external/ens';
+import { resolveENS } from '../../../../src/lib/ens';
 
 jest.mock('../../../../src/signatures');
-jest.mock('../../../../src/external/ens');
+jest.mock('../../../../src/lib/ens');
 
 const mockedIsSignatureValid = jest.mocked(isSignatureValid, true);
 const mockedResolveENS = jest.mocked(resolveENS, true);
