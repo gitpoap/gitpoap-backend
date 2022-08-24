@@ -294,18 +294,15 @@ export class CustomRepoResolver {
 
     const results = await prisma.$queryRaw<RepoData[]>`
       SELECT r.*, 
-          COUNT(DISTINCT c."userId") AS "contributorCount",
-          COUNT(DISTINCT g.id) AS "gitPOAPCount",
-          COUNT(c.id) AS "mintedGitPOAPCount"
+          COUNT(DISTINCT c."userId")::INTEGER AS "contributorCount",
+          COUNT(DISTINCT g.id)::INTEGER AS "gitPOAPCount",
+          COUNT(c.id)::INTEGER AS "mintedGitPOAPCount"
         FROM "Repo" as r
         INNER JOIN "Project" AS p ON r."projectId" = p.id
         INNER JOIN "GitPOAP" AS g ON g."projectId" = p.id
-        LEFT JOIN 
-          (
-            SELECT * FROM "Claim" 
-            WHERE status = ${ClaimStatus.CLAIMED} 
-              AND "mintedAt" >= ${getXDaysAgoStartDatetime(numDays)}
-          ) AS c ON c."gitPOAPId" = g.id
+        LEFT JOIN "Claim" AS c ON c."gitPOAPId" = g.id AND c."status" = 'CLAIMED' AND c."mintedAt" >= ${getXDaysAgoStartDatetime(
+          numDays,
+        )}
         GROUP BY r.id
         ORDER BY "mintedGitPOAPCount" DESC
         LIMIT ${count}
