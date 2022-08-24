@@ -1,7 +1,7 @@
 import { Arg, Ctx, Field, ObjectType, Resolver, Query } from 'type-graphql';
 import { ClaimStatus, FeaturedPOAP, Profile } from '@generated/type-graphql';
 import { Context } from '../../context';
-import { resolveENS, resolveAddress } from '../../external/ens';
+import { resolveENS, resolveAddress } from '../../lib/ens';
 import { createScopedLogger } from '../../logging';
 import { gqlRequestDurationSeconds } from '../../metrics';
 import { getLastMonthStartDatetime } from './util';
