@@ -1,7 +1,7 @@
 import { Arg, Ctx, Field, ObjectType, Resolver, Query } from 'type-graphql';
 import { Profile, User } from '@generated/type-graphql';
 import { Context } from '../../context';
-import { resolveENS } from '../../external/ens';
+import { resolveENS } from '../../lib/ens';
 import { createScopedLogger } from '../../logging';
 import { gqlRequestDurationSeconds } from '../../metrics';
 

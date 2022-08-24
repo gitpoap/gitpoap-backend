@@ -1708,6 +1708,7 @@ input ProfileWhereInput {
   twitterHandle: StringNullableFilter
   personalSiteUrl: StringNullableFilter
   isVisibleOnLeaderboard: BoolFilter
+  ensAvatarImageUrl: StringNullableFilter
   featuredPOAPs: FeaturedPOAPListRelationFilter
 }
 
@@ -1737,6 +1738,7 @@ input ProfileOrderByWithRelationInput {
   twitterHandle: SortOrder
   personalSiteUrl: SortOrder
   isVisibleOnLeaderboard: SortOrder
+  ensAvatarImageUrl: SortOrder
   featuredPOAPs: FeaturedPOAPOrderByRelationAggregateInput
 }
 
@@ -1775,6 +1777,7 @@ type Profile {
   twitterHandle: String
   personalSiteUrl: String
   isVisibleOnLeaderboard: Boolean!
+  ensAvatarImageUrl: String
   _count: ProfileCount
   featuredPOAPs(
     where: FeaturedPOAPWhereInput
@@ -2528,6 +2531,7 @@ type ProfileCountAggregate {
   twitterHandle: Int!
   personalSiteUrl: Int!
   isVisibleOnLeaderboard: Int!
+  ensAvatarImageUrl: Int!
   _all: Int!
 }
 
@@ -2552,6 +2556,7 @@ type ProfileMinAggregate {
   twitterHandle: String
   personalSiteUrl: String
   isVisibleOnLeaderboard: Boolean
+  ensAvatarImageUrl: String
 }
 
 type ProfileMaxAggregate {
@@ -2567,6 +2572,7 @@ type ProfileMaxAggregate {
   twitterHandle: String
   personalSiteUrl: String
   isVisibleOnLeaderboard: Boolean
+  ensAvatarImageUrl: String
 }
 
 input ProfileWhereUniqueInput {
@@ -2587,6 +2593,7 @@ enum ProfileScalarFieldEnum {
   twitterHandle
   personalSiteUrl
   isVisibleOnLeaderboard
+  ensAvatarImageUrl
 }
 
 type ProfileGroupBy {
@@ -2602,6 +2609,7 @@ type ProfileGroupBy {
   twitterHandle: String
   personalSiteUrl: String
   isVisibleOnLeaderboard: Boolean!
+  ensAvatarImageUrl: String
   _count: ProfileCountAggregate
   _avg: ProfileAvgAggregate
   _sum: ProfileSumAggregate
@@ -2622,6 +2630,7 @@ input ProfileOrderByWithAggregationInput {
   twitterHandle: SortOrder
   personalSiteUrl: SortOrder
   isVisibleOnLeaderboard: SortOrder
+  ensAvatarImageUrl: SortOrder
   _count: ProfileCountOrderByAggregateInput
   _avg: ProfileAvgOrderByAggregateInput
   _max: ProfileMaxOrderByAggregateInput
@@ -2642,6 +2651,7 @@ input ProfileCountOrderByAggregateInput {
   twitterHandle: SortOrder
   personalSiteUrl: SortOrder
   isVisibleOnLeaderboard: SortOrder
+  ensAvatarImageUrl: SortOrder
 }
 
 input ProfileAvgOrderByAggregateInput {
@@ -2661,6 +2671,7 @@ input ProfileMaxOrderByAggregateInput {
   twitterHandle: SortOrder
   personalSiteUrl: SortOrder
   isVisibleOnLeaderboard: SortOrder
+  ensAvatarImageUrl: SortOrder
 }
 
 input ProfileMinOrderByAggregateInput {
@@ -2676,6 +2687,7 @@ input ProfileMinOrderByAggregateInput {
   twitterHandle: SortOrder
   personalSiteUrl: SortOrder
   isVisibleOnLeaderboard: SortOrder
+  ensAvatarImageUrl: SortOrder
 }
 
 input ProfileSumOrderByAggregateInput {
@@ -2698,6 +2710,7 @@ input ProfileScalarWhereWithAggregatesInput {
   twitterHandle: StringNullableWithAggregatesFilter
   personalSiteUrl: StringNullableWithAggregatesFilter
   isVisibleOnLeaderboard: BoolWithAggregatesFilter
+  ensAvatarImageUrl: StringNullableWithAggregatesFilter
 }
 
 type AggregateProject {

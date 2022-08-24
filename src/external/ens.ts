@@ -9,12 +9,13 @@ const ENS_RESOLVE_CACHE_TTL = 30 * SECONDS_PER_DAY; // 30 days
 
 /**
  * Resolve an ENS name to an ETH address.
+ * NOTE: You should be calling the function in src/lib/ens instead of this!
  *
  * @param ensName - the ENS name to resolve
  * @returns the resolved ETH address associated with the ENS name or null
  */
-export async function resolveENS(ensName: string): Promise<string | null> {
-  const logger = createScopedLogger('resolveENS');
+export async function resolveENSInternal(ensName: string): Promise<string | null> {
+  const logger = createScopedLogger('resolveENSInternal');
 
   if (!ensName.endsWith('.eth')) {
     logger.debug("Skipping lookup since ensName doesn't end with '.eth'");
@@ -77,11 +78,12 @@ const ENS_REVERSE_RESOLVE_CACHE_TTL = 5 * SECONDS_PER_DAY;
 
 /**
  * ENS Reverse Resolution - Resolve an ETH address to an ENS name
+ * NOTE: You should be calling the function in src/lib/ens instead of this!
  *
  * @param address - the ETH address to resolve
  * @returns the resolved ENS name associated with the ETH address or null
  */
-export async function resolveAddress(address: string): Promise<string | null> {
+export async function resolveAddressInternal(address: string): Promise<string | null> {
   const logger = createScopedLogger('resolveAddress');
 
   if (!isAddress(address)) {
@@ -148,4 +150,14 @@ async function lookupAddress(address: string): Promise<string | null> {
     logger.warn(`Got error from ethers.lookupAddress: ${err}`);
     return null;
   }
+}
+
+export async function getAvatar(ensName: string): Promise<string | null> {
+  const endTimer = ensRequestDurationSeconds.startTimer('getAvatar');
+
+  const avatarURL = await context.provider.getAvatar(ensName);
+
+  endTimer();
+
+  return avatarURL;
 }
