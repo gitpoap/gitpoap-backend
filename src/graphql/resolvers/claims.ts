@@ -5,7 +5,7 @@ import { POAPEvent } from '../../types/poap';
 import { retrievePOAPEventInfo } from '../../external/poap';
 import { createScopedLogger } from '../../logging';
 import { gqlRequestDurationSeconds } from '../../metrics';
-import { getPastStartDatetime } from './util';
+import { getLastMonthStartDay } from './util';
 
 @ObjectType()
 class FullClaimData {
@@ -52,7 +52,7 @@ export class CustomClaimResolver {
         id: true,
       },
       where: {
-        mintedAt: { gt: getPastStartDatetime(30) },
+        mintedAt: { gt: getLastMonthStartDay() },
         status: ClaimStatus.CLAIMED,
       },
     });
