@@ -1,6 +1,6 @@
 import { Arg, Ctx, Field, ObjectType, Resolver, Query } from 'type-graphql';
 import { ClaimStatus, Repo, RepoOrderByWithRelationInput } from '@generated/type-graphql';
-import { getLastMonthStartDay, getXDaysAgoStartDatetime } from './util';
+import { getLastMonthStartDatetime, getXDaysAgoStartDatetime } from './util';
 import { Context } from '../../context';
 import { createScopedLogger } from '../../logging';
 import { gqlRequestDurationSeconds } from '../../metrics';
@@ -162,7 +162,7 @@ export class CustomRepoResolver {
         id: true,
       },
       where: {
-        createdAt: { gt: getLastMonthStartDay() },
+        createdAt: { gt: getLastMonthStartDatetime() },
       },
     });
 
