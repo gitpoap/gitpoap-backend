@@ -3,7 +3,7 @@ import { Claim, ClaimStatus, GitPOAPStatus, GitPOAP, Profile } from '@generated/
 import { getLastMonthStartDatetime } from './util';
 import { Context } from '../../context';
 import { POAPEvent, POAPToken } from '../../types/poap';
-import { resolveENS } from '../../external/ens';
+import { resolveENS } from '../../lib/ens';
 import { retrievePOAPEventInfo, retrieveUsersPOAPs, retrievePOAPInfo } from '../../external/poap';
 import { createScopedLogger } from '../../logging';
 import { gqlRequestDurationSeconds } from '../../metrics';

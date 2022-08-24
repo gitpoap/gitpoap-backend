@@ -6,7 +6,7 @@ import {
 import { Router, Request } from 'express';
 import { context } from '../context';
 import { ClaimStatus, GitPOAP, GitPOAPStatus } from '@prisma/client';
-import { resolveENS } from '../external/ens';
+import { resolveENS } from '../lib/ens';
 import { isSignatureValid } from '../signatures';
 import jwt from 'express-jwt';
 import { jwtWithAdminOAuth, gitpoapBotAuth } from '../middleware';

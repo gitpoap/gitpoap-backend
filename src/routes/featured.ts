@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { AddFeaturedSchema, RemoveFeaturedSchema } from '../schemas/featured';
 import { context } from '../context';
-import { resolveENS } from '../external/ens';
+import { resolveENS } from '../lib/ens';
 import { isSignatureValid } from '../signatures';
 import { retrievePOAPInfo } from '../external/poap';
 import { createScopedLogger } from '../logging';

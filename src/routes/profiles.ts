@@ -1,7 +1,7 @@
 import { UpdateProfileSchema } from '../schemas/profiles';
 import { Router } from 'express';
 import { context } from '../context';
-import { resolveENS } from '../external/ens';
+import { resolveENS } from '../lib/ens';
 import { isSignatureValid } from '../signatures';
 import { createScopedLogger } from '../logging';
 import { httpRequestDurationSeconds } from '../metrics';
