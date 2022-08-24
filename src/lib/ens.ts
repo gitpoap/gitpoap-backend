@@ -2,9 +2,27 @@ import { createScopedLogger } from '../logging';
 import { context } from '../context';
 import { getAvatar, resolveENSInternal, resolveAddressInternal } from '../external/ens';
 import { uploadFileFromURL, s3configProfile, getS3URL } from '../external/s3';
+import { SECONDS_PER_HOUR } from '../constants';
+
+const ENS_AVATAR_LAST_RUN_CACHE_PREFIX = 'ens#avatar-last-run';
+
+const ENS_AVATAR_MAX_CHECK_FREQUENCY_HOURS = 1;
 
 async function resolveENSAvatar(ensName: string, resolvedAddress: string) {
   const logger = createScopedLogger('resolveAvatar');
+
+  const lastRunValue = await context.redis.getValue(ENS_AVATAR_LAST_RUN_CACHE_PREFIX, ensName);
+  if (lastRunValue !== null) {
+    logger.debug(`Not enough time has elapsed to check for new avatars for ${ensName}`);
+    return;
+  }
+
+  context.redis.setValue(
+    ENS_AVATAR_LAST_RUN_CACHE_PREFIX,
+    ensName,
+    'checked',
+    ENS_AVATAR_MAX_CHECK_FREQUENCY_HOURS * SECONDS_PER_HOUR,
+  );
 
   const addressLower = resolvedAddress.toLowerCase();
 
@@ -14,7 +32,7 @@ async function resolveENSAvatar(ensName: string, resolvedAddress: string) {
     const response = await uploadFileFromURL(
       avatarURL,
       s3configProfile.buckets.ensAvatarCache,
-      addressLower,
+      addressLower, // Using ENS may cause issues (emoji ENSs/etc)
     );
 
     if (response === null) {
