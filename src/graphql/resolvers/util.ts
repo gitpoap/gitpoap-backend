@@ -9,6 +9,6 @@ export function getXDaysAgoStartDatetime(days: number): Date {
   return new Date(getXDaysAgoStartDay(days));
 }
 
-export function getLastMonthStartDay(): Date {
+export function getLastMonthStartDatetime(): Date {
   return new Date(getXDaysAgoStartDay(30));
 }
