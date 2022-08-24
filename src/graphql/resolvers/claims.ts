@@ -82,7 +82,9 @@ export class CustomClaimResolver {
         },
         OR: [
           {
-            status: ClaimStatus.UNCLAIMED,
+            status: {
+              in: [ClaimStatus.UNCLAIMED, ClaimStatus.PENDING, ClaimStatus.MINTING],
+            },
           },
           {
             mintedAt: { gt: getLastMonthStartDatetime() },
@@ -102,7 +104,7 @@ export class CustomClaimResolver {
       },
     });
 
-    let results: FullClaimData[] = [];
+    const results: FullClaimData[] = [];
 
     for (const claim of claims) {
       const { gitPOAP, ...claimData } = claim;
