@@ -1,6 +1,6 @@
 import { Arg, Ctx, Field, ObjectType, Resolver, Query } from 'type-graphql';
 import { ClaimStatus, Repo, RepoOrderByWithRelationInput } from '@generated/type-graphql';
-import { getPastStartDatetime } from './util';
+import { getLastMonthStartDay, getXDaysAgoStartDatetime } from './util';
 import { Context } from '../../context';
 import { createScopedLogger } from '../../logging';
 import { gqlRequestDurationSeconds } from '../../metrics';
@@ -162,7 +162,7 @@ export class CustomRepoResolver {
         id: true,
       },
       where: {
-        createdAt: { gt: getPastStartDatetime(30) },
+        createdAt: { gt: getLastMonthStartDay() },
       },
     });
 
@@ -284,11 +284,11 @@ export class CustomRepoResolver {
   async trendingRepos(
     @Ctx() { prisma }: Context,
     @Arg('count', { defaultValue: 10 }) count: number,
-    @Arg('last', { defaultValue: 3 }) last: number,
-  ): Promise<Repo[] | null> {
+    @Arg('numDays', { defaultValue: 3 }) numDays: number,
+  ): Promise<RepoData[] | null> {
     const logger = createScopedLogger('GQL trendingRepos');
 
-    logger.info(`Request for trending repos form the last ${last} days`);
+    logger.info(`Request for trending repos form the last ${numDays} days`);
 
     const endTimer = gqlRequestDurationSeconds.startTimer('trendingRepos');
 
@@ -301,11 +301,11 @@ export class CustomRepoResolver {
         INNER JOIN "Project" AS p ON r."projectId" = p.id
         INNER JOIN "GitPOAP" AS g ON g."projectId" = p.id
         LEFT JOIN 
-          (SELECT * 
-            FROM "Claim" 
-            WHERE status = ${ClaimStatus.CLAIMED} AND "mintedAt" >= ${getPastStartDatetime(
-      last,
-    )}) AS c ON c."gitPOAPId" = g.id
+          (
+            SELECT * FROM "Claim" 
+            WHERE status = ${ClaimStatus.CLAIMED} 
+              AND "mintedAt" >= ${getXDaysAgoStartDatetime(numDays)}
+          ) AS c ON c."gitPOAPId" = g.id
         GROUP BY r.id
         ORDER BY "mintedGitPOAPCount" DESC
         LIMIT ${count}
