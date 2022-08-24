@@ -55,6 +55,7 @@ export const uploadFileFromURL = async (
   url: string,
   bucket: string,
   key: string,
+  isPublic?: boolean,
 ): Promise<PutObjectCommandOutput | null> => {
   const logger = createScopedLogger('uploadFileFromURL');
 
@@ -73,6 +74,11 @@ export const uploadFileFromURL = async (
     return null;
   }
 
+  if (response.body === null) {
+    logger.warn(`The file at "${url}" has no body`);
+    return null;
+  }
+
   const contentType = response.headers.get('content-type');
 
   if (contentType === null) {
@@ -80,11 +86,14 @@ export const uploadFileFromURL = async (
     return null;
   }
 
+  const acl = isPublic ? 'public-read' : undefined;
+
   const params: PutObjectCommandInput = {
     Bucket: bucket,
     Key: key,
-    Body: await response.blob(),
+    Body: Buffer.from(await response.arrayBuffer()),
     ContentType: contentType,
+    ACL: acl,
   };
 
   return await s3.send(new PutObjectCommand(params));
