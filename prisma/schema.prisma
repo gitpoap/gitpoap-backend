@@ -44,6 +44,7 @@ model Profile {
   twitterHandle          String?        @db.VarChar(255)
   personalSiteUrl        String?        @db.VarChar(255)
   isVisibleOnLeaderboard Boolean        @default(true)
+  ensAvatarImageUrl      String?        @db.VarChar(255)
   featuredPOAPs          FeaturedPOAP[]
 }
 

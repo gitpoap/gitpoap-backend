@@ -3,7 +3,7 @@ import { Octokit } from 'octokit';
 import { z } from 'zod';
 import multer from 'multer';
 import { DateTime } from 'luxon';
-import { uploadMulterFile, s3configProfile, s3 } from '../external/s3';
+import { uploadMulterFile, s3configProfile, s3, getS3URL } from '../external/s3';
 import {
   PutItemCommand,
   PutItemCommandInput,
@@ -381,7 +381,7 @@ onboardingRouter.post<'/intake-form', {}, {}, IntakeForm>(
           const key = `${unixTime}-${req.body.githubHandle}-${req.body.email}-${index}`;
           await uploadMulterFile(image, s3configProfile.buckets.intakeForm, key);
           /* Get s3 file URL */
-          const url = `https://${s3configProfile.buckets.intakeForm}.s3.${s3configProfile.region}.amazonaws.com/${key}`;
+          const url = getS3URL(s3configProfile.buckets.intakeForm, key);
           urls.push(url);
           logger.info(
             `Uploaded image ${index + 1} to S3 bucket ${s3configProfile.buckets.intakeForm}`,
