@@ -3170,6 +3170,7 @@ type Holder {
   profileImageUrl: String
   twitterHandle: String
   personalSiteUrl: String
+  ensAvatarImageUrl: String
   githubHandle: String!
   gitPOAPCount: Float!
 }
@@ -3237,6 +3238,7 @@ type NullableProfile {
   twitterHandle: String
   personalSiteUrl: String
   isVisibleOnLeaderboard: Boolean!
+  ensAvatarImageUrl: String
   featuredPOAPs: [FeaturedPOAP!]!
 }
 
