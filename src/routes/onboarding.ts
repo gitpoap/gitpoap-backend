@@ -465,20 +465,21 @@ onboardingRouter.get<'/github/repos', {}, APIResponseData<Repo[]>>(
 
     logger.info(`Fetching repos lists for GitHub user ${user.data.login}`);
 
+    const foundRepoIds = new Set<number>();
+    const rejectedRepoIds = new Set<number>();
+
     let mappedPrRepos: Repo[] = [];
     let mappedRepos: Repo[] = [];
     let mappedOrgRepos: Repo[] = [];
 
     try {
-      const foundRepoIds = new Set<number>();
-
       /* Fetch first 100 public PRs for a user */
       const publicPrs = await octokit.graphql<PullRequestsRes>(publicPRsQuery(user.data.login));
 
       const uniquePrRepos = publicPrs.search.edges.filter(repo => {
+        /* Do NOT filter out repos based on stars */
         if (repo.node.repository.isFork) {
-          return false;
-        } else if (repo.node.repository.stargazerCount < 2) {
+          rejectedRepoIds.add(repo.node.repository.databaseId);
           return false;
         }
         const isFound = foundRepoIds.has(repo.node.repository.databaseId);
@@ -523,8 +524,10 @@ onboardingRouter.get<'/github/repos', {}, APIResponseData<Repo[]>>(
           if (isFound) {
             return false;
           } else if (repo.fork) {
+            rejectedRepoIds.add(repo.id);
             return false;
           } else if (!repo.stargazers_count || repo.stargazers_count < 2) {
+            rejectedRepoIds.add(repo.id);
             return false;
           }
           const hasPermission =
@@ -541,8 +544,10 @@ onboardingRouter.get<'/github/repos', {}, APIResponseData<Repo[]>>(
           if (isFound) {
             return false;
           } else if (repo.fork) {
+            rejectedRepoIds.add(repo.id);
             return false;
           } else if (!repo.stargazers_count || repo.stargazers_count < 2) {
+            rejectedRepoIds.add(repo.id);
             return false;
           }
           const hasPermission =
@@ -560,7 +565,7 @@ onboardingRouter.get<'/github/repos', {}, APIResponseData<Repo[]>>(
     const allRepos = [...mappedRepos, ...mappedOrgRepos, ...mappedPrRepos];
 
     logger.info(
-      `Found ${allRepos.length} total applicable repos for GitHub user ${user.data.login}`,
+      `Found ${allRepos.length} total applicable repos for GitHub user ${user.data.login}. Rejected ${rejectedRepoIds.size} repos.`,
     );
     endTimer({ status: 200 });
 
