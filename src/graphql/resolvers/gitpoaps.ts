@@ -1,6 +1,6 @@
 import { Arg, Ctx, Field, ObjectType, Resolver, Query } from 'type-graphql';
 import { Claim, ClaimStatus, GitPOAPStatus, GitPOAP, Profile } from '@generated/type-graphql';
-import { getPastStartDatetime } from './util';
+import { getLastMonthStartDay } from './util';
 import { Context } from '../../context';
 import { POAPEvent, POAPToken } from '../../types/poap';
 import { resolveENS } from '../../lib/ens';
@@ -159,7 +159,7 @@ export class CustomGitPOAPResolver {
       },
       where: {
         isEnabled: true,
-        createdAt: { gt: getPastStartDatetime(30) },
+        createdAt: { gt: getLastMonthStartDay() },
         NOT: {
           status: GitPOAPStatus.UNAPPROVED,
         },
