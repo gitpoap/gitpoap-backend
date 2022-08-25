@@ -33,7 +33,7 @@ export const claimsRouter = Router();
 // Ensure that we still have enough codes left for a GitPOAP after a claim
 async function ensureRedeemCodeThreshold(gitPOAP: GitPOAP) {
   // If the distribution is not ongoing then we don't need to do anything
-  if (!gitPOAP.ongoing) {
+  if (!gitPOAP.ongoing || gitPOAP.status === GitPOAPStatus.DEPRECATED) {
     return;
   }
 
@@ -390,6 +390,12 @@ claimsRouter.post('/create', jwtWithAdminOAuth(), async function (req, res) {
   }
   if (gitPOAPData.status === GitPOAPStatus.UNAPPROVED) {
     const msg = `GitPOAP ID ${req.body.gitPOAPId} has not been approved yet`;
+    logger.warn(msg);
+    endTimer({ status: 400 });
+    return res.status(400).send({ msg });
+  }
+  if (gitPOAPData.status === GitPOAPStatus.DEPRECATED) {
+    const msg = `GitPOAP ID ${req.body.gitPOAPId} is deprecated`;
     logger.warn(msg);
     endTimer({ status: 400 });
     return res.status(400).send({ msg });

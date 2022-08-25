@@ -159,7 +159,7 @@ export class CustomGitPOAPResolver {
       where: {
         isEnabled: true,
         NOT: {
-          status: GitPOAPStatus.UNAPPROVED,
+          status: { in: [GitPOAPStatus.UNAPPROVED, GitPOAPStatus.DEPRECATED] },
         },
       },
     });
@@ -187,7 +187,7 @@ export class CustomGitPOAPResolver {
         isEnabled: true,
         createdAt: { gt: getLastMonthStartDatetime() },
         NOT: {
-          status: GitPOAPStatus.UNAPPROVED,
+          status: { in: [GitPOAPStatus.UNAPPROVED, GitPOAPStatus.DEPRECATED] },
         },
       },
     });
@@ -378,7 +378,14 @@ export class CustomGitPOAPResolver {
       select: {
         project: {
           select: {
-            gitPOAPs: true,
+            gitPOAPs: {
+              where: {
+                isEnabled: true,
+                NOT: {
+                  status: { in: [GitPOAPStatus.UNAPPROVED, GitPOAPStatus.DEPRECATED] },
+                },
+              },
+            },
           },
         },
       },

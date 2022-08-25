@@ -11,6 +11,7 @@ import { extractMergeCommitSha, upsertGithubPullRequest } from './pullRequests';
 import { upsertUser } from './users';
 import { YearlyGitPOAPsMap, createNewClaimsForRepoPR, createYearlyGitPOAPsMap } from './claims';
 import { lookupLastRun, updateLastRun } from './batchProcessing';
+import { GitPOAPStatus } from '@prisma/client';
 
 // The number of pull requests to request in a single page (currently the maximum number)
 const PULL_STEP_SIZE = 100;
@@ -201,6 +202,9 @@ export async function runOngoingIssuanceUpdater() {
               where: {
                 ongoing: true,
                 isPRBased: true,
+                NOT: {
+                  status: GitPOAPStatus.DEPRECATED,
+                },
               },
               select: {
                 id: true,
