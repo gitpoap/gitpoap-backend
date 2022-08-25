@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { context } from '../../../context';
 import { httpRequestDurationSeconds } from '../../../metrics';
 import { createScopedLogger } from '../../../logging';
-import { ClaimStatus } from '@generated/type-graphql';
+import { GitPOAPStatus, ClaimStatus } from '@generated/type-graphql';
 import { GitPOAPEventResultType } from '../types';
 import { mapGitPOAPsToGitPOAPResults } from '../helpers';
 
@@ -85,6 +85,9 @@ gitpoapsRouter.get('/events', async (req, res) => {
   const gitPOAPs = await context.prisma.gitPOAP.findMany({
     where: {
       isEnabled: true,
+      NOT: {
+        status: GitPOAPStatus.DEPRECATED,
+      },
     },
     select: {
       id: true,
