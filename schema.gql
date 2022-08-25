@@ -779,6 +779,7 @@ enum GitPOAPStatus {
   UNAPPROVED
   APPROVED
   REDEEM_REQUEST_PENDING
+  DEPRECATED
 }
 
 input NestedEnumGitPOAPStatusFilter {
