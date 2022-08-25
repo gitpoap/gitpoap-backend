@@ -1,5 +1,10 @@
 import { Arg, Ctx, Field, ObjectType, Resolver, Query } from 'type-graphql';
-import { ClaimStatus, Repo, RepoOrderByWithRelationInput } from '@generated/type-graphql';
+import {
+  ClaimStatus,
+  GitPOAPStatus,
+  Repo,
+  RepoOrderByWithRelationInput,
+} from '@generated/type-graphql';
 import { getLastMonthStartDatetime, getXDaysAgoStartDatetime } from './util';
 import { Context } from '../../context';
 import { createScopedLogger } from '../../logging';
@@ -42,7 +47,9 @@ export class CustomRepoResolver {
           COUNT(c.id)::INTEGER AS "mintedGitPOAPCount"
         FROM "Repo" as r
         INNER JOIN "Project" AS p ON r."projectId" = p.id
-        INNER JOIN "GitPOAP" AS g ON g."projectId" = p.id AND g."isEnabled" IS TRUE
+        INNER JOIN "GitPOAP" AS g ON g."projectId" = p.id
+          AND g."isEnabled" IS TRUE
+          AND g.status != ${GitPOAPStatus.DEPRECATED}::"GitPOAPStatus"
         LEFT JOIN 
           (
             SELECT * FROM "Claim"
@@ -68,7 +75,9 @@ export class CustomRepoResolver {
         FROM "Repo" as r
         INNER JOIN "Organization" AS o ON o.id = r."organizationId"
         INNER JOIN "Project" AS p ON r."projectId" = p.id
-        INNER JOIN "GitPOAP" AS g ON g."projectId" = p.id AND g."isEnabled" IS TRUE
+        INNER JOIN "GitPOAP" AS g ON g."projectId" = p.id
+          AND g."isEnabled" IS TRUE
+          AND g.status != ${GitPOAPStatus.DEPRECATED}::"GitPOAPStatus"
         LEFT JOIN 
           (
             SELECT * FROM "Claim"
@@ -263,7 +272,7 @@ export class CustomRepoResolver {
       results = await prisma.$queryRaw<Repo[]>`
         SELECT r.* FROM "Repo" AS r
         INNER JOIN "Project" AS p ON p.id = r."projectId"
-        INNER JOIN "GitPOAP" AS g ON g."projectId" = p.id
+        INNER JOIN "GitPOAP" AS g ON g."projectId" = p.id AND g.status != ${GitPOAPStatus.DEPRECATED}
         LEFT JOIN "Claim" AS c ON c."gitPOAPId" = g.id AND c.status = 'CLAIMED'
         GROUP BY r.id
         ORDER BY COUNT(c.id) DESC
