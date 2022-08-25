@@ -3,6 +3,7 @@ import { context } from '../../../context';
 import { httpRequestDurationSeconds } from '../../../metrics';
 import { createScopedLogger } from '../../../logging';
 import { retrievePOAPEventInfo } from '../../../external/poap';
+import { GitPOAPStatus } from '@prisma/client';
 
 export const poapEventRouter = Router();
 
@@ -56,6 +57,9 @@ poapEventRouter.get('/gitpoap-event-ids', async function (req, res) {
   const gitPOAPs = await context.prisma.gitPOAP.findMany({
     where: {
       isEnabled: true,
+      NOT: {
+        status: GitPOAPStatus.DEPRECATED,
+      },
     },
     select: {
       poapEventId: true,
@@ -87,6 +91,9 @@ poapEventRouter.get('/gitpoap-event-fancy-ids', async function (req, res) {
   const gitPOAPs = await context.prisma.gitPOAP.findMany({
     where: {
       isEnabled: true,
+      NOT: {
+        status: GitPOAPStatus.DEPRECATED,
+      },
     },
     select: {
       id: true,
