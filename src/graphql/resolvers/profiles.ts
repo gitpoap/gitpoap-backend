@@ -256,7 +256,7 @@ export class CustomProfileResolver {
       WHERE pf."isVisibleOnLeaderboard" IS TRUE
         AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
         AND c."needsRevalidation" IS FALSE
-        AND g.status != ${GitPOAPStatus.DEPRECATED}::"GitPOAPStatus"
+        AND gp.status != ${GitPOAPStatus.DEPRECATED}::"GitPOAPStatus"
         AND r.id = ${repoId}
       GROUP BY pf.id
       ORDER BY "claimsCount" DESC
