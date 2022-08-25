@@ -173,7 +173,7 @@ async function main() {
   const claim11A = await ClaimFactory.createClaim(gitpoap11.id, jay.id);
   const claim11B = await ClaimFactory.createClaim(gitpoap11.id, anthony.id);
   const claim11C = await ClaimFactory.createClaim(gitpoap11.id, colfax.id);
-  const claim11D = await ClaimFactory.createClaim(gitpoap11.id, aldo.id, ClaimStatus.CLAIMED, ADDRESSES.aldo, '1234567894', DateTime.now().minus({ days: 2 }).toJSDate());
+  const claim11D = await ClaimFactory.createClaim(gitpoap11.id, aldo.id, ClaimStatus.CLAIMED, ADDRESSES.aldo, '1234567894', DateTime.utc().minus({ days: 2 }).toJSDate());
 
   /* Create Profiles */
   const profile1 = await ProfileFactory.createProfile(ADDRESSES.colfax, 'I like brisket.');
