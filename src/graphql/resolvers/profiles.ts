@@ -1,5 +1,5 @@
 import { Arg, Ctx, Field, ObjectType, Resolver, Query } from 'type-graphql';
-import { ClaimStatus, FeaturedPOAP, Profile } from '@generated/type-graphql';
+import { ClaimStatus, FeaturedPOAP, GitPOAPStatus, Profile } from '@generated/type-graphql';
 import { Context } from '../../context';
 import { resolveENS, resolveAddress } from '../../lib/ens';
 import { createScopedLogger } from '../../logging';
@@ -76,8 +76,10 @@ export class CustomProfileResolver {
     const result: { count: number }[] = await prisma.$queryRaw`
       SELECT COUNT(DISTINCT c.address)::INTEGER
       FROM "Claim" AS c
+      INNER JOIN "GitPOAP" AS g ON g.id = c."gitPOAPId"
       WHERE c.address IS NOT NULL
         AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
+        AND g.status != ${GitPOAPStatus.DEPRECATED}::"GitPOAPStatus"
     `;
 
     logger.debug('Completed request for total contributors');
@@ -98,9 +100,11 @@ export class CustomProfileResolver {
     const result: { count: number }[] = await prisma.$queryRaw`
       SELECT COUNT(DISTINCT c.address)::INTEGER
       FROM "Claim" AS c
+      INNER JOIN "GitPOAP" AS g ON g.id = c."gitPOAPId"
       WHERE c.address IS NOT NULL
         AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
         AND c."mintedAt" > ${getLastMonthStartDatetime()}
+        AND g.status != ${GitPOAPStatus.DEPRECATED}::"GitPOAPStatus"
     `;
 
     logger.debug("Completed request for last month's contributors");
@@ -197,10 +201,12 @@ export class CustomProfileResolver {
     const results: ResultType[] = await prisma.$queryRaw`
       SELECT p.*, COUNT(c.id)::INTEGER AS "claimsCount"
       FROM "Profile" AS p
-      JOIN "Claim" AS c ON c.address = p.address
+      INNER JOIN "Claim" AS c ON c.address = p.address
+      INNER JOIN "GitPOAP" AS g ON g.id = c."gitPOAPId"
       WHERE p."isVisibleOnLeaderboard" IS TRUE
         AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
         AND c."needsRevalidation" IS FALSE
+        AND g.status != ${GitPOAPStatus.DEPRECATED}::"GitPOAPStatus"
       GROUP BY p.id
       ORDER BY "claimsCount" DESC
       LIMIT ${count}
@@ -250,6 +256,7 @@ export class CustomProfileResolver {
       WHERE pf."isVisibleOnLeaderboard" IS TRUE
         AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
         AND c."needsRevalidation" IS FALSE
+        AND g.status != ${GitPOAPStatus.DEPRECATED}::"GitPOAPStatus"
         AND r.id = ${repoId}
       GROUP BY pf.id
       ORDER BY "claimsCount" DESC
