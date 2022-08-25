@@ -332,14 +332,20 @@ gitpoapsRouter.put('/enable/:id', jwtWithAdminOAuth(), async (req, res) => {
     },
     select: {
       id: true,
+      status: true,
     },
   });
-
   if (gitPOAPInfo === null) {
     const msg = `Failed to find GitPOAP with ID ${gitPOAPId}`;
     logger.warn(msg);
     endTimer({ status: 404 });
     return res.status(404).send({ msg });
+  }
+  if (gitPOAPInfo.status === GitPOAPStatus.DEPRECATED) {
+    const msg = `GitPOAP with ID ${gitPOAPId} is deprecated`;
+    logger.warn(msg);
+    endTimer({ status: 400 });
+    return res.status(400).send({ msg });
   }
 
   await context.prisma.gitPOAP.update({

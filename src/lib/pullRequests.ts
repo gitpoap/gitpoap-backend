@@ -9,7 +9,7 @@ import {
   createNewClaimsForRepoPR,
   createYearlyGitPOAPsMap,
 } from './claims';
-import { GithubPullRequest } from '@generated/type-graphql';
+import { GitPOAPStatus, GithubPullRequest } from '@generated/type-graphql';
 
 type ExtraRepoData = RepoData & {
   name: string;
@@ -38,6 +38,9 @@ async function getRepoInfo(repoId: number): Promise<ExtraRepoData | null> {
           gitPOAPs: {
             where: {
               isPRBased: true,
+              NOT: {
+                status: GitPOAPStatus.DEPRECATED,
+              },
             },
             select: {
               id: true,

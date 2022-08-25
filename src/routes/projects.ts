@@ -7,6 +7,7 @@ import { createRepoByGithubId } from '../lib/repos';
 import { context } from '../context';
 import { AccessTokenPayloadWithOAuth } from '../types/tokens';
 import { backloadGithubPullRequestData } from '../lib/pullRequests';
+import { GitPOAPStatus } from '@prisma/client';
 
 export const projectsRouter = Router();
 
@@ -108,6 +109,9 @@ projectsRouter.put('/enable/:id', jwtWithAdminOAuth(), async (req, res) => {
   await context.prisma.gitPOAP.updateMany({
     where: {
       projectId,
+      NOT: {
+        status: GitPOAPStatus.DEPRECATED,
+      },
     },
     data: {
       isEnabled: true,
