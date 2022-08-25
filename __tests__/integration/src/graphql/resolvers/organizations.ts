@@ -45,8 +45,8 @@ describe('CustomOrganizationResolver', () => {
     expect(data.organizationData.name).toEqual('gitpoap');
     expect(data.organizationData.repoCount).toEqual(3);
     expect(data.organizationData.gitPOAPCount).toEqual(9);
-    expect(data.organizationData.mintedGitPOAPCount).toEqual(7);
-    expect(data.organizationData.contributorCount).toEqual(4);
+    expect(data.organizationData.mintedGitPOAPCount).toEqual(8);
+    expect(data.organizationData.contributorCount).toEqual(5);
   });
 
   it('allOrganizations - alphabetical', async () => {
@@ -88,8 +88,8 @@ describe('CustomOrganizationResolver', () => {
   const expectGitPOAPBackendProject = (data: Record<string, any>) => {
     expect(data.organizationRepos.length).toEqual(1);
     expect(data.organizationRepos[0].name).toEqual('gitpoap-backend');
-    expect(data.organizationRepos[0].mintedGitPOAPCount).toEqual(6);
-    expect(data.organizationRepos[0].contributorCount).toEqual(3);
+    expect(data.organizationRepos[0].mintedGitPOAPCount).toEqual(7);
+    expect(data.organizationRepos[0].contributorCount).toEqual(4);
   };
 
   it('organizationRepos - alphabetical', async () => {

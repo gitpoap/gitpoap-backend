@@ -37,8 +37,8 @@ describe('CustomRepoResolver', () => {
     expect(data.repoData).not.toEqual(null);
     expect(data.repoData.name).toEqual('gitpoap-backend');
     expect(data.repoData.gitPOAPCount).toEqual(4);
-    expect(data.repoData.mintedGitPOAPCount).toEqual(6);
-    expect(data.repoData.contributorCount).toEqual(3);
+    expect(data.repoData.mintedGitPOAPCount).toEqual(7);
+    expect(data.repoData.contributorCount).toEqual(4);
   });
 
   it('totalRepos', async () => {

@@ -11,7 +11,7 @@ describe('CustomClaimResolver', () => {
       }
     `);
 
-    expect(data.totalClaims).toEqual(13);
+    expect(data.totalClaims).toEqual(14);
   });
 
   it('lastMonthClaims', async () => {
@@ -21,7 +21,7 @@ describe('CustomClaimResolver', () => {
       }
     `);
 
-    expect(data.lastMonthClaims).toEqual(0);
+    expect(data.lastMonthClaims).toEqual(1);
   });
 
   it('userClaims', async () => {

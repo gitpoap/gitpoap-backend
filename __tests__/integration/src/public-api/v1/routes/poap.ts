@@ -34,7 +34,7 @@ describe('public-api/v1/poap/gitpoap-ids', () => {
     const data = await response.json();
 
     expect(data.poapTokenIds).not.toEqual(null);
-    expect(data.poapTokenIds.length).toEqual(13);
+    expect(data.poapTokenIds.length).toEqual(14);
 
     // names are from variables in prisma/seed.ts
     expect(data.poapTokenIds).toContainEqual('thunderdome'); // claim1
@@ -50,5 +50,6 @@ describe('public-api/v1/poap/gitpoap-ids', () => {
     expect(data.poapTokenIds).toContainEqual('1234567891');  // claim9B
     expect(data.poapTokenIds).toContainEqual('1234567892');  // claim9C
     expect(data.poapTokenIds).toContainEqual('1234567893');  // claim10C
+    expect(data.poapTokenIds).toContainEqual('1234567894');  // claim11D
   });
 });
