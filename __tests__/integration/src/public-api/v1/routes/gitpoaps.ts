@@ -53,11 +53,12 @@ describe('public-api/v1/gitpoaps/addresses', () => {
     const data = await response.json();
 
     expect(data.addresses).not.toEqual(null);
-    expect(data.addresses.length).toEqual(4);
+    expect(data.addresses.length).toEqual(5);
     expect(data.addresses).toContain(ADDRESSES.test1);
     expect(data.addresses).toContain(ADDRESSES.jay);
     expect(data.addresses).toContain(ADDRESSES.colfax);
     expect(data.addresses).toContain(ADDRESSES.anthony2);
+    expect(data.addresses).toContain(ADDRESSES.aldo);
   });
 });
 
@@ -152,7 +153,7 @@ describe('public-api/v1/gitpoaps/events', () => {
       11,
       event36572,
       ['gitpoap/gitpoap-backend'],
-      0,
+      1,
     ));
     expect(data.gitPoapEvents).toContainEqual(genExpectedDataFromEvent(
       12,
