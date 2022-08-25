@@ -77,14 +77,21 @@ export async function resolveENS(ensName: string): Promise<string | null> {
  * ENS Reverse Resolution - Resolve an ETH address to an ENS name
  *
  * @param address - the ETH address to resolve
+ * @param synchronous - should the function wait to return until ENS avatar checks are done?
  * @returns the resolved ENS name associated with the ETH address or null
  */
-export async function resolveAddress(address: string): Promise<string | null> {
+export async function resolveAddress(
+  address: string,
+  synchronous?: boolean,
+): Promise<string | null> {
   const result = await resolveAddressInternal(address);
 
   if (result !== null) {
-    // Run in the background
-    resolveENSAvatar(result, address);
+    const avatarPromise = resolveENSAvatar(result, address);
+
+    if (synchronous) {
+      await avatarPromise;
+    }
   }
 
   return result;
