@@ -64,13 +64,13 @@ export const uploadFileFromURL = async (
     response = await fetch(url);
 
     if (response.status >= 400) {
-      logger.warn(
+      logger.error(
         `Failed to fetch file "${url}" [status: ${response.status}]: ${await response.text()}`,
       );
       return null;
     }
   } catch (err) {
-    logger.warn(`Error while fetching file "${url}": ${err}`);
+    logger.error(`Error while fetching file "${url}": ${err}`);
     return null;
   }
 
