@@ -102,4 +102,17 @@ describe('CustomRepoResolver', () => {
     expect(data.allRepos.length).toEqual(1);
     expect(data.allRepos[0].name).toEqual('gitpoap-backend');
   });
+
+  it('trendingRepos - orderby', async () => {
+    const data = await client.request(gql`
+      {
+        trendingRepos(count: 1, numDays: 10000) {
+          mintedGitPOAPCount
+        }
+      }
+    `);
+
+    expect(data.trendingRepos.length).toEqual(1);
+    expect(data.trendingRepos[0].mintedGitPOAPCount).toEqual(7);
+  });
 });
