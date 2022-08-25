@@ -272,7 +272,8 @@ export class CustomRepoResolver {
       results = await prisma.$queryRaw<Repo[]>`
         SELECT r.* FROM "Repo" AS r
         INNER JOIN "Project" AS p ON p.id = r."projectId"
-        INNER JOIN "GitPOAP" AS g ON g."projectId" = p.id AND g.status != ${GitPOAPStatus.DEPRECATED}
+        INNER JOIN "GitPOAP" AS g ON g."projectId" = p.id
+          AND g.status != ${GitPOAPStatus.DEPRECATED}::"GitPOAPStatus"
         LEFT JOIN "Claim" AS c ON c."gitPOAPId" = g.id AND c.status = 'CLAIMED'
         GROUP BY r.id
         ORDER BY COUNT(c.id) DESC
