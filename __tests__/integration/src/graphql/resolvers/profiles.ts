@@ -13,7 +13,7 @@ describe('CustomProfileResolver', () => {
       }
     `);
 
-    expect(data.totalContributors).toEqual(4);
+    expect(data.totalContributors).toEqual(5);
   });
 
   it('lastMonthContributors', async () => {
@@ -23,7 +23,7 @@ describe('CustomProfileResolver', () => {
       }
     `);
 
-    expect(data.lastMonthContributors).toEqual(0);
+    expect(data.lastMonthContributors).toEqual(1);
   });
 
   it('profileData', async () => {
@@ -119,7 +119,7 @@ describe('CustomProfileResolver', () => {
   it('repoMostHonoredContributors', async () => {
     const data = await client.request(gql`
       {
-        repoMostHonoredContributors(repoId: 1, count: 4) {
+        repoMostHonoredContributors(repoId: 1, page: 1, perPage: 4) {
           profile {
             address
           }
@@ -139,7 +139,7 @@ describe('CustomProfileResolver', () => {
 
     const data = await client.request(gql`
       {
-        repoMostHonoredContributors(repoId: 1, count: 1) {
+        repoMostHonoredContributors(repoId: 1, page: 1, perPage: 1) {
           profile {
             address
           }
