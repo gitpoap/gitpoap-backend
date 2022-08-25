@@ -58,7 +58,10 @@ describe('PUT /gitpoaps/enable/:id', () => {
     expect(contextMock.prisma.gitPOAP.findUnique).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.gitPOAP.findUnique).toHaveBeenCalledWith({
       where: { id: gitPOAPId },
-      select: { id: true },
+      select: {
+        id: true,
+        status: true,
+      },
     });
   });
 
@@ -79,7 +82,10 @@ describe('PUT /gitpoaps/enable/:id', () => {
     expect(contextMock.prisma.gitPOAP.findUnique).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.gitPOAP.findUnique).toHaveBeenCalledWith({
       where: { id: gitPOAPId },
-      select: { id: true },
+      select: {
+        id: true,
+        status: true,
+      },
     });
 
     expect(contextMock.prisma.gitPOAP.update).toHaveBeenCalledTimes(1);
