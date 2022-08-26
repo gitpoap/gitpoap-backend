@@ -1,7 +1,7 @@
 import { createScopedLogger } from '../logging';
 import { context } from '../context';
 import { RepoData } from './claims';
-import { Repo } from '@generated/type-graphql';
+import { GitPOAPStatus, Repo } from '@generated/type-graphql';
 import {
   GithubRepoResponse,
   getGithubRepository,
@@ -109,6 +109,9 @@ export async function getRepoByName(owner: string, repo: string): Promise<RepoDa
           gitPOAPs: {
             where: {
               ongoing: true,
+              NOT: {
+                status: GitPOAPStatus.DEPRECATED,
+              },
             },
             select: {
               id: true,

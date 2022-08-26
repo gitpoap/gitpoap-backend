@@ -25,6 +25,7 @@ poapEventRouter.get('/:poapEventId/is-gitpoap', async function (req, res) {
     },
     select: {
       id: true,
+      status: true,
     },
   });
 
@@ -34,7 +35,7 @@ poapEventRouter.get('/:poapEventId/is-gitpoap', async function (req, res) {
     `Completed request to check it POAP event id ${req.params.poapEventId} is a GitPOAP project contribution level`,
   );
 
-  if (gitPOAP === null) {
+  if (gitPOAP === null || gitPOAP.status === GitPOAPStatus.DEPRECATED) {
     return res.status(200).send({ isGitPOAP: false });
   }
 

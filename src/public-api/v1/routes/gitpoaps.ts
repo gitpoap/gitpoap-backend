@@ -62,6 +62,11 @@ gitpoapsRouter.get('/addresses', async function (req, res) {
       address: {
         not: null,
       },
+      gitPOAP: {
+        NOT: {
+          status: GitPOAPStatus.DEPRECATED,
+        },
+      },
     },
     select: {
       address: true,
