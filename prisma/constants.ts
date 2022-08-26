@@ -1,5 +1,5 @@
 export const ADDRESSES = {
-  test1: '0xae95f7e7fb2fcf86148ef832faed2752ae5a358a' as const,
+  test1: '0xae95f7e7fb2fcf86148ef832faed2752ae5a358a'.toLowerCase(),
   jay: '0xaE32D159BB3ABFcAdFaBE7aBB461C2AB4805596D'.toLowerCase(),
   burz: '0xAe95f7e7fb2FCF86148ef832FAeD2752Ae5A358a'.toLowerCase(),
   burz2: '0x206e554084BEeC98e08043397be63C5132Cc01A1'.toLowerCase(),
@@ -7,6 +7,7 @@ export const ADDRESSES = {
   vitalik: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'.toLowerCase(),
   aldo: '0x02738d122e0970aAf8DEADf0c6A217a1923E1e99'.toLowerCase(),
   tyler: '0x8404DDF7ed9Cce1EFDC14f3Af4c8eD0015d28937'.toLowerCase(),
+  kayleen: '0x04c0cD38B8c203b14ef2b7B8d736D69B938AFF71'.toLowerCase(),
 };
 
 export const GH_HANDLES = {
@@ -16,6 +17,7 @@ export const GH_HANDLES = {
   vitalik: 'vbuterin',
   aldo: 'aldolamb',
   tyler: 'tyler415git',
+  kayleen: 'nixorokish',
 };
 
 export const GH_IDS = {
@@ -23,4 +25,5 @@ export const GH_IDS = {
   burz: 1555326,
   aldo: 19416312,
   tyler: 110413633,
+  kayleen: 23272494,
 };
