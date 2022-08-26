@@ -7,6 +7,7 @@ import {
   event29009,
   event36570,
   event36572,
+  event36576,
 } from '../../../../../prisma/data';
 import { ADDRESSES } from '../../../../../prisma/constants';
 
@@ -114,6 +115,36 @@ describe('CustomClaimResolver', () => {
 
     expect(data.userPOAPs.poaps.length).toEqual(1);
     expect(data.userPOAPs.poaps[0].event.name).toEqual(event25149.name);
+  });
+
+  it('userPOAPs - returns DEPRECATED GitPOAPs', async () => {
+    const data = await client.request(gql`
+      {
+        userPOAPs(address: "${ADDRESSES.kayleen}", sort: "alphabetical", perPage: 1, page: 1) {
+          totalGitPOAPs
+          totalPOAPs
+          gitPOAPs {
+            event {
+              name
+            }
+          }
+          poaps {
+            event {
+              name
+            }
+          }
+        }
+      }
+    `);
+
+    expect(data.userPOAPs.totalGitPOAPs).toEqual(1);
+    expect(data.userPOAPs.totalPOAPs).toEqual(7);
+
+    expect(data.userPOAPs.gitPOAPs.length).toEqual(1);
+    expect(data.userPOAPs.gitPOAPs[0].event.name).toEqual(event36576.name);
+
+    expect(data.userPOAPs.poaps.length).toEqual(1);
+    expect(data.userPOAPs.poaps[0].event.name).toEqual(event2.name);
   });
 
   it('repoGitPOAPs - date', async () => {

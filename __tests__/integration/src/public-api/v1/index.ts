@@ -7,6 +7,7 @@ import {
   event29009,
   event36571,
 } from '../../../../../prisma/data';
+import { MILLISECONDS_PER_SECOND } from '../../../../../src/constants';
 
 const PUBLIC_API_URL = 'http://public-api-server:3122';
 
@@ -31,7 +32,7 @@ describe('public-api/v1/address/:address/gitpoaps', () => {
     const data = await response.json();
 
     expect(data.length).toEqual(0);
-  });
+  }, 10 * MILLISECONDS_PER_SECOND);
 
   it("Returns known user's GitPOAPs", async () => {
     const response = await fetch(`${PUBLIC_API_URL}/v1/address/${ADDRESSES.burz2}/gitpoaps`);
@@ -59,6 +60,16 @@ describe('public-api/v1/address/:address/gitpoaps', () => {
     expect(new Date(data[0].earnedAt)).toEqual(todayStart);
     expect(data[0].mintedAt).toEqual('2020-01-09');
     expect(data[0].needsRevalidation).toEqual(false);
+  });
+
+  it("Doesn't return DEPRECATED GitPOAPs", async () => {
+    const response = await fetch(`${PUBLIC_API_URL}/v1/address/${ADDRESSES.kayleen}/gitpoaps`);
+
+    expect(response.status).toBeLessThan(400);
+
+    const data = await response.json();
+
+    expect(data.length).toEqual(0);
   });
 });
 
@@ -170,6 +181,13 @@ describe('public-api/v1/github/user/:githubHandle/gitpoaps', () => {
     expect(data[0].repositories[0]).toEqual('gitpoap/gitpoap-backend');
     expect(new Date(data[0].earnedAt)).toEqual(todayStart);
     expect(data[0].mintedAt).toBeNull();
+  });
+
+  it("Doesn't return DEPRECATED GitPOAPs", async () => {
+    const response = await fetch(`${PUBLIC_API_URL}/v1/github/user/${GH_HANDLES.kayleen}/gitpoaps`);
+    expect(response.status).toBeLessThan(400);
+    const data = await response.json();
+    expect(data.length).toEqual(0);
   });
 });
 

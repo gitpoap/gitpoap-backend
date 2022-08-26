@@ -23,6 +23,16 @@ describe('public-api/v1/poap/:poapTokenId/is-gitpoap', () => {
     expect(data.isGitPOAP).toEqual(true);
     expect(data.gitPOAPId).toEqual(1);
   });
+
+  it('Returns false for a DEPRECATED GitPOAP POAP ID', async () => {
+    const response = await fetch(`${PUBLIC_API_URL}/v1/poap/77778/is-gitpoap`);
+
+    expect(response.status).toBeLessThan(400);
+
+    const data = await response.json();
+
+    expect(data.isGitPOAP).toEqual(false);
+  });
 });
 
 describe('public-api/v1/poap/gitpoap-ids', () => {
