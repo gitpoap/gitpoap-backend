@@ -36,6 +36,11 @@ v1Router.get('/address/:address/gitpoaps', async function (req, res) {
     where: {
       address: resolvedAddress.toLowerCase(),
       status: ClaimStatus.CLAIMED,
+      gitPOAP: {
+        NOT: {
+          status: GitPOAPStatus.DEPRECATED,
+        },
+      },
     },
     select: {
       id: true,
@@ -126,6 +131,9 @@ v1Router.get('/github/user/:githubHandle/gitpoaps', async function (req, res) {
       status,
       gitPOAP: {
         isEnabled: true,
+        NOT: {
+          status: GitPOAPStatus.DEPRECATED,
+        },
       },
     },
     select: {

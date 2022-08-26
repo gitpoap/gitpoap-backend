@@ -1,5 +1,5 @@
 import { Arg, Ctx, Field, ObjectType, Resolver, Query } from 'type-graphql';
-import { Claim, ClaimStatus } from '@generated/type-graphql';
+import { Claim, ClaimStatus, GitPOAPStatus } from '@generated/type-graphql';
 import { Context } from '../../context';
 import { POAPEvent } from '../../types/poap';
 import { retrievePOAPEventInfo } from '../../external/poap';
@@ -29,6 +29,11 @@ export class CustomClaimResolver {
     const result = await prisma.claim.count({
       where: {
         status: ClaimStatus.CLAIMED,
+        gitPOAP: {
+          NOT: {
+            status: GitPOAPStatus.DEPRECATED,
+          },
+        },
       },
     });
 
@@ -54,6 +59,11 @@ export class CustomClaimResolver {
       where: {
         mintedAt: { gt: getLastMonthStartDatetime() },
         status: ClaimStatus.CLAIMED,
+        gitPOAP: {
+          NOT: {
+            status: GitPOAPStatus.DEPRECATED,
+          },
+        },
       },
     });
 
@@ -93,6 +103,9 @@ export class CustomClaimResolver {
         ],
         gitPOAP: {
           isEnabled: true,
+          NOT: {
+            status: GitPOAPStatus.DEPRECATED,
+          },
         },
       },
       include: {
