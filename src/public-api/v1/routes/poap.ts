@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { context } from '../../../context';
 import { httpRequestDurationSeconds } from '../../../metrics';
 import { createScopedLogger } from '../../../logging';
-import { ClaimStatus } from '@generated/type-graphql';
+import { ClaimStatus, GitPOAPStatus } from '@generated/type-graphql';
 
 export const poapRouter = Router();
 
@@ -13,12 +13,17 @@ poapRouter.get('/:poapTokenId/is-gitpoap', async function (req, res) {
 
   const endTimer = httpRequestDurationSeconds.startTimer('GET', '/v1/poap/:poapTokenId/is-gitpoap');
 
-  const gitPOAP = await context.prisma.claim.findUnique({
+  const claim = await context.prisma.claim.findUnique({
     where: {
       poapTokenId: req.params.poapTokenId,
     },
     select: {
-      gitPOAPId: true,
+      gitPOAP: {
+        select: {
+          id: true,
+          status: true,
+        },
+      },
     },
   });
 
@@ -28,13 +33,13 @@ poapRouter.get('/:poapTokenId/is-gitpoap', async function (req, res) {
     `Completed request to check it POAP token id ${req.params.poapTokenId} is a GitPOAP`,
   );
 
-  if (gitPOAP === null) {
+  if (claim === null || claim.gitPOAP.status === GitPOAPStatus.DEPRECATED) {
     return res.status(200).send({ isGitPOAP: false });
   }
 
   return res.status(200).send({
     isGitPOAP: true,
-    gitPOAPId: gitPOAP.gitPOAPId,
+    gitPOAPId: claim.gitPOAP.id,
   });
 });
 
@@ -48,6 +53,11 @@ poapRouter.get('/gitpoap-ids', async function (req, res) {
   const claims = await context.prisma.claim.findMany({
     where: {
       status: ClaimStatus.CLAIMED,
+      gitPOAP: {
+        NOT: {
+          status: GitPOAPStatus.DEPRECATED,
+        },
+      },
     },
     select: {
       poapTokenId: true,

@@ -159,6 +159,7 @@ export async function retrieveClaimsCreatedByPR(pullRequestId: number): Promise<
   const logger = createScopedLogger('retrieveClaimsCreatedByPR');
 
   // Retrieve any new claims created by this new PR
+  // No need to filter out DEPRECATED since the claims aren't created for DEPRECATED GitPOAPs
   const newClaims = await context.prisma.claim.findMany({
     where: {
       pullRequestEarnedId: pullRequestId,

@@ -77,9 +77,9 @@ export class CustomProfileResolver {
       SELECT COUNT(DISTINCT c.address)::INTEGER
       FROM "Claim" AS c
       INNER JOIN "GitPOAP" AS g ON g.id = c."gitPOAPId"
+        AND g.status != ${GitPOAPStatus.DEPRECATED}::"GitPOAPStatus"
       WHERE c.address IS NOT NULL
         AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
-        AND g.status != ${GitPOAPStatus.DEPRECATED}::"GitPOAPStatus"
     `;
 
     logger.debug('Completed request for total contributors');
@@ -101,10 +101,10 @@ export class CustomProfileResolver {
       SELECT COUNT(DISTINCT c.address)::INTEGER
       FROM "Claim" AS c
       INNER JOIN "GitPOAP" AS g ON g.id = c."gitPOAPId"
+        AND g.status != ${GitPOAPStatus.DEPRECATED}::"GitPOAPStatus"
       WHERE c.address IS NOT NULL
         AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
         AND c."mintedAt" > ${getLastMonthStartDatetime()}
-        AND g.status != ${GitPOAPStatus.DEPRECATED}::"GitPOAPStatus"
     `;
 
     logger.debug("Completed request for last month's contributors");
@@ -202,11 +202,11 @@ export class CustomProfileResolver {
       SELECT p.*, COUNT(c.id)::INTEGER AS "claimsCount"
       FROM "Profile" AS p
       INNER JOIN "Claim" AS c ON c.address = p.address
-      INNER JOIN "GitPOAP" AS g ON g.id = c."gitPOAPId"
-      WHERE p."isVisibleOnLeaderboard" IS TRUE
         AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
         AND c."needsRevalidation" IS FALSE
+      INNER JOIN "GitPOAP" AS g ON g.id = c."gitPOAPId"
         AND g.status != ${GitPOAPStatus.DEPRECATED}::"GitPOAPStatus"
+      WHERE p."isVisibleOnLeaderboard" IS TRUE
       GROUP BY p.id
       ORDER BY "claimsCount" DESC
       LIMIT ${count}
@@ -250,14 +250,14 @@ export class CustomProfileResolver {
       SELECT pf.*, COUNT(c.id)::INTEGER AS "claimsCount"
       FROM "Profile" AS pf
       INNER JOIN "Claim" AS c ON c.address = pf.address
-      INNER JOIN "GitPOAP" AS gp ON gp.id = c."gitPOAPId"
-      INNER JOIN "Project" AS pr ON pr.id = gp."projectId"
-      INNER JOIN "Repo" AS r ON r."projectId" = pr.id
-      WHERE pf."isVisibleOnLeaderboard" IS TRUE
         AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
         AND c."needsRevalidation" IS FALSE
+      INNER JOIN "GitPOAP" AS gp ON gp.id = c."gitPOAPId"
         AND gp.status != ${GitPOAPStatus.DEPRECATED}::"GitPOAPStatus"
+      INNER JOIN "Project" AS pr ON pr.id = gp."projectId"
+      INNER JOIN "Repo" AS r ON r."projectId" = pr.id
         AND r.id = ${repoId}
+      WHERE pf."isVisibleOnLeaderboard" IS TRUE
       GROUP BY pf.id
       ORDER BY "claimsCount" DESC
       LIMIT ${<number>perPage} OFFSET ${(<number>page - 1) * <number>perPage}
