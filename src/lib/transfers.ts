@@ -57,21 +57,29 @@ export async function checkIfClaimTransferred(claimId: number): Promise<string |
     return null;
   }
 
+  const poapTokenId = claimData.poapTokenId;
+
+  if (poapTokenId === null) {
+    return null;
+  }
+
+  const address = claimData.address;
+
+  if (address === null) {
+    logger.error(`Claim ID ${claimId} has poapTokenId set but address is null`);
+    return null;
+  }
+
   logger.info(`Clearing POAP cache data for POAP Token ID ${claimData.poapTokenId}`);
 
-  await clearPOAPTokenInfoCache(claimData.poapTokenId as string);
+  await clearPOAPTokenInfoCache(poapTokenId);
 
-  const newData = await retrievePOAPTokenInfo(claimData.poapTokenId as string);
+  const newData = await retrievePOAPTokenInfo(poapTokenId);
 
   if (newData.owner !== claimData.address) {
     logger.info(`Found transferred GitPOAP Token ID: ${claimId}`);
 
-    await handleGitPOAPTransfer(
-      claimId,
-      claimData.poapTokenId as string,
-      claimData.address as string,
-      newData.owner,
-    );
+    await handleGitPOAPTransfer(claimId, poapTokenId, address, newData.owner);
   }
 
   return newData.owner;
