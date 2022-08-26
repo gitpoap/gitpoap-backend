@@ -124,11 +124,18 @@ export async function splitUsersPOAPs(address: string): Promise<SplitUsersPOAPsR
         });
 
         if (claimData !== null) {
+          const address = claimData.address;
+
+          if (address === null) {
+            logger.error(`Claim ID ${claimData.id} has poapTokenId set but address is null`);
+            continue;
+          }
+
           // Here we assume that the user didn't just claim this during this function's run
           const updatedClaim = await handleGitPOAPTransfer(
             claimData.id,
             poap.tokenId,
-            claimData.address as string,
+            address,
             addressLower,
           );
 
