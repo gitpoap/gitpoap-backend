@@ -10,7 +10,7 @@ import { createPOAPEvent } from '../external/poap';
 import { createScopedLogger } from '../logging';
 import { jwtWithAdminOAuth } from '../middleware';
 import multer from 'multer';
-import { GitPOAPStatus } from '@generated/type-graphql';
+import { ClaimStatus, GitPOAPStatus } from '@generated/type-graphql';
 import { httpRequestDurationSeconds } from '../metrics';
 import { AccessTokenPayloadWithOAuth } from '../types/tokens';
 import { backloadGithubPullRequestData } from '../lib/pullRequests';
@@ -369,4 +369,53 @@ gitpoapsRouter.put('/enable/:id', jwtWithAdminOAuth(), async (req, res) => {
   endTimer({ status: 200 });
 
   return res.status(200).send('ENABLED');
+});
+
+gitpoapsRouter.put('/deprecate/:id', jwtWithAdminOAuth(), async (req, res) => {
+  const logger = createScopedLogger('PUT /gitpoaps/deprecate/:id');
+
+  const endTimer = httpRequestDurationSeconds.startTimer('PUT', '/gitpoaps/deprecate/:id');
+
+  const gitPOAPId = parseInt(req.params.id, 10);
+
+  logger.info(`Admin request to deprecate GitPOAP ID ${gitPOAPId}`);
+
+  const gitPOAPInfo = await context.prisma.gitPOAP.findUnique({
+    where: {
+      id: gitPOAPId,
+    },
+    select: {
+      id: true,
+    },
+  });
+  if (gitPOAPInfo === null) {
+    const msg = `Failed to find GitPOAP with ID ${gitPOAPId}`;
+    logger.warn(msg);
+    endTimer({ status: 404 });
+    return res.status(404).send({ msg });
+  }
+
+  await context.prisma.gitPOAP.update({
+    where: {
+      id: gitPOAPId,
+    },
+    data: {
+      ongoing: false,
+      status: GitPOAPStatus.DEPRECATED,
+    },
+  });
+
+  // Delete all the claims for the GitPOAP that are not claimed yet
+  await context.prisma.claim.deleteMany({
+    where: {
+      gitPOAPId,
+      status: ClaimStatus.UNCLAIMED,
+    },
+  });
+
+  logger.debug(`Completed admin request to deprecate GitPOAP ID ${gitPOAPId}`);
+
+  endTimer({ status: 200 });
+
+  return res.status(200).send('DEPRECATED');
 });
