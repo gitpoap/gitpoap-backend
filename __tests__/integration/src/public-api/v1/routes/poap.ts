@@ -47,9 +47,9 @@ describe('public-api/v1/poap/gitpoap-ids', () => {
     expect(data.poapTokenIds).toContainEqual('3973554');     // claim16
     expect(data.poapTokenIds).toContainEqual('4126448');     // claim17
     expect(data.poapTokenIds).toContainEqual('123456789');   // claim21
-    expect(data.poapTokenIds).toContainEqual('1234567891');  // claim9B
-    expect(data.poapTokenIds).toContainEqual('1234567892');  // claim9C
-    expect(data.poapTokenIds).toContainEqual('1234567893');  // claim10C
-    expect(data.poapTokenIds).toContainEqual('1234567894');  // claim11D
+    expect(data.poapTokenIds).toContainEqual('1234567891');  // claim31
+    expect(data.poapTokenIds).toContainEqual('1234567892');  // claim32
+    expect(data.poapTokenIds).toContainEqual('1234567893');  // claim36
+    expect(data.poapTokenIds).toContainEqual('1234567894');  // claim41
   });
 });

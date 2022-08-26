@@ -179,14 +179,21 @@ gitpoapsRouter.get('/poap-token-id/:id', async function (req, res) {
     where: {
       poapTokenId: req.params.id,
     },
-    include: {
+    select: {
       gitPOAP: {
-        include: {
+        select: {
+          year: true,
+          status: true,
           project: {
-            include: {
+            select: {
               repos: {
-                include: {
-                  organization: true,
+                select: {
+                  name: true,
+                  organization: {
+                    select: {
+                      name: true,
+                    },
+                  },
                 },
               },
             },
@@ -195,7 +202,7 @@ gitpoapsRouter.get('/poap-token-id/:id', async function (req, res) {
       },
     },
   });
-  if (claimData === null) {
+  if (claimData === null || claimData.gitPOAP.status === GitPOAPStatus.DEPRECATED) {
     const msg = `There's no GitPOAP claimed with POAP ID: ${req.params.id}`;
     logger.info(msg);
     endTimer({ status: 404 });

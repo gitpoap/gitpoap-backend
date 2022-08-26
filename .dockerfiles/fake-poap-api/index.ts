@@ -50,6 +50,7 @@ let eventsCache: Record<string, any> = {
   36573: events.event36573,
   36574: events.event36574,
   36575: events.event36575,
+  36576: events.event36576,
   37428: events.event37428,
   37429: events.event37429,
   37430: events.event37430,

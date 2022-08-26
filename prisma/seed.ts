@@ -29,6 +29,7 @@ import {
   event36573,
   event36574,
   event36575,
+  event36576,
   event37428,
   event37429,
   event37430,
@@ -109,6 +110,8 @@ async function main() {
   const gitpoap16 = await GitPOAPFactory.createGitPOAPFromEvent(botTestProject.id, event36574, GitPOAPStatus.APPROVED, true, 2, 2);
   // Add one that is NOT enabled
   const gitpoap17 = await GitPOAPFactory.createGitPOAPFromEvent(botTestProject.id, event36575, GitPOAPStatus.APPROVED, true, 3, 3, false);
+  // Add one that is deprecated
+  const gitpoap18 = await GitPOAPFactory.createGitPOAPFromEvent(botTestProject.id, event36576, GitPOAPStatus.DEPRECATED);
 
   /* Add codes */
   await RedeemCodeFactory.addRedeemCodes(['6j8wda', 'tqaq9y', 'd4tdh0', 'o9uorf', 'eeyewe', '09wqld', 'tsl7wt', 'i52wvt', 'mshofb', 'v9cbcd'], gitpoap7.id);
@@ -149,31 +152,38 @@ async function main() {
   const claim20 = await ClaimFactory.createClaim(gitpoap5.id, vitalik.id);
   const claim21 = await ClaimFactory.createClaim(gitpoap5.id, burz2.id, ClaimStatus.CLAIMED, ADDRESSES.burz2, '123456789', DateTime.utc(2020, 1, 9).toJSDate());
 
-  // GitPOAPs 7, 8, 9, 10, 11, 12 - GitPOAP BugBash Repos
-  const claim7A = await ClaimFactory.createClaim(gitpoap7.id, jay.id);
-  const claim7B = await ClaimFactory.createClaim(gitpoap7.id, burz.id);
-  const claim7C = await ClaimFactory.createClaim(gitpoap7.id, colfax.id);
-  const claim7D = await ClaimFactory.createClaim(gitpoap7.id, aldo.id);
+  // GitPOAPs 7 - GitPOAP BugBash Repos
+  const claim22 = await ClaimFactory.createClaim(gitpoap7.id, jay.id);
+  const claim23 = await ClaimFactory.createClaim(gitpoap7.id, burz.id);
+  const claim24 = await ClaimFactory.createClaim(gitpoap7.id, colfax.id);
+  const claim25 = await ClaimFactory.createClaim(gitpoap7.id, aldo.id);
 
-  const claim8A = await ClaimFactory.createClaim(gitpoap8.id, jay.id);
-  const claim8B = await ClaimFactory.createClaim(gitpoap8.id, burz.id);
-  const claim8C = await ClaimFactory.createClaim(gitpoap8.id, colfax.id);
-  const claim8D = await ClaimFactory.createClaim(gitpoap8.id, aldo.id);
+  // GitPOAPs 8 - GitPOAP BugBash Repos
+  const claim26 = await ClaimFactory.createClaim(gitpoap8.id, jay.id);
+  const claim27 = await ClaimFactory.createClaim(gitpoap8.id, burz.id);
+  const claim28 = await ClaimFactory.createClaim(gitpoap8.id, colfax.id);
+  const claim29 = await ClaimFactory.createClaim(gitpoap8.id, aldo.id);
 
-  const claim9A = await ClaimFactory.createClaim(gitpoap9.id, jay.id);
-  const claim9B = await ClaimFactory.createClaim(gitpoap9.id, burz.id, ClaimStatus.CLAIMED, ADDRESSES.burz, '1234567891', DateTime.utc(2020, 1, 9).toJSDate());
-  const claim9C = await ClaimFactory.createClaim(gitpoap9.id, colfax.id, ClaimStatus.CLAIMED, ADDRESSES.colfax, '1234567892', DateTime.utc(2020, 1, 9).toJSDate());
-  const claim9D = await ClaimFactory.createClaim(gitpoap9.id, aldo.id);
+  // GitPOAPs 9 - GitPOAP BugBash Repos
+  const claim30 = await ClaimFactory.createClaim(gitpoap9.id, jay.id);
+  const claim31 = await ClaimFactory.createClaim(gitpoap9.id, burz.id, ClaimStatus.CLAIMED, ADDRESSES.burz, '1234567891', DateTime.utc(2020, 1, 9).toJSDate());
+  const claim32 = await ClaimFactory.createClaim(gitpoap9.id, colfax.id, ClaimStatus.CLAIMED, ADDRESSES.colfax, '1234567892', DateTime.utc(2020, 1, 9).toJSDate());
+  const claim33 = await ClaimFactory.createClaim(gitpoap9.id, aldo.id);
 
-  const claim10A = await ClaimFactory.createClaim(gitpoap10.id, jay.id);
-  const claim10B = await ClaimFactory.createClaim(gitpoap10.id, burz.id);
-  const claim10C = await ClaimFactory.createClaim(gitpoap10.id, colfax.id, ClaimStatus.CLAIMED, ADDRESSES.colfax, '1234567893', DateTime.utc(2020, 1, 9).toJSDate());
-  const claim10D = await ClaimFactory.createClaim(gitpoap10.id, aldo.id);
+  // GitPOAPs 10 - GitPOAP BugBash Repos
+  const claim34 = await ClaimFactory.createClaim(gitpoap10.id, jay.id);
+  const claim35 = await ClaimFactory.createClaim(gitpoap10.id, burz.id);
+  const claim36 = await ClaimFactory.createClaim(gitpoap10.id, colfax.id, ClaimStatus.CLAIMED, ADDRESSES.colfax, '1234567893', DateTime.utc(2020, 1, 9).toJSDate());
+  const claim37 = await ClaimFactory.createClaim(gitpoap10.id, aldo.id);
 
-  const claim11A = await ClaimFactory.createClaim(gitpoap11.id, jay.id);
-  const claim11B = await ClaimFactory.createClaim(gitpoap11.id, burz.id);
-  const claim11C = await ClaimFactory.createClaim(gitpoap11.id, colfax.id);
-  const claim11D = await ClaimFactory.createClaim(gitpoap11.id, aldo.id, ClaimStatus.CLAIMED, ADDRESSES.aldo, '1234567894', DateTime.utc().minus({ days: 2 }).toJSDate());
+  // GitPOAPs 11 - GitPOAP BugBash Repos
+  const claim38 = await ClaimFactory.createClaim(gitpoap11.id, jay.id);
+  const claim39 = await ClaimFactory.createClaim(gitpoap11.id, burz.id);
+  const claim40 = await ClaimFactory.createClaim(gitpoap11.id, colfax.id);
+  const claim41 = await ClaimFactory.createClaim(gitpoap11.id, aldo.id, ClaimStatus.CLAIMED, ADDRESSES.aldo, '1234567894', DateTime.utc().minus({ days: 2 }).toJSDate());
+
+  // GitPOAP 18 - Deprecated
+  const claim42 = await ClaimFactory.createClaim(gitpoap18.id, burz.id, ClaimStatus.CLAIMED, ADDRESSES.burz, '77777', DateTime.utc(2019, 12, 11).toJSDate());
 
   /* Create Profiles */
   const profile1 = await ProfileFactory.createProfile(ADDRESSES.colfax, 'I like brisket.');

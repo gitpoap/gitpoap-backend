@@ -74,6 +74,7 @@ export class CustomRepoResolver {
           COUNT(c.id)::INTEGER AS "mintedGitPOAPCount"
         FROM "Repo" as r
         INNER JOIN "Organization" AS o ON o.id = r."organizationId"
+          AND o.name = ${orgName}
         INNER JOIN "Project" AS p ON r."projectId" = p.id
         INNER JOIN "GitPOAP" AS g ON g."projectId" = p.id
           AND g."isEnabled" IS TRUE
@@ -83,7 +84,7 @@ export class CustomRepoResolver {
             SELECT * FROM "Claim"
             WHERE status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
           ) AS c ON c."gitPOAPId" = g.id
-        WHERE o.name = ${orgName} AND r.name = ${repoName}
+        WHERE r.name = ${repoName}
         GROUP BY r.id
       `;
 
@@ -274,7 +275,8 @@ export class CustomRepoResolver {
         INNER JOIN "Project" AS p ON p.id = r."projectId"
         INNER JOIN "GitPOAP" AS g ON g."projectId" = p.id
           AND g.status != ${GitPOAPStatus.DEPRECATED}::"GitPOAPStatus"
-        LEFT JOIN "Claim" AS c ON c."gitPOAPId" = g.id AND c.status = 'CLAIMED'
+        LEFT JOIN "Claim" AS c ON c."gitPOAPId" = g.id
+          AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
         GROUP BY r.id
         ORDER BY COUNT(c.id) DESC
         ${skip} ${take}
