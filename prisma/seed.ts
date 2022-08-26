@@ -48,6 +48,7 @@ async function main() {
   const aldo = await UserFactory.createUser(GH_IDS.aldo, GH_HANDLES.aldo);
   const tyler = await UserFactory.createUser(GH_IDS.tyler, GH_HANDLES.tyler);
   const burz2 = await UserFactory.createUser(6, 'burzzzzz');
+  const kayleen = await UserFactory.createUser(GH_IDS.kayleen, GH_HANDLES.kayleen);
 
   /* Create Projects */
   const frontendProject = await ProjectFactory.createProject();
@@ -184,6 +185,7 @@ async function main() {
 
   // GitPOAP 18 - Deprecated
   const claim42 = await ClaimFactory.createClaim(gitpoap18.id, burz.id, ClaimStatus.CLAIMED, ADDRESSES.burz, '77777', DateTime.utc(2019, 12, 11).toJSDate());
+  const claim43 = await ClaimFactory.createClaim(gitpoap18.id, kayleen.id, ClaimStatus.CLAIMED, ADDRESSES.kayleen, '77778', DateTime.utc(2019, 12, 11).toJSDate());
 
   /* Create Profiles */
   const profile1 = await ProfileFactory.createProfile(ADDRESSES.colfax, 'I like brisket.');

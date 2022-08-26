@@ -158,6 +158,20 @@ let tokensCache: Record<string, any> = {
     chain: 'xdai',
     created: '2022-03-14',
   },
+  77777: {
+    event: events.event36576,
+    owner: ADDRESSES.anthony,
+    tokenId: '77777',
+    chain: 'xdai',
+    created: '2019-12-11',
+  },
+  77778: {
+    event: events.event36576,
+    owner: ADDRESSES.kayleen,
+    tokenId: '77778',
+    chain: 'xdai',
+    created: '2019-12-11',
+  },
 };
 let nextTokenId = 100000000;
 
@@ -274,59 +288,64 @@ app.get('/actions/scan/:address', async (req, res) => {
 
   res.setHeader('Content-Type', 'application/json');
 
-  res.end(
-    JSON.stringify([
-      {
-        event: events.event1,
-        tokenId: 'thunderdome',
-        owner: req.params.address,
-        chain: 'xdai',
-        created: '2022-02-02',
-      },
-      {
-        event: events.event2,
-        tokenId: 'ethdenver',
-        owner: req.params.address,
-        chain: 'xdai',
-        created: '2022-02-01',
-      },
-      {
-        event: events.event3,
-        tokenId: 'pizza-pie',
-        owner: req.params.address,
-        chain: 'xdai',
-        created: '2022-03-01',
-      },
-      {
-        event: events.event27309,
-        tokenId: '4082459',
-        owner: req.params.address,
-        chain: 'xdai',
-        created: '2022-02-01',
-      },
-      {
-        event: events.event27307,
-        tokenId: '4068504',
-        owner: req.params.address,
-        chain: 'xdai',
-        created: '2022-02-01',
-      },
-      {
-        event: events.event27305,
-        tokenId: '4068606',
-        owner: req.params.address,
-        chain: 'xdai',
-        created: '2022-02-03',
-      },
-      {
-        event: events.event25149,
-        tokenId: '4078452',
-        owner: req.params.address,
-        chain: 'xdai',
-        created: '2022-02-02',
-      },
-    ]),
-  );
+  let tokens = [
+    {
+      event: events.event1,
+      tokenId: 'thunderdome',
+      owner: req.params.address,
+      chain: 'xdai',
+      created: '2022-02-02',
+    },
+    {
+      event: events.event2,
+      tokenId: 'ethdenver',
+      owner: req.params.address,
+      chain: 'xdai',
+      created: '2022-02-01',
+    },
+    {
+      event: events.event3,
+      tokenId: 'pizza-pie',
+      owner: req.params.address,
+      chain: 'xdai',
+      created: '2022-03-01',
+    },
+    {
+      event: events.event27309,
+      tokenId: '4082459',
+      owner: req.params.address,
+      chain: 'xdai',
+      created: '2022-02-01',
+    },
+    {
+      event: events.event27307,
+      tokenId: '4068504',
+      owner: req.params.address,
+      chain: 'xdai',
+      created: '2022-02-01',
+    },
+    {
+      event: events.event27305,
+      tokenId: '4068606',
+      owner: req.params.address,
+      chain: 'xdai',
+      created: '2022-02-03',
+    },
+    {
+      event: events.event25149,
+      tokenId: '4078452',
+      owner: req.params.address,
+      chain: 'xdai',
+      created: '2022-02-02',
+    },
+  ];
+
+  // Special case for Kayleen's deprecated GitPOAP
+  if (req.params.address.toLowerCase() === ADDRESSES.kayleen) {
+    tokens.push(tokensCache['77778']);
+  }
+
+  res.end(JSON.stringify(tokens));
 });
 
 app.get('/events/id/:id', async (req, res) => {
