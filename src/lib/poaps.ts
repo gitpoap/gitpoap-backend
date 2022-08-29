@@ -36,6 +36,95 @@ async function generateGitPOAPPOAPEventIdSet() {
   return poapEventIdSet;
 }
 
+type TransferInReturnType = {
+  gitPOAP: GitPOAPReturnData | null;
+};
+
+async function handlePotentialTransferIn(
+  poapTokenId: string,
+  ownerAddress: string,
+  poapEvent: POAPEvent,
+): Promise<TransferInReturnType | null> {
+  const logger = createScopedLogger('handlePotentialTransferIn');
+
+  const claimData = await context.prisma.claim.findUnique({
+    where: {
+      poapTokenId: poapTokenId,
+    },
+    select: {
+      id: true,
+      address: true,
+      gitPOAP: true,
+    },
+  });
+
+  if (claimData !== null) {
+    const address = claimData.address;
+
+    if (address === null) {
+      logger.error(`Claim ID ${claimData.id} has poapTokenId set but address is null`);
+      return null;
+    }
+
+    // Here we assume that the user didn't just claim this during this function's run
+    const updatedClaim = await handleGitPOAPTransfer(
+      claimData.id,
+      poapTokenId,
+      address,
+      ownerAddress.toLowerCase(),
+    );
+
+    return {
+      gitPOAP: {
+        claim: { ...updatedClaim, gitPOAP: claimData.gitPOAP },
+        event: poapEvent,
+      },
+    };
+  }
+
+  return { gitPOAP: null };
+}
+
+async function handleTransferPostProcessing(
+  ownerAddress: string,
+  foundPOAPIds: Set<string>,
+  claims: {
+    id: number;
+    poapTokenId: string | null;
+  }[],
+) {
+  const featuredData = await context.prisma.featuredPOAP.findMany({
+    where: {
+      profile: {
+        address: ownerAddress,
+      },
+    },
+    select: {
+      id: true,
+      poapTokenId: true,
+    },
+  });
+
+  for (const feature of featuredData) {
+    if (!(feature.poapTokenId in foundPOAPIds)) {
+      await context.prisma.featuredPOAP.delete({
+        where: {
+          id: feature.id,
+        },
+      });
+    }
+  }
+
+  // If some claim that is marked in our DB as belonging to the address is no
+  // longer in their set of POAPs, we need to handle its transfer
+  for (const claim of claims) {
+    if (claim.poapTokenId !== null && !(claim.poapTokenId in foundPOAPIds)) {
+      // Run this in the background
+      checkIfClaimTransferred(claim.id);
+    }
+  }
+}
+
 // Note that address CANNOT be an ENS
 export async function splitUsersPOAPs(address: string): Promise<SplitUsersPOAPsReturnType | null> {
   const logger = createScopedLogger('splitUsersPOAPs');
@@ -43,8 +132,10 @@ export async function splitUsersPOAPs(address: string): Promise<SplitUsersPOAPsR
   const addressLower = address.toLowerCase();
 
   // Call the POAP API, and generate the POAP Event ID Set in the background
-  const poapsPromise = retrieveUsersPOAPs(addressLower);
-  const gitPOAPPOAPEventIdSetPromise = generateGitPOAPPOAPEventIdSet();
+  const backgroundPromises = Promise.all([
+    retrieveUsersPOAPs(addressLower),
+    generateGitPOAPPOAPEventIdSet(),
+  ]);
 
   const claims = await context.prisma.claim.findMany({
     where: {
@@ -58,7 +149,6 @@ export async function splitUsersPOAPs(address: string): Promise<SplitUsersPOAPsR
 
   // Map from POAP Token ID to their corresponding Claim objects
   const poapIdToClaimMap: Record<string, ClaimWithGitPOAP> = {};
-
   // List of GitPOAPs
   const gitPOAPsOnly: GitPOAPReturnData[] = [];
 
@@ -85,18 +175,16 @@ export async function splitUsersPOAPs(address: string): Promise<SplitUsersPOAPsR
     }
   }
 
-  const poaps = await poapsPromise;
+  // 0: All the POAPs the user has
+  // 1: All the POAP Event IDs that are GitPOAP Events
+  const [poaps, gitPOAPPOAPEventIdSet] = await backgroundPromises;
   if (poaps === null) {
     logger.error(`Failed to query POAPs from POAP API for address: ${address}`);
     return null;
   }
 
-  // All the POAP Event IDs that are GitPOAP Events
-  const gitPOAPPOAPEventIdSet = await gitPOAPPOAPEventIdSetPromise;
-
   // List of POAPs that are NOT GitPOAPs
   const poapsOnly: POAPToken[] = [];
-
   // All the POAP Token IDs that were found for the address
   const foundPOAPIds = new Set<string>();
 
@@ -112,37 +200,14 @@ export async function splitUsersPOAPs(address: string): Promise<SplitUsersPOAPsR
       // If this POAP belongs to a GitPOAP Event we need to check if it
       // was just transferred to this account
       if (gitPOAPPOAPEventIdSet.has(poap.event.id)) {
-        const claimData = await context.prisma.claim.findUnique({
-          where: {
-            poapTokenId: poap.tokenId,
-          },
-          select: {
-            id: true,
-            address: true,
-            gitPOAP: true,
-          },
-        });
-
-        if (claimData !== null) {
-          const address = claimData.address;
-
-          if (address === null) {
-            logger.error(`Claim ID ${claimData.id} has poapTokenId set but address is null`);
-            continue;
-          }
-
-          // Here we assume that the user didn't just claim this during this function's run
-          const updatedClaim = await handleGitPOAPTransfer(
-            claimData.id,
-            poap.tokenId,
-            address,
-            addressLower,
-          );
-
-          gitPOAPsOnly.push({
-            claim: { ...updatedClaim, gitPOAP: claimData.gitPOAP },
-            event: poap.event,
-          });
+        const result = await handlePotentialTransferIn(poap.tokenId, addressLower, poap.event);
+        // Skip if there was an error
+        if (result === null) {
+          continue;
+        }
+        // If it's a transfered in GitPOAP
+        if (result.gitPOAP !== null) {
+          gitPOAPsOnly.push(result.gitPOAP);
           continue;
         }
       }
@@ -152,43 +217,8 @@ export async function splitUsersPOAPs(address: string): Promise<SplitUsersPOAPsR
     }
   }
 
-  // We need to make sure we've updated GitPOAPs transferred FROM this profile
-  // And we need to delete any featured POAPs they no longer control
-  const postProcessing = async () => {
-    const featuredData = await context.prisma.featuredPOAP.findMany({
-      where: {
-        profile: {
-          address: addressLower,
-        },
-      },
-      select: {
-        id: true,
-        poapTokenId: true,
-      },
-    });
-
-    for (const feature of featuredData) {
-      if (!(feature.poapTokenId in foundPOAPIds)) {
-        await context.prisma.featuredPOAP.delete({
-          where: {
-            id: feature.id,
-          },
-        });
-      }
-    }
-
-    // If some claim that is marked in our DB as belonging to the address is no
-    // longer in their set of POAPs, we need to handle its transfer
-    for (const claim of claims) {
-      if (claim.poapTokenId !== null && !(claim.poapTokenId in foundPOAPIds)) {
-        // Run this in the background
-        checkIfClaimTransferred(claim.id);
-      }
-    }
-  };
-
   // Run this in the background
-  postProcessing();
+  handleTransferPostProcessing(addressLower, foundPOAPIds, claims);
 
   // Return immediately
   return { gitPOAPsOnly, poapsOnly };
