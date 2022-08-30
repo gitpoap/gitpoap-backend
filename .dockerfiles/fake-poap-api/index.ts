@@ -160,7 +160,7 @@ let tokensCache: Record<string, any> = {
   },
   77777: {
     event: events.event36576,
-    owner: ADDRESSES.anthony,
+    owner: ADDRESSES.burz,
     tokenId: '77777',
     chain: 'xdai',
     created: '2019-12-11',
@@ -342,7 +342,7 @@ app.get('/actions/scan/:address', async (req, res) => {
 
   // Special case for Kayleen's deprecated GitPOAP
   if (req.params.address.toLowerCase() === ADDRESSES.kayleen) {
-    tokens.push(tokensCache['77778']);
+    return res.end(JSON.stringify([tokensCache['77778']]));
   }
 
   res.end(JSON.stringify(tokens));

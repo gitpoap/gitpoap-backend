@@ -16,6 +16,7 @@ import {
   event37430,
   event36573,
   event36574,
+  event36576,
 } from '../../../../../../prisma/data';
 
 const PUBLIC_API_URL = 'http://public-api-server:3122';
@@ -40,16 +41,19 @@ describe('public-api/v1/poap-event/:poapEventId/is-gitpoap', () => {
 
     expect(data.isGitPOAP).toEqual(true);
     expect(data.gitPOAPId).toEqual(1);
+    expect(data.isDeprecated).toEqual(false);
   });
 
-  it('Returns false for a DEPRECATED GitPOAP POAP Event ID', async () => {
+  it('Returns isDeprecated for a DEPRECATED GitPOAP POAP Event ID', async () => {
     const response = await fetch(`${PUBLIC_API_URL}/v1/poap-event/36576/is-gitpoap`);
 
     expect(response.status).toBeLessThan(400);
 
     const data = await response.json();
 
-    expect(data.isGitPOAP).toEqual(false);
+    expect(data.isGitPOAP).toEqual(true);
+    expect(data.gitPOAPId).toEqual(18);
+    expect(data.isDeprecated).toEqual(true);
   });
 });
 
@@ -62,7 +66,7 @@ describe('public-api/v1/poap-event/gitpoap-event-ids', () => {
     const data = await response.json();
 
     expect(data.poapEventIds).not.toEqual(null);
-    expect(data.poapEventIds.length).toEqual(16);
+    expect(data.poapEventIds.length).toEqual(17);
     expect(data.poapEventIds).toContainEqual(event1.id);
     expect(data.poapEventIds).toContainEqual(event2.id);
     expect(data.poapEventIds).toContainEqual(event3.id);
@@ -74,11 +78,12 @@ describe('public-api/v1/poap-event/gitpoap-event-ids', () => {
     expect(data.poapEventIds).toContainEqual(event36570.id);
     expect(data.poapEventIds).toContainEqual(event36571.id);
     expect(data.poapEventIds).toContainEqual(event36572.id);
+    expect(data.poapEventIds).toContainEqual(event36573.id);
+    expect(data.poapEventIds).toContainEqual(event36574.id);
+    expect(data.poapEventIds).toContainEqual(event36576.id);
     expect(data.poapEventIds).toContainEqual(event37428.id);
     expect(data.poapEventIds).toContainEqual(event37429.id);
     expect(data.poapEventIds).toContainEqual(event37430.id);
-    expect(data.poapEventIds).toContainEqual(event36573.id);
-    expect(data.poapEventIds).toContainEqual(event36574.id);
   });
 });
 
@@ -91,7 +96,7 @@ describe('public-api/v1/poap-event/gitpoap-event-fancy-ids', () => {
     const data = await response.json();
 
     expect(data.poapEventFancyIds).not.toEqual(null);
-    expect(data.poapEventFancyIds.length).toEqual(16);
+    expect(data.poapEventFancyIds.length).toEqual(17);
     expect(data.poapEventFancyIds).toContainEqual(event1.fancy_id);
     expect(data.poapEventFancyIds).toContainEqual(event2.fancy_id);
     expect(data.poapEventFancyIds).toContainEqual(event3.fancy_id);
@@ -103,10 +108,11 @@ describe('public-api/v1/poap-event/gitpoap-event-fancy-ids', () => {
     expect(data.poapEventFancyIds).toContainEqual(event36570.fancy_id);
     expect(data.poapEventFancyIds).toContainEqual(event36571.fancy_id);
     expect(data.poapEventFancyIds).toContainEqual(event36572.fancy_id);
+    expect(data.poapEventFancyIds).toContainEqual(event36573.fancy_id);
+    expect(data.poapEventFancyIds).toContainEqual(event36574.fancy_id);
+    expect(data.poapEventFancyIds).toContainEqual(event36576.fancy_id);
     expect(data.poapEventFancyIds).toContainEqual(event37428.fancy_id);
     expect(data.poapEventFancyIds).toContainEqual(event37429.fancy_id);
     expect(data.poapEventFancyIds).toContainEqual(event37430.fancy_id);
-    expect(data.poapEventFancyIds).toContainEqual(event36573.fancy_id);
-    expect(data.poapEventFancyIds).toContainEqual(event36574.fancy_id);
   });
 });

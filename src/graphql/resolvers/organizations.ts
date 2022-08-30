@@ -7,8 +7,8 @@ import {
 import { Context } from '../../context';
 import { createScopedLogger } from '../../logging';
 import { gqlRequestDurationSeconds } from '../../metrics';
+import { Prisma } from '@prisma/client';
 import { RepoReturnData } from './repos';
-import { GitPOAPStatus, Prisma } from '@prisma/client';
 
 @ObjectType()
 class OrganizationData extends Organization {
@@ -51,9 +51,7 @@ export class CustomOrganizationResolver {
       FROM "Organization" as o
       INNER JOIN "Repo" AS r ON r."organizationId" = o.id
       INNER JOIN "Project" AS p ON r."projectId" = p.id
-      INNER JOIN "GitPOAP" AS g ON g."projectId" = p.id
-        AND g."isEnabled" IS TRUE
-        AND g.status != ${GitPOAPStatus.DEPRECATED}::"GitPOAPStatus"
+      INNER JOIN "GitPOAP" AS g ON g."projectId" = p.id AND g."isEnabled" IS TRUE
       LEFT JOIN
         (
           SELECT * FROM "Claim"
@@ -183,15 +181,11 @@ export class CustomOrganizationResolver {
         COUNT(DISTINCT c.id)::INTEGER AS "mintedGitPOAPCount"
       FROM "Repo" as r
       INNER JOIN "Project" AS p ON p.id = r."projectId"
-      INNER JOIN "GitPOAP" AS g ON g."projectId" = p.id
-        AND g."isEnabled" IS TRUE
-        AND g.status != ${GitPOAPStatus.DEPRECATED}::"GitPOAPStatus"
+      INNER JOIN "GitPOAP" AS g ON g."projectId" = p.id AND g."isEnabled" IS TRUE
       LEFT JOIN
         (
-          SELECT c2.* FROM "Claim" AS c2
-          INNER JOIN "GitPOAP" AS g2 ON g2.id = c2."gitPOAPId"
-            AND g2.status != ${GitPOAPStatus.DEPRECATED}::"GitPOAPStatus"
-          WHERE c2.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
+          SELECT * FROM "Claim"
+          WHERE status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
         ) AS c ON c."gitPOAPId" = g.id
       WHERE r."organizationId" = ${orgId}
       GROUP BY r.id
