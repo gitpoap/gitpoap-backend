@@ -138,6 +138,7 @@ The query to get an address's (or an ENS's) POAPs and GitPOAPs is as follows:
         name
         image_url
       }
+      prCount
     }
     poaps {
       event {
@@ -156,8 +157,8 @@ and returns data in the form:
 {
   "data": {
     "userPOAPs": {
-      "totalGitPOAPs": 3,
-      "totalPOAPs": 4,
+      "totalGitPOAPs": 1,
+      "totalPOAPs": 1,
       "gitPOAPs": [
         {
           "claim": {
@@ -176,26 +177,8 @@ and returns data in the form:
           "event": {
             "name": "GitPOAP: 2022 you ate some pizza pie Contributor",
             "image_url": "https://avatars.githubusercontent.com/u/1355326?v=4"
-          }
-        },
-        {
-          "claim": {
-            "gitPOAP": {
-              "project": {
-                "repos": [
-                  {
-                    "name": "repo7"
-                  }
-                ]
-              }
-            },
-            "status": "CLAIMED",
-            "poapTokenId": "ethdenver"
           },
-          "event": {
-            "name": "GitPOAP: 2022 ethdenver Contributor",
-            "image_url": "https://avatars.githubusercontent.com/u/1455326?v=4"
-          }
+          "prCount": 4
         }
       ],
       "poaps": [
