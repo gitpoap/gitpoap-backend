@@ -18,7 +18,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
+model GitHubUser {
   id                Int                 @id @default(autoincrement())
   githubId          Int                 @unique
   githubHandle      String              @db.VarChar(255)
@@ -27,37 +27,72 @@ model User {
   claims            Claim[]
   // Hide user.authTokens from generated resolvers
   /// @TypeGraphQL.omit(output: true, input: true)
-  authTokens        AuthToken[]
+  authTokens        GitHubOAuthToken[]
   GithubPullRequest GithubPullRequest[]
+  Address           Address[]
 }
 
 model Profile {
   id                     Int            @id @default(autoincrement())
-  address                String         @unique @db.VarChar(255)
+  addressId              Int            @unique
+  address                Address        @relation(fields: [addressId], references: [id])
   createdAt              DateTime       @default(now())
   updatedAt              DateTime       @updatedAt
   bio                    String?
   bannerImageUrl         String?        @db.VarChar(255)
   name                   String?        @db.VarChar(255)
   profileImageUrl        String?        @db.VarChar(255)
-  githubHandle           String?        @db.VarChar(255)
   twitterHandle          String?        @db.VarChar(255)
   personalSiteUrl        String?        @db.VarChar(255)
   isVisibleOnLeaderboard Boolean        @default(true)
-  ensAvatarImageUrl      String?        @db.VarChar(255)
   featuredPOAPs          FeaturedPOAP[]
 }
 
+model Address {
+  id                     Int                      @id @default(autoincrement())
+  address                String                   @unique @db.VarChar(255)
+  email                  String                   @db.VarChar(255)
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime                 @updatedAt
+  Profile                Profile?
+  gitHubUserId           Int
+  githubUser             GitHubUser               @relation(fields: [gitHubUserId], references: [id])
+  ensAvatarImageUrl      String?                  @db.VarChar(255)
+  ensName                String?                  @db.VarChar(255)
+  Organization           Organization[]
+  OrganizationMembership OrganizationMembership[]
+  Claim                  Claim[]
+
+  @@index([address])
+}
+
+model OrganizationMembership {
+  id             Int            @id @default(autoincrement())
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  organizationId Int
+  organization   Organization   @relation(fields: [organizationId], references: [id])
+  addressId      Int
+  address        Address        @relation(fields: [addressId], references: [id])
+  role           MembershipRole
+  isActive       Boolean        @default(true)
+
+  @@unique([organizationId, addressId])
+}
+
 model Organization {
-  id            Int      @id @default(autoincrement())
-  githubOrgId   Int      @unique
-  name          String   @db.VarChar(50)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  description   String?
-  twitterHandle String?  @db.VarChar(255)
-  url           String?  @db.VarChar(255)
-  repos         Repo[]
+  id                     Int                      @id @default(autoincrement())
+  githubOrgId            Int                      @unique
+  name                   String                   @db.VarChar(50)
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime                 @updatedAt
+  description            String?
+  twitterHandle          String?                  @db.VarChar(255)
+  url                    String?                  @db.VarChar(255)
+  ownerAddressId         Int?
+  owner                  Address?                 @relation(fields: [ownerAddressId], references: [id])
+  repos                  Repo[]
+  OrganizationMembership OrganizationMembership[]
 }
 
 model Repo {
@@ -94,17 +129,19 @@ model Claim {
   /// @TypeGraphQL.omit(output: true, input: true)
   qrHash              String?            @db.VarChar(10)
   poapTokenId         String?            @unique @db.VarChar(255)
-  address             String?            @db.VarChar(255)
   gitPOAPId           Int
   gitPOAP             GitPOAP            @relation(fields: [gitPOAPId], references: [id])
-  userId              Int
-  user                User               @relation(fields: [userId], references: [id])
+  githHubUserId       Int
+  gitHubUser          GitHubUser         @relation(fields: [githHubUserId], references: [id])
+  addressId           Int?
+  address             Address?           @relation(fields: [addressId], references: [id])
+  email               String?            @db.VarChar(255)
   // Note that not all Claims have pull request they were earned in (e.g. Hackathon GitPOAPs)
   pullRequestEarnedId Int?
   pullRequestEarned   GithubPullRequest? @relation(fields: [pullRequestEarnedId], references: [id])
   needsRevalidation   Boolean            @default(false)
 
-  @@unique([gitPOAPId, userId])
+  @@unique([gitPOAPId, githHubUserId])
 }
 
 model GitPOAP {
@@ -136,12 +173,12 @@ model GitPOAP {
   isEnabled   Boolean       @default(true)
 }
 
-model AuthToken {
-  id               Int    @id @default(autoincrement())
-  generation       Int    @default(0)
+model GitHubOAuthToken {
+  id               Int        @id @default(autoincrement())
+  generation       Int        @default(0)
   githubOAuthToken String
   githubId         Int
-  user             User   @relation(fields: [githubId], references: [githubId])
+  user             GitHubUser @relation(fields: [githubId], references: [githubId])
 }
 
 model FeaturedPOAP {
@@ -181,19 +218,19 @@ model BatchTiming {
 }
 
 model GithubPullRequest {
-  id                   Int      @id @default(autoincrement())
+  id                   Int        @id @default(autoincrement())
   // Note that the following two fields are named in relation
   // to an instance of GithubPullRequest
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
   githubPullNumber     Int
   githubTitle          String
   githubMergedAt       DateTime
-  githubMergeCommitSha String   @db.VarChar(41)
+  githubMergeCommitSha String     @db.VarChar(41)
   repoId               Int
-  repo                 Repo     @relation(fields: [repoId], references: [id])
+  repo                 Repo       @relation(fields: [repoId], references: [id])
   userId               Int
-  user                 User     @relation(fields: [userId], references: [id])
+  user                 GitHubUser @relation(fields: [userId], references: [id])
   Claim                Claim[]
 
   @@unique([repoId, githubPullNumber])
@@ -234,4 +271,10 @@ enum ClaimType {
   ANNUAL
   QUARTERLY
   MANUAL
+}
+
+enum MembershipRole {
+  MEMBER
+  ADMIN
+  OWNER
 }
