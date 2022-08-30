@@ -37,6 +37,7 @@ export type RepoReturnType = {
       year: number;
       threshold: number;
     }[];
+    repos: { id: number }[];
   };
   organization: {
     name: string;
@@ -112,7 +113,7 @@ export async function handleNewPull(
       return { finished: false, updatedAt: updatedAt };
     }
 
-    await createNewClaimsForRepoPR(user, repo, yearlyGitPOAPsMap, githubPullRequest);
+    await createNewClaimsForRepoPR(user, repo.project.repos, yearlyGitPOAPsMap, githubPullRequest);
   }
 
   return { finished: false, updatedAt: updatedAt };
@@ -205,6 +206,11 @@ export async function runOngoingIssuanceUpdater() {
                 id: true,
                 year: true,
                 threshold: true,
+              },
+            },
+            repos: {
+              select: {
+                id: true,
               },
             },
           },

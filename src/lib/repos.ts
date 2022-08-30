@@ -116,6 +116,11 @@ export async function getRepoByName(owner: string, repo: string): Promise<RepoDa
               threshold: true,
             },
           },
+          repos: {
+            select: {
+              id: true,
+            },
+          },
         },
       },
     },
