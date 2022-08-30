@@ -1,16 +1,21 @@
 import { context } from '../context';
 import { retrieveUsersPOAPs, retrievePOAPEventInfo } from '../external/poap';
-import { Claim, ClaimStatus, GitPOAP } from '@generated/type-graphql';
+import { Claim, ClaimStatus, GitPOAP, Project, Repo, User } from '@generated/type-graphql';
 import { createScopedLogger } from '../logging';
 import { POAPEvent, POAPToken } from '../types/poap';
 import { checkIfClaimTransferred, handleGitPOAPTransfer } from './transfers';
 
-type ClaimWithGitPOAP = Claim & {
-  gitPOAP: GitPOAP;
+type ExtendedClaimType = Claim & {
+  user: User;
+  gitPOAP: GitPOAP & {
+    project: Project & {
+      repos: Repo[];
+    };
+  };
 };
 
-type GitPOAPReturnData = {
-  claim: ClaimWithGitPOAP;
+export type GitPOAPReturnData = {
+  claim: ExtendedClaimType;
   event: POAPEvent;
 };
 
@@ -51,10 +56,17 @@ async function handlePotentialTransferIn(
     where: {
       poapTokenId: poapTokenId,
     },
-    select: {
-      id: true,
-      address: true,
-      gitPOAP: true,
+    include: {
+      user: true,
+      gitPOAP: {
+        include: {
+          project: {
+            include: {
+              repos: true,
+            },
+          },
+        },
+      },
     },
   });
 
@@ -76,7 +88,11 @@ async function handlePotentialTransferIn(
 
     return {
       gitPOAP: {
-        claim: { ...updatedClaim, gitPOAP: claimData.gitPOAP },
+        claim: {
+          ...updatedClaim,
+          user: claimData.user,
+          gitPOAP: claimData.gitPOAP,
+        },
         event: poapEvent,
       },
     };
@@ -143,12 +159,21 @@ export async function splitUsersPOAPs(address: string): Promise<SplitUsersPOAPsR
       status: { in: [ClaimStatus.CLAIMED, ClaimStatus.MINTING] },
     },
     include: {
-      gitPOAP: true,
+      user: true,
+      gitPOAP: {
+        include: {
+          project: {
+            include: {
+              repos: true,
+            },
+          },
+        },
+      },
     },
   });
 
   // Map from POAP Token ID to their corresponding Claim objects
-  const poapIdToClaimMap: Record<string, ClaimWithGitPOAP> = {};
+  const poapIdToClaimMap: Record<string, ExtendedClaimType> = {};
   // List of GitPOAPs
   const gitPOAPsOnly: GitPOAPReturnData[] = [];
 
