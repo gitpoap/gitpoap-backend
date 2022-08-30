@@ -15,6 +15,7 @@ export type RepoData = {
   id: number;
   project: {
     gitPOAPs: GitPOAPs;
+    repos: { id: number }[];
   };
 };
 
@@ -77,13 +78,15 @@ export function createYearlyGitPOAPsMap(gitPOAPs: GitPOAPs): YearlyGitPOAPsMap {
 
 export async function countPRsForClaim(
   user: { id: number },
-  repo: { id: number },
+  repos: { id: number }[],
   gitPOAP: { year: number },
 ): Promise<number> {
   return await context.prisma.githubPullRequest.count({
     where: {
       userId: user.id,
-      repoId: repo.id,
+      repoId: {
+        in: repos.map(r => r.id),
+      },
       githubMergedAt: {
         gte: new Date(gitPOAP.year, 0, 1),
         lt: new Date(gitPOAP.year + 1, 0, 1),
@@ -94,7 +97,7 @@ export async function countPRsForClaim(
 
 export async function createNewClaimsForRepoPR(
   user: { id: number },
-  repo: { id: number },
+  repos: { id: number }[],
   yearlyGitPOAPsMap: YearlyGitPOAPsMap,
   githubPullRequest: { id: number },
 ): Promise<Claim[]> {
@@ -112,7 +115,7 @@ export async function createNewClaimsForRepoPR(
   for (const year of years) {
     const gitPOAPs = yearlyGitPOAPsMap[year];
 
-    const prCount = await countPRsForClaim(user, repo, gitPOAPs[0]);
+    const prCount = await countPRsForClaim(user, repos, gitPOAPs[0]);
 
     logger.debug(`User ID ${user.id} has ${prCount} PRs in year ${year}`);
 
@@ -146,7 +149,7 @@ export async function createNewClaimsForRepoPRHelper(
 ): Promise<Claim[]> {
   return await createNewClaimsForRepoPR(
     user,
-    repo,
+    repo.project.repos,
     createYearlyGitPOAPsMap(repo.project.gitPOAPs),
     githubPullRequest,
   );

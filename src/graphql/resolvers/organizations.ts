@@ -8,7 +8,7 @@ import { Context } from '../../context';
 import { createScopedLogger } from '../../logging';
 import { gqlRequestDurationSeconds } from '../../metrics';
 import { Prisma } from '@prisma/client';
-import { RepoData } from './repos';
+import { RepoReturnData } from './repos';
 
 @ObjectType()
 class OrganizationData extends Organization {
@@ -128,14 +128,14 @@ export class CustomOrganizationResolver {
     return results;
   }
 
-  @Query(returns => [RepoData], { nullable: true })
+  @Query(returns => [RepoReturnData], { nullable: true })
   async organizationRepos(
     @Ctx() { prisma }: Context,
     @Arg('orgId') orgId: number,
     @Arg('sort', { defaultValue: 'alphabetical' }) sort?: string,
     @Arg('perPage', { defaultValue: null }) perPage?: number,
     @Arg('page', { defaultValue: null }) page?: number,
-  ): Promise<RepoData[] | null> {
+  ): Promise<RepoReturnData[] | null> {
     const logger = createScopedLogger('GQL organizationRepos');
 
     logger.info(
@@ -174,7 +174,7 @@ export class CustomOrganizationResolver {
       ? Prisma.sql`OFFSET ${(page - 1) * <number>perPage} ROWS FETCH NEXT ${perPage} ROWS ONLY`
       : Prisma.empty;
 
-    const results = await prisma.$queryRaw<RepoData[]>`
+    const results = await prisma.$queryRaw<RepoReturnData[]>`
       SELECT r.*,
         COUNT(DISTINCT c."userId")::INTEGER AS "contributorCount",
         COUNT(DISTINCT g.id)::INTEGER AS "gitPOAPCount",
