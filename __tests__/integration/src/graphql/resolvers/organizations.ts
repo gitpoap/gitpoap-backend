@@ -44,9 +44,9 @@ describe('CustomOrganizationResolver', () => {
     expect(data.organizationData.id).toEqual(4);
     expect(data.organizationData.name).toEqual('gitpoap');
     expect(data.organizationData.repoCount).toEqual(3);
-    expect(data.organizationData.gitPOAPCount).toEqual(9);
-    expect(data.organizationData.mintedGitPOAPCount).toEqual(8);
-    expect(data.organizationData.contributorCount).toEqual(5);
+    expect(data.organizationData.gitPOAPCount).toEqual(10);
+    expect(data.organizationData.mintedGitPOAPCount).toEqual(10);
+    expect(data.organizationData.contributorCount).toEqual(6);
   });
 
   it('allOrganizations - alphabetical', async () => {
@@ -119,8 +119,8 @@ describe('CustomOrganizationResolver', () => {
 
     expect(data.organizationRepos.length).toEqual(1);
     expect(data.organizationRepos[0].name).toEqual('gitpoap-bot-test-repo');
-    expect(data.organizationRepos[0].mintedGitPOAPCount).toEqual(0);
-    expect(data.organizationRepos[0].contributorCount).toEqual(0);
+    expect(data.organizationRepos[0].mintedGitPOAPCount).toEqual(2);
+    expect(data.organizationRepos[0].contributorCount).toEqual(2);
   });
 
   it('organizationRepos - contributor-count', async () => {

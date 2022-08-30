@@ -6,6 +6,7 @@ import {
   event3,
   event29009,
   event36571,
+  event36576,
 } from '../../../../../prisma/data';
 import { MILLISECONDS_PER_SECOND } from '../../../../../src/constants';
 
@@ -62,14 +63,32 @@ describe('public-api/v1/address/:address/gitpoaps', () => {
     expect(data[0].needsRevalidation).toEqual(false);
   });
 
-  it("Doesn't return DEPRECATED GitPOAPs", async () => {
+  it("Returns DEPRECATED GitPOAPs", async () => {
     const response = await fetch(`${PUBLIC_API_URL}/v1/address/${ADDRESSES.kayleen}/gitpoaps`);
 
     expect(response.status).toBeLessThan(400);
 
     const data = await response.json();
 
-    expect(data.length).toEqual(0);
+    expect(data.length).toEqual(1);
+
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
+    expect(data[0].gitPoapId).toEqual(43);
+    expect(data[0].gitPoapEventId).toEqual(18);
+    expect(data[0].poapTokenId).toEqual('77778');
+    expect(data[0].poapEventId).toEqual(event36576.id);
+    expect(data[0].poapEventFancyId).toEqual(event36576.fancy_id);
+    expect(data[0].name).toEqual(event36576.name);
+    expect(data[0].year).toEqual(event36576.year);
+    expect(data[0].description).toEqual(event36576.description);
+    expect(data[0].imageUrl).toEqual(event36576.image_url);
+    expect(data[0].repositories.length).toEqual(1);
+    expect(data[0].repositories[0]).toEqual('gitpoap/gitpoap-bot-test-repo');
+    expect(new Date(data[0].earnedAt)).toEqual(todayStart);
+    expect(data[0].mintedAt).toEqual('2019-12-11');
+    expect(data[0].needsRevalidation).toEqual(false);
   });
 });
 
@@ -100,7 +119,7 @@ describe('public-api/v1/github/user/:githubHandle/gitpoaps', () => {
       const todayStart = new Date();
       todayStart.setHours(0, 0, 0, 0);
 
-      expect(data.length).toEqual(3);
+      expect(data.length).toEqual(4);
       expect(data[0].gitPoapId).toEqual(8);
       expect(data[0].gitPoapEventId).toEqual(3);
       expect(data[0].poapTokenId).toEqual('pizza-pie');
@@ -167,7 +186,7 @@ describe('public-api/v1/github/user/:githubHandle/gitpoaps', () => {
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
 
-    expect(data.length).toEqual(9);
+    expect(data.length).toEqual(10);
     expect(data[0].gitPoapId).toEqual(35);
     expect(data[0].gitPoapEventId).toEqual(10);
     expect(data[0].poapTokenId).toBeNull();
@@ -183,11 +202,29 @@ describe('public-api/v1/github/user/:githubHandle/gitpoaps', () => {
     expect(data[0].mintedAt).toBeNull();
   });
 
-  it("Doesn't return DEPRECATED GitPOAPs", async () => {
+  it("Returns DEPRECATED GitPOAPs", async () => {
     const response = await fetch(`${PUBLIC_API_URL}/v1/github/user/${GH_HANDLES.kayleen}/gitpoaps`);
     expect(response.status).toBeLessThan(400);
     const data = await response.json();
-    expect(data.length).toEqual(0);
+
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
+    expect(data.length).toEqual(1);
+    expect(data[0].gitPoapId).toEqual(43);
+    expect(data[0].gitPoapEventId).toEqual(18);
+    expect(data[0].poapTokenId).toEqual('77778');
+    expect(data[0].poapEventId).toEqual(event36576.id);
+    expect(data[0].poapEventFancyId).toEqual(event36576.fancy_id);
+    expect(data[0].name).toEqual(event36576.name);
+    expect(data[0].year).toEqual(event36576.year);
+    expect(data[0].description).toEqual(event36576.description);
+    expect(data[0].imageUrl).toEqual(event36576.image_url);
+    expect(data[0].repositories.length).toEqual(1);
+    expect(data[0].repositories[0]).toEqual('gitpoap/gitpoap-bot-test-repo');
+    expect(new Date(data[0].earnedAt)).toEqual(todayStart);
+    expect(data[0].mintedAt).toEqual('2019-12-11');
+    expect(data[0].needsRevalidation).toEqual(false);
   });
 });
 

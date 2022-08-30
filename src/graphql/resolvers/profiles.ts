@@ -1,5 +1,5 @@
 import { Arg, Ctx, Field, ObjectType, Resolver, Query } from 'type-graphql';
-import { ClaimStatus, FeaturedPOAP, GitPOAPStatus, Profile } from '@generated/type-graphql';
+import { ClaimStatus, FeaturedPOAP, Profile } from '@generated/type-graphql';
 import { Context } from '../../context';
 import { resolveENS, resolveAddress } from '../../lib/ens';
 import { createScopedLogger } from '../../logging';
@@ -76,8 +76,6 @@ export class CustomProfileResolver {
     const result: { count: number }[] = await prisma.$queryRaw`
       SELECT COUNT(DISTINCT c.address)::INTEGER
       FROM "Claim" AS c
-      INNER JOIN "GitPOAP" AS g ON g.id = c."gitPOAPId"
-        AND g.status != ${GitPOAPStatus.DEPRECATED}::"GitPOAPStatus"
       WHERE c.address IS NOT NULL
         AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
     `;
@@ -100,8 +98,6 @@ export class CustomProfileResolver {
     const result: { count: number }[] = await prisma.$queryRaw`
       SELECT COUNT(DISTINCT c.address)::INTEGER
       FROM "Claim" AS c
-      INNER JOIN "GitPOAP" AS g ON g.id = c."gitPOAPId"
-        AND g.status != ${GitPOAPStatus.DEPRECATED}::"GitPOAPStatus"
       WHERE c.address IS NOT NULL
         AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
         AND c."mintedAt" > ${getLastMonthStartDatetime()}
@@ -204,8 +200,6 @@ export class CustomProfileResolver {
       INNER JOIN "Claim" AS c ON c.address = p.address
         AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
         AND c."needsRevalidation" IS FALSE
-      INNER JOIN "GitPOAP" AS g ON g.id = c."gitPOAPId"
-        AND g.status != ${GitPOAPStatus.DEPRECATED}::"GitPOAPStatus"
       WHERE p."isVisibleOnLeaderboard" IS TRUE
       GROUP BY p.id
       ORDER BY "claimsCount" DESC
@@ -253,7 +247,6 @@ export class CustomProfileResolver {
         AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
         AND c."needsRevalidation" IS FALSE
       INNER JOIN "GitPOAP" AS gp ON gp.id = c."gitPOAPId"
-        AND gp.status != ${GitPOAPStatus.DEPRECATED}::"GitPOAPStatus"
       INNER JOIN "Project" AS pr ON pr.id = gp."projectId"
       INNER JOIN "Repo" AS r ON r."projectId" = pr.id
         AND r.id = ${repoId}

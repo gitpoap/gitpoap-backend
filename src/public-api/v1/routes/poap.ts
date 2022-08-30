@@ -33,13 +33,14 @@ poapRouter.get('/:poapTokenId/is-gitpoap', async function (req, res) {
     `Completed request to check it POAP token id ${req.params.poapTokenId} is a GitPOAP`,
   );
 
-  if (claim === null || claim.gitPOAP.status === GitPOAPStatus.DEPRECATED) {
+  if (claim === null) {
     return res.status(200).send({ isGitPOAP: false });
   }
 
   return res.status(200).send({
     isGitPOAP: true,
     gitPOAPId: claim.gitPOAP.id,
+    isDeprecated: claim.gitPOAP.status === GitPOAPStatus.DEPRECATED,
   });
 });
 
@@ -53,11 +54,6 @@ poapRouter.get('/gitpoap-ids', async function (req, res) {
   const claims = await context.prisma.claim.findMany({
     where: {
       status: ClaimStatus.CLAIMED,
-      gitPOAP: {
-        NOT: {
-          status: GitPOAPStatus.DEPRECATED,
-        },
-      },
     },
     select: {
       poapTokenId: true,

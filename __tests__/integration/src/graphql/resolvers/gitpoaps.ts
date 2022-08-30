@@ -21,7 +21,7 @@ describe('CustomClaimResolver', () => {
       }
     `);
 
-    expect(data.totalGitPOAPs).toEqual(16);
+    expect(data.totalGitPOAPs).toEqual(17);
   });
 
   it('lastMonthGitPOAPs', async () => {
@@ -31,7 +31,7 @@ describe('CustomClaimResolver', () => {
       }
     `);
 
-    expect(data.lastMonthGitPOAPs).toEqual(16);
+    expect(data.lastMonthGitPOAPs).toEqual(17);
   });
 
   it('gitPOAPEvent', async () => {
@@ -138,13 +138,12 @@ describe('CustomClaimResolver', () => {
     `);
 
     expect(data.userPOAPs.totalGitPOAPs).toEqual(1);
-    expect(data.userPOAPs.totalPOAPs).toEqual(7);
+    expect(data.userPOAPs.totalPOAPs).toEqual(0);
 
     expect(data.userPOAPs.gitPOAPs.length).toEqual(1);
     expect(data.userPOAPs.gitPOAPs[0].event.name).toEqual(event36576.name);
 
-    expect(data.userPOAPs.poaps.length).toEqual(1);
-    expect(data.userPOAPs.poaps[0].event.name).toEqual(event2.name);
+    expect(data.userPOAPs.poaps.length).toEqual(0);
   });
 
   it('repoGitPOAPs - date', async () => {
@@ -277,6 +276,6 @@ describe('CustomClaimResolver', () => {
     expect(data.gitPOAPHolders.holders.length).toEqual(1);
 
     expect(data.gitPOAPHolders.holders[0].address).toEqual(ADDRESSES.burz);
-    expect(data.gitPOAPHolders.holders[0].gitPOAPCount).toEqual(5);
+    expect(data.gitPOAPHolders.holders[0].gitPOAPCount).toEqual(6);
   });
 });

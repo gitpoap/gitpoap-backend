@@ -1,4 +1,4 @@
-import { GithubPullRequest } from '@prisma/client';
+import { GithubPullRequest, GitPOAPStatus } from '@prisma/client';
 import { DateTime } from 'luxon';
 import { retrievePOAPEventInfo } from '../../external/poap';
 import { createScopedLogger } from '../../logging';
@@ -8,6 +8,7 @@ type Claim = {
   poapTokenId: string | null;
   gitPOAP: {
     id: number;
+    status: GitPOAPStatus;
     poapEventId: number;
     project: {
       repos: {
@@ -27,6 +28,7 @@ type Claim = {
 
 type GitPOAP = {
   id: number;
+  status: GitPOAPStatus;
   poapEventId: number;
   project: {
     repos: {
@@ -82,6 +84,7 @@ export const mapClaimsToGitPOAPResults = async (
       earnedAt: DateTime.fromJSDate(earnedAt).toFormat('yyyy-MM-dd'),
       mintedAt: claim.mintedAt ? DateTime.fromJSDate(claim.mintedAt).toFormat('yyyy-MM-dd') : null,
       needsRevalidation: claim.needsRevalidation,
+      isDeprecated: claim.gitPOAP.status === GitPOAPStatus.DEPRECATED,
     });
   }
 
@@ -114,6 +117,7 @@ export async function mapGitPOAPsToGitPOAPResults(
       imageUrl: poapEventData.image_url,
       repositories: gitPOAP.project.repos.map(r => `${r.organization.name}/${r.name}`),
       mintedCount: gitPOAP.claims.length,
+      isDeprecated: gitPOAP.status === GitPOAPStatus.DEPRECATED,
     });
   }
 

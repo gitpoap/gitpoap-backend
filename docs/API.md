@@ -423,8 +423,8 @@ Also note that the `"signature"`'s `"data"` field should contain the signature c
 
 `PUT /gitpoaps/deprecate/:id`
 
-This endpoint deprecates a GitPOAP. This means that after this action, the GitPOAP will not show up anywhere
-on the site or in any of the API endpoints except on a user's listing of GitPOAPs who already had claimed it.
+This endpoint deprecates a GitPOAP. This means that after this action, the GitPOAP will no longer be
+claimable, all existing UNCLAIMED claims will be deleted, and ongoing issuance will skip this GitPOAP.
 
 Note that the caller of this endpoint must have admin privileges.
 

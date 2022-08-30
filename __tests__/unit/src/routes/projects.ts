@@ -5,7 +5,6 @@ import { ADMIN_GITHUB_IDS } from '../../../../src/constants';
 import request from 'supertest';
 import { createRepoByGithubId } from '../../../../src/lib/repos';
 import { backloadGithubPullRequestData } from '../../../../src/lib/pullRequests';
-import { GitPOAPStatus } from '@prisma/client';
 
 jest.mock('../../../../src/lib/repos');
 jest.mock('../../../../src/lib/pullRequests');
@@ -192,12 +191,7 @@ describe('PUT /projects/enable/:id', () => {
 
     expect(contextMock.prisma.gitPOAP.updateMany).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.gitPOAP.updateMany).toHaveBeenCalledWith({
-      where: {
-        projectId,
-        NOT: {
-          status: GitPOAPStatus.DEPRECATED,
-        },
-      },
+      where: { projectId },
       data: { isEnabled: true },
     });
   });

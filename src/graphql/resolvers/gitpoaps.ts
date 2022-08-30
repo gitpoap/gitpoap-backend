@@ -160,7 +160,7 @@ export class CustomGitPOAPResolver {
       where: {
         isEnabled: true,
         NOT: {
-          status: { in: [GitPOAPStatus.UNAPPROVED, GitPOAPStatus.DEPRECATED] },
+          status: GitPOAPStatus.UNAPPROVED,
         },
       },
     });
@@ -188,7 +188,7 @@ export class CustomGitPOAPResolver {
         isEnabled: true,
         createdAt: { gt: getLastMonthStartDatetime() },
         NOT: {
-          status: { in: [GitPOAPStatus.UNAPPROVED, GitPOAPStatus.DEPRECATED] },
+          status: GitPOAPStatus.UNAPPROVED,
         },
       },
     });
@@ -383,7 +383,7 @@ export class CustomGitPOAPResolver {
               where: {
                 isEnabled: true,
                 NOT: {
-                  status: { in: [GitPOAPStatus.UNAPPROVED, GitPOAPStatus.DEPRECATED] },
+                  status: GitPOAPStatus.UNAPPROVED,
                 },
               },
             },
@@ -614,7 +614,6 @@ export class CustomGitPOAPResolver {
     const claimStatusSelect = Prisma.sql`
       SELECT COUNT(c2.id)::INTEGER FROM "Claim" AS c2
       INNER JOIN "GitPOAP" AS g ON g.id = c2."gitPOAPId"
-        AND g.status != ${GitPOAPStatus.DEPRECATED}::"GitPOAPStatus"
       WHERE p.address = c2.address
         AND c2.status IN (
           ${ClaimStatus.MINTING}::"ClaimStatus",
