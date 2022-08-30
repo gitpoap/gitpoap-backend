@@ -47,6 +47,9 @@ describe('createNewClaimsForRepoPR', () => {
             threshold: 2,
           },
         ],
+        repos: [
+          { id: 43 },
+        ],
       },
     };
 
@@ -69,6 +72,9 @@ describe('createNewClaimsForRepoPR', () => {
             year: 9001,
             threshold: 1,
           },
+        ],
+        repos: [
+          { id: 43 },
         ],
       },
     };
@@ -106,6 +112,9 @@ describe('createNewClaimsForRepoPR', () => {
             threshold: 5,
           },
         ],
+        repos: [
+          { id: 43 },
+        ],
       },
     };
 
@@ -139,6 +148,9 @@ describe('createNewClaimsForRepoPR', () => {
             year: 9001,
             threshold: 1,
           },
+        ],
+        repos: [
+          { id: 43 },
         ],
       },
     };

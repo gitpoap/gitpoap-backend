@@ -222,10 +222,17 @@ describe('splitUsersPOAPs', () => {
       where: {
         poapTokenId: claim1.poapTokenId,
       },
-      select: {
-        id: true,
-        address: true,
-        gitPOAP: true,
+      include: {
+        user: true,
+        gitPOAP: {
+          include: {
+            project: {
+              include: {
+                repos: true,
+              },
+            },
+          },
+        },
       },
     });
     expect(mockedHandleGitPOAPTransfer).toHaveBeenCalledTimes(0);
@@ -261,10 +268,17 @@ describe('splitUsersPOAPs', () => {
       where: {
         poapTokenId: claim1.poapTokenId,
       },
-      select: {
-        id: true,
-        address: true,
-        gitPOAP: true,
+      include: {
+        user: true,
+        gitPOAP: {
+          include: {
+            project: {
+              include: {
+                repos: true,
+              },
+            },
+          },
+        },
       },
     });
     expect(mockedHandleGitPOAPTransfer).toHaveBeenCalledTimes(1);
