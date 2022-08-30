@@ -62,6 +62,7 @@ describe('CustomClaimResolver', () => {
             event {
               name
             }
+            prCount
           }
           poaps {
             event {
@@ -77,6 +78,7 @@ describe('CustomClaimResolver', () => {
 
     expect(data.userPOAPs.gitPOAPs.length).toEqual(1);
     expect(data.userPOAPs.gitPOAPs[0].event.name).toEqual(event3.name);
+    expect(data.userPOAPs.gitPOAPs[0].prCount).toEqual(0);
 
     expect(data.userPOAPs.poaps.length).toEqual(1);
     expect(data.userPOAPs.poaps[0].event.name).toEqual(event27305.name);
@@ -92,6 +94,7 @@ describe('CustomClaimResolver', () => {
             event {
               name
             }
+            prCount
           }
           poaps {
             event {
@@ -107,6 +110,7 @@ describe('CustomClaimResolver', () => {
 
     expect(data.userPOAPs.gitPOAPs.length).toEqual(1);
     expect(data.userPOAPs.gitPOAPs[0].event.name).toEqual(event2.name);
+    expect(data.userPOAPs.gitPOAPs[0].prCount).toEqual(0);
 
     expect(data.userPOAPs.poaps.length).toEqual(1);
     expect(data.userPOAPs.poaps[0].event.name).toEqual(event25149.name);

@@ -43,6 +43,9 @@ const repo: RepoReturnType = {
         threshold: 1,
       },
     ],
+    repos: [
+      { id: 5 },
+    ],
   },
   organization: {
     name: 'org',
@@ -242,7 +245,12 @@ describe('handleNewPull', () => {
     );
 
     expect(createNewClaimsForRepoPR).toHaveBeenCalledTimes(1);
-    expect(createNewClaimsForRepoPR).toHaveBeenCalledWith(user, repo, yearlyGitPOAPsMap, pr);
+    expect(createNewClaimsForRepoPR).toHaveBeenCalledWith(
+      user,
+      repo.project.repos,
+      yearlyGitPOAPsMap,
+      pr
+    );
   });
 
   it('Skips creating claims for bots', async () => {
