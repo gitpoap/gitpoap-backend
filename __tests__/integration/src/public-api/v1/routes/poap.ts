@@ -22,16 +22,19 @@ describe('public-api/v1/poap/:poapTokenId/is-gitpoap', () => {
 
     expect(data.isGitPOAP).toEqual(true);
     expect(data.gitPOAPId).toEqual(1);
+    expect(data.isDeprecated).toEqual(false);
   });
 
-  it('Returns false for a DEPRECATED GitPOAP POAP ID', async () => {
+  it('Returns isDeprecated for a DEPRECATED GitPOAP POAP ID', async () => {
     const response = await fetch(`${PUBLIC_API_URL}/v1/poap/77778/is-gitpoap`);
 
     expect(response.status).toBeLessThan(400);
 
     const data = await response.json();
 
-    expect(data.isGitPOAP).toEqual(false);
+    expect(data.isGitPOAP).toEqual(true);
+    expect(data.gitPOAPId).toEqual(18);
+    expect(data.isDeprecated).toEqual(true);
   });
 });
 
@@ -44,7 +47,7 @@ describe('public-api/v1/poap/gitpoap-ids', () => {
     const data = await response.json();
 
     expect(data.poapTokenIds).not.toEqual(null);
-    expect(data.poapTokenIds.length).toEqual(14);
+    expect(data.poapTokenIds.length).toEqual(16);
 
     // names are from variables in prisma/seed.ts
     expect(data.poapTokenIds).toContainEqual('thunderdome'); // claim1
@@ -61,5 +64,7 @@ describe('public-api/v1/poap/gitpoap-ids', () => {
     expect(data.poapTokenIds).toContainEqual('1234567892');  // claim32
     expect(data.poapTokenIds).toContainEqual('1234567893');  // claim36
     expect(data.poapTokenIds).toContainEqual('1234567894');  // claim41
+    expect(data.poapTokenIds).toContainEqual('77777');       // claim42
+    expect(data.poapTokenIds).toContainEqual('77778');       // claim43
   });
 });
