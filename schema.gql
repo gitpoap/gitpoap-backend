@@ -319,7 +319,7 @@ type Query {
     repoName: String = null
     orgName: String = null
     repoId: Float = null
-  ): RepoData
+  ): RepoReturnData
   repoStarCount(repoId: Float!): Float!
   totalRepos: Float!
   lastMonthRepos: Float!
@@ -329,7 +329,7 @@ type Query {
     perPage: Float = null
     sort: String = "alphabetical"
   ): [Repo!]
-  trendingRepos(numDays: Float = 3, count: Float = 10): [RepoData!]
+  trendingRepos(numDays: Float = 3, count: Float = 10): [RepoReturnData!]
   organizationData(
     orgName: String = null
     orgId: Float = null
@@ -344,7 +344,7 @@ type Query {
     perPage: Float = null
     sort: String = "alphabetical"
     orgId: Float!
-  ): [RepoData!]
+  ): [RepoReturnData!]
   totalContributors: Float!
   lastMonthContributors: Float!
   profileData(address: String!): NullableProfile
@@ -3141,6 +3141,7 @@ type UserPOAPs {
 type UserGitPOAPData {
   claim: Claim!
   event: POAPEvent!
+  prCount: Float!
 }
 
 type POAPToken {
@@ -3189,7 +3190,7 @@ type Holder {
   gitPOAPCount: Float!
 }
 
-type RepoData {
+type RepoReturnData {
   id: Int!
   name: String!
   githubRepoId: Int!
