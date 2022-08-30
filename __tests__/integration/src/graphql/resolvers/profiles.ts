@@ -13,7 +13,7 @@ describe('CustomProfileResolver', () => {
       }
     `);
 
-    expect(data.totalContributors).toEqual(5);
+    expect(data.totalContributors).toEqual(6);
   });
 
   it('lastMonthContributors', async () => {
@@ -79,7 +79,7 @@ describe('CustomProfileResolver', () => {
     expect(data.mostHonoredContributors.length).toEqual(2);
 
     expect(data.mostHonoredContributors[0].profile.address).toEqual(ADDRESSES.burz);
-    expect(data.mostHonoredContributors[0].claimsCount).toEqual(5);
+    expect(data.mostHonoredContributors[0].claimsCount).toEqual(6);
 
     expect(data.mostHonoredContributors[1].profile.address).toEqual(ADDRESSES.jay);
     expect(data.mostHonoredContributors[1].claimsCount).toEqual(4);

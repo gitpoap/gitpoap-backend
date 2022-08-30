@@ -17,6 +17,7 @@ import {
   event37430,
   event36573,
   event36574,
+  event36576,
 } from '../../../../../../prisma/data';
 import { POAPEvent } from '../../../../../../src/types/poap';
 import { GitPOAPEventResultType } from '../../../../../../src/public-api/v1/types';
@@ -53,12 +54,13 @@ describe('public-api/v1/gitpoaps/addresses', () => {
     const data = await response.json();
 
     expect(data.addresses).not.toEqual(null);
-    expect(data.addresses.length).toEqual(5);
+    expect(data.addresses.length).toEqual(6);
     expect(data.addresses).toContain(ADDRESSES.test1);
     expect(data.addresses).toContain(ADDRESSES.jay);
     expect(data.addresses).toContain(ADDRESSES.colfax);
     expect(data.addresses).toContain(ADDRESSES.burz2);
     expect(data.addresses).toContain(ADDRESSES.aldo);
+    expect(data.addresses).toContain(ADDRESSES.kayleen);
   });
 });
 
@@ -68,6 +70,7 @@ describe('public-api/v1/gitpoaps/events', () => {
     event: POAPEvent,
     repositories: string[],
     mintedCount: number,
+    isDeprecated: boolean = false,
   ): GitPOAPEventResultType => ({
     gitPoapEventId,
     poapEventId: event.id,
@@ -78,6 +81,7 @@ describe('public-api/v1/gitpoaps/events', () => {
     imageUrl: event.image_url,
     repositories,
     mintedCount,
+    isDeprecated,
   });
 
   it('Returns all the GitPOAP events', async () => {
@@ -88,7 +92,7 @@ describe('public-api/v1/gitpoaps/events', () => {
     const data = await response.json();
 
     expect(data.gitPoapEvents).not.toEqual(null);
-    expect(data.gitPoapEvents.length).toEqual(16);
+    expect(data.gitPoapEvents.length).toEqual(17);
     expect(data.gitPoapEvents).toContainEqual(genExpectedDataFromEvent(
       1,
       event1,
@@ -184,6 +188,13 @@ describe('public-api/v1/gitpoaps/events', () => {
       event36574,
       ['gitpoap/gitpoap-bot-test-repo'],
       0,
+    ));
+    expect(data.gitPoapEvents).toContainEqual(genExpectedDataFromEvent(
+      18,
+      event36576,
+      ['gitpoap/gitpoap-bot-test-repo'],
+      2,
+      true,
     ));
   });
 });

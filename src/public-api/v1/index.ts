@@ -3,7 +3,7 @@ import { context } from '../../context';
 import { httpRequestDurationSeconds } from '../../metrics';
 import { createScopedLogger } from '../../logging';
 import { resolveENSInternal } from '../../external/ens';
-import { ClaimStatus, GitPOAPStatus } from '@generated/type-graphql';
+import { ClaimStatus } from '@generated/type-graphql';
 import { badgen } from 'badgen';
 import { GitPOAPMiniLogo } from './constants';
 import { mapClaimsToGitPOAPResults } from './helpers';
@@ -36,11 +36,6 @@ v1Router.get('/address/:address/gitpoaps', async function (req, res) {
     where: {
       address: resolvedAddress.toLowerCase(),
       status: ClaimStatus.CLAIMED,
-      gitPOAP: {
-        NOT: {
-          status: GitPOAPStatus.DEPRECATED,
-        },
-      },
     },
     select: {
       id: true,
@@ -54,6 +49,7 @@ v1Router.get('/address/:address/gitpoaps', async function (req, res) {
           id: true,
           year: true,
           poapEventId: true,
+          status: true,
           project: {
             select: {
               repos: {
@@ -131,9 +127,6 @@ v1Router.get('/github/user/:githubHandle/gitpoaps', async function (req, res) {
       status,
       gitPOAP: {
         isEnabled: true,
-        NOT: {
-          status: GitPOAPStatus.DEPRECATED,
-        },
       },
     },
     select: {
@@ -147,6 +140,7 @@ v1Router.get('/github/user/:githubHandle/gitpoaps', async function (req, res) {
         select: {
           id: true,
           poapEventId: true,
+          status: true,
           project: {
             select: {
               repos: {
@@ -187,9 +181,6 @@ v1Router.get('/repo/:owner/:name/badge', async (req, res) => {
     where: {
       status: ClaimStatus.CLAIMED,
       gitPOAP: {
-        NOT: {
-          status: GitPOAPStatus.DEPRECATED,
-        },
         project: {
           repos: {
             some: {

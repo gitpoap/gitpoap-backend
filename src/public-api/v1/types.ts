@@ -12,6 +12,7 @@ export type GitPOAPResultType = {
   earnedAt: string;
   mintedAt: string | null;
   needsRevalidation: boolean;
+  isDeprecated: boolean;
 };
 
 export type GitPOAPEventResultType = {
@@ -24,4 +25,5 @@ export type GitPOAPEventResultType = {
   imageUrl: string;
   repositories: string[];
   mintedCount: number;
+  isDeprecated: boolean;
 };
