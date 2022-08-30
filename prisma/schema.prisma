@@ -61,7 +61,8 @@ model Address {
   ensName                String?                  @db.VarChar(255)
   Organization           Organization[]
   OrganizationMembership OrganizationMembership[]
-  Claim                  Claim[]
+  issuedClaims           Claim[]                  @relation("issuedClaims")
+  Claim                  Claim[]                  @relation("mintedClaims")
 
   @@index([address])
 }
@@ -131,11 +132,15 @@ model Claim {
   poapTokenId         String?            @unique @db.VarChar(255)
   gitPOAPId           Int
   gitPOAP             GitPOAP            @relation(fields: [gitPOAPId], references: [id])
+  // Claim can be 'issued' to a github user, eth address, or email
   githHubUserId       Int
   gitHubUser          GitHubUser         @relation(fields: [githHubUserId], references: [id])
   addressId           Int?
-  address             Address?           @relation(fields: [addressId], references: [id])
+  address             Address?           @relation("issuedClaims", fields: [addressId], references: [id])
   email               String?            @db.VarChar(255)
+  // End: Issuance fields
+  mintedAddressId     Int
+  mintedAddress       Address?           @relation("mintedClaims", fields: [mintedAddressId], references: [id])
   // Note that not all Claims have pull request they were earned in (e.g. Hackathon GitPOAPs)
   pullRequestEarnedId Int?
   pullRequestEarned   GithubPullRequest? @relation(fields: [pullRequestEarnedId], references: [id])
