@@ -75,6 +75,23 @@ export function createYearlyGitPOAPsMap(gitPOAPs: GitPOAPs): YearlyGitPOAPsMap {
   return yearlyGitPOAPsMap;
 }
 
+export async function countPRsForClaim(
+  user: { id: number },
+  repo: { id: number },
+  gitPOAP: { year: number },
+): Promise<number> {
+  return await context.prisma.githubPullRequest.count({
+    where: {
+      userId: user.id,
+      repoId: repo.id,
+      githubMergedAt: {
+        gte: new Date(gitPOAP.year, 0, 1),
+        lt: new Date(gitPOAP.year + 1, 0, 1),
+      },
+    },
+  });
+}
+
 export async function createNewClaimsForRepoPR(
   user: { id: number },
   repo: { id: number },
@@ -95,16 +112,7 @@ export async function createNewClaimsForRepoPR(
   for (const year of years) {
     const gitPOAPs = yearlyGitPOAPsMap[year];
 
-    const prCount = await context.prisma.githubPullRequest.count({
-      where: {
-        userId: user.id,
-        repoId: repo.id,
-        githubMergedAt: {
-          gte: new Date(gitPOAPs[0].year, 0, 1),
-          lt: new Date(gitPOAPs[0].year + 1, 0, 1),
-        },
-      },
-    });
+    const prCount = await countPRsForClaim(user, repo, gitPOAPs[0]);
 
     logger.debug(`User ID ${user.id} has ${prCount} PRs in year ${year}`);
 
