@@ -8,7 +8,7 @@ import { getGithubRepositoryStarCount } from '../../external/github';
 import { Prisma } from '@prisma/client';
 
 @ObjectType()
-export class RepoData extends Repo {
+export class RepoReturnData extends Repo {
   @Field()
   contributorCount: number;
   @Field()
@@ -19,13 +19,13 @@ export class RepoData extends Repo {
 
 @Resolver(of => Repo)
 export class CustomRepoResolver {
-  @Query(returns => RepoData, { nullable: true })
+  @Query(returns => RepoReturnData, { nullable: true })
   async repoData(
     @Ctx() { prisma }: Context,
     @Arg('repoId', { defaultValue: null }) repoId?: number,
     @Arg('orgName', { defaultValue: null }) orgName?: string,
     @Arg('repoName', { defaultValue: null }) repoName?: string,
-  ): Promise<RepoData | null> {
+  ): Promise<RepoReturnData | null> {
     const logger = createScopedLogger('GQL repoData');
 
     logger.info(`Request data for repo: ${repoId}`);
@@ -35,7 +35,7 @@ export class CustomRepoResolver {
     let results;
 
     if (repoId) {
-      results = await prisma.$queryRaw<RepoData[]>`
+      results = await prisma.$queryRaw<RepoReturnData[]>`
         SELECT r.*, 
           COUNT(DISTINCT c."userId")::INTEGER AS "contributorCount",
           COUNT(DISTINCT g.id)::INTEGER AS "gitPOAPCount",
@@ -60,7 +60,7 @@ export class CustomRepoResolver {
 
       logger.debug(`Completed request for data from repo: ${repoId}`);
     } else if (orgName && repoName) {
-      results = await prisma.$queryRaw<RepoData[]>`
+      results = await prisma.$queryRaw<RepoReturnData[]>`
         SELECT r.*, 
           COUNT(DISTINCT c."userId")::INTEGER AS "contributorCount",
           COUNT(DISTINCT g.id)::INTEGER AS "gitPOAPCount",
@@ -280,19 +280,19 @@ export class CustomRepoResolver {
     return results;
   }
 
-  @Query(returns => [RepoData], { nullable: true })
+  @Query(returns => [RepoReturnData], { nullable: true })
   async trendingRepos(
     @Ctx() { prisma }: Context,
     @Arg('count', { defaultValue: 10 }) count: number,
     @Arg('numDays', { defaultValue: 3 }) numDays: number,
-  ): Promise<RepoData[] | null> {
+  ): Promise<RepoReturnData[] | null> {
     const logger = createScopedLogger('GQL trendingRepos');
 
     logger.info(`Request for trending repos form the last ${numDays} days`);
 
     const endTimer = gqlRequestDurationSeconds.startTimer('trendingRepos');
 
-    const results = await prisma.$queryRaw<RepoData[]>`
+    const results = await prisma.$queryRaw<RepoReturnData[]>`
       SELECT r.*, 
           COUNT(DISTINCT c."userId")::INTEGER AS "contributorCount",
           COUNT(DISTINCT g.id)::INTEGER AS "gitPOAPCount",
