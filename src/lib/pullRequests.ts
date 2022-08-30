@@ -45,6 +45,11 @@ async function getRepoInfo(repoId: number): Promise<ExtraRepoData | null> {
               threshold: true,
             },
           },
+          repos: {
+            select: {
+              id: true,
+            },
+          },
         },
       },
     },
@@ -112,7 +117,10 @@ export async function upsertGithubPullRequest(
 }
 
 async function backloadGithubPullRequest(
-  repo: { id: number },
+  repo: {
+    id: number;
+    project: { repos: { id: number }[] };
+  },
   yearlyGitPOAPsMap: YearlyGitPOAPsMap,
   pr: GithubPullRequestData,
 ) {
@@ -145,7 +153,12 @@ async function backloadGithubPullRequest(
     user.id,
   );
 
-  const claims = await createNewClaimsForRepoPR(user, repo, yearlyGitPOAPsMap, githubPullRequest);
+  const claims = await createNewClaimsForRepoPR(
+    user,
+    repo.project.repos,
+    yearlyGitPOAPsMap,
+    githubPullRequest,
+  );
 
   for (const claim of claims) {
     // If this is the user's first PR set the earned at field
