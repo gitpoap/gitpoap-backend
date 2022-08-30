@@ -11,7 +11,8 @@ import {
 } from '../../external/poap';
 import { createScopedLogger } from '../../logging';
 import { gqlRequestDurationSeconds } from '../../metrics';
-import { splitUsersPOAPs } from '../../lib/poaps';
+import { GitPOAPReturnData, splitUsersPOAPs } from '../../lib/poaps';
+import { countPRsForClaim } from '../../lib/claims';
 
 @ObjectType()
 class FullGitPOAPEventData {
@@ -29,6 +30,9 @@ class UserGitPOAPData {
 
   @Field(() => POAPEvent)
   event: POAPEvent;
+
+  @Field()
+  prCount: number;
 }
 
 @ObjectType()
@@ -122,6 +126,23 @@ class Holders {
 
   @Field(() => [Holder])
   holders: Holder[];
+}
+
+async function addPRCountData(userGitPOAPData: GitPOAPReturnData[]): Promise<UserGitPOAPData[]> {
+  let results = [];
+
+  for (const gitPOAPData of userGitPOAPData) {
+    results.push({
+      ...gitPOAPData,
+      prCount: await countPRsForClaim(
+        gitPOAPData.claim.user,
+        gitPOAPData.claim.gitPOAP.project.repos,
+        gitPOAPData.claim.gitPOAP,
+      ),
+    });
+  }
+
+  return results;
 }
 
 @Resolver(of => GitPOAP)
@@ -305,14 +326,14 @@ export class CustomGitPOAPResolver {
       return {
         totalGitPOAPs: gitPOAPsOnly.length,
         totalPOAPs: poapsOnly.length,
-        gitPOAPs: gitPOAPsOnly.slice(index, index + <number>perPage),
+        gitPOAPs: await addPRCountData(gitPOAPsOnly.slice(index, index + <number>perPage)),
         poaps: poapsOnly.slice(index, index + <number>perPage),
       };
     } else {
       return {
         totalGitPOAPs: gitPOAPsOnly.length,
         totalPOAPs: poapsOnly.length,
-        gitPOAPs: gitPOAPsOnly,
+        gitPOAPs: await addPRCountData(gitPOAPsOnly),
         poaps: poapsOnly,
       };
     }
