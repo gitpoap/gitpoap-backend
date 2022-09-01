@@ -1,6 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { getDefaultProvider } from 'ethers';
-import { BaseProvider } from '@ethersproject/providers';
+import { BaseProvider, InfuraProvider } from '@ethersproject/providers';
 import { INFURA_API_KEY } from './environment';
 import { createRedisClient, RedisClient } from './redis/client';
 
@@ -12,17 +11,7 @@ export interface Context {
 
 const prisma = new PrismaClient();
 
-let apiObj = undefined;
-if (INFURA_API_KEY) {
-  apiObj = {
-    infura: INFURA_API_KEY,
-    etherscan: '-',
-    alchemy: '-',
-    pocket: '-',
-    ankr: '-',
-  };
-}
-const provider = getDefaultProvider('homestead', apiObj);
+const provider = new InfuraProvider('mainnet', INFURA_API_KEY);
 
 const redis = createRedisClient();
 
