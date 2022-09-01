@@ -112,7 +112,7 @@ async function handleTransferPostProcessing(
   const featuredData = await context.prisma.featuredPOAP.findMany({
     where: {
       profile: {
-        address: ownerAddress,
+        address: ownerAddress.toLowerCase(),
       },
     },
     select: {
@@ -122,7 +122,7 @@ async function handleTransferPostProcessing(
   });
 
   for (const feature of featuredData) {
-    if (!(feature.poapTokenId in foundPOAPIds)) {
+    if (!foundPOAPIds.has(feature.poapTokenId)) {
       await context.prisma.featuredPOAP.delete({
         where: {
           id: feature.id,
@@ -134,7 +134,7 @@ async function handleTransferPostProcessing(
   // If some claim that is marked in our DB as belonging to the address is no
   // longer in their set of POAPs, we need to handle its transfer
   for (const claim of claims) {
-    if (claim.poapTokenId !== null && !(claim.poapTokenId in foundPOAPIds)) {
+    if (claim.poapTokenId !== null && !foundPOAPIds.has(claim.poapTokenId)) {
       // Run this in the background
       checkIfClaimTransferred(claim.id);
     }
