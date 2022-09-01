@@ -490,24 +490,24 @@ claimsRouter.post(
     }
 
     logger.info(
-      `Request to create claim for PR #${req.body.pullRequestNumber} on "${req.body.owner}/${req.body.repo}"`,
+      `Request to create claim for PR #${req.body.pullRequestNumber} on "${req.body.organization}/${req.body.repo}"`,
     );
 
-    const repo = await getRepoByName(req.body.owner, req.body.repo);
+    const repo = await getRepoByName(req.body.organization, req.body.repo);
     if (repo === null) {
-      const msg = `Failed to find repo: "${req.body.owner}/${req.body.repo}"`;
+      const msg = `Failed to find repo: "${req.body.organization}/${req.body.repo}"`;
       logger.warn(msg);
       endTimer({ status: 404 });
       return res.status(404).send({ msg });
     }
 
     const pull = await getSingleGithubRepositoryPullAsAdmin(
-      req.body.owner,
+      req.body.organization,
       req.body.repo,
       req.body.pullRequestNumber,
     );
     if (pull === null) {
-      const msg = `Failed to query repo data for "${req.body.owner}/${req.body.repo}" via GitHub API`;
+      const msg = `Failed to query repo data for "${req.body.organization}/${req.body.repo}" via GitHub API`;
       logger.error(msg);
       endTimer({ status: 404 });
       return res.status(404).send({ msg });
@@ -538,7 +538,7 @@ claimsRouter.post(
     const newClaims = await retrieveClaimsCreatedByPR(githubPullRequest.id);
 
     logger.debug(
-      `Completed request to create claim for PR #${req.body.pullRequestNumber} on "${req.body.owner}/${req.body.repo}`,
+      `Completed request to create claim for PR #${req.body.pullRequestNumber} on "${req.body.organization}/${req.body.repo}`,
     );
 
     endTimer({ status: 200 });
