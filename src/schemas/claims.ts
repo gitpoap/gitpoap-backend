@@ -12,8 +12,23 @@ export const CreateGitPOAPClaimsSchema = z.object({
   recipientGithubIds: z.array(z.number()).nonempty(),
 });
 
-export const CreateGitPOAPBotClaimsSchema = z.object({
+export const CreateGitPOAPBotClaimsForPRSchema = z.object({
+  organization: z.string().nonempty(),
   repo: z.string().nonempty(),
-  owner: z.string().nonempty(),
   pullRequestNumber: z.number(),
 });
+
+export const CreateGitPOAPBotClaimsForIssueSchema = z.object({
+  organization: z.string().nonempty(),
+  repo: z.string().nonempty(),
+  issueNumber: z.number(),
+});
+
+export const CreateGitPOAPBotClaimsSchema = z.union([
+  z.object({
+    pullRequest: CreateGitPOAPBotClaimsForPRSchema,
+  }),
+  z.object({
+    issue: CreateGitPOAPBotClaimsForIssueSchema,
+  }),
+]);

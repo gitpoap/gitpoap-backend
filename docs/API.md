@@ -428,6 +428,33 @@ claimable, all existing UNCLAIMED claims will be deleted, and ongoing issuance w
 
 Note that the caller of this endpoint must have admin privileges.
 
+## [gitpoap-bot] Create a Claim
+
+`PUT /claims/gitpoap-bot/create`
+
+This endpoint allows the gitpoap-bot to create claims for either a PR or an issue.
+The request to this endpoint should contain bodies like the following:
+* For a Pull Request:
+    ```json
+    {
+      "pullRequest": {
+        "organization": "gitpoap",
+        "repo": "gitpoap-backend",
+        "pullRequestNumber": 34
+      }
+    }
+    ```
+* For an Issue:
+    ```json
+    {
+      "issue": {
+        "organization": "gitpoap",
+        "repo": "gitpoap-backend",
+        "issueNumber": 324
+      }
+    }
+    ```
+
 ## Appendix
 
 ### Generating Signatures
