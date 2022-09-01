@@ -3,8 +3,6 @@ import { context } from '../context';
 import { ensRequestDurationSeconds } from '../metrics';
 import { SECONDS_PER_DAY } from '../constants';
 import { isAddress } from 'ethers/lib/utils';
-import { InfuraProvider } from '@ethersproject/providers';
-import { INFURA_API_KEY } from '../environment';
 
 const ENS_RESOLVE_CACHE_PREFIX = 'ens#resolve';
 const ENS_RESOLVE_CACHE_TTL = 30 * SECONDS_PER_DAY; // 30 days
