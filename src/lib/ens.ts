@@ -9,9 +9,11 @@ const ENS_AVATAR_LAST_RUN_CACHE_PREFIX = 'ens#avatar-last-run';
 
 const ENS_AVATAR_MAX_CHECK_FREQUENCY_HOURS = 1;
 
+const DEFAULT_SVG_IMAGE_SIZE = 500;
+
 const contentTypeCallback: ContentTypeCallback = async (contentType: string, buffer: Buffer) => {
   if (contentType === 'image/svg+xml') {
-    const newBuffer = await sharp(buffer).png().toBuffer();
+    const newBuffer = await sharp(buffer).resize(DEFAULT_SVG_IMAGE_SIZE).png().toBuffer();
 
     return {
       contentType: 'image/png',
