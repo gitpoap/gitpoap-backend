@@ -52,11 +52,27 @@ export const uploadMulterFile = async (
   return await s3.send(new PutObjectCommand(params));
 };
 
+export type ContentTypeCallback = (
+  contentType: string,
+  buffer: Buffer,
+) => Promise<{
+  contentType: string;
+  buffer: Buffer;
+}>;
+
+const defaultContentTypeCallback: ContentTypeCallback = async (
+  contentType: string,
+  buffer: Buffer,
+) => {
+  return { contentType, buffer };
+};
+
 export const uploadFileFromURL = async (
   url: string,
   bucket: string,
   key: string,
   isPublic?: boolean,
+  contentTypeCallback: ContentTypeCallback = defaultContentTypeCallback,
 ): Promise<PutObjectCommandOutput | null> => {
   const logger = createScopedLogger('uploadFileFromURL');
 
@@ -105,14 +121,14 @@ export const uploadFileFromURL = async (
     buffer = Buffer.from(await response.arrayBuffer());
   }
 
-  const acl = isPublic ? 'public-read' : undefined;
+  const updatedData = await contentTypeCallback(contentType, buffer);
 
   const params: PutObjectCommandInput = {
     Bucket: bucket,
     Key: key,
-    Body: buffer,
-    ContentType: contentType,
-    ACL: acl,
+    Body: updatedData.buffer,
+    ContentType: updatedData.contentType,
+    ACL: isPublic ? 'public-read' : undefined,
   };
 
   return await s3.send(new PutObjectCommand(params));
