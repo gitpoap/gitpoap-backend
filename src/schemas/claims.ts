@@ -16,12 +16,14 @@ export const CreateGitPOAPBotClaimsForPRSchema = z.object({
   organization: z.string().nonempty(),
   repo: z.string().nonempty(),
   pullRequestNumber: z.number(),
+  contributorGithubIds: z.array(z.number()).nonempty(),
 });
 
 export const CreateGitPOAPBotClaimsForIssueSchema = z.object({
   organization: z.string().nonempty(),
   repo: z.string().nonempty(),
   issueNumber: z.number(),
+  contributorGithubIds: z.array(z.number()).nonempty(),
 });
 
 export const CreateGitPOAPBotClaimsSchema = z.union([
