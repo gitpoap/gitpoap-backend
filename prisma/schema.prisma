@@ -29,6 +29,7 @@ model User {
   /// @TypeGraphQL.omit(output: true, input: true)
   authTokens        AuthToken[]
   GithubPullRequest GithubPullRequest[]
+  GithubIssue       GithubIssue[]
 }
 
 model Profile {
@@ -74,6 +75,7 @@ model Repo {
   // Default to the beginning of the year, but this will update when contributions
   // are initially uploaded
   lastPRUpdatedAt   DateTime            @default(dbgenerated("date_trunc('year'::text, now())"))
+  GithubIssue       GithubIssue[]
 }
 
 model Project {
@@ -102,6 +104,9 @@ model Claim {
   // Note that not all Claims have pull request they were earned in (e.g. Hackathon GitPOAPs)
   pullRequestEarnedId Int?
   pullRequestEarned   GithubPullRequest? @relation(fields: [pullRequestEarnedId], references: [id])
+  // Some claims are earned by tagging a user in an issue or when an issue is closed by a PR
+  issueEarnedId       Int?
+  issueEarned         GithubIssue?       @relation(fields: [issueEarnedId], references: [id])
   needsRevalidation   Boolean            @default(false)
 
   @@unique([gitPOAPId, userId])
@@ -181,22 +186,45 @@ model BatchTiming {
 }
 
 model GithubPullRequest {
-  id                   Int      @id @default(autoincrement())
+  id                   Int           @id @default(autoincrement())
   // Note that the following two fields are named in relation
   // to an instance of GithubPullRequest
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
   githubPullNumber     Int
   githubTitle          String
   githubMergedAt       DateTime
-  githubMergeCommitSha String   @db.VarChar(41)
+  githubMergeCommitSha String        @db.VarChar(41)
   repoId               Int
-  repo                 Repo     @relation(fields: [repoId], references: [id])
+  repo                 Repo          @relation(fields: [repoId], references: [id])
   userId               Int
-  user                 User     @relation(fields: [userId], references: [id])
+  user                 User          @relation(fields: [userId], references: [id])
   Claim                Claim[]
+  GithubIssue          GithubIssue[]
 
   @@unique([repoId, githubPullNumber])
+}
+
+model GithubIssue {
+  id                Int                @id @default(autoincrement())
+  // Note that the following two fields are named in relation
+  // to an instance of GithubIssue
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  githubIssueNumber Int
+  githubTitle       String
+  // If the user was tagged in an issue for the bot the issue may not have
+  // been closed yet (or ever)
+  githubClosedAt    DateTime?
+  repoId            Int
+  repo              Repo               @relation(fields: [repoId], references: [id])
+  userId            Int
+  user              User               @relation(fields: [userId], references: [id])
+  prClosedById      Int?
+  prClosedBy        GithubPullRequest? @relation(fields: [prClosedById], references: [id])
+  Claim             Claim[]
+
+  @@unique([repoId, githubIssueNumber])
 }
 
 model Event {
