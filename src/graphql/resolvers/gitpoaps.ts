@@ -1,14 +1,10 @@
 import { Arg, Ctx, Field, ObjectType, Resolver, Query } from 'type-graphql';
 import { Claim, ClaimStatus, GitPOAPStatus, GitPOAP, Profile } from '@generated/type-graphql';
 import { getLastMonthStartDatetime } from './util';
-import { Context } from '../../context';
+import { context, Context } from '../../context';
 import { POAPEvent, POAPToken } from '../../types/poap';
 import { resolveENS } from '../../lib/ens';
-import {
-  retrievePOAPEventInfo,
-  retrieveUsersPOAPs,
-  retrievePOAPTokenInfo,
-} from '../../external/poap';
+import { retrievePOAPEventInfo, retrievePOAPTokenInfo } from '../../external/poap';
 import { createScopedLogger } from '../../logging';
 import { gqlRequestDurationSeconds } from '../../metrics';
 import { GitPOAPReturnData, splitUsersPOAPs } from '../../lib/poaps';
@@ -130,7 +126,21 @@ class Holders {
 }
 
 async function addPRCountData(userGitPOAPData: GitPOAPReturnData[]): Promise<UserGitPOAPData[]> {
-  let results = [];
+  const results = [];
+
+  const profile = await context.prisma.profile.findUnique({
+    where: {
+      address: userGitPOAPData[0].claim.address ?? undefined,
+    },
+  });
+
+  /* Here we assume that all user gitpoaps here belong to the same address */
+  if (!profile || !profile.githubHandle) {
+    return userGitPOAPData.map(gitPOAPData => ({
+      ...gitPOAPData,
+      prCount: 0,
+    }));
+  }
 
   for (const gitPOAPData of userGitPOAPData) {
     results.push({
