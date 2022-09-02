@@ -440,7 +440,8 @@ The request to this endpoint should contain bodies like the following:
       "pullRequest": {
         "organization": "gitpoap",
         "repo": "gitpoap-backend",
-        "pullRequestNumber": 34
+        "pullRequestNumber": 34,
+        "contributorGithubIds": [1, 23, 44],
       }
     }
     ```
@@ -450,7 +451,8 @@ The request to this endpoint should contain bodies like the following:
       "issue": {
         "organization": "gitpoap",
         "repo": "gitpoap-backend",
-        "issueNumber": 324
+        "issueNumber": 324,
+        "contributorGithubIds": [4],
       }
     }
     ```
