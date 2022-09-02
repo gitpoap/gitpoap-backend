@@ -1,12 +1,26 @@
 import { createScopedLogger } from '../logging';
 import { context } from '../context';
 import { getAvatar, resolveENSInternal, resolveAddressInternal } from '../external/ens';
-import { uploadFileFromURL, s3configProfile, getS3URL } from '../external/s3';
+import { ContentTypeCallback, getS3URL, s3configProfile, uploadFileFromURL } from '../external/s3';
 import { SECONDS_PER_HOUR } from '../constants';
+import sharp from 'sharp';
 
 const ENS_AVATAR_LAST_RUN_CACHE_PREFIX = 'ens#avatar-last-run';
 
 const ENS_AVATAR_MAX_CHECK_FREQUENCY_HOURS = 1;
+
+const contentTypeCallback: ContentTypeCallback = async (contentType: string, buffer: Buffer) => {
+  if (contentType === 'image/svg+xml') {
+    const newBuffer = await sharp(buffer).png().toBuffer();
+
+    return {
+      contentType: 'image/png',
+      buffer: newBuffer,
+    };
+  } else {
+    return { contentType, buffer };
+  }
+};
 
 async function resolveENSAvatar(ensName: string, resolvedAddress: string) {
   const logger = createScopedLogger('resolveAvatar');
@@ -34,6 +48,7 @@ async function resolveENSAvatar(ensName: string, resolvedAddress: string) {
       s3configProfile.buckets.ensAvatarCache,
       addressLower, // Using ENS may cause issues (emoji ENSs/etc)
       true, // Make the image publically accessible
+      contentTypeCallback, // Convert SVGs to PNGs before uploading
     );
 
     if (response === null) {
