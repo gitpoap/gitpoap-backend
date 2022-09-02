@@ -9,6 +9,7 @@ import { fromIni } from '@aws-sdk/credential-provider-ini';
 import { AWS_PROFILE, NODE_ENV } from '../environment';
 import fetch from 'cross-fetch';
 import { createScopedLogger } from '../logging';
+import parseDataURL from 'data-urls';
 
 type S3ClientConfigProfile = S3ClientConfig & {
   buckets: Record<string, string>;
@@ -59,31 +60,49 @@ export const uploadFileFromURL = async (
 ): Promise<PutObjectCommandOutput | null> => {
   const logger = createScopedLogger('uploadFileFromURL');
 
-  let response;
-  try {
-    response = await fetch(url);
+  let contentType: string;
+  let buffer: Buffer;
+  // Handle data URLs
+  if (url.startsWith('data:')) {
+    const result = parseDataURL(url);
 
-    if (response.status >= 400) {
-      logger.error(
-        `Failed to fetch file "${url}" [status: ${response.status}]: ${await response.text()}`,
-      );
+    if (result === null) {
+      logger.error(`Failed to parse data URL "${url}"`);
       return null;
     }
-  } catch (err) {
-    logger.error(`Error while fetching file "${url}": ${err}`);
-    return null;
-  }
 
-  if (response.body === null) {
-    logger.warn(`The file at "${url}" has no body`);
-    return null;
-  }
+    contentType = result.mimeType.toString();
+    buffer = Buffer.from(result.body);
+  } else {
+    let response;
+    try {
+      response = await fetch(url);
 
-  const contentType = response.headers.get('content-type');
+      if (response.status >= 400) {
+        logger.error(
+          `Failed to fetch file "${url}" [status: ${response.status}]: ${await response.text()}`,
+        );
+        return null;
+      }
+    } catch (err) {
+      logger.error(`Error while fetching file "${url}": ${err}`);
+      return null;
+    }
 
-  if (contentType === null) {
-    logger.warn(`The file at "${url}" has no Content-Type set`);
-    return null;
+    if (response.body === null) {
+      logger.warn(`The file at "${url}" has no body`);
+      return null;
+    }
+
+    const headerContentType = response.headers.get('content-type');
+
+    if (headerContentType === null) {
+      logger.warn(`The file at "${url}" has no Content-Type set`);
+      return null;
+    }
+
+    contentType = headerContentType;
+    buffer = Buffer.from(await response.arrayBuffer());
   }
 
   const acl = isPublic ? 'public-read' : undefined;
@@ -91,7 +110,7 @@ export const uploadFileFromURL = async (
   const params: PutObjectCommandInput = {
     Bucket: bucket,
     Key: key,
-    Body: Buffer.from(await response.arrayBuffer()),
+    Body: buffer,
     ContentType: contentType,
     ACL: acl,
   };
