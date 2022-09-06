@@ -125,7 +125,9 @@ class Holders {
   holders: Holder[];
 }
 
-async function addPRCountData(userGitPOAPData: GitPOAPReturnData[]): Promise<UserGitPOAPData[]> {
+export async function addPRCountData(
+  userGitPOAPData: GitPOAPReturnData[],
+): Promise<UserGitPOAPData[]> {
   const results = [];
 
   const profile = await context.prisma.profile.findUnique({
