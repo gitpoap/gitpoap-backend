@@ -1,6 +1,5 @@
 import { context } from '../context';
 import { createScopedLogger } from '../logging';
-import { retrievePOAPEventInfo } from '../external/poap';
 import { Claim } from '@generated/type-graphql';
 
 type GitPOAPs = {
@@ -21,17 +20,40 @@ export type RepoData = {
 
 export type ClaimData = {
   id: number;
-  gitPOAP: { id: number; poapEventId: number; threshold: number };
-  name: string;
-  imageUrl: string;
-  description: string;
+  gitPOAP: {
+    id: number;
+    name: string;
+    imageUrl: string;
+    description: string;
+    threshold: number;
+  };
 };
+
+export type Contribution = { pullRequest: { id: number } } | { issue: { id: number } };
 
 export async function upsertClaim(
   user: { id: number },
   gitPOAP: { id: number },
-  githubPullRequest: { id: number },
+  contribution: Contribution,
 ): Promise<Claim> {
+  let pullRequestEarned = undefined;
+  let issueEarned = undefined;
+
+  if ('pullRequest' in contribution) {
+    pullRequestEarned = {
+      connect: {
+        id: contribution.pullRequest.id,
+      },
+    };
+  } else {
+    // 'issue' in contribution
+    issueEarned = {
+      connect: {
+        id: contribution.issue.id,
+      },
+    };
+  }
+
   return await context.prisma.claim.upsert({
     where: {
       gitPOAPId_userId: {
@@ -51,11 +73,8 @@ export async function upsertClaim(
           id: user.id,
         },
       },
-      pullRequestEarned: {
-        connect: {
-          id: githubPullRequest.id,
-        },
-      },
+      pullRequestEarned,
+      issueEarned,
     },
   });
 }
@@ -76,36 +95,60 @@ export function createYearlyGitPOAPsMap(gitPOAPs: GitPOAPs): YearlyGitPOAPsMap {
   return yearlyGitPOAPsMap;
 }
 
-export async function countPRsForClaim(
+export async function countContributionsForClaim(
   user: { id: number },
   repos: { id: number }[],
   gitPOAP: { year: number },
 ): Promise<number> {
-  return await context.prisma.githubPullRequest.count({
-    where: {
-      userId: user.id,
-      repoId: {
-        in: repos.map(r => r.id),
+  const repoIds: number[] = repos.map(r => r.id);
+
+  const dateRange = {
+    gte: new Date(gitPOAP.year, 0, 1),
+    lt: new Date(gitPOAP.year + 1, 0, 1),
+  };
+
+  const [prCount, issueCount] = await Promise.all([
+    context.prisma.githubPullRequest.count({
+      where: {
+        userId: user.id,
+        repoId: {
+          in: repoIds,
+        },
+        githubMergedAt: dateRange,
       },
-      githubMergedAt: {
-        gte: new Date(gitPOAP.year, 0, 1),
-        lt: new Date(gitPOAP.year + 1, 0, 1),
+    }),
+    context.prisma.githubIssue.count({
+      where: {
+        userId: user.id,
+        repoId: {
+          in: repoIds,
+        },
+        githubClosedAt: dateRange,
       },
-    },
-  });
+    }),
+  ]);
+
+  return prCount + issueCount;
 }
 
-export async function createNewClaimsForRepoPR(
+export async function createNewClaimsForRepoContribution(
   user: { id: number },
   repos: { id: number }[],
   yearlyGitPOAPsMap: YearlyGitPOAPsMap,
-  githubPullRequest: { id: number },
+  contribution: Contribution,
 ): Promise<Claim[]> {
-  const logger = createScopedLogger('createNewClaimsForRepoPR');
+  const logger = createScopedLogger('createNewClaimsForRepoContribution');
 
-  logger.info(
-    `Handling creating new claims for PR ID ${githubPullRequest.id} for User ID ${user.id}`,
-  );
+  if ('pullRequest' in contribution) {
+    logger.info(
+      `Handling creating new claims for PR ID ${contribution.pullRequest.id} for User ID ${user.id}`,
+    );
+  } else {
+    // 'issue' in contribution
+    logger.info(
+      `Handling creating new claims for Issue ID ${contribution.issue.id} for User ID ${user.id}`,
+    );
+  }
 
   const years = Object.keys(yearlyGitPOAPsMap);
 
@@ -115,18 +158,18 @@ export async function createNewClaimsForRepoPR(
   for (const year of years) {
     const gitPOAPs = yearlyGitPOAPsMap[year];
 
-    const prCount = await countPRsForClaim(user, repos, gitPOAPs[0]);
+    const contributionCount = await countContributionsForClaim(user, repos, gitPOAPs[0]);
 
-    logger.debug(`User ID ${user.id} has ${prCount} PRs in year ${year}`);
+    logger.debug(`User ID ${user.id} has ${contributionCount} Contributions in year ${year}`);
 
     // Skip if there are no PRs for this year
-    if (prCount === 0) {
+    if (contributionCount === 0) {
       continue;
     }
 
     for (const gitPOAP of gitPOAPs) {
       // Skip this GitPOAP if the threshold wasn't reached
-      if (prCount < gitPOAP.threshold) {
+      if (contributionCount < gitPOAP.threshold) {
         logger.info(
           `User ID ${user.id} misses threshold of ${gitPOAP.threshold} for GitPOAP ID ${gitPOAP.id}`,
         );
@@ -135,71 +178,80 @@ export async function createNewClaimsForRepoPR(
 
       logger.info(`Upserting claim for User ID ${user.id} for GitPOAP ID ${gitPOAP.id}`);
 
-      claims.push(await upsertClaim(user, gitPOAP, githubPullRequest));
+      claims.push(await upsertClaim(user, gitPOAP, contribution));
     }
   }
 
   return claims;
 }
 
-export async function createNewClaimsForRepoPRHelper(
+export async function createNewClaimsForRepoContributionHelper(
   user: { id: number },
   repo: RepoData,
-  githubPullRequest: { id: number },
+  contribution: Contribution,
 ): Promise<Claim[]> {
-  return await createNewClaimsForRepoPR(
+  return await createNewClaimsForRepoContribution(
     user,
     repo.project.repos,
     createYearlyGitPOAPsMap(repo.project.gitPOAPs),
-    githubPullRequest,
+    contribution,
   );
 }
 
 export async function retrieveClaimsCreatedByPR(pullRequestId: number): Promise<ClaimData[]> {
   const logger = createScopedLogger('retrieveClaimsCreatedByPR');
 
-  // Retrieve any new claims created by this new PR
+  // Retrieve any new claims created by this PR
   // No need to filter out DEPRECATED since the claims aren't created for DEPRECATED GitPOAPs
-  const newClaims = await context.prisma.claim.findMany({
+  const claims: ClaimData[] = await context.prisma.claim.findMany({
     where: {
       pullRequestEarnedId: pullRequestId,
+      gitPOAP: {
+        isEnabled: true,
+      },
     },
     select: {
       id: true,
       gitPOAP: {
         select: {
           id: true,
-          poapEventId: true,
+          name: true,
+          imageUrl: true,
+          description: true,
           threshold: true,
-          isEnabled: true,
         },
       },
     },
   });
 
-  let claimsData: ClaimData[] = [];
-  for (const claim of newClaims) {
-    if (!claim.gitPOAP.isEnabled) {
-      logger.info(`Skipping returning claim for non-enabled GitPOAP ID: ${claim.gitPOAP.id}`);
-      continue;
-    }
+  return claims;
+}
 
-    const poapEvent = await retrievePOAPEventInfo(claim.gitPOAP.poapEventId);
-    if (poapEvent === null) {
-      logger.error(
-        `Failed to lookup POAP event (${claim.gitPOAP.poapEventId}) for GitPOAP id ${claim.gitPOAP.id}`,
-      );
-      // Just skip this Claim if we caught an error, and we can investigate afterwards
-      continue;
-    }
+export async function retrieveClaimsCreatedByIssue(issueId: number): Promise<ClaimData[]> {
+  const logger = createScopedLogger('retrieveClaimsCreatedByIssue');
 
-    claimsData.push({
-      name: poapEvent.name,
-      imageUrl: poapEvent.image_url,
-      description: poapEvent.description,
-      ...claim,
-    });
-  }
+  // Retrieve any new claims created by this Issue
+  // No need to filter out DEPRECATED since the claims aren't created for DEPRECATED GitPOAPs
+  const claims: ClaimData[] = await context.prisma.claim.findMany({
+    where: {
+      issueEarnedId: issueId,
+      gitPOAP: {
+        isEnabled: true,
+      },
+    },
+    select: {
+      id: true,
+      gitPOAP: {
+        select: {
+          id: true,
+          name: true,
+          imageUrl: true,
+          description: true,
+          threshold: true,
+        },
+      },
+    },
+  });
 
-  return claimsData;
+  return claims;
 }

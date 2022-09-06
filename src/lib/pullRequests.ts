@@ -6,10 +6,10 @@ import { upsertUser } from './users';
 import {
   RepoData,
   YearlyGitPOAPsMap,
-  createNewClaimsForRepoPR,
+  createNewClaimsForRepoContribution,
   createYearlyGitPOAPsMap,
 } from './claims';
-import { GitPOAPStatus, GithubPullRequest } from '@generated/type-graphql';
+import { GitPOAPStatus, GithubPullRequest } from '@prisma/client';
 
 type ExtraRepoData = RepoData & {
   name: string;
@@ -78,33 +78,33 @@ export function extractMergeCommitSha(pr: GithubPullRequestData) {
 
 export async function upsertGithubPullRequest(
   repoId: number,
-  prNumber: number,
-  prTitle: string,
-  mergedAt: Date,
-  mergeCommitSha: string,
+  githubPullNumber: number,
+  githubTitle: string,
+  githubMergedAt: Date | null,
+  githubMergeCommitSha: string,
   userId: number,
 ): Promise<GithubPullRequest> {
   const logger = createScopedLogger('upsertGithubPullRequest');
 
-  logger.info(`Upserting PR #${prNumber}`);
+  logger.info(`Upserting PR #${githubPullNumber}`);
 
   return await context.prisma.githubPullRequest.upsert({
     where: {
       repoId_githubPullNumber: {
         repoId: repoId,
-        githubPullNumber: prNumber,
+        githubPullNumber,
       },
     },
     update: {
-      githubMergedAt: mergedAt,
-      githubTitle: prTitle,
-      githubMergeCommitSha: mergeCommitSha,
+      githubMergedAt,
+      githubTitle,
+      githubMergeCommitSha,
     },
     create: {
-      githubPullNumber: prNumber,
-      githubTitle: prTitle,
-      githubMergedAt: mergedAt,
-      githubMergeCommitSha: mergeCommitSha,
+      githubPullNumber,
+      githubTitle,
+      githubMergedAt,
+      githubMergeCommitSha,
       repo: {
         connect: {
           id: repoId,
@@ -156,11 +156,11 @@ async function backloadGithubPullRequest(
     user.id,
   );
 
-  const claims = await createNewClaimsForRepoPR(
+  const claims = await createNewClaimsForRepoContribution(
     user,
     repo.project.repos,
     yearlyGitPOAPsMap,
-    githubPullRequest,
+    { pullRequest: githubPullRequest },
   );
 
   for (const claim of claims) {

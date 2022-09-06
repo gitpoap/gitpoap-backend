@@ -9,7 +9,11 @@ import {
 } from '../metrics';
 import { extractMergeCommitSha, upsertGithubPullRequest } from './pullRequests';
 import { upsertUser } from './users';
-import { YearlyGitPOAPsMap, createNewClaimsForRepoPR, createYearlyGitPOAPsMap } from './claims';
+import {
+  YearlyGitPOAPsMap,
+  createNewClaimsForRepoContribution,
+  createYearlyGitPOAPsMap,
+} from './claims';
 import { lookupLastRun, updateLastRun } from './batchProcessing';
 import { GitPOAPStatus } from '@prisma/client';
 
@@ -114,7 +118,9 @@ export async function handleNewPull(
       return { finished: false, updatedAt: updatedAt };
     }
 
-    await createNewClaimsForRepoPR(user, repo.project.repos, yearlyGitPOAPsMap, githubPullRequest);
+    await createNewClaimsForRepoContribution(user, repo.project.repos, yearlyGitPOAPsMap, {
+      pullRequest: githubPullRequest,
+    });
   }
 
   return { finished: false, updatedAt: updatedAt };

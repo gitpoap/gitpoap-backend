@@ -8,7 +8,7 @@ import { retrievePOAPEventInfo, retrievePOAPTokenInfo } from '../../external/poa
 import { createScopedLogger } from '../../logging';
 import { gqlRequestDurationSeconds } from '../../metrics';
 import { GitPOAPReturnData, splitUsersPOAPs } from '../../lib/poaps';
-import { countPRsForClaim } from '../../lib/claims';
+import { countContributionsForClaim } from '../../lib/claims';
 import { Prisma } from '@prisma/client';
 
 @ObjectType()
@@ -29,7 +29,7 @@ class UserGitPOAPData {
   event: POAPEvent;
 
   @Field()
-  prCount: number;
+  contributionCount: number;
 }
 
 @ObjectType()
@@ -142,14 +142,14 @@ export async function addPRCountData(userGitPOAPData: GitPOAPReturnData[]): Prom
   if (!profile || !profile.githubHandle) {
     return userGitPOAPData.map(gitPOAPData => ({
       ...gitPOAPData,
-      prCount: 0,
+      contributionCount: 0,
     }));
   }
 
   for (const gitPOAPData of userGitPOAPData) {
     results.push({
       ...gitPOAPData,
-      prCount: await countPRsForClaim(
+      contributionCount: await countContributionsForClaim(
         gitPOAPData.claim.user,
         gitPOAPData.claim.gitPOAP.project.repos,
         gitPOAPData.claim.gitPOAP,

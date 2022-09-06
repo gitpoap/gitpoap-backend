@@ -22,17 +22,21 @@ type GithubUserResponse = {
 export type GithubPullRequestData = {
   number: number;
   title: string;
-  user: {
-    id: number;
-    login: string;
-    type: string;
-  };
+  user: GithubUserResponse;
   merged_at: string | null;
   updated_at: string;
   merge_commit_sha: string;
   head: {
     sha: string;
   };
+};
+
+export type GithubIssueData = {
+  number: number;
+  title: string;
+  user: GithubUserResponse;
+  closed_at: string | null;
+  updated_at: string;
 };
 
 export type GithubRepoResponse = {
@@ -265,13 +269,21 @@ export async function getGithubRepositoryPullsAsAdmin(
 }
 
 /* Get single pull request data */
-export const getSingleGithubRepositoryPullAsAdmin = async (
+export async function getSingleGithubRepositoryPullAsAdmin(
   org: string,
   repo: string,
-  pullRequestNum: number,
-): Promise<GithubPullRequestData> => {
-  return await makeAdminGithubAPIRequest(`/repos/${org}/${repo}/pulls/${pullRequestNum}`);
-};
+  pullRequestNumber: number,
+): Promise<GithubPullRequestData> {
+  return await makeAdminGithubAPIRequest(`/repos/${org}/${repo}/pulls/${pullRequestNumber}`);
+}
+
+export async function getSingleGithubRepositoryIssueAsAdmin(
+  org: string,
+  repo: string,
+  issueNumber: number,
+): Promise<GithubIssueData> {
+  return await makeAdminGithubAPIRequest(`/repos/${org}/${repo}/issues/${issueNumber}`);
+}
 
 export async function getGithubAuthenticatedApp(jwtToken: string) {
   return await makeGithubJWTAPIRequest('/app', jwtToken);
