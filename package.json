@@ -6,6 +6,7 @@
   "scripts": {
     "copy-files": "cp src/redis/deletePrefix.lua dist/src/redis/deletePrefix.lua",
     "build": "tsc --project ./ && yarn copy-files",
+    "first-time-dev": "./.dockerfiles/run-server.sh",
     "dev": "ts-node-dev --transpile-only --respawn --exit-child --watch ./src/ ./src/server.ts",
     "dev-api": "ts-node-dev --transpile-only --respawn --exit-child --watch ./src/ ./src/public-api/server.ts",
     "start": "node -r dotenv/config ./dist/src/server.js",
