@@ -62,12 +62,18 @@ import {
   FindManyGithubPullRequestResolver,
   GroupByGithubPullRequestResolver,
   AggregateGithubPullRequestResolver,
-  /* Auto-generated GithubPullRequest Resolvers */
+  /* Auto-generated Project Resolvers */
   FindUniqueProjectResolver,
   FindFirstProjectResolver,
   FindManyProjectResolver,
   GroupByProjectResolver,
   AggregateProjectResolver,
+  /* Auto-generated GithubIssue Resolvers */
+  FindUniqueGithubIssueResolver,
+  FindFirstGithubIssueResolver,
+  FindManyGithubIssueResolver,
+  GroupByGithubIssueResolver,
+  AggregateGithubIssueResolver,
 } from '@generated/type-graphql';
 import { CustomClaimResolver } from './resolvers/claims';
 import { CustomGitPOAPResolver } from './resolvers/gitpoaps';
@@ -141,6 +147,12 @@ const allResolvers: NonEmptyArray<Function> = [
   FindManyProjectResolver,
   GroupByProjectResolver,
   AggregateProjectResolver,
+  /* Auto-generated GithubIssue READ Resolvers */
+  FindUniqueGithubIssueResolver,
+  FindFirstGithubIssueResolver,
+  FindManyGithubIssueResolver,
+  GroupByGithubIssueResolver,
+  AggregateGithubIssueResolver,
   /* ~~ Custom resolvers ~~ */
   CustomClaimResolver,
   CustomGitPOAPResolver,

@@ -81,7 +81,7 @@ export const mapClaimsToGitPOAPResults = async (
       description: poapEventData.description,
       imageUrl: poapEventData.image_url,
       repositories,
-      earnedAt: DateTime.fromJSDate(earnedAt).toFormat('yyyy-MM-dd'),
+      earnedAt: DateTime.fromJSDate(<Date>earnedAt).toFormat('yyyy-MM-dd'),
       mintedAt: claim.mintedAt ? DateTime.fromJSDate(claim.mintedAt).toFormat('yyyy-MM-dd') : null,
       needsRevalidation: claim.needsRevalidation,
       isDeprecated: claim.gitPOAP.status === GitPOAPStatus.DEPRECATED,

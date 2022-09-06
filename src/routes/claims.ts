@@ -1,32 +1,31 @@
 import {
   ClaimGitPOAPSchema,
-  CreateGitPOAPBotClaimsSchema,
   CreateGitPOAPClaimsSchema,
+  CreateGitPOAPBotClaimsForPRSchema,
+  CreateGitPOAPBotClaimsForIssueSchema,
+  CreateGitPOAPBotClaimsSchema,
 } from '../schemas/claims';
 import { Router, Request } from 'express';
 import { context } from '../context';
-import { ClaimStatus, GitPOAP, GitPOAPStatus } from '@prisma/client';
+import { ClaimStatus, GitPOAP, GitPOAPStatus, User } from '@prisma/client';
 import { resolveENS } from '../lib/ens';
 import { isSignatureValid } from '../signatures';
 import { jwtWithOAuth, jwtWithAdminOAuth, gitpoapBotAuth } from '../middleware';
 import { AccessTokenPayload, AccessTokenPayloadWithOAuth } from '../types/tokens';
 import { redeemPOAP, requestPOAPCodes, retrieveClaimInfo } from '../external/poap';
-import { getSingleGithubRepositoryPullAsAdmin, getGithubUserById } from '../external/github';
+import { getGithubUserById } from '../external/github';
 import { createScopedLogger } from '../logging';
 import { MINIMUM_REMAINING_REDEEM_CODES, REDEEM_CODE_STEP_SIZE } from '../constants';
 import { httpRequestDurationSeconds } from '../metrics';
 import { DateTime } from 'luxon';
 import { sleep } from '../lib/sleep';
-import {
-  backloadGithubPullRequestData,
-  upsertGithubPullRequest,
-  extractMergeCommitSha,
-} from '../lib/pullRequests';
+import { backloadGithubPullRequestData } from '../lib/pullRequests';
 import { upsertUser } from '../lib/users';
-import { RepoData, createNewClaimsForRepoPRHelper, retrieveClaimsCreatedByPR } from '../lib/claims';
-import { getRepoByName } from '../lib/repos';
+import { RepoData, retrieveClaimsCreatedByIssue, retrieveClaimsCreatedByPR } from '../lib/claims';
 import { checkIfClaimTransferred } from '../lib/transfers';
 import { upsertProfile } from '../lib/profiles';
+import { z } from 'zod';
+import { createClaimsForPR, createClaimsForIssue } from '../lib/bot';
 
 export const claimsRouter = Router();
 
@@ -468,12 +467,10 @@ claimsRouter.post('/create', jwtWithAdminOAuth(), async function (req, res) {
   }
 });
 
-type ReqBody = { repo: string; owner: string; pullRequestNumber: number };
-
 claimsRouter.post(
   '/gitpoap-bot/create',
   gitpoapBotAuth(),
-  async function (req: Request<any, any, ReqBody>, res) {
+  async function (req: Request<any, any, z.infer<typeof CreateGitPOAPBotClaimsSchema>>, res) {
     const logger = createScopedLogger('POST /claims/gitpoap-bot/create');
 
     logger.debug(`Body: ${JSON.stringify(req.body)}`);
@@ -489,57 +486,51 @@ claimsRouter.post(
       return res.status(400).send({ issues: schemaResult.error.issues });
     }
 
-    logger.info(
-      `Request to create claim for PR #${req.body.pullRequestNumber} on "${req.body.organization}/${req.body.repo}"`,
-    );
+    let newClaims;
+    if ('pullRequest' in req.body) {
+      const reqBody: z.infer<typeof CreateGitPOAPBotClaimsForPRSchema> = req.body.pullRequest;
 
-    const repo = await getRepoByName(req.body.organization, req.body.repo);
-    if (repo === null) {
-      const msg = `Failed to find repo: "${req.body.organization}/${req.body.repo}"`;
-      logger.warn(msg);
-      endTimer({ status: 404 });
-      return res.status(404).send({ msg });
+      logger.info(
+        `Request to create claim for PR #${reqBody.pullRequestNumber} on "${reqBody.organization}/${reqBody.repo}"`,
+      );
+
+      const githubPullRequest = await createClaimsForPR(
+        reqBody.organization,
+        reqBody.repo,
+        reqBody.pullRequestNumber,
+      );
+      if (githubPullRequest === null) {
+        return res.status(404).send({ msg: 'Failed to find repo' });
+      }
+
+      newClaims = await retrieveClaimsCreatedByPR(githubPullRequest.id);
+
+      logger.debug(
+        `Completed request to create claim for PR #${reqBody.pullRequestNumber} on "${reqBody.organization}/${reqBody.repo}`,
+      );
+    } else {
+      // 'issue' in req.body
+      const reqBody: z.infer<typeof CreateGitPOAPBotClaimsForIssueSchema> = req.body.issue;
+
+      logger.info(
+        `Request to create claim for Issue #${reqBody.issueNumber} on "${reqBody.organization}/${reqBody.repo}`,
+      );
+
+      const githubIssue = await createClaimsForIssue(
+        reqBody.organization,
+        reqBody.repo,
+        reqBody.issueNumber,
+      );
+      if (githubIssue === null) {
+        return res.status(404).send({ msg: 'Failed to find repo' });
+      }
+
+      newClaims = await retrieveClaimsCreatedByIssue(githubIssue.id);
+
+      logger.debug(
+        `Completed equest to create claim for Issue #${reqBody.issueNumber} on "${reqBody.organization}/${reqBody.repo}`,
+      );
     }
-
-    const pull = await getSingleGithubRepositoryPullAsAdmin(
-      req.body.organization,
-      req.body.repo,
-      req.body.pullRequestNumber,
-    );
-    if (pull === null) {
-      const msg = `Failed to query repo data for "${req.body.organization}/${req.body.repo}" via GitHub API`;
-      logger.error(msg);
-      endTimer({ status: 404 });
-      return res.status(404).send({ msg });
-    }
-
-    if (pull.user.type === 'Bot') {
-      logger.info(`Skipping creating new claims for bot "${pull.user.login}"`);
-      endTimer({ status: 200 });
-      return res.status(200).send({ newClaims: [] });
-    }
-
-    // Ensure that we've created a user in our system for the claim
-    const user = await upsertUser(pull.user.id, pull.user.login);
-
-    const githubPullRequest = await upsertGithubPullRequest(
-      repo.id,
-      pull.number,
-      pull.title,
-      // Since we are getting from the merge message, we assume this is not null
-      new Date(<string>pull.merged_at),
-      extractMergeCommitSha(pull),
-      user.id,
-    );
-
-    // Create any new claims (if they haven't been already)
-    await createNewClaimsForRepoPRHelper(user, repo, githubPullRequest);
-
-    const newClaims = await retrieveClaimsCreatedByPR(githubPullRequest.id);
-
-    logger.debug(
-      `Completed request to create claim for PR #${req.body.pullRequestNumber} on "${req.body.organization}/${req.body.repo}`,
-    );
 
     endTimer({ status: 200 });
 
