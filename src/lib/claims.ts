@@ -35,6 +35,7 @@ export async function upsertClaim(
   user: { id: number },
   gitPOAP: { id: number },
   contribution: Contribution,
+  wasEarnedByMention: boolean,
 ): Promise<Claim> {
   let pullRequestEarned = undefined;
   let issueEarned = undefined;
@@ -63,6 +64,7 @@ export async function upsertClaim(
     },
     update: {},
     create: {
+      wasEarnedByMention,
       gitPOAP: {
         connect: {
           id: gitPOAP.id,
@@ -136,6 +138,7 @@ export async function createNewClaimsForRepoContribution(
   repos: { id: number }[],
   yearlyGitPOAPsMap: YearlyGitPOAPsMap,
   contribution: Contribution,
+  wasEarnedByMention: boolean = false,
 ): Promise<Claim[]> {
   const logger = createScopedLogger('createNewClaimsForRepoContribution');
 
@@ -178,7 +181,7 @@ export async function createNewClaimsForRepoContribution(
 
       logger.info(`Upserting claim for User ID ${user.id} for GitPOAP ID ${gitPOAP.id}`);
 
-      claims.push(await upsertClaim(user, gitPOAP, contribution));
+      claims.push(await upsertClaim(user, gitPOAP, contribution, wasEarnedByMention));
     }
   }
 
@@ -189,12 +192,14 @@ export async function createNewClaimsForRepoContributionHelper(
   user: { id: number },
   repo: RepoData,
   contribution: Contribution,
+  wasEarnedByMention: boolean = false,
 ): Promise<Claim[]> {
   return await createNewClaimsForRepoContribution(
     user,
     repo.project.repos,
     createYearlyGitPOAPsMap(repo.project.gitPOAPs),
     contribution,
+    wasEarnedByMention,
   );
 }
 

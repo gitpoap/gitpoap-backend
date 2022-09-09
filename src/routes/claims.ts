@@ -498,6 +498,7 @@ claimsRouter.post(
         reqBody.organization,
         reqBody.repo,
         reqBody.pullRequestNumber,
+        reqBody.wasEarnedByMention,
       );
       if (githubPullRequest === null) {
         return res.status(404).send({ msg: 'Failed to find repo' });
@@ -520,6 +521,7 @@ claimsRouter.post(
         reqBody.organization,
         reqBody.repo,
         reqBody.issueNumber,
+        reqBody.wasEarnedByMention,
       );
       if (githubIssue === null) {
         return res.status(404).send({ msg: 'Failed to find repo' });
