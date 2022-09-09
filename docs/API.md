@@ -459,6 +459,12 @@ The request to this endpoint should contain bodies like the following:
     }
     ```
 
+Note: The returned `ClaimData` of this will only include Claims that have
+`wasEarnedByMention` set to the same value as in the request. In this way we can make
+(presumably) two separate comments:
+1. For any users that were mentined as being contributors to the PR/Issue
+2. For the user that was the creator of the merged/closed PR/issue
+
 ## Appendix
 
 ### Generating Signatures
