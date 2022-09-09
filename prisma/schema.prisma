@@ -107,6 +107,9 @@ model Claim {
   // Some claims are earned by tagging a user in an issue or when an issue is closed by a PR
   issueEarnedId       Int?
   issueEarned         GithubIssue?       @relation(fields: [issueEarnedId], references: [id])
+  // Some claims were not earned by the creator of a CLOSED/MERGED PR/issue
+  // but were attained by the contributor by mentions to the gitpoap-bot
+  wasEarnedByMention  Boolean            @default(false)
   needsRevalidation   Boolean            @default(false)
 
   @@unique([gitPOAPId, userId])

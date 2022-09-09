@@ -17,6 +17,7 @@ export const CreateGitPOAPBotClaimsForPRSchema = z.object({
   repo: z.string().nonempty(),
   pullRequestNumber: z.number(),
   contributorGithubIds: z.array(z.number()).nonempty(),
+  wasEarnedByMention: z.boolean(),
 });
 
 export const CreateGitPOAPBotClaimsForIssueSchema = z.object({
@@ -24,6 +25,7 @@ export const CreateGitPOAPBotClaimsForIssueSchema = z.object({
   repo: z.string().nonempty(),
   issueNumber: z.number(),
   contributorGithubIds: z.array(z.number()).nonempty(),
+  wasEarnedByMention: z.boolean(),
 });
 
 export const CreateGitPOAPBotClaimsSchema = z.union([

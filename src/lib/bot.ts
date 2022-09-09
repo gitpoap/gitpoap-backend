@@ -14,6 +14,7 @@ export async function createClaimsForPR(
   organization: string,
   repo: string,
   pullRequestNumber: number,
+  wasEarnedByMention: boolean,
 ): Promise<GithubPullRequest | null> {
   const logger = createScopedLogger('createClaimsForPR');
 
@@ -49,9 +50,12 @@ export async function createClaimsForPR(
   );
 
   // Create any new claims (if they haven't been already)
-  await createNewClaimsForRepoContributionHelper(user, repoData, {
-    pullRequest: githubPullRequest,
-  });
+  await createNewClaimsForRepoContributionHelper(
+    user,
+    repoData,
+    { pullRequest: githubPullRequest },
+    wasEarnedByMention,
+  );
 
   return githubPullRequest;
 }
@@ -60,6 +64,7 @@ export async function createClaimsForIssue(
   organization: string,
   repo: string,
   issueNumber: number,
+  wasEarnedByMention: boolean,
 ): Promise<GithubIssue | null> {
   const logger = createScopedLogger('createClaimsForIssue');
 
@@ -84,7 +89,12 @@ export async function createClaimsForIssue(
     user.id,
   );
 
-  await createNewClaimsForRepoContributionHelper(user, repoData, { issue: githubIssue });
+  await createNewClaimsForRepoContributionHelper(
+    user,
+    repoData,
+    { issue: githubIssue },
+    wasEarnedByMention,
+  );
 
   return githubIssue;
 }
