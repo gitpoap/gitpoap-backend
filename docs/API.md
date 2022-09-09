@@ -442,6 +442,7 @@ The request to this endpoint should contain bodies like the following:
         "repo": "gitpoap-backend",
         "pullRequestNumber": 34,
         "contributorGithubIds": [1, 23, 44],
+        "wasEarnedByMention": false
       }
     }
     ```
@@ -453,6 +454,7 @@ The request to this endpoint should contain bodies like the following:
         "repo": "gitpoap-backend",
         "issueNumber": 324,
         "contributorGithubIds": [4],
+        "wasEarnedByMention": true
       }
     }
     ```

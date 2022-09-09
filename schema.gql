@@ -410,6 +410,7 @@ type ClaimCountAggregate {
   userId: Int!
   pullRequestEarnedId: Int!
   issueEarnedId: Int!
+  wasEarnedByMention: Int!
   needsRevalidation: Int!
   _all: Int!
 }
@@ -443,6 +444,7 @@ type ClaimMinAggregate {
   userId: Int
   pullRequestEarnedId: Int
   issueEarnedId: Int
+  wasEarnedByMention: Boolean
   needsRevalidation: Boolean
 }
 
@@ -469,6 +471,7 @@ type ClaimMaxAggregate {
   userId: Int
   pullRequestEarnedId: Int
   issueEarnedId: Int
+  wasEarnedByMention: Boolean
   needsRevalidation: Boolean
 }
 
@@ -491,6 +494,7 @@ input ClaimWhereInput {
   pullRequestEarned: GithubPullRequestRelationFilter
   issueEarnedId: IntNullableFilter
   issueEarned: GithubIssueRelationFilter
+  wasEarnedByMention: BoolFilter
   needsRevalidation: BoolFilter
 }
 
@@ -955,6 +959,7 @@ input ClaimOrderByWithRelationInput {
   pullRequestEarned: GithubPullRequestOrderByWithRelationInput
   issueEarnedId: SortOrder
   issueEarned: GithubIssueOrderByWithRelationInput
+  wasEarnedByMention: SortOrder
   needsRevalidation: SortOrder
 }
 
@@ -1129,6 +1134,7 @@ type Claim {
   userId: Int!
   pullRequestEarnedId: Int
   issueEarnedId: Int
+  wasEarnedByMention: Boolean!
   needsRevalidation: Boolean!
   gitPOAP: GitPOAP!
   user: User!
@@ -1372,6 +1378,7 @@ enum ClaimScalarFieldEnum {
   userId
   pullRequestEarnedId
   issueEarnedId
+  wasEarnedByMention
   needsRevalidation
 }
 
@@ -1525,6 +1532,7 @@ type ClaimGroupBy {
   userId: Int!
   pullRequestEarnedId: Int
   issueEarnedId: Int
+  wasEarnedByMention: Boolean!
   needsRevalidation: Boolean!
   _count: ClaimCountAggregate
   _avg: ClaimAvgAggregate
@@ -1545,6 +1553,7 @@ input ClaimOrderByWithAggregationInput {
   userId: SortOrder
   pullRequestEarnedId: SortOrder
   issueEarnedId: SortOrder
+  wasEarnedByMention: SortOrder
   needsRevalidation: SortOrder
   _count: ClaimCountOrderByAggregateInput
   _avg: ClaimAvgOrderByAggregateInput
@@ -1565,6 +1574,7 @@ input ClaimCountOrderByAggregateInput {
   userId: SortOrder
   pullRequestEarnedId: SortOrder
   issueEarnedId: SortOrder
+  wasEarnedByMention: SortOrder
   needsRevalidation: SortOrder
 }
 
@@ -1588,6 +1598,7 @@ input ClaimMaxOrderByAggregateInput {
   userId: SortOrder
   pullRequestEarnedId: SortOrder
   issueEarnedId: SortOrder
+  wasEarnedByMention: SortOrder
   needsRevalidation: SortOrder
 }
 
@@ -1603,6 +1614,7 @@ input ClaimMinOrderByAggregateInput {
   userId: SortOrder
   pullRequestEarnedId: SortOrder
   issueEarnedId: SortOrder
+  wasEarnedByMention: SortOrder
   needsRevalidation: SortOrder
 }
 
@@ -1629,6 +1641,7 @@ input ClaimScalarWhereWithAggregatesInput {
   userId: IntWithAggregatesFilter
   pullRequestEarnedId: IntNullableWithAggregatesFilter
   issueEarnedId: IntNullableWithAggregatesFilter
+  wasEarnedByMention: BoolWithAggregatesFilter
   needsRevalidation: BoolWithAggregatesFilter
 }
 
