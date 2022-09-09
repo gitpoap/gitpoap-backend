@@ -163,6 +163,12 @@ export async function getGithubUserById(
   return await makeGithubAPIRequest(`/user/${githubId}`, githubToken);
 }
 
+export async function getGithubUserByIdAsAdmin(
+  githubId: number,
+): Promise<GithubUserResponse | null> {
+  return await makeAdminGithubAPIRequest(`/user/${githubId}`);
+}
+
 export async function getGithubRepository(
   organization: string,
   name: string,
