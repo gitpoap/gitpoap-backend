@@ -1,5 +1,6 @@
 import { GithubIssue, GithubPullRequest } from '@prisma/client';
 import {
+  getGithubUserByIdAsAdmin,
   getSingleGithubRepositoryIssueAsAdmin,
   getSingleGithubRepositoryPullAsAdmin,
 } from '../external/github';
@@ -10,32 +11,52 @@ import { createNewClaimsForRepoContributionHelper } from '../lib/claims';
 import { extractMergeCommitSha, upsertGithubPullRequest } from '../lib/pullRequests';
 import { upsertGithubIssue } from '../lib/issues';
 
+async function isUserABot(githubId: number): Promise<boolean> {
+  const logger = createScopedLogger('isUserABot');
+
+  const userInfo = await getGithubUserByIdAsAdmin(githubId);
+
+  if (userInfo === null) {
+    // In this case let's log an error and then pretend they are a bot
+    // so they get skipped
+    logger.error(`Failed to lookup Github user ID ${githubId}`);
+    return true;
+  }
+
+  return userInfo.type === 'Bot';
+}
+
+export enum BotCreateClaimsErrorType {
+  BotUser,
+  RepoNotFound,
+  GithubRecordNotFound,
+}
+
 export async function createClaimsForPR(
   organization: string,
   repo: string,
   pullRequestNumber: number,
+  githubId: number,
   wasEarnedByMention: boolean,
-): Promise<GithubPullRequest | null> {
+): Promise<GithubPullRequest | BotCreateClaimsErrorType> {
   const logger = createScopedLogger('createClaimsForPR');
+
+  if (await isUserABot(githubId)) {
+    logger.info(`Skipping creating new claims for bot ID: ${githubId}`);
+    return BotCreateClaimsErrorType.BotUser;
+  }
 
   const repoData = await getRepoByName(organization, repo);
   if (repoData === null) {
     logger.warn(`Failed to find repo: "${organization}/${repo}"`);
-    return null;
+    return BotCreateClaimsErrorType.RepoNotFound;
   }
 
   const pull = await getSingleGithubRepositoryPullAsAdmin(organization, repo, pullRequestNumber);
   if (pull === null) {
     logger.error(`Failed to query repo data for "${organization}/${repo}" via GitHub API`);
-    return null;
+    return BotCreateClaimsErrorType.GithubRecordNotFound;
   }
-
-  // TODO figure out this
-  //  if (pull.user.type === 'Bot') {
-  //    logger.info(`Skipping creating new claims for bot "${pull.user.login}"`);
-  //    endTimer({ status: 200 });
-  //    return res.status(200).send({ newClaims: [] });
-  //  }
 
   // Ensure that we've created a user in our system for the claim
   const user = await upsertUser(pull.user.id, pull.user.login);
@@ -64,19 +85,26 @@ export async function createClaimsForIssue(
   organization: string,
   repo: string,
   issueNumber: number,
+  githubId: number,
   wasEarnedByMention: boolean,
-): Promise<GithubIssue | null> {
+): Promise<GithubIssue | BotCreateClaimsErrorType> {
   const logger = createScopedLogger('createClaimsForIssue');
+
+  if (await isUserABot(githubId)) {
+    logger.info(`Skipping creating new claims for bot ID: ${githubId}`);
+    return BotCreateClaimsErrorType.BotUser;
+  }
 
   const repoData = await getRepoByName(organization, repo);
   if (repoData === null) {
     logger.warn(`Failed to find repo: "${organization}/${repo}"`);
-    return null;
+    return BotCreateClaimsErrorType.RepoNotFound;
   }
 
   const issue = await getSingleGithubRepositoryIssueAsAdmin(organization, repo, issueNumber);
-
-  // TODO handle bots
+  if (issue === null) {
+    return BotCreateClaimsErrorType.GithubRecordNotFound;
+  }
 
   // Ensure that we've created a user in our system for the claim
   const user = await upsertUser(issue.user.id, issue.user.login);
