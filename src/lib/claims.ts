@@ -20,6 +20,9 @@ export type RepoData = {
 
 export type ClaimData = {
   id: number;
+  user: {
+    githubHandle: string;
+  };
   gitPOAP: {
     id: number;
     name: string;
@@ -203,7 +206,10 @@ export async function createNewClaimsForRepoContributionHelper(
   );
 }
 
-export async function retrieveClaimsCreatedByPR(pullRequestId: number): Promise<ClaimData[]> {
+export async function retrieveClaimsCreatedByPR(
+  pullRequestId: number,
+  wasEarnedByMention: boolean,
+): Promise<ClaimData[]> {
   const logger = createScopedLogger('retrieveClaimsCreatedByPR');
 
   // Retrieve any new claims created by this PR
@@ -211,12 +217,18 @@ export async function retrieveClaimsCreatedByPR(pullRequestId: number): Promise<
   const claims: ClaimData[] = await context.prisma.claim.findMany({
     where: {
       pullRequestEarnedId: pullRequestId,
+      wasEarnedByMention,
       gitPOAP: {
         isEnabled: true,
       },
     },
     select: {
       id: true,
+      user: {
+        select: {
+          githubHandle: true,
+        },
+      },
       gitPOAP: {
         select: {
           id: true,
@@ -232,7 +244,10 @@ export async function retrieveClaimsCreatedByPR(pullRequestId: number): Promise<
   return claims;
 }
 
-export async function retrieveClaimsCreatedByIssue(issueId: number): Promise<ClaimData[]> {
+export async function retrieveClaimsCreatedByIssue(
+  issueId: number,
+  wasEarnedByMention: boolean,
+): Promise<ClaimData[]> {
   const logger = createScopedLogger('retrieveClaimsCreatedByIssue');
 
   // Retrieve any new claims created by this Issue
@@ -240,12 +255,18 @@ export async function retrieveClaimsCreatedByIssue(issueId: number): Promise<Cla
   const claims: ClaimData[] = await context.prisma.claim.findMany({
     where: {
       issueEarnedId: issueId,
+      wasEarnedByMention,
       gitPOAP: {
         isEnabled: true,
       },
     },
     select: {
       id: true,
+      user: {
+        select: {
+          githubHandle: true,
+        },
+      },
       gitPOAP: {
         select: {
           id: true,

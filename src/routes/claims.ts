@@ -521,7 +521,10 @@ claimsRouter.post(
       if (githubPullRequest === null) {
         newClaims = [];
       } else {
-        newClaims = await retrieveClaimsCreatedByPR(githubPullRequest.id);
+        newClaims = await retrieveClaimsCreatedByPR(
+          githubPullRequest.id,
+          reqBody.wasEarnedByMention,
+        );
       }
 
       logger.debug(
@@ -557,7 +560,7 @@ claimsRouter.post(
       if (githubIssue === null) {
         newClaims = [];
       } else {
-        newClaims = await retrieveClaimsCreatedByIssue(githubIssue.id);
+        newClaims = await retrieveClaimsCreatedByIssue(githubIssue.id, reqBody.wasEarnedByMention);
       }
 
       logger.debug(
