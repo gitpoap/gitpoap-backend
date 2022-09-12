@@ -1,6 +1,7 @@
 import { context } from '../context';
 import { createScopedLogger } from '../logging';
 import { Claim } from '@generated/type-graphql';
+import { countContributionsForClaim } from './contributions';
 
 type GitPOAPs = {
   id: number;
@@ -98,42 +99,6 @@ export function createYearlyGitPOAPsMap(gitPOAPs: GitPOAPs): YearlyGitPOAPsMap {
   }
 
   return yearlyGitPOAPsMap;
-}
-
-export async function countContributionsForClaim(
-  user: { id: number },
-  repos: { id: number }[],
-  gitPOAP: { year: number },
-): Promise<number> {
-  const repoIds: number[] = repos.map(r => r.id);
-
-  const dateRange = {
-    gte: new Date(gitPOAP.year, 0, 1),
-    lt: new Date(gitPOAP.year + 1, 0, 1),
-  };
-
-  const [prCount, issueCount] = await Promise.all([
-    context.prisma.githubPullRequest.count({
-      where: {
-        userId: user.id,
-        repoId: {
-          in: repoIds,
-        },
-        githubMergedAt: dateRange,
-      },
-    }),
-    context.prisma.githubIssue.count({
-      where: {
-        userId: user.id,
-        repoId: {
-          in: repoIds,
-        },
-        githubClosedAt: dateRange,
-      },
-    }),
-  ]);
-
-  return prCount + issueCount;
 }
 
 export async function createNewClaimsForRepoContribution(

@@ -1,5 +1,5 @@
-import { contextMock } from '../../../../__mocks__/src/context';
 import { mockedLogger } from '../../../../__mocks__/src/logging';
+import { contextMock } from '../../../../__mocks__/src/context';
 import { retrieveUsersPOAPs, retrievePOAPEventInfo } from '../../../../src/external/poap';
 import { splitUsersPOAPs } from '../../../../src/lib/poaps';
 import { ADDRESSES } from '../../../../prisma/constants';

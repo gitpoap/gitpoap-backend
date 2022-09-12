@@ -1,5 +1,5 @@
-import { contextMock } from '../../../../__mocks__/src/context';
 import { mockedLogger } from '../../../../__mocks__/src/logging';
+import { contextMock } from '../../../../__mocks__/src/context';
 import { retrieveUnusedPOAPCodes } from '../../../../src/external/poap';
 import { checkGitPOAPForNewCodes, GitPOAPWithSecret } from '../../../../src/lib/codes';
 import { GitPOAPStatus } from '@generated/type-graphql';

@@ -1,3 +1,4 @@
+import { mockedLogger } from '../../../../__mocks__/src/logging';
 import { contextMock } from '../../../../__mocks__/src/context';
 import { setupApp } from '../../../../src/app';
 import { generateAuthTokens } from '../../../../src/lib/authTokens';

@@ -1,10 +1,36 @@
+import { mockedLogger } from '../../../../__mocks__/src/logging';
 import { contextMock } from '../../../../__mocks__/src/context';
-import { createNewClaimsForRepoPRHelper, RepoData } from '../../../../src/lib/claims';
+import {
+  Contribution,
+  RepoData,
+  createNewClaimsForRepoContributionHelper,
+} from '../../../../src/lib/claims';
+import { countContributionsForClaim } from '../../../../src/lib/contributions';
+
+jest.mock('../../../../src/lib/contributions');
+
+const mockedCountContributionsForClaim = jest.mocked(countContributionsForClaim, true);
 
 const user = { id: 4 };
-const pr = { id: 32 };
 
-function fillInUpsert(userId: number, gitPOAPId: number, prId: number) {
+function fillInUpsert(
+  userId: number,
+  gitPOAPId: number,
+  contribution: Contribution,
+  wasEarnedByMention: boolean = false
+) {
+  let pullRequestEarned = undefined;
+  let issueEarned = undefined;
+  if ('pullRequest' in contribution) {
+    pullRequestEarned = {
+      connect: contribution.pullRequest,
+    };
+  } else { // 'issue' in contribution
+    issueEarned = {
+      connect: contribution.issue,
+    };
+  }
+
   return {
     where: {
       gitPOAPId_userId: {
@@ -24,18 +50,18 @@ function fillInUpsert(userId: number, gitPOAPId: number, prId: number) {
           id: userId,
         },
       },
-      pullRequestEarned: {
-        connect: {
-          id: prId,
-        },
-      },
+      pullRequestEarned,
+      issueEarned,
+      wasEarnedByMention,
     },
   };
 }
 
-describe('createNewClaimsForRepoPR', () => {
+describe('createNewClaimsForRepoContribution', () => {
+  const pr = { id: 32 };
+
   it('Does nothing when threshold is not met', async () => {
-    contextMock.prisma.githubPullRequest.count.mockResolvedValue(1);
+    mockedCountContributionsForClaim.mockResolvedValue(1);
 
     const repo: RepoData = {
       id: 43,
@@ -53,15 +79,15 @@ describe('createNewClaimsForRepoPR', () => {
       },
     };
 
-    await createNewClaimsForRepoPRHelper(user, repo, pr);
+    await createNewClaimsForRepoContributionHelper(user, repo, { pullRequest: pr });
 
-    expect(contextMock.prisma.githubPullRequest.count).toHaveBeenCalledTimes(1);
+    expect(mockedCountContributionsForClaim).toHaveBeenCalledTimes(1);
 
     expect(contextMock.prisma.claim.upsert).toHaveBeenCalledTimes(0);
   });
 
   it('Creates claim when threshold is met', async () => {
-    contextMock.prisma.githubPullRequest.count.mockResolvedValue(1);
+    mockedCountContributionsForClaim.mockResolvedValue(1);
 
     const repo: RepoData = {
       id: 43,
@@ -79,18 +105,18 @@ describe('createNewClaimsForRepoPR', () => {
       },
     };
 
-    await createNewClaimsForRepoPRHelper(user, repo, pr);
+    await createNewClaimsForRepoContributionHelper(user, repo, { pullRequest: pr });
 
-    expect(contextMock.prisma.githubPullRequest.count).toHaveBeenCalledTimes(1);
+    expect(mockedCountContributionsForClaim).toHaveBeenCalledTimes(1);
 
     expect(contextMock.prisma.claim.upsert).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.claim.upsert).toHaveBeenCalledWith(
-      fillInUpsert(user.id, repo.project.gitPOAPs[0].id, pr.id),
+      fillInUpsert(user.id, repo.project.gitPOAPs[0].id, { pullRequest: pr }),
     );
   });
 
   it('Creates multiple claims when thresholds are met', async () => {
-    contextMock.prisma.githubPullRequest.count.mockResolvedValue(4);
+    mockedCountContributionsForClaim.mockResolvedValue(4);
 
     const repo: RepoData = {
       id: 43,
@@ -118,21 +144,21 @@ describe('createNewClaimsForRepoPR', () => {
       },
     };
 
-    await createNewClaimsForRepoPRHelper(user, repo, pr);
+    await createNewClaimsForRepoContributionHelper(user, repo, { pullRequest: pr });
 
-    expect(contextMock.prisma.githubPullRequest.count).toHaveBeenCalledTimes(1);
+    expect(mockedCountContributionsForClaim).toHaveBeenCalledTimes(1);
 
     expect(contextMock.prisma.claim.upsert).toHaveBeenCalledTimes(2);
     expect(contextMock.prisma.claim.upsert).toHaveBeenCalledWith(
-      fillInUpsert(user.id, repo.project.gitPOAPs[0].id, pr.id),
+      fillInUpsert(user.id, repo.project.gitPOAPs[0].id, { pullRequest: pr }),
     );
     expect(contextMock.prisma.claim.upsert).toHaveBeenCalledWith(
-      fillInUpsert(user.id, repo.project.gitPOAPs[1].id, pr.id),
+      fillInUpsert(user.id, repo.project.gitPOAPs[1].id, { pullRequest: pr }),
     );
   });
 
   it('Creates multiple claims when there are multple GitPOAPs with same threshold', async () => {
-    contextMock.prisma.githubPullRequest.count.mockResolvedValue(1);
+    mockedCountContributionsForClaim.mockResolvedValue(1);
 
     const repo: RepoData = {
       id: 43,
@@ -155,16 +181,15 @@ describe('createNewClaimsForRepoPR', () => {
       },
     };
 
-    await createNewClaimsForRepoPRHelper(user, repo, pr);
+    await createNewClaimsForRepoContributionHelper(user, repo, { pullRequest: pr });
 
-    expect(contextMock.prisma.githubPullRequest.count).toHaveBeenCalledTimes(1);
+    expect(mockedCountContributionsForClaim).toHaveBeenCalledTimes(1);
 
     expect(contextMock.prisma.claim.upsert).toHaveBeenCalledTimes(2);
     expect(contextMock.prisma.claim.upsert).toHaveBeenCalledWith(
-      fillInUpsert(user.id, repo.project.gitPOAPs[0].id, pr.id),
+      fillInUpsert(user.id, repo.project.gitPOAPs[0].id, { pullRequest: pr }),
     );
     expect(contextMock.prisma.claim.upsert).toHaveBeenCalledWith(
-      fillInUpsert(user.id, repo.project.gitPOAPs[1].id, pr.id),
+      fillInUpsert(user.id, repo.project.gitPOAPs[1].id, { pullRequest: pr }),
     );
-  });
-});
+  }); });
