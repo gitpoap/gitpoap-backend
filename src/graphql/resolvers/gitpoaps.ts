@@ -8,7 +8,7 @@ import { retrievePOAPEventInfo, retrievePOAPTokenInfo } from '../../external/poa
 import { createScopedLogger } from '../../logging';
 import { gqlRequestDurationSeconds } from '../../metrics';
 import { GitPOAPReturnData, splitUsersPOAPs } from '../../lib/poaps';
-import { countContributionsForClaim } from '../../lib/claims';
+import { countContributionsForClaim } from '../../lib/contributions';
 import { Prisma } from '@prisma/client';
 
 @ObjectType()
