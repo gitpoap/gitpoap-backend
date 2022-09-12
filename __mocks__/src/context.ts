@@ -1,3 +1,4 @@
+import { mockedLogger } from './logging';
 import { PrismaClient } from '@prisma/client';
 import { Provider } from '@ethersproject/providers';
 import { RedisClient } from '../../src/redis/client';

@@ -11,7 +11,7 @@ import { createNewClaimsForRepoContributionHelper } from '../lib/claims';
 import { extractMergeCommitSha, upsertGithubPullRequest } from '../lib/pullRequests';
 import { upsertGithubIssue } from '../lib/issues';
 
-async function isUserABot(githubId: number): Promise<boolean> {
+export async function isUserABot(githubId: number): Promise<boolean> {
   const logger = createScopedLogger('isUserABot');
 
   const userInfo = await getGithubUserByIdAsAdmin(githubId);
@@ -63,7 +63,7 @@ export async function createClaimsForPR(
 
   const githubPullRequest = await upsertGithubPullRequest(
     repoData.id,
-    pull.number,
+    pullRequestNumber,
     pull.title,
     pull.merged_at === null ? null : new Date(pull.merged_at),
     extractMergeCommitSha(pull),
