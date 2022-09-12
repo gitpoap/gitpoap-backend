@@ -1,12 +1,12 @@
-import { contextMock } from '../../../../__mocks__/src/context';
 import { mockedLogger } from '../../../../__mocks__/src/logging';
+import { contextMock } from '../../../../__mocks__/src/context';
 import { handleNewPull, RepoReturnType } from '../../../../src/lib/ongoing';
 import { GithubPullRequestData } from '../../../../src/external/github';
 import { upsertUser } from '../../../../src/lib/users';
 import { upsertGithubPullRequest } from '../../../../src/lib/pullRequests';
 import { User } from '@generated/type-graphql';
 import {
-  createNewClaimsForRepoPR,
+  createNewClaimsForRepoContribution,
   createYearlyGitPOAPsMap,
 } from '../../../../src/lib/claims';
 
@@ -146,7 +146,7 @@ describe('handleNewPull', () => {
 
     expect(mockedLogger.error).toHaveBeenCalledTimes(1);
 
-    expect(createNewClaimsForRepoPR).toHaveBeenCalledTimes(0);
+    expect(createNewClaimsForRepoContribution).toHaveBeenCalledTimes(0);
   });
 
   it("Doesn't try to create claims for older years", async () => {
@@ -188,7 +188,7 @@ describe('handleNewPull', () => {
 
     expect(mockedLogger.error).toHaveBeenCalledTimes(0);
 
-    expect(createNewClaimsForRepoPR).toHaveBeenCalledTimes(0);
+    expect(createNewClaimsForRepoContribution).toHaveBeenCalledTimes(0);
   });
 
   it('Creates claims for this year', async () => {
@@ -244,12 +244,12 @@ describe('handleNewPull', () => {
       user.id,
     );
 
-    expect(createNewClaimsForRepoPR).toHaveBeenCalledTimes(1);
-    expect(createNewClaimsForRepoPR).toHaveBeenCalledWith(
+    expect(createNewClaimsForRepoContribution).toHaveBeenCalledTimes(1);
+    expect(createNewClaimsForRepoContribution).toHaveBeenCalledWith(
       user,
       repo.project.repos,
       yearlyGitPOAPsMap,
-      pr
+      { pullRequest: pr },
     );
   });
 
