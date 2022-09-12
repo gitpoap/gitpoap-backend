@@ -175,8 +175,6 @@ export async function retrieveClaimsCreatedByPR(
   pullRequestId: number,
   wasEarnedByMention: boolean,
 ): Promise<ClaimData[]> {
-  const logger = createScopedLogger('retrieveClaimsCreatedByPR');
-
   // Retrieve any new claims created by this PR
   // No need to filter out DEPRECATED since the claims aren't created for DEPRECATED GitPOAPs
   const claims: ClaimData[] = await context.prisma.claim.findMany({
@@ -213,8 +211,6 @@ export async function retrieveClaimsCreatedByIssue(
   issueId: number,
   wasEarnedByMention: boolean,
 ): Promise<ClaimData[]> {
-  const logger = createScopedLogger('retrieveClaimsCreatedByIssue');
-
   // Retrieve any new claims created by this Issue
   // No need to filter out DEPRECATED since the claims aren't created for DEPRECATED GitPOAPs
   const claims: ClaimData[] = await context.prisma.claim.findMany({

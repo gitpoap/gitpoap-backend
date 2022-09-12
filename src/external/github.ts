@@ -279,7 +279,7 @@ export async function getSingleGithubRepositoryPullAsAdmin(
   org: string,
   repo: string,
   pullRequestNumber: number,
-): Promise<GithubPullRequestData> {
+): Promise<GithubPullRequestData | null> {
   return await makeAdminGithubAPIRequest(`/repos/${org}/${repo}/pulls/${pullRequestNumber}`);
 }
 
@@ -287,7 +287,7 @@ export async function getSingleGithubRepositoryIssueAsAdmin(
   org: string,
   repo: string,
   issueNumber: number,
-): Promise<GithubIssueData> {
+): Promise<GithubIssueData | null> {
   return await makeAdminGithubAPIRequest(`/repos/${org}/${repo}/issues/${issueNumber}`);
 }
 
