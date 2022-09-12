@@ -79,8 +79,8 @@ export function gitpoapBotAuth() {
 
   const middleware: RequestHandler = async (req, res, next) => {
     if (!req.headers.authorization) {
-      logger.warn('Non-gitpoap-bot user attempted to hit a gitpoap-bot route');
-      next({ status: 401, msg: 'You are not privileged for this endpoint' });
+      logger.warn('Someone attempted to hit a gitpoap-bot route without credentials');
+      next({ status: 400, msg: 'You are not privileged for this endpoint' });
       return;
     }
 
@@ -95,8 +95,7 @@ export function gitpoapBotAuth() {
     const token = authParts[1];
 
     const githubApp = await getGithubAuthenticatedApp(token);
-
-    if (!githubApp) {
+    if (githubApp === null) {
       logger.warn('gitpoap-bot route hit with invalid credentials');
       next({ status: 400, msg: 'Invalid credentials' });
       return;
