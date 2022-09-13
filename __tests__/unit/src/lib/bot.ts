@@ -284,7 +284,6 @@ describe('createClaimsForPR', () => {
 
 describe('createClaimsForIssue', () => {
   const issueNumber = 324;
-  const wasEarnedByMention = true;
 
   it('Returns with BotUser error if user failed lookup on Github', async () => {
     mockedGetGithubUserByIdAsAdmin.mockResolvedValue(null);
@@ -294,7 +293,6 @@ describe('createClaimsForIssue', () => {
       repo,
       issueNumber,
       githubId,
-      wasEarnedByMention,
     );
 
     expect(result).toEqual(BotCreateClaimsErrorType.BotUser);
@@ -313,7 +311,6 @@ describe('createClaimsForIssue', () => {
       repo,
       issueNumber,
       githubId,
-      wasEarnedByMention,
     );
 
     expect(result).toEqual(BotCreateClaimsErrorType.BotUser);
@@ -333,7 +330,6 @@ describe('createClaimsForIssue', () => {
       repo,
       issueNumber,
       githubId,
-      wasEarnedByMention,
     );
 
     expect(result).toEqual(BotCreateClaimsErrorType.RepoNotFound);
@@ -357,7 +353,6 @@ describe('createClaimsForIssue', () => {
       repo,
       issueNumber,
       githubId,
-      wasEarnedByMention,
     );
 
     expect(result).toEqual(BotCreateClaimsErrorType.GithubRecordNotFound);
@@ -402,7 +397,6 @@ describe('createClaimsForIssue', () => {
       repo,
       issueNumber,
       githubId,
-      wasEarnedByMention,
     );
 
     expect(result).toEqual({ mention: { id: githubMentionId } });

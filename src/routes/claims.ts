@@ -25,8 +25,9 @@ import {
   ClaimData,
   Contribution,
   RepoData,
-  retrieveClaimsCreatedByPR,
+  RestrictedContribution,
   retrieveClaimsCreatedByMention,
+  retrieveClaimsCreatedByPR,
 } from '../lib/claims';
 import { checkIfClaimTransferred } from '../lib/transfers';
 import { upsertProfile } from '../lib/profiles';
@@ -501,7 +502,7 @@ claimsRouter.post(
         `Request to create claim for${mentionInfo} PR #${reqBody.pullRequestNumber} on "${reqBody.organization}/${reqBody.repo}"`,
       );
 
-      let contribution: Contribution | null = null;
+      let contribution: RestrictedContribution | null = null;
       for (const githubId of reqBody.contributorGithubIds) {
         const newContribution = await createClaimsForPR(
           reqBody.organization,
@@ -523,12 +524,9 @@ claimsRouter.post(
         newClaims = [];
       } else if ('pullRequest' in contribution) {
         newClaims = await retrieveClaimsCreatedByPR(contribution.pullRequest.id);
-      } else if ('mention' in contribution) {
-        newClaims = await retrieveClaimsCreatedByMention(contribution.mention.id);
       } else {
-        // 'issue' in contribution
-        logger.error(`createClaimsForPR returned a GithubIssue (ID: ${contribution.issue.id})`);
-        return res.status(500).send({ msg: 'createClaimsForPR failed' });
+        // 'mention' in contribution
+        newClaims = await retrieveClaimsCreatedByMention(contribution.mention.id);
       }
 
       logger.debug(
@@ -551,14 +549,13 @@ claimsRouter.post(
         `Request to create claim for mention in Issue #${reqBody.issueNumber} on "${reqBody.organization}/${reqBody.repo}"`,
       );
 
-      let contribution: Contribution | null = null;
+      let contribution: RestrictedContribution | null = null;
       for (const githubId of reqBody.contributorGithubIds) {
         const newContribution = await createClaimsForIssue(
           reqBody.organization,
           reqBody.repo,
           reqBody.issueNumber,
           githubId,
-          reqBody.wasEarnedByMention,
         );
         if (newContribution === BotCreateClaimsErrorType.RepoNotFound) {
           return res.status(404).send({ msg: 'Failed to find repo' });
@@ -574,12 +571,8 @@ claimsRouter.post(
       } else if ('mention' in contribution) {
         newClaims = await retrieveClaimsCreatedByMention(contribution.mention.id);
       } else {
-        if ('issue' in contribution) {
-          logger.error('Got back an issue from createClaimsForIssue');
-        } else {
-          // 'pullRequest' in contribution
-          logger.error('Got back a pull request from createClaimsForIssue');
-        }
+        // 'pullRequest' in contribution
+        logger.error('Got back a pull request from createClaimsForIssue');
         return res.status(500).send({ msg: 'createClaimsForIssue failed' });
       }
 
