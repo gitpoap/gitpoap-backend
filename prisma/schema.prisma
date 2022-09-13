@@ -111,8 +111,6 @@ model Claim {
   mentionEarnedId     Int?
   mentionEarned       GithubMention?     @relation(fields: [mentionEarnedId], references: [id])
   needsRevalidation   Boolean            @default(false)
-  GithubIssue         GithubIssue?       @relation(fields: [githubIssueId], references: [id])
-  githubIssueId       Int?
 
   @@unique([gitPOAPId, userId])
 }
@@ -205,31 +203,27 @@ model GithubPullRequest {
   userId               Int
   user                 User            @relation(fields: [userId], references: [id])
   Claim                Claim[]
-  GithubIssue          GithubIssue[]
   GithubMention        GithubMention[]
 
   @@unique([repoId, githubPullNumber])
 }
 
 model GithubIssue {
-  id                  Int                @id @default(autoincrement())
+  id                Int             @id @default(autoincrement())
   // Note that the following two fields are named in relation
   // to an instance of GithubIssue
-  createdAt           DateTime           @default(now())
-  updatedAt           DateTime           @updatedAt
-  githubIssueNumber   Int
-  githubTitle         String
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  githubIssueNumber Int
+  githubTitle       String
   // If the user was tagged in an issue for the bot the issue may not have
   // been closed yet (or ever)
-  githubClosedAt      DateTime?
-  repoId              Int
-  repo                Repo               @relation(fields: [repoId], references: [id])
-  userId              Int
-  user                User               @relation(fields: [userId], references: [id])
-  Claim               Claim[]
-  GithubPullRequest   GithubPullRequest? @relation(fields: [githubPullRequestId], references: [id])
-  githubPullRequestId Int?
-  GithubMention       GithubMention[]
+  githubClosedAt    DateTime?
+  repoId            Int
+  repo              Repo            @relation(fields: [repoId], references: [id])
+  userId            Int
+  user              User            @relation(fields: [userId], references: [id])
+  GithubMention     GithubMention[]
 
   @@unique([repoId, githubIssueNumber])
 }

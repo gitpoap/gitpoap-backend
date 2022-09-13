@@ -1,6 +1,5 @@
 -- AlterTable
-ALTER TABLE "Claim" ADD COLUMN     "githubIssueId" INTEGER,
-ADD COLUMN     "mentionEarnedId" INTEGER;
+ALTER TABLE "Claim" ADD COLUMN     "mentionEarnedId" INTEGER;
 
 -- AlterTable
 ALTER TABLE "GithubPullRequest" ALTER COLUMN "githubMergedAt" DROP NOT NULL;
@@ -15,7 +14,6 @@ CREATE TABLE "GithubIssue" (
     "githubClosedAt" TIMESTAMP(3),
     "repoId" INTEGER NOT NULL,
     "userId" INTEGER NOT NULL,
-    "githubPullRequestId" INTEGER,
 
     CONSTRAINT "GithubIssue_pkey" PRIMARY KEY ("id")
 );
@@ -47,16 +45,10 @@ CREATE UNIQUE INDEX "GithubMention_repoId_userId_issueId_key" ON "GithubMention"
 ALTER TABLE "Claim" ADD CONSTRAINT "Claim_mentionEarnedId_fkey" FOREIGN KEY ("mentionEarnedId") REFERENCES "GithubMention"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Claim" ADD CONSTRAINT "Claim_githubIssueId_fkey" FOREIGN KEY ("githubIssueId") REFERENCES "GithubIssue"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "GithubIssue" ADD CONSTRAINT "GithubIssue_repoId_fkey" FOREIGN KEY ("repoId") REFERENCES "Repo"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "GithubIssue" ADD CONSTRAINT "GithubIssue_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "GithubIssue" ADD CONSTRAINT "GithubIssue_githubPullRequestId_fkey" FOREIGN KEY ("githubPullRequestId") REFERENCES "GithubPullRequest"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "GithubMention" ADD CONSTRAINT "GithubMention_repoId_fkey" FOREIGN KEY ("repoId") REFERENCES "Repo"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

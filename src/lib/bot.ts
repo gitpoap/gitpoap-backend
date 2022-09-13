@@ -67,8 +67,6 @@ export async function createClaimsForPR(
     const githubMention = await upsertGithubMention(repoData.id, contribution, user.id);
 
     contribution = { mention: githubMention };
-  } else {
-    contribution = { pullRequest: githubPullRequest };
   }
 
   // Create any new claims (if they haven't been already)
