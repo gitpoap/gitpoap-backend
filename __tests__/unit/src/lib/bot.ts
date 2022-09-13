@@ -3,7 +3,6 @@ import { mockedLogger } from '../../../../__mocks__/src/logging';
 import { contextMock } from '../../../../__mocks__/src/context';
 import {
   BotCreateClaimsErrorType,
-  isUserABot,
   createClaimsForPR,
   createClaimsForIssue,
 } from '../../../../src/lib/bot';
@@ -19,7 +18,11 @@ import { createNewClaimsForRepoContributionHelper } from '../../../../src/lib/cl
 jest.mock('../../../../src/external/github');
 jest.mock('../../../../src/lib/repos');
 jest.mock('../../../../src/lib/users');
-jest.mock('../../../../src/lib/pullRequests');
+jest.mock('../../../../src/lib/pullRequests', () => ({
+  __esModule: true,
+  ...(<any>jest.requireActual('../../../../src/lib/pullRequests')),
+  upsertGithubPullRequest: jest.fn(),
+}));
 jest.mock('../../../../src/lib/claims');
 
 const mockedGetGithubUserByIdAsAdmin = jest.mocked(getGithubUserByIdAsAdmin, true);
@@ -38,41 +41,6 @@ const issueNumber = 324;
 const wasEarnedByMention = false;
 const userId = 32422;
 const githubPullRequestId = 9995445;
-
-describe('isUserABot', () => {
-  it('Returns true if GitHub lookup fails', async () => {
-    mockedGetGithubUserByIdAsAdmin.mockResolvedValue(null);
-
-    const result = await isUserABot(githubId);
-
-    expect(result).toEqual(true);
-
-    expect(mockedGetGithubUserByIdAsAdmin).toHaveBeenCalledTimes(1);
-    expect(mockedGetGithubUserByIdAsAdmin).toHaveBeenCalledWith(githubId);
-  });
-
-  it("Returns true if Github says it's a bot", async () => {
-    mockedGetGithubUserByIdAsAdmin.mockResolvedValue({ type: 'Bot' } as any);
-
-    const result = await isUserABot(githubId);
-
-    expect(result).toEqual(true);
-
-    expect(mockedGetGithubUserByIdAsAdmin).toHaveBeenCalledTimes(1);
-    expect(mockedGetGithubUserByIdAsAdmin).toHaveBeenCalledWith(githubId);
-  });
-
-  it('Returns true if Github says its a user', async () => {
-    mockedGetGithubUserByIdAsAdmin.mockResolvedValue({ type: 'User' } as any);
-
-    const result = await isUserABot(githubId);
-
-    expect(result).toEqual(false);
-
-    expect(mockedGetGithubUserByIdAsAdmin).toHaveBeenCalledTimes(1);
-    expect(mockedGetGithubUserByIdAsAdmin).toHaveBeenCalledWith(githubId);
-  });
-});
 
 describe('createClaimsForPR', () => {
   it('Returns with BotUser error if user is a bot', async () => {
@@ -139,7 +107,11 @@ describe('createClaimsForPR', () => {
     expect(mockedGetRepoByName).toHaveBeenCalledWith(organization, repo);
 
     expect(mockedGetSingleGithubRepositoryPullAsAdmin).toHaveBeenCalledTimes(1);
-    expect(mockedGetSingleGithubRepositoryPullAsAdmin).toHaveBeenCalledWith(repoId);
+    expect(mockedGetSingleGithubRepositoryPullAsAdmin).toHaveBeenCalledWith(
+      organization,
+      repo,
+      pullRequestNumber,
+    );
 
     expect(mockedUpsertUser).toHaveBeenCalledTimes(0);
   });
@@ -147,6 +119,7 @@ describe('createClaimsForPR', () => {
   it('Returns GithubPullRequest on success', async () => {
     const githubHandle = 'burz9001';
     mockedGetGithubUserByIdAsAdmin.mockResolvedValue({
+      id: githubId,
       login: githubHandle,
       type: 'User',
     } as any);
@@ -177,7 +150,11 @@ describe('createClaimsForPR', () => {
     expect(mockedGetRepoByName).toHaveBeenCalledWith(organization, repo);
 
     expect(mockedGetSingleGithubRepositoryPullAsAdmin).toHaveBeenCalledTimes(1);
-    expect(mockedGetSingleGithubRepositoryPullAsAdmin).toHaveBeenCalledWith(repoId);
+    expect(mockedGetSingleGithubRepositoryPullAsAdmin).toHaveBeenCalledWith(
+      organization,
+      repo,
+      pullRequestNumber,
+    );
 
     expect(mockedUpsertUser).toHaveBeenCalledTimes(1);
     expect(mockedUpsertUser).toHaveBeenCalledWith(githubId, githubHandle); 
@@ -191,13 +168,13 @@ describe('createClaimsForPR', () => {
       pullRequest.merge_commit_sha,
       userId,
     );
-  });
 
-  expect(mockedCreateNewClaimsForRepoContributionHelper).toHaveBeenCalledTimes(1);
-  expect(mockedCreateNewClaimsForRepoContributionHelper).toHaveBeenCalledWith(
-    { id: userId },
-    { id: repoId },
-    { pullRequest: { id: githubPullRequestId } },
-    wasEarnedByMention,
-  );
+    expect(mockedCreateNewClaimsForRepoContributionHelper).toHaveBeenCalledTimes(1);
+    expect(mockedCreateNewClaimsForRepoContributionHelper).toHaveBeenCalledWith(
+      { id: userId },
+      { id: repoId },
+      { pullRequest: { id: githubPullRequestId } },
+      wasEarnedByMention,
+    );
+  });
 });

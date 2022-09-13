@@ -17,7 +17,6 @@ function fillInUpsert(
   userId: number,
   gitPOAPId: number,
   contribution: Contribution,
-  wasEarnedByMention: boolean = false
 ) {
   let pullRequestEarned = undefined;
   let issueEarned = undefined;
@@ -52,7 +51,8 @@ function fillInUpsert(
       },
       pullRequestEarned,
       issueEarned,
-      wasEarnedByMention,
+      wasEarnedByMention: false,
+      mentionedAt: null,
     },
   };
 }
