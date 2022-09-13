@@ -5,11 +5,12 @@ import {
   getSingleGithubRepositoryPullAsAdmin,
 } from '../external/github';
 import { createScopedLogger } from '../logging';
-import { getRepoByName } from '../lib/repos';
-import { upsertUser } from '../lib/users';
-import { createNewClaimsForRepoContributionHelper } from '../lib/claims';
-import { extractMergeCommitSha, upsertGithubPullRequest } from '../lib/pullRequests';
-import { upsertGithubIssue } from '../lib/issues';
+import { getRepoByName } from './repos';
+import { upsertUser } from './users';
+import { Contribution, createNewClaimsForRepoContributionHelper } from './claims';
+import { extractMergeCommitSha, upsertGithubPullRequest } from './pullRequests';
+import { upsertGithubIssue } from './issues';
+import { upsertGithubMention } from './mentions';
 
 export enum BotCreateClaimsErrorType {
   BotUser,
@@ -62,13 +63,15 @@ export async function createClaimsForPR(
     user.id,
   );
 
+  let contribution: Contribution = { pullRequest: githubPullRequest };
+  if (wasEarnedByMention) {
+    const githubMention = await upsertGithubMention(repoData.id, contribution, user.id);
+
+    contribution = { mention: githubMention };
+  }
+
   // Create any new claims (if they haven't been already)
-  await createNewClaimsForRepoContributionHelper(
-    user,
-    repoData,
-    { pullRequest: githubPullRequest },
-    wasEarnedByMention,
-  );
+  await createNewClaimsForRepoContributionHelper(user, repoData, contribution);
 
   return githubPullRequest;
 }
@@ -116,12 +119,14 @@ export async function createClaimsForIssue(
     user.id,
   );
 
-  await createNewClaimsForRepoContributionHelper(
-    user,
-    repoData,
-    { issue: githubIssue },
-    wasEarnedByMention,
-  );
+  let contribution: Contribution = { issue: githubIssue };
+  if (wasEarnedByMention) {
+    const githubMention = await upsertGithubMention(repoData.id, contribution, user.id);
+
+    contribution = { mention: githubMention };
+  }
+
+  await createNewClaimsForRepoContributionHelper(user, repoData, contribution);
 
   return githubIssue;
 }

@@ -127,6 +127,38 @@ type Query {
     take: Int
     skip: Int
   ): [GithubIssueGroupBy!]!
+  aggregateGithubMention(
+    where: GithubMentionWhereInput
+    orderBy: [GithubMentionOrderByWithRelationInput!]
+    cursor: GithubMentionWhereUniqueInput
+    take: Int
+    skip: Int
+  ): AggregateGithubMention!
+  findFirstGithubMention(
+    where: GithubMentionWhereInput
+    orderBy: [GithubMentionOrderByWithRelationInput!]
+    cursor: GithubMentionWhereUniqueInput
+    take: Int
+    skip: Int
+    distinct: [GithubMentionScalarFieldEnum!]
+  ): GithubMention
+  githubMentions(
+    where: GithubMentionWhereInput
+    orderBy: [GithubMentionOrderByWithRelationInput!]
+    cursor: GithubMentionWhereUniqueInput
+    take: Int
+    skip: Int
+    distinct: [GithubMentionScalarFieldEnum!]
+  ): [GithubMention!]!
+  githubMention(where: GithubMentionWhereUniqueInput!): GithubMention
+  groupByGithubMention(
+    where: GithubMentionWhereInput
+    orderBy: [GithubMentionOrderByWithAggregationInput!]
+    by: [GithubMentionScalarFieldEnum!]!
+    having: GithubMentionScalarWhereWithAggregatesInput
+    take: Int
+    skip: Int
+  ): [GithubMentionGroupBy!]!
   aggregateGithubPullRequest(
     where: GithubPullRequestWhereInput
     orderBy: [GithubPullRequestOrderByWithRelationInput!]
@@ -409,10 +441,9 @@ type ClaimCountAggregate {
   gitPOAPId: Int!
   userId: Int!
   pullRequestEarnedId: Int!
-  issueEarnedId: Int!
-  wasEarnedByMention: Int!
-  mentionedAt: Int!
+  mentionEarnedId: Int!
   needsRevalidation: Int!
+  githubIssueId: Int!
   _all: Int!
 }
 
@@ -421,7 +452,8 @@ type ClaimAvgAggregate {
   gitPOAPId: Float
   userId: Float
   pullRequestEarnedId: Float
-  issueEarnedId: Float
+  mentionEarnedId: Float
+  githubIssueId: Float
 }
 
 type ClaimSumAggregate {
@@ -429,7 +461,8 @@ type ClaimSumAggregate {
   gitPOAPId: Int
   userId: Int
   pullRequestEarnedId: Int
-  issueEarnedId: Int
+  mentionEarnedId: Int
+  githubIssueId: Int
 }
 
 type ClaimMinAggregate {
@@ -444,10 +477,9 @@ type ClaimMinAggregate {
   gitPOAPId: Int
   userId: Int
   pullRequestEarnedId: Int
-  issueEarnedId: Int
-  wasEarnedByMention: Boolean
-  mentionedAt: DateTime
+  mentionEarnedId: Int
   needsRevalidation: Boolean
+  githubIssueId: Int
 }
 
 # The javascript `Date` as string. Type represents date and time as the ISO Date string.
@@ -472,10 +504,9 @@ type ClaimMaxAggregate {
   gitPOAPId: Int
   userId: Int
   pullRequestEarnedId: Int
-  issueEarnedId: Int
-  wasEarnedByMention: Boolean
-  mentionedAt: DateTime
+  mentionEarnedId: Int
   needsRevalidation: Boolean
+  githubIssueId: Int
 }
 
 input ClaimWhereInput {
@@ -495,11 +526,11 @@ input ClaimWhereInput {
   user: UserRelationFilter
   pullRequestEarnedId: IntNullableFilter
   pullRequestEarned: GithubPullRequestRelationFilter
-  issueEarnedId: IntNullableFilter
-  issueEarned: GithubIssueRelationFilter
-  wasEarnedByMention: BoolFilter
-  mentionedAt: DateTimeNullableFilter
+  mentionEarnedId: IntNullableFilter
+  mentionEarned: GithubMentionRelationFilter
   needsRevalidation: BoolFilter
+  GithubIssue: GithubIssueRelationFilter
+  githubIssueId: IntNullableFilter
 }
 
 input IntFilter {
@@ -735,6 +766,7 @@ input RepoWhereInput {
   project: ProjectRelationFilter
   lastPRUpdatedAt: DateTimeFilter
   GithubIssue: GithubIssueListRelationFilter
+  GithubMention: GithubMentionListRelationFilter
 }
 
 input OrganizationRelationFilter {
@@ -780,6 +812,7 @@ input GithubPullRequestWhereInput {
   user: UserRelationFilter
   Claim: ClaimListRelationFilter
   GithubIssue: GithubIssueListRelationFilter
+  GithubMention: GithubMentionListRelationFilter
 }
 
 input RepoRelationFilter {
@@ -804,6 +837,7 @@ input UserWhereInput {
   claims: ClaimListRelationFilter
   GithubPullRequest: GithubPullRequestListRelationFilter
   GithubIssue: GithubIssueListRelationFilter
+  GithubMention: GithubMentionListRelationFilter
 }
 
 input ClaimListRelationFilter {
@@ -832,9 +866,15 @@ input GithubIssueWhereInput {
   repo: RepoRelationFilter
   userId: IntFilter
   user: UserRelationFilter
-  prClosedById: IntNullableFilter
-  prClosedBy: GithubPullRequestRelationFilter
   Claim: ClaimListRelationFilter
+  GithubPullRequest: GithubPullRequestRelationFilter
+  githubPullRequestId: IntNullableFilter
+  GithubMention: GithubMentionListRelationFilter
+}
+
+input GithubPullRequestRelationFilter {
+  is: GithubPullRequestWhereInput
+  isNot: GithubPullRequestWhereInput
 }
 
 input IntNullableFilter {
@@ -859,9 +899,34 @@ input NestedIntNullableFilter {
   not: NestedIntNullableFilter
 }
 
-input GithubPullRequestRelationFilter {
-  is: GithubPullRequestWhereInput
-  isNot: GithubPullRequestWhereInput
+input GithubMentionListRelationFilter {
+  every: GithubMentionWhereInput
+  some: GithubMentionWhereInput
+  none: GithubMentionWhereInput
+}
+
+input GithubMentionWhereInput {
+  AND: [GithubMentionWhereInput!]
+  OR: [GithubMentionWhereInput!]
+  NOT: [GithubMentionWhereInput!]
+  id: IntFilter
+  createdAt: DateTimeFilter
+  updatedAt: DateTimeFilter
+  mentionedAt: DateTimeFilter
+  repoId: IntFilter
+  repo: RepoRelationFilter
+  userId: IntFilter
+  user: UserRelationFilter
+  pullRequestId: IntNullableFilter
+  pullRequest: GithubPullRequestRelationFilter
+  issueId: IntNullableFilter
+  issue: GithubIssueRelationFilter
+  Claim: ClaimListRelationFilter
+}
+
+input GithubIssueRelationFilter {
+  is: GithubIssueWhereInput
+  isNot: GithubIssueWhereInput
 }
 
 input GitPOAPListRelationFilter {
@@ -942,9 +1007,9 @@ input EventWhereInput {
   GitPOAP: GitPOAPListRelationFilter
 }
 
-input GithubIssueRelationFilter {
-  is: GithubIssueWhereInput
-  isNot: GithubIssueWhereInput
+input GithubMentionRelationFilter {
+  is: GithubMentionWhereInput
+  isNot: GithubMentionWhereInput
 }
 
 input ClaimOrderByWithRelationInput {
@@ -961,11 +1026,11 @@ input ClaimOrderByWithRelationInput {
   user: UserOrderByWithRelationInput
   pullRequestEarnedId: SortOrder
   pullRequestEarned: GithubPullRequestOrderByWithRelationInput
-  issueEarnedId: SortOrder
-  issueEarned: GithubIssueOrderByWithRelationInput
-  wasEarnedByMention: SortOrder
-  mentionedAt: SortOrder
+  mentionEarnedId: SortOrder
+  mentionEarned: GithubMentionOrderByWithRelationInput
   needsRevalidation: SortOrder
+  GithubIssue: GithubIssueOrderByWithRelationInput
+  githubIssueId: SortOrder
 }
 
 enum SortOrder {
@@ -1047,6 +1112,7 @@ input UserOrderByWithRelationInput {
   claims: ClaimOrderByRelationAggregateInput
   GithubPullRequest: GithubPullRequestOrderByRelationAggregateInput
   GithubIssue: GithubIssueOrderByRelationAggregateInput
+  GithubMention: GithubMentionOrderByRelationAggregateInput
 }
 
 input GithubPullRequestOrderByRelationAggregateInput {
@@ -1054,6 +1120,10 @@ input GithubPullRequestOrderByRelationAggregateInput {
 }
 
 input GithubIssueOrderByRelationAggregateInput {
+  _count: SortOrder
+}
+
+input GithubMentionOrderByRelationAggregateInput {
   _count: SortOrder
 }
 
@@ -1071,6 +1141,7 @@ input GithubPullRequestOrderByWithRelationInput {
   user: UserOrderByWithRelationInput
   Claim: ClaimOrderByRelationAggregateInput
   GithubIssue: GithubIssueOrderByRelationAggregateInput
+  GithubMention: GithubMentionOrderByRelationAggregateInput
 }
 
 input RepoOrderByWithRelationInput {
@@ -1086,6 +1157,7 @@ input RepoOrderByWithRelationInput {
   project: ProjectOrderByWithRelationInput
   lastPRUpdatedAt: SortOrder
   GithubIssue: GithubIssueOrderByRelationAggregateInput
+  GithubMention: GithubMentionOrderByRelationAggregateInput
 }
 
 input OrganizationOrderByWithRelationInput {
@@ -1100,6 +1172,22 @@ input OrganizationOrderByWithRelationInput {
   repos: RepoOrderByRelationAggregateInput
 }
 
+input GithubMentionOrderByWithRelationInput {
+  id: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  mentionedAt: SortOrder
+  repoId: SortOrder
+  repo: RepoOrderByWithRelationInput
+  userId: SortOrder
+  user: UserOrderByWithRelationInput
+  pullRequestId: SortOrder
+  pullRequest: GithubPullRequestOrderByWithRelationInput
+  issueId: SortOrder
+  issue: GithubIssueOrderByWithRelationInput
+  Claim: ClaimOrderByRelationAggregateInput
+}
+
 input GithubIssueOrderByWithRelationInput {
   id: SortOrder
   createdAt: SortOrder
@@ -1111,9 +1199,10 @@ input GithubIssueOrderByWithRelationInput {
   repo: RepoOrderByWithRelationInput
   userId: SortOrder
   user: UserOrderByWithRelationInput
-  prClosedById: SortOrder
-  prClosedBy: GithubPullRequestOrderByWithRelationInput
   Claim: ClaimOrderByRelationAggregateInput
+  GithubPullRequest: GithubPullRequestOrderByWithRelationInput
+  githubPullRequestId: SortOrder
+  GithubMention: GithubMentionOrderByRelationAggregateInput
 }
 
 input ClaimWhereUniqueInput {
@@ -1138,14 +1227,14 @@ type Claim {
   gitPOAPId: Int!
   userId: Int!
   pullRequestEarnedId: Int
-  issueEarnedId: Int
-  wasEarnedByMention: Boolean!
-  mentionedAt: DateTime
+  mentionEarnedId: Int
   needsRevalidation: Boolean!
+  githubIssueId: Int
   gitPOAP: GitPOAP!
   user: User!
   pullRequestEarned: GithubPullRequest
-  issueEarned: GithubIssue
+  mentionEarned: GithubMention
+  GithubIssue: GithubIssue
 }
 
 type GitPOAP {
@@ -1248,11 +1337,20 @@ type Repo {
     skip: Int
     distinct: [GithubIssueScalarFieldEnum!]
   ): [GithubIssue!]!
+  GithubMention(
+    where: GithubMentionWhereInput
+    orderBy: [GithubMentionOrderByWithRelationInput!]
+    cursor: GithubMentionWhereUniqueInput
+    take: Int
+    skip: Int
+    distinct: [GithubMentionScalarFieldEnum!]
+  ): [GithubMention!]!
 }
 
 type RepoCount {
   GithubPullRequest: Int!
   GithubIssue: Int!
+  GithubMention: Int!
 }
 
 type Organization {
@@ -1324,11 +1422,20 @@ type GithubPullRequest {
     skip: Int
     distinct: [GithubIssueScalarFieldEnum!]
   ): [GithubIssue!]!
+  GithubMention(
+    where: GithubMentionWhereInput
+    orderBy: [GithubMentionOrderByWithRelationInput!]
+    cursor: GithubMentionWhereUniqueInput
+    take: Int
+    skip: Int
+    distinct: [GithubMentionScalarFieldEnum!]
+  ): [GithubMention!]!
 }
 
 type GithubPullRequestCount {
   Claim: Int!
   GithubIssue: Int!
+  GithubMention: Int!
 }
 
 type User {
@@ -1362,6 +1469,14 @@ type User {
     skip: Int
     distinct: [GithubIssueScalarFieldEnum!]
   ): [GithubIssue!]!
+  GithubMention(
+    where: GithubMentionWhereInput
+    orderBy: [GithubMentionOrderByWithRelationInput!]
+    cursor: GithubMentionWhereUniqueInput
+    take: Int
+    skip: Int
+    distinct: [GithubMentionScalarFieldEnum!]
+  ): [GithubMention!]!
 }
 
 type UserCount {
@@ -1369,6 +1484,7 @@ type UserCount {
   authTokens: Int!
   GithubPullRequest: Int!
   GithubIssue: Int!
+  GithubMention: Int!
 }
 
 enum ClaimScalarFieldEnum {
@@ -1383,10 +1499,9 @@ enum ClaimScalarFieldEnum {
   gitPOAPId
   userId
   pullRequestEarnedId
-  issueEarnedId
-  wasEarnedByMention
-  mentionedAt
+  mentionEarnedId
   needsRevalidation
+  githubIssueId
 }
 
 input GithubPullRequestWhereUniqueInput {
@@ -1420,12 +1535,13 @@ type GithubIssue {
   githubClosedAt: DateTime
   repoId: Int!
   userId: Int!
-  prClosedById: Int
+  githubPullRequestId: Int
   _count: GithubIssueCount
 }
 
 type GithubIssueCount {
   Claim: Int!
+  GithubMention: Int!
 }
 
 input GithubIssueWhereUniqueInput {
@@ -1447,7 +1563,52 @@ enum GithubIssueScalarFieldEnum {
   githubClosedAt
   repoId
   userId
-  prClosedById
+  githubPullRequestId
+}
+
+type GithubMention {
+  id: Int!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  mentionedAt: DateTime!
+  repoId: Int!
+  userId: Int!
+  pullRequestId: Int
+  issueId: Int
+  _count: GithubMentionCount
+}
+
+type GithubMentionCount {
+  Claim: Int!
+}
+
+input GithubMentionWhereUniqueInput {
+  id: Int
+  repoId_userId_pullRequestId: GithubMentionRepoIdUserIdPullRequestIdCompoundUniqueInput
+  repoId_userId_issueId: GithubMentionRepoIdUserIdIssueIdCompoundUniqueInput
+}
+
+input GithubMentionRepoIdUserIdPullRequestIdCompoundUniqueInput {
+  repoId: Int!
+  userId: Int!
+  pullRequestId: Int!
+}
+
+input GithubMentionRepoIdUserIdIssueIdCompoundUniqueInput {
+  repoId: Int!
+  userId: Int!
+  issueId: Int!
+}
+
+enum GithubMentionScalarFieldEnum {
+  id
+  createdAt
+  updatedAt
+  mentionedAt
+  repoId
+  userId
+  pullRequestId
+  issueId
 }
 
 input GitPOAPWhereUniqueInput {
@@ -1538,10 +1699,9 @@ type ClaimGroupBy {
   gitPOAPId: Int!
   userId: Int!
   pullRequestEarnedId: Int
-  issueEarnedId: Int
-  wasEarnedByMention: Boolean!
-  mentionedAt: DateTime
+  mentionEarnedId: Int
   needsRevalidation: Boolean!
+  githubIssueId: Int
   _count: ClaimCountAggregate
   _avg: ClaimAvgAggregate
   _sum: ClaimSumAggregate
@@ -1560,10 +1720,9 @@ input ClaimOrderByWithAggregationInput {
   gitPOAPId: SortOrder
   userId: SortOrder
   pullRequestEarnedId: SortOrder
-  issueEarnedId: SortOrder
-  wasEarnedByMention: SortOrder
-  mentionedAt: SortOrder
+  mentionEarnedId: SortOrder
   needsRevalidation: SortOrder
+  githubIssueId: SortOrder
   _count: ClaimCountOrderByAggregateInput
   _avg: ClaimAvgOrderByAggregateInput
   _max: ClaimMaxOrderByAggregateInput
@@ -1582,10 +1741,9 @@ input ClaimCountOrderByAggregateInput {
   gitPOAPId: SortOrder
   userId: SortOrder
   pullRequestEarnedId: SortOrder
-  issueEarnedId: SortOrder
-  wasEarnedByMention: SortOrder
-  mentionedAt: SortOrder
+  mentionEarnedId: SortOrder
   needsRevalidation: SortOrder
+  githubIssueId: SortOrder
 }
 
 input ClaimAvgOrderByAggregateInput {
@@ -1593,7 +1751,8 @@ input ClaimAvgOrderByAggregateInput {
   gitPOAPId: SortOrder
   userId: SortOrder
   pullRequestEarnedId: SortOrder
-  issueEarnedId: SortOrder
+  mentionEarnedId: SortOrder
+  githubIssueId: SortOrder
 }
 
 input ClaimMaxOrderByAggregateInput {
@@ -1607,10 +1766,9 @@ input ClaimMaxOrderByAggregateInput {
   gitPOAPId: SortOrder
   userId: SortOrder
   pullRequestEarnedId: SortOrder
-  issueEarnedId: SortOrder
-  wasEarnedByMention: SortOrder
-  mentionedAt: SortOrder
+  mentionEarnedId: SortOrder
   needsRevalidation: SortOrder
+  githubIssueId: SortOrder
 }
 
 input ClaimMinOrderByAggregateInput {
@@ -1624,10 +1782,9 @@ input ClaimMinOrderByAggregateInput {
   gitPOAPId: SortOrder
   userId: SortOrder
   pullRequestEarnedId: SortOrder
-  issueEarnedId: SortOrder
-  wasEarnedByMention: SortOrder
-  mentionedAt: SortOrder
+  mentionEarnedId: SortOrder
   needsRevalidation: SortOrder
+  githubIssueId: SortOrder
 }
 
 input ClaimSumOrderByAggregateInput {
@@ -1635,7 +1792,8 @@ input ClaimSumOrderByAggregateInput {
   gitPOAPId: SortOrder
   userId: SortOrder
   pullRequestEarnedId: SortOrder
-  issueEarnedId: SortOrder
+  mentionEarnedId: SortOrder
+  githubIssueId: SortOrder
 }
 
 input ClaimScalarWhereWithAggregatesInput {
@@ -1652,10 +1810,9 @@ input ClaimScalarWhereWithAggregatesInput {
   gitPOAPId: IntWithAggregatesFilter
   userId: IntWithAggregatesFilter
   pullRequestEarnedId: IntNullableWithAggregatesFilter
-  issueEarnedId: IntNullableWithAggregatesFilter
-  wasEarnedByMention: BoolWithAggregatesFilter
-  mentionedAt: DateTimeNullableWithAggregatesFilter
+  mentionEarnedId: IntNullableWithAggregatesFilter
   needsRevalidation: BoolWithAggregatesFilter
+  githubIssueId: IntNullableWithAggregatesFilter
 }
 
 input IntWithAggregatesFilter {
@@ -2427,7 +2584,7 @@ type GithubIssueCountAggregate {
   githubClosedAt: Int!
   repoId: Int!
   userId: Int!
-  prClosedById: Int!
+  githubPullRequestId: Int!
   _all: Int!
 }
 
@@ -2436,7 +2593,7 @@ type GithubIssueAvgAggregate {
   githubIssueNumber: Float
   repoId: Float
   userId: Float
-  prClosedById: Float
+  githubPullRequestId: Float
 }
 
 type GithubIssueSumAggregate {
@@ -2444,7 +2601,7 @@ type GithubIssueSumAggregate {
   githubIssueNumber: Int
   repoId: Int
   userId: Int
-  prClosedById: Int
+  githubPullRequestId: Int
 }
 
 type GithubIssueMinAggregate {
@@ -2456,7 +2613,7 @@ type GithubIssueMinAggregate {
   githubClosedAt: DateTime
   repoId: Int
   userId: Int
-  prClosedById: Int
+  githubPullRequestId: Int
 }
 
 type GithubIssueMaxAggregate {
@@ -2468,7 +2625,7 @@ type GithubIssueMaxAggregate {
   githubClosedAt: DateTime
   repoId: Int
   userId: Int
-  prClosedById: Int
+  githubPullRequestId: Int
 }
 
 type GithubIssueGroupBy {
@@ -2480,7 +2637,7 @@ type GithubIssueGroupBy {
   githubClosedAt: DateTime
   repoId: Int!
   userId: Int!
-  prClosedById: Int
+  githubPullRequestId: Int
   _count: GithubIssueCountAggregate
   _avg: GithubIssueAvgAggregate
   _sum: GithubIssueSumAggregate
@@ -2497,7 +2654,7 @@ input GithubIssueOrderByWithAggregationInput {
   githubClosedAt: SortOrder
   repoId: SortOrder
   userId: SortOrder
-  prClosedById: SortOrder
+  githubPullRequestId: SortOrder
   _count: GithubIssueCountOrderByAggregateInput
   _avg: GithubIssueAvgOrderByAggregateInput
   _max: GithubIssueMaxOrderByAggregateInput
@@ -2514,7 +2671,7 @@ input GithubIssueCountOrderByAggregateInput {
   githubClosedAt: SortOrder
   repoId: SortOrder
   userId: SortOrder
-  prClosedById: SortOrder
+  githubPullRequestId: SortOrder
 }
 
 input GithubIssueAvgOrderByAggregateInput {
@@ -2522,7 +2679,7 @@ input GithubIssueAvgOrderByAggregateInput {
   githubIssueNumber: SortOrder
   repoId: SortOrder
   userId: SortOrder
-  prClosedById: SortOrder
+  githubPullRequestId: SortOrder
 }
 
 input GithubIssueMaxOrderByAggregateInput {
@@ -2534,7 +2691,7 @@ input GithubIssueMaxOrderByAggregateInput {
   githubClosedAt: SortOrder
   repoId: SortOrder
   userId: SortOrder
-  prClosedById: SortOrder
+  githubPullRequestId: SortOrder
 }
 
 input GithubIssueMinOrderByAggregateInput {
@@ -2546,7 +2703,7 @@ input GithubIssueMinOrderByAggregateInput {
   githubClosedAt: SortOrder
   repoId: SortOrder
   userId: SortOrder
-  prClosedById: SortOrder
+  githubPullRequestId: SortOrder
 }
 
 input GithubIssueSumOrderByAggregateInput {
@@ -2554,7 +2711,7 @@ input GithubIssueSumOrderByAggregateInput {
   githubIssueNumber: SortOrder
   repoId: SortOrder
   userId: SortOrder
-  prClosedById: SortOrder
+  githubPullRequestId: SortOrder
 }
 
 input GithubIssueScalarWhereWithAggregatesInput {
@@ -2569,7 +2726,160 @@ input GithubIssueScalarWhereWithAggregatesInput {
   githubClosedAt: DateTimeNullableWithAggregatesFilter
   repoId: IntWithAggregatesFilter
   userId: IntWithAggregatesFilter
-  prClosedById: IntNullableWithAggregatesFilter
+  githubPullRequestId: IntNullableWithAggregatesFilter
+}
+
+type AggregateGithubMention {
+  _count: GithubMentionCountAggregate
+  _avg: GithubMentionAvgAggregate
+  _sum: GithubMentionSumAggregate
+  _min: GithubMentionMinAggregate
+  _max: GithubMentionMaxAggregate
+}
+
+type GithubMentionCountAggregate {
+  id: Int!
+  createdAt: Int!
+  updatedAt: Int!
+  mentionedAt: Int!
+  repoId: Int!
+  userId: Int!
+  pullRequestId: Int!
+  issueId: Int!
+  _all: Int!
+}
+
+type GithubMentionAvgAggregate {
+  id: Float
+  repoId: Float
+  userId: Float
+  pullRequestId: Float
+  issueId: Float
+}
+
+type GithubMentionSumAggregate {
+  id: Int
+  repoId: Int
+  userId: Int
+  pullRequestId: Int
+  issueId: Int
+}
+
+type GithubMentionMinAggregate {
+  id: Int
+  createdAt: DateTime
+  updatedAt: DateTime
+  mentionedAt: DateTime
+  repoId: Int
+  userId: Int
+  pullRequestId: Int
+  issueId: Int
+}
+
+type GithubMentionMaxAggregate {
+  id: Int
+  createdAt: DateTime
+  updatedAt: DateTime
+  mentionedAt: DateTime
+  repoId: Int
+  userId: Int
+  pullRequestId: Int
+  issueId: Int
+}
+
+type GithubMentionGroupBy {
+  id: Int!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  mentionedAt: DateTime!
+  repoId: Int!
+  userId: Int!
+  pullRequestId: Int
+  issueId: Int
+  _count: GithubMentionCountAggregate
+  _avg: GithubMentionAvgAggregate
+  _sum: GithubMentionSumAggregate
+  _min: GithubMentionMinAggregate
+  _max: GithubMentionMaxAggregate
+}
+
+input GithubMentionOrderByWithAggregationInput {
+  id: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  mentionedAt: SortOrder
+  repoId: SortOrder
+  userId: SortOrder
+  pullRequestId: SortOrder
+  issueId: SortOrder
+  _count: GithubMentionCountOrderByAggregateInput
+  _avg: GithubMentionAvgOrderByAggregateInput
+  _max: GithubMentionMaxOrderByAggregateInput
+  _min: GithubMentionMinOrderByAggregateInput
+  _sum: GithubMentionSumOrderByAggregateInput
+}
+
+input GithubMentionCountOrderByAggregateInput {
+  id: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  mentionedAt: SortOrder
+  repoId: SortOrder
+  userId: SortOrder
+  pullRequestId: SortOrder
+  issueId: SortOrder
+}
+
+input GithubMentionAvgOrderByAggregateInput {
+  id: SortOrder
+  repoId: SortOrder
+  userId: SortOrder
+  pullRequestId: SortOrder
+  issueId: SortOrder
+}
+
+input GithubMentionMaxOrderByAggregateInput {
+  id: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  mentionedAt: SortOrder
+  repoId: SortOrder
+  userId: SortOrder
+  pullRequestId: SortOrder
+  issueId: SortOrder
+}
+
+input GithubMentionMinOrderByAggregateInput {
+  id: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  mentionedAt: SortOrder
+  repoId: SortOrder
+  userId: SortOrder
+  pullRequestId: SortOrder
+  issueId: SortOrder
+}
+
+input GithubMentionSumOrderByAggregateInput {
+  id: SortOrder
+  repoId: SortOrder
+  userId: SortOrder
+  pullRequestId: SortOrder
+  issueId: SortOrder
+}
+
+input GithubMentionScalarWhereWithAggregatesInput {
+  AND: [GithubMentionScalarWhereWithAggregatesInput!]
+  OR: [GithubMentionScalarWhereWithAggregatesInput!]
+  NOT: [GithubMentionScalarWhereWithAggregatesInput!]
+  id: IntWithAggregatesFilter
+  createdAt: DateTimeWithAggregatesFilter
+  updatedAt: DateTimeWithAggregatesFilter
+  mentionedAt: DateTimeWithAggregatesFilter
+  repoId: IntWithAggregatesFilter
+  userId: IntWithAggregatesFilter
+  pullRequestId: IntNullableWithAggregatesFilter
+  issueId: IntNullableWithAggregatesFilter
 }
 
 type AggregateGithubPullRequest {
@@ -3581,6 +3891,14 @@ type RepoReturnData {
     skip: Int
     distinct: [GithubIssueScalarFieldEnum!]
   ): [GithubIssue!]!
+  GithubMention(
+    where: GithubMentionWhereInput
+    orderBy: [GithubMentionOrderByWithRelationInput!]
+    cursor: GithubMentionWhereUniqueInput
+    take: Int
+    skip: Int
+    distinct: [GithubMentionScalarFieldEnum!]
+  ): [GithubMention!]!
   contributorCount: Float!
   gitPOAPCount: Float!
   mintedGitPOAPCount: Float!

@@ -1,4 +1,3 @@
-import { mockedLogger } from '../../../../__mocks__/src/logging';
 import { contextMock } from '../../../../__mocks__/src/context';
 import { countContributionsForClaim } from '../../../../src/lib/contributions';
 
@@ -15,7 +14,7 @@ describe('countContributionsForClaim', () => {
 
   it('Returns 0 when there are no contributions', async () => {
     contextMock.prisma.githubPullRequest.count.mockResolvedValue(0);
-    contextMock.prisma.githubIssue.count.mockResolvedValue(0);
+    contextMock.prisma.githubMention.count.mockResolvedValue(0);
 
     const result = await countContributionsForClaim(user, repos, gitPOAP);
 
@@ -30,19 +29,19 @@ describe('countContributionsForClaim', () => {
       },
     });
 
-    expect(contextMock.prisma.githubIssue.count).toHaveBeenCalledTimes(1);
-    expect(contextMock.prisma.githubIssue.count).toHaveBeenCalledWith({
+    expect(contextMock.prisma.githubMention.count).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.githubMention.count).toHaveBeenCalledWith({
       where: {
         userId: user.id,
         repoId: { in: repoIds },
-        githubClosedAt: dateRange,
+        mentionedAt: dateRange,
       },
     });
   });
 
   it('Returns PR count when there are no Issue contributions', async () => {
     contextMock.prisma.githubPullRequest.count.mockResolvedValue(4);
-    contextMock.prisma.githubIssue.count.mockResolvedValue(0);
+    contextMock.prisma.githubMention.count.mockResolvedValue(0);
 
     const result = await countContributionsForClaim(user, repos, gitPOAP);
 
@@ -57,19 +56,19 @@ describe('countContributionsForClaim', () => {
       },
     });
 
-    expect(contextMock.prisma.githubIssue.count).toHaveBeenCalledTimes(1);
-    expect(contextMock.prisma.githubIssue.count).toHaveBeenCalledWith({
+    expect(contextMock.prisma.githubMention.count).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.githubMention.count).toHaveBeenCalledWith({
       where: {
         userId: user.id,
         repoId: { in: repoIds },
-        githubClosedAt: dateRange,
+        mentionedAt: dateRange,
       },
     });
   });
 
   it('Returns Issue count when there are no PR contributions', async () => {
     contextMock.prisma.githubPullRequest.count.mockResolvedValue(0);
-    contextMock.prisma.githubIssue.count.mockResolvedValue(7);
+    contextMock.prisma.githubMention.count.mockResolvedValue(7);
 
     const result = await countContributionsForClaim(user, repos, gitPOAP);
 
@@ -84,19 +83,19 @@ describe('countContributionsForClaim', () => {
       },
     });
 
-    expect(contextMock.prisma.githubIssue.count).toHaveBeenCalledTimes(1);
-    expect(contextMock.prisma.githubIssue.count).toHaveBeenCalledWith({
+    expect(contextMock.prisma.githubMention.count).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.githubMention.count).toHaveBeenCalledWith({
       where: {
         userId: user.id,
         repoId: { in: repoIds },
-        githubClosedAt: dateRange,
+        mentionedAt: dateRange,
       },
     });
   });
 
   it('Returns sum of contributions', async () => {
     contextMock.prisma.githubPullRequest.count.mockResolvedValue(3);
-    contextMock.prisma.githubIssue.count.mockResolvedValue(7);
+    contextMock.prisma.githubMention.count.mockResolvedValue(7);
 
     const result = await countContributionsForClaim(user, repos, gitPOAP);
 
@@ -111,12 +110,12 @@ describe('countContributionsForClaim', () => {
       },
     });
 
-    expect(contextMock.prisma.githubIssue.count).toHaveBeenCalledTimes(1);
-    expect(contextMock.prisma.githubIssue.count).toHaveBeenCalledWith({
+    expect(contextMock.prisma.githubMention.count).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.githubMention.count).toHaveBeenCalledWith({
       where: {
         userId: user.id,
         repoId: { in: repoIds },
-        githubClosedAt: dateRange,
+        mentionedAt: dateRange,
       },
     });
   });
