@@ -110,7 +110,7 @@ export async function createClaimsForIssue(
 
   const githubIssue = await upsertGithubIssue(
     repoData.id,
-    issue.number,
+    issueNumber,
     issue.title,
     issue.closed_at === null ? null : new Date(issue.closed_at),
     user.id,
