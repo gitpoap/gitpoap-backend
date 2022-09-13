@@ -171,7 +171,7 @@ describe('createClaimsForPR', () => {
       wasEarnedByMention,
     );
 
-    expect(result).toEqual({ id: githubPullRequestId });
+    expect(result).toEqual({ pullRequest: { id: githubPullRequestId } });
 
     expect(mockedGetGithubUserByIdAsAdmin).toHaveBeenCalledTimes(1);
     expect(mockedGetGithubUserByIdAsAdmin).toHaveBeenCalledWith(githubId);
@@ -209,7 +209,7 @@ describe('createClaimsForPR', () => {
     );
   });
 
-  it('Returns GithubPullRequest on success - with mention', async () => {
+  it('Returns GithubMention on success - with mention', async () => {
     const githubHandle = 'burz9001';
     mockedGetGithubUserByIdAsAdmin.mockResolvedValue({
       id: githubId,
@@ -238,7 +238,7 @@ describe('createClaimsForPR', () => {
       wasEarnedByMention,
     );
 
-    expect(result).toEqual({ id: githubPullRequestId });
+    expect(result).toEqual({ mention: { id: githubMentionId } });
 
     expect(mockedGetGithubUserByIdAsAdmin).toHaveBeenCalledTimes(1);
     expect(mockedGetGithubUserByIdAsAdmin).toHaveBeenCalledWith(githubId);
@@ -378,7 +378,7 @@ describe('createClaimsForIssue', () => {
     expect(mockedUpsertUser).toHaveBeenCalledTimes(0);
   });
 
-  it('Returns GithubIssue on success - with mention', async () => {
+  it('Returns GithubMention on success - with mention', async () => {
     const githubHandle = 'burz9001';
     mockedGetGithubUserByIdAsAdmin.mockResolvedValue({
       id: githubId,
@@ -405,7 +405,7 @@ describe('createClaimsForIssue', () => {
       wasEarnedByMention,
     );
 
-    expect(result).toEqual({ id: githubIssueId });
+    expect(result).toEqual({ mention: { id: githubMentionId } });
 
     expect(mockedGetGithubUserByIdAsAdmin).toHaveBeenCalledTimes(1);
     expect(mockedGetGithubUserByIdAsAdmin).toHaveBeenCalledWith(githubId);
