@@ -6,7 +6,11 @@ import {
 import { createScopedLogger } from '../logging';
 import { getRepoByName } from './repos';
 import { upsertUser } from './users';
-import { Contribution, createNewClaimsForRepoContributionHelper } from './claims';
+import {
+  Contribution,
+  RestrictedContribution,
+  createNewClaimsForRepoContributionHelper,
+} from './claims';
 import { extractMergeCommitSha, upsertGithubPullRequest } from './pullRequests';
 import { upsertGithubIssue } from './issues';
 import { upsertGithubMention } from './mentions';
@@ -23,7 +27,7 @@ export async function createClaimsForPR(
   pullRequestNumber: number,
   githubId: number,
   wasEarnedByMention: boolean,
-): Promise<Contribution | BotCreateClaimsErrorType> {
+): Promise<RestrictedContribution | BotCreateClaimsErrorType> {
   const logger = createScopedLogger('createClaimsForPR');
 
   const userInfo = await getGithubUserByIdAsAdmin(githubId);
@@ -62,7 +66,7 @@ export async function createClaimsForPR(
     user.id,
   );
 
-  let contribution: Contribution = { pullRequest: githubPullRequest };
+  let contribution: RestrictedContribution = { pullRequest: githubPullRequest };
   if (wasEarnedByMention) {
     const githubMention = await upsertGithubMention(repoData.id, contribution, user.id);
 
@@ -80,8 +84,7 @@ export async function createClaimsForIssue(
   repo: string,
   issueNumber: number,
   githubId: number,
-  wasEarnedByMention: boolean,
-): Promise<Contribution | BotCreateClaimsErrorType> {
+): Promise<RestrictedContribution | BotCreateClaimsErrorType> {
   const logger = createScopedLogger('createClaimsForIssue');
 
   const userInfo = await getGithubUserByIdAsAdmin(githubId);
@@ -119,11 +122,10 @@ export async function createClaimsForIssue(
   );
 
   let contribution: Contribution = { issue: githubIssue };
-  if (wasEarnedByMention) {
-    const githubMention = await upsertGithubMention(repoData.id, contribution, user.id);
 
-    contribution = { mention: githubMention };
-  }
+  const githubMention = await upsertGithubMention(repoData.id, contribution, user.id);
+
+  contribution = { mention: githubMention };
 
   await createNewClaimsForRepoContributionHelper(user, repoData, contribution);
 
