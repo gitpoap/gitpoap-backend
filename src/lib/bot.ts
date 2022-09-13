@@ -1,4 +1,3 @@
-import { GithubIssue, GithubPullRequest } from '@prisma/client';
 import {
   getGithubUserByIdAsAdmin,
   getSingleGithubRepositoryIssueAsAdmin,
@@ -24,7 +23,7 @@ export async function createClaimsForPR(
   pullRequestNumber: number,
   githubId: number,
   wasEarnedByMention: boolean,
-): Promise<GithubPullRequest | BotCreateClaimsErrorType> {
+): Promise<Contribution | BotCreateClaimsErrorType> {
   const logger = createScopedLogger('createClaimsForPR');
 
   const userInfo = await getGithubUserByIdAsAdmin(githubId);
@@ -68,12 +67,14 @@ export async function createClaimsForPR(
     const githubMention = await upsertGithubMention(repoData.id, contribution, user.id);
 
     contribution = { mention: githubMention };
+  } else {
+    contribution = { pullRequest: githubPullRequest };
   }
 
   // Create any new claims (if they haven't been already)
   await createNewClaimsForRepoContributionHelper(user, repoData, contribution);
 
-  return githubPullRequest;
+  return contribution;
 }
 
 export async function createClaimsForIssue(
@@ -82,7 +83,7 @@ export async function createClaimsForIssue(
   issueNumber: number,
   githubId: number,
   wasEarnedByMention: boolean,
-): Promise<GithubIssue | BotCreateClaimsErrorType> {
+): Promise<Contribution | BotCreateClaimsErrorType> {
   const logger = createScopedLogger('createClaimsForIssue');
 
   const userInfo = await getGithubUserByIdAsAdmin(githubId);
@@ -128,5 +129,5 @@ export async function createClaimsForIssue(
 
   await createNewClaimsForRepoContributionHelper(user, repoData, contribution);
 
-  return githubIssue;
+  return contribution;
 }
