@@ -12,7 +12,9 @@ export async function countContributionsForClaim(
     lt: new Date(gitPOAP.year + 1, 0, 1),
   };
 
-  const [prCount, issueCount] = await Promise.all([
+  const [prCount, mentionedCount] = await Promise.all([
+    // Count all PRs that this user has had merged into the
+    // repos
     context.prisma.githubPullRequest.count({
       where: {
         userId: user.id,
@@ -22,16 +24,18 @@ export async function countContributionsForClaim(
         githubMergedAt: dateRange,
       },
     }),
-    context.prisma.githubIssue.count({
+    // Count all (already existing) claims that the user
+    // got from mentions. Note that these can be UNCLAIMED
+    context.prisma.githubMention.count({
       where: {
         userId: user.id,
         repoId: {
           in: repoIds,
         },
-        githubClosedAt: dateRange,
+        mentionedAt: dateRange,
       },
     }),
   ]);
 
-  return prCount + issueCount;
+  return prCount + mentionedCount;
 }

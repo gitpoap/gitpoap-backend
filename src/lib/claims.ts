@@ -33,17 +33,19 @@ export type ClaimData = {
   };
 };
 
-export type Contribution = { pullRequest: { id: number } } | { issue: { id: number } };
+export type Contribution =
+  | { pullRequest: { id: number } }
+  | { issue: { id: number } }
+  | { mention: { id: number } };
 
 export async function upsertClaim(
   user: { id: number },
   gitPOAP: { id: number },
   contribution: Contribution,
-  wasEarnedByMention: boolean,
 ): Promise<Claim> {
   let pullRequestEarned = undefined;
   let issueEarned = undefined;
-  let mentionedAt = null;
+  let mentionEarned = undefined;
 
   if ('pullRequest' in contribution) {
     pullRequestEarned = {
@@ -51,18 +53,19 @@ export async function upsertClaim(
         id: contribution.pullRequest.id,
       },
     };
-  } else {
-    // 'issue' in contribution
+  } else if ('issue' in contribution) {
     issueEarned = {
       connect: {
         id: contribution.issue.id,
       },
     };
-  }
-
-  if (wasEarnedByMention) {
-    // Set mentionedAt to now
-    mentionedAt = new Date();
+  } else {
+    // 'mention' in contribution
+    mentionEarned = {
+      connect: {
+        id: contribution.mention.id,
+      },
+    };
   }
 
   return await context.prisma.claim.upsert({
@@ -74,8 +77,6 @@ export async function upsertClaim(
     },
     update: {},
     create: {
-      wasEarnedByMention,
-      mentionedAt,
       gitPOAP: {
         connect: {
           id: gitPOAP.id,
@@ -87,7 +88,7 @@ export async function upsertClaim(
         },
       },
       pullRequestEarned,
-      issueEarned,
+      mentionEarned,
     },
   });
 }
@@ -113,7 +114,6 @@ export async function createNewClaimsForRepoContribution(
   repos: { id: number }[],
   yearlyGitPOAPsMap: YearlyGitPOAPsMap,
   contribution: Contribution,
-  wasEarnedByMention: boolean = false,
 ): Promise<Claim[]> {
   const logger = createScopedLogger('createNewClaimsForRepoContribution');
 
@@ -121,10 +121,14 @@ export async function createNewClaimsForRepoContribution(
     logger.info(
       `Handling creating new claims for PR ID ${contribution.pullRequest.id} for User ID ${user.id}`,
     );
-  } else {
-    // 'issue' in contribution
+  } else if ('issue' in contribution) {
     logger.info(
       `Handling creating new claims for Issue ID ${contribution.issue.id} for User ID ${user.id}`,
+    );
+  } else {
+    // 'mention' in contribution
+    logger.info(
+      `Handling creating new claims for Mention ID ${contribution.mention.id} for User ID ${user.id}`,
     );
   }
 
@@ -156,7 +160,7 @@ export async function createNewClaimsForRepoContribution(
 
       logger.info(`Upserting claim for User ID ${user.id} for GitPOAP ID ${gitPOAP.id}`);
 
-      claims.push(await upsertClaim(user, gitPOAP, contribution, wasEarnedByMention));
+      claims.push(await upsertClaim(user, gitPOAP, contribution));
     }
   }
 
@@ -167,14 +171,12 @@ export async function createNewClaimsForRepoContributionHelper(
   user: { id: number },
   repo: RepoData,
   contribution: Contribution,
-  wasEarnedByMention: boolean = false,
 ): Promise<Claim[]> {
   return await createNewClaimsForRepoContribution(
     user,
     repo.project.repos,
     createYearlyGitPOAPsMap(repo.project.gitPOAPs),
     contribution,
-    wasEarnedByMention,
   );
 }
 
@@ -182,12 +184,19 @@ export async function retrieveClaimsCreatedByPR(
   pullRequestId: number,
   wasEarnedByMention: boolean,
 ): Promise<ClaimData[]> {
+  let pullRequestEarnedId: number | undefined = pullRequestId;
+  let mentionEarned = undefined;
+  if (wasEarnedByMention) {
+    pullRequestEarnedId = undefined;
+    mentionEarned = { pullRequestId };
+  }
+
   // Retrieve any new claims created by this PR
   // No need to filter out DEPRECATED since the claims aren't created for DEPRECATED GitPOAPs
   const claims: ClaimData[] = await context.prisma.claim.findMany({
     where: {
-      pullRequestEarnedId: pullRequestId,
-      wasEarnedByMention,
+      pullRequestEarnedId,
+      mentionEarned,
       gitPOAP: {
         isEnabled: true,
       },
@@ -218,12 +227,20 @@ export async function retrieveClaimsCreatedByIssue(
   issueId: number,
   wasEarnedByMention: boolean,
 ): Promise<ClaimData[]> {
-  // Retrieve any new claims created by this Issue
+  const logger = createScopedLogger('retrieveClaimsCreatedByIssue');
+
+  if (!wasEarnedByMention) {
+    logger.error("Closed issues currently can't generate Claims but was requested to look them up");
+    return [];
+  }
+
+  // Retrieve any new claims created by this Mention
   // No need to filter out DEPRECATED since the claims aren't created for DEPRECATED GitPOAPs
   const claims: ClaimData[] = await context.prisma.claim.findMany({
     where: {
-      issueEarnedId: issueId,
-      wasEarnedByMention,
+      mentionEarned: {
+        issueId,
+      },
       gitPOAP: {
         isEnabled: true,
       },
@@ -252,10 +269,11 @@ export async function retrieveClaimsCreatedByIssue(
 
 type EarnedAtClaimData = {
   id: number;
-  wasEarnedByMention: boolean;
-  mentionedAt: Date | null;
   pullRequestEarned: {
     githubMergedAt: Date | null;
+  } | null;
+  mentionEarned: {
+    mentionedAt: Date;
   } | null;
   createdAt: Date;
 };
@@ -263,26 +281,16 @@ type EarnedAtClaimData = {
 export function getEarnedAt(claim: EarnedAtClaimData): Date {
   const logger = createScopedLogger('getEarnedAt');
 
-  if (claim.wasEarnedByMention) {
-    if (claim.mentionedAt === null) {
-      logger.error(`Claim ID ${claim.id} was earned by mention but mentionedAt is null`);
+  if (claim.pullRequestEarned) {
+    if (claim.pullRequestEarned.githubMergedAt === null) {
+      logger.error(
+        `Claim ID ${claim.id} was not earned by mention and has pullRequestEarned set with null githubMergedAt`,
+      );
     } else {
-      return claim.mentionedAt;
+      return claim.pullRequestEarned.githubMergedAt;
     }
-  } else {
-    if (claim.pullRequestEarned) {
-      if (claim.pullRequestEarned.githubMergedAt === null) {
-        logger.error(
-          `Claim ID ${claim.id} was not earned by mention and has pullRequestEarned set with null githubMergedAt`,
-        );
-      } else {
-        return claim.pullRequestEarned.githubMergedAt;
-      }
-    }
-
-    // Since we don't issue claims for closed issues right now,
-    // we can skip the similar logic for issues
-    // (only mentioned at issues can have claims)
+  } else if (claim.mentionEarned) {
+    return claim.mentionEarned.mentionedAt;
   }
 
   // Default to createdAt (e.g. for hackathon GitPOAPs)
