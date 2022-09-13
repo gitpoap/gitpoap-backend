@@ -23,12 +23,13 @@ type Claim = {
   pullRequestEarned: {
     githubMergedAt: Date | null;
   } | null;
+  mentionEarned: {
+    mentionedAt: Date;
+  } | null;
   id: number;
   createdAt: Date;
   mintedAt: Date | null;
   needsRevalidation: boolean;
-  wasEarnedByMention: boolean;
-  mentionedAt: Date | null;
 };
 
 type GitPOAP = {

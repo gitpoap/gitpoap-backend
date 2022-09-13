@@ -30,6 +30,7 @@ model User {
   authTokens        AuthToken[]
   GithubPullRequest GithubPullRequest[]
   GithubIssue       GithubIssue[]
+  GithubMention     GithubMention[]
 }
 
 model Profile {
@@ -76,6 +77,7 @@ model Repo {
   // are initially uploaded
   lastPRUpdatedAt   DateTime            @default(dbgenerated("date_trunc('year'::text, now())"))
   GithubIssue       GithubIssue[]
+  GithubMention     GithubMention[]
 }
 
 model Project {
@@ -104,14 +106,13 @@ model Claim {
   // Note that not all Claims have pull request they were earned in (e.g. Hackathon GitPOAPs)
   pullRequestEarnedId Int?
   pullRequestEarned   GithubPullRequest? @relation(fields: [pullRequestEarnedId], references: [id])
-  // Some claims are earned by tagging a user in an issue or when an issue is closed by a PR
-  issueEarnedId       Int?
-  issueEarned         GithubIssue?       @relation(fields: [issueEarnedId], references: [id])
-  // Some claims were not earned by the creator of a CLOSED/MERGED PR/issue
+  // Some claims were not earned by the creator of a MERGED PR
   // but were attained by the contributor by mentions to the gitpoap-bot
-  wasEarnedByMention  Boolean            @default(false)
-  mentionedAt         DateTime?
+  mentionEarnedId     Int?
+  mentionEarned       GithubMention?     @relation(fields: [mentionEarnedId], references: [id])
   needsRevalidation   Boolean            @default(false)
+  GithubIssue         GithubIssue?       @relation(fields: [githubIssueId], references: [id])
+  githubIssueId       Int?
 
   @@unique([gitPOAPId, userId])
 }
@@ -190,45 +191,68 @@ model BatchTiming {
 }
 
 model GithubPullRequest {
-  id                   Int           @id @default(autoincrement())
+  id                   Int             @id @default(autoincrement())
   // Note that the following two fields are named in relation
   // to an instance of GithubPullRequest
-  createdAt            DateTime      @default(now())
-  updatedAt            DateTime      @updatedAt
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
   githubPullNumber     Int
   githubTitle          String
   githubMergedAt       DateTime?
-  githubMergeCommitSha String        @db.VarChar(41)
+  githubMergeCommitSha String          @db.VarChar(41)
   repoId               Int
-  repo                 Repo          @relation(fields: [repoId], references: [id])
+  repo                 Repo            @relation(fields: [repoId], references: [id])
   userId               Int
-  user                 User          @relation(fields: [userId], references: [id])
+  user                 User            @relation(fields: [userId], references: [id])
   Claim                Claim[]
   GithubIssue          GithubIssue[]
+  GithubMention        GithubMention[]
 
   @@unique([repoId, githubPullNumber])
 }
 
 model GithubIssue {
-  id                Int                @id @default(autoincrement())
+  id                  Int                @id @default(autoincrement())
   // Note that the following two fields are named in relation
   // to an instance of GithubIssue
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
-  githubIssueNumber Int
-  githubTitle       String
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  githubIssueNumber   Int
+  githubTitle         String
   // If the user was tagged in an issue for the bot the issue may not have
   // been closed yet (or ever)
-  githubClosedAt    DateTime?
-  repoId            Int
-  repo              Repo               @relation(fields: [repoId], references: [id])
-  userId            Int
-  user              User               @relation(fields: [userId], references: [id])
-  prClosedById      Int?
-  prClosedBy        GithubPullRequest? @relation(fields: [prClosedById], references: [id])
-  Claim             Claim[]
+  githubClosedAt      DateTime?
+  repoId              Int
+  repo                Repo               @relation(fields: [repoId], references: [id])
+  userId              Int
+  user                User               @relation(fields: [userId], references: [id])
+  Claim               Claim[]
+  GithubPullRequest   GithubPullRequest? @relation(fields: [githubPullRequestId], references: [id])
+  githubPullRequestId Int?
+  GithubMention       GithubMention[]
 
   @@unique([repoId, githubIssueNumber])
+}
+
+model GithubMention {
+  id            Int                @id @default(autoincrement())
+  // Note that the following two fields are named in relation
+  // to an instance of GithubMention
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  mentionedAt   DateTime
+  repoId        Int
+  repo          Repo               @relation(fields: [repoId], references: [id])
+  userId        Int
+  user          User               @relation(fields: [userId], references: [id])
+  pullRequestId Int?
+  pullRequest   GithubPullRequest? @relation(fields: [pullRequestId], references: [id])
+  issueId       Int?
+  issue         GithubIssue?       @relation(fields: [issueId], references: [id])
+  Claim         Claim[]
+
+  @@unique([repoId, userId, pullRequestId])
+  @@unique([repoId, userId, issueId])
 }
 
 model Event {
