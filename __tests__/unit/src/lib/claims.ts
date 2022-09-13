@@ -1,4 +1,3 @@
-import { mockedLogger } from '../../../../__mocks__/src/logging';
 import { contextMock } from '../../../../__mocks__/src/context';
 import {
   Contribution,
@@ -20,13 +19,18 @@ function fillInUpsert(
 ) {
   let pullRequestEarned = undefined;
   let issueEarned = undefined;
+  let mentionEarned = undefined;
   if ('pullRequest' in contribution) {
     pullRequestEarned = {
       connect: contribution.pullRequest,
     };
-  } else { // 'issue' in contribution
+  } else if ('issue' in contribution) {
     issueEarned = {
       connect: contribution.issue,
+    };
+  } else { // 'mention' in contribution
+    mentionEarned = {
+      connect: contribution.mention,
     };
   }
 
@@ -51,8 +55,7 @@ function fillInUpsert(
       },
       pullRequestEarned,
       issueEarned,
-      wasEarnedByMention: false,
-      mentionedAt: null,
+      mentionEarned,
     },
   };
 }
