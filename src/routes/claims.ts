@@ -23,9 +23,10 @@ import { backloadGithubPullRequestData } from '../lib/pullRequests';
 import { upsertUser } from '../lib/users';
 import {
   ClaimData,
+  Contribution,
   RepoData,
-  retrieveClaimsCreatedByIssue,
   retrieveClaimsCreatedByPR,
+  retrieveClaimsCreatedByMention,
 } from '../lib/claims';
 import { checkIfClaimTransferred } from '../lib/transfers';
 import { upsertProfile } from '../lib/profiles';
@@ -500,31 +501,34 @@ claimsRouter.post(
         `Request to create claim for${mentionInfo} PR #${reqBody.pullRequestNumber} on "${reqBody.organization}/${reqBody.repo}"`,
       );
 
-      let githubPullRequest = null;
+      let contribution: Contribution | null = null;
       for (const githubId of reqBody.contributorGithubIds) {
-        const newGithubPullRequest = await createClaimsForPR(
+        const newContribution = await createClaimsForPR(
           reqBody.organization,
           reqBody.repo,
           reqBody.pullRequestNumber,
           githubId,
           reqBody.wasEarnedByMention,
         );
-        if (newGithubPullRequest === BotCreateClaimsErrorType.RepoNotFound) {
+        if (newContribution === BotCreateClaimsErrorType.RepoNotFound) {
           return res.status(404).send({ msg: 'Failed to find repo' });
-        } else if (newGithubPullRequest === BotCreateClaimsErrorType.GithubRecordNotFound) {
+        } else if (newContribution === BotCreateClaimsErrorType.GithubRecordNotFound) {
           return res.status(404).send({ msg: 'Failed to find repo on GitHub' });
-        } else if (newGithubPullRequest !== BotCreateClaimsErrorType.BotUser) {
-          githubPullRequest = newGithubPullRequest;
+        } else if (newContribution !== BotCreateClaimsErrorType.BotUser) {
+          contribution = newContribution;
         }
       }
 
-      if (githubPullRequest === null) {
+      if (contribution === null) {
         newClaims = [];
+      } else if ('pullRequest' in contribution) {
+        newClaims = await retrieveClaimsCreatedByPR(contribution.pullRequest.id);
+      } else if ('mention' in contribution) {
+        newClaims = await retrieveClaimsCreatedByMention(contribution.mention.id);
       } else {
-        newClaims = await retrieveClaimsCreatedByPR(
-          githubPullRequest.id,
-          reqBody.wasEarnedByMention,
-        );
+        // 'issue' in contribution
+        logger.error(`createClaimsForPR returned a GithubIssue (ID: ${contribution.issue.id})`);
+        return res.status(500).send({ msg: 'createClaimsForPR failed' });
       }
 
       logger.debug(
@@ -534,37 +538,53 @@ claimsRouter.post(
       // 'issue' in req.body
       const reqBody: z.infer<typeof CreateGitPOAPBotClaimsForIssueSchema> = req.body.issue;
 
-      const mentionInfo = reqBody.wasEarnedByMention ? ' mentions in' : '';
+      if (reqBody.wasEarnedByMention === false) {
+        logger.error(
+          `gitpoap-bot tried to create a claim for issue #${reqBody.issueNumber} without a mention in "${reqBody.organization}/${reqBody.repo}"`,
+        );
+        return res
+          .status(400)
+          .send({ msg: 'Cannot create a claim for an issue without a mention' });
+      }
+
       logger.info(
-        `Request to create claim for${mentionInfo} Issue #${reqBody.issueNumber} on "${reqBody.organization}/${reqBody.repo}"`,
+        `Request to create claim for mention in Issue #${reqBody.issueNumber} on "${reqBody.organization}/${reqBody.repo}"`,
       );
 
-      let githubIssue = null;
+      let contribution: Contribution | null = null;
       for (const githubId of reqBody.contributorGithubIds) {
-        const newGithubIssue = await createClaimsForIssue(
+        const newContribution = await createClaimsForIssue(
           reqBody.organization,
           reqBody.repo,
           reqBody.issueNumber,
           githubId,
           reqBody.wasEarnedByMention,
         );
-        if (newGithubIssue === BotCreateClaimsErrorType.RepoNotFound) {
+        if (newContribution === BotCreateClaimsErrorType.RepoNotFound) {
           return res.status(404).send({ msg: 'Failed to find repo' });
-        } else if (newGithubIssue === BotCreateClaimsErrorType.GithubRecordNotFound) {
+        } else if (newContribution === BotCreateClaimsErrorType.GithubRecordNotFound) {
           return res.status(404).send({ msg: 'Failed to find repo on GitHub' });
-        } else if (newGithubIssue !== BotCreateClaimsErrorType.BotUser) {
-          githubIssue = newGithubIssue;
+        } else if (newContribution !== BotCreateClaimsErrorType.BotUser) {
+          contribution = newContribution;
         }
       }
 
-      if (githubIssue === null) {
+      if (contribution === null) {
         newClaims = [];
+      } else if ('mention' in contribution) {
+        newClaims = await retrieveClaimsCreatedByMention(contribution.mention.id);
       } else {
-        newClaims = await retrieveClaimsCreatedByIssue(githubIssue.id, reqBody.wasEarnedByMention);
+        if ('issue' in contribution) {
+          logger.error('Got back an issue from createClaimsForIssue');
+        } else {
+          // 'pullRequest' in contribution
+          logger.error('Got back a pull request from createClaimsForIssue');
+        }
+        return res.status(500).send({ msg: 'createClaimsForIssue failed' });
       }
 
       logger.debug(
-        `Completed equest to create claim for${mentionInfo} Issue #${reqBody.issueNumber} on "${reqBody.organization}/${reqBody.repo}"`,
+        `Completed equest to create claim for mention in Issue #${reqBody.issueNumber} on "${reqBody.organization}/${reqBody.repo}"`,
       );
     }
 
