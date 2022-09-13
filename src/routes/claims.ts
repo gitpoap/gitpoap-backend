@@ -536,7 +536,7 @@ claimsRouter.post(
 
       const mentionInfo = reqBody.wasEarnedByMention ? ' mentions in' : '';
       logger.info(
-        `Request to create claim for${mentionInfo} Issue #${reqBody.issueNumber} on "${reqBody.organization}/${reqBody.repo}`,
+        `Request to create claim for${mentionInfo} Issue #${reqBody.issueNumber} on "${reqBody.organization}/${reqBody.repo}"`,
       );
 
       let githubIssue = null;
@@ -564,7 +564,7 @@ claimsRouter.post(
       }
 
       logger.debug(
-        `Completed equest to create claim for${mentionInfo} Issue #${reqBody.issueNumber} on "${reqBody.organization}/${reqBody.repo}`,
+        `Completed equest to create claim for${mentionInfo} Issue #${reqBody.issueNumber} on "${reqBody.organization}/${reqBody.repo}"`,
       );
     }
 

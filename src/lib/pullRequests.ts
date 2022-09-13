@@ -68,7 +68,7 @@ async function getRepoInfo(repoId: number): Promise<ExtraRepoData | null> {
 
 // Helper function to either return the commit where this was merged
 // or the last commit of the PR in case merge_commit_sha is null
-export function extractMergeCommitSha(pr: GithubPullRequestData) {
+export function extractMergeCommitSha(pr: GithubPullRequestData): string {
   if (pr.merge_commit_sha === null) {
     return pr.head.sha;
   }

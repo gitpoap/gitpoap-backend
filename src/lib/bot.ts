@@ -11,21 +11,6 @@ import { createNewClaimsForRepoContributionHelper } from '../lib/claims';
 import { extractMergeCommitSha, upsertGithubPullRequest } from '../lib/pullRequests';
 import { upsertGithubIssue } from '../lib/issues';
 
-export async function isUserABot(githubId: number): Promise<boolean> {
-  const logger = createScopedLogger('isUserABot');
-
-  const userInfo = await getGithubUserByIdAsAdmin(githubId);
-
-  if (userInfo === null) {
-    // In this case let's log an error and then pretend they are a bot
-    // so they get skipped
-    logger.error(`Failed to lookup Github user ID ${githubId}`);
-    return true;
-  }
-
-  return userInfo.type === 'Bot';
-}
-
 export enum BotCreateClaimsErrorType {
   BotUser,
   RepoNotFound,
@@ -41,7 +26,14 @@ export async function createClaimsForPR(
 ): Promise<GithubPullRequest | BotCreateClaimsErrorType> {
   const logger = createScopedLogger('createClaimsForPR');
 
-  if (await isUserABot(githubId)) {
+  const userInfo = await getGithubUserByIdAsAdmin(githubId);
+  if (userInfo === null) {
+    // In this case let's log an error and then pretend they are a bot
+    // so they get skipped
+    logger.error(`Failed to lookup Github user ID ${githubId}`);
+    return BotCreateClaimsErrorType.BotUser;
+  }
+  if (userInfo.type === 'Bot') {
     logger.info(`Skipping creating new claims for bot ID: ${githubId}`);
     return BotCreateClaimsErrorType.BotUser;
   }
@@ -59,7 +51,7 @@ export async function createClaimsForPR(
   }
 
   // Ensure that we've created a user in our system for the claim
-  const user = await upsertUser(pull.user.id, pull.user.login);
+  const user = await upsertUser(userInfo.id, userInfo.login);
 
   const githubPullRequest = await upsertGithubPullRequest(
     repoData.id,
@@ -90,7 +82,14 @@ export async function createClaimsForIssue(
 ): Promise<GithubIssue | BotCreateClaimsErrorType> {
   const logger = createScopedLogger('createClaimsForIssue');
 
-  if (await isUserABot(githubId)) {
+  const userInfo = await getGithubUserByIdAsAdmin(githubId);
+  if (userInfo === null) {
+    // In this case let's log an error and then pretend they are a bot
+    // so they get skipped
+    logger.error(`Failed to lookup Github user ID ${githubId}`);
+    return BotCreateClaimsErrorType.BotUser;
+  }
+  if (userInfo.type === 'Bot') {
     logger.info(`Skipping creating new claims for bot ID: ${githubId}`);
     return BotCreateClaimsErrorType.BotUser;
   }
@@ -107,7 +106,7 @@ export async function createClaimsForIssue(
   }
 
   // Ensure that we've created a user in our system for the claim
-  const user = await upsertUser(issue.user.id, issue.user.login);
+  const user = await upsertUser(userInfo.id, userInfo.login);
 
   const githubIssue = await upsertGithubIssue(
     repoData.id,
