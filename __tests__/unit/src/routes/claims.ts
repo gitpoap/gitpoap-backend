@@ -208,7 +208,6 @@ describe('POST /claims/gitpoap-bot/create', () => {
       issue.repo,
       issue.issueNumber,
       contributorId,
-      issue.wasEarnedByMention,
     );
   });
 
@@ -249,61 +248,26 @@ describe('POST /claims/gitpoap-bot/create', () => {
       issue.repo,
       issue.issueNumber,
       contributorId,
-      issue.wasEarnedByMention,
     );
   });
 
-  it('Fails if createClaimsForPR returns an issue', async () => {
+  it('Fails if createClaimsForIssue returns a pullRequest', async () => {
     mockedGetGithubAuthenticatedApp.mockResolvedValue({ id: GITPOAP_BOT_APP_ID });
-    mockedCreateClaimsForPR.mockResolvedValue({ issue: { id: 3234 } });
+    mockedCreateClaimsForIssue.mockResolvedValue({ pullRequest: { id: 3 } });
 
     const result = await request(await setupApp())
       .post('/claims/gitpoap-bot/create')
       .set('Authorization', `Bearer ${authToken}`)
-      .send({ pullRequest });
+      .send({ issue });
 
     expect(result.statusCode).toEqual(500);
 
-    expect(mockedCreateClaimsForPR).toHaveBeenCalledTimes(1);
-    expect(mockedCreateClaimsForPR).toHaveBeenCalledWith(
-      pullRequest.organization,
-      pullRequest.repo,
-      pullRequest.pullRequestNumber,
-      contributorId,
-      pullRequest.wasEarnedByMention,
-    );
-  });
-
-  it('Fails if createClaimsForIssue returns a pullRequest or issue', async () => {
-    mockedGetGithubAuthenticatedApp.mockResolvedValue({ id: GITPOAP_BOT_APP_ID });
-    mockedCreateClaimsForIssue
-      .mockResolvedValueOnce({ pullRequest: { id: 3 } })
-      .mockResolvedValueOnce({ issue: { id: 234 } });
-
-    { // pullRequest
-      const result = await request(await setupApp())
-        .post('/claims/gitpoap-bot/create')
-        .set('Authorization', `Bearer ${authToken}`)
-        .send({ issue });
-
-      expect(result.statusCode).toEqual(500);
-    }
-    { // issue
-      const result = await request(await setupApp())
-        .post('/claims/gitpoap-bot/create')
-        .set('Authorization', `Bearer ${authToken}`)
-        .send({ issue });
-
-      expect(result.statusCode).toEqual(500);
-    }
-
-    expect(mockedCreateClaimsForIssue).toHaveBeenCalledTimes(2);
+    expect(mockedCreateClaimsForIssue).toHaveBeenCalledTimes(1);
     expect(mockedCreateClaimsForIssue).toHaveBeenCalledWith(
       issue.organization,
       issue.repo,
       issue.issueNumber,
       contributorId,
-      issue.wasEarnedByMention,
     );
   });
 
@@ -346,7 +310,6 @@ describe('POST /claims/gitpoap-bot/create', () => {
       issue.repo,
       issue.issueNumber,
       contributorId,
-      issue.wasEarnedByMention,
     );
 
     expect(mockedRetrieveClaimsCreatedByPR).toHaveBeenCalledTimes(0);
@@ -410,7 +373,6 @@ describe('POST /claims/gitpoap-bot/create', () => {
       issue.repo,
       issue.issueNumber,
       contributorId,
-      issue.wasEarnedByMention,
     );
 
     expect(mockedRetrieveClaimsCreatedByPR).toHaveBeenCalledTimes(1);

@@ -33,30 +33,22 @@ export type ClaimData = {
   };
 };
 
-export type Contribution =
-  | { pullRequest: { id: number } }
-  | { issue: { id: number } }
-  | { mention: { id: number } };
+export type RestrictedContribution = { pullRequest: { id: number } } | { mention: { id: number } };
+
+export type Contribution = RestrictedContribution | { issue: { id: number } };
 
 export async function upsertClaim(
   user: { id: number },
   gitPOAP: { id: number },
-  contribution: Contribution,
+  contribution: RestrictedContribution,
 ): Promise<Claim> {
   let pullRequestEarned = undefined;
-  let issueEarned = undefined;
   let mentionEarned = undefined;
 
   if ('pullRequest' in contribution) {
     pullRequestEarned = {
       connect: {
         id: contribution.pullRequest.id,
-      },
-    };
-  } else if ('issue' in contribution) {
-    issueEarned = {
-      connect: {
-        id: contribution.issue.id,
       },
     };
   } else {
@@ -113,17 +105,13 @@ export async function createNewClaimsForRepoContribution(
   user: { id: number },
   repos: { id: number }[],
   yearlyGitPOAPsMap: YearlyGitPOAPsMap,
-  contribution: Contribution,
+  contribution: RestrictedContribution,
 ): Promise<Claim[]> {
   const logger = createScopedLogger('createNewClaimsForRepoContribution');
 
   if ('pullRequest' in contribution) {
     logger.info(
       `Handling creating new claims for PR ID ${contribution.pullRequest.id} for User ID ${user.id}`,
-    );
-  } else if ('issue' in contribution) {
-    logger.info(
-      `Handling creating new claims for Issue ID ${contribution.issue.id} for User ID ${user.id}`,
     );
   } else {
     // 'mention' in contribution
@@ -170,7 +158,7 @@ export async function createNewClaimsForRepoContribution(
 export async function createNewClaimsForRepoContributionHelper(
   user: { id: number },
   repo: RepoData,
-  contribution: Contribution,
+  contribution: RestrictedContribution,
 ): Promise<Claim[]> {
   return await createNewClaimsForRepoContribution(
     user,
