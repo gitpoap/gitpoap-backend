@@ -110,6 +110,7 @@ model Claim {
   // Some claims were not earned by the creator of a CLOSED/MERGED PR/issue
   // but were attained by the contributor by mentions to the gitpoap-bot
   wasEarnedByMention  Boolean            @default(false)
+  mentionedAt         DateTime?
   needsRevalidation   Boolean            @default(false)
 
   @@unique([gitPOAPId, userId])
