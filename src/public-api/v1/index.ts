@@ -42,8 +42,9 @@ v1Router.get('/address/:address/gitpoaps', async function (req, res) {
       createdAt: true,
       mintedAt: true,
       poapTokenId: true,
-      pullRequestEarned: true,
       needsRevalidation: true,
+      wasEarnedByMention: true,
+      mentionedAt: true,
       gitPOAP: {
         select: {
           id: true,
@@ -62,6 +63,11 @@ v1Router.get('/address/:address/gitpoaps', async function (req, res) {
               },
             },
           },
+        },
+      },
+      pullRequestEarned: {
+        select: {
+          githubMergedAt: true,
         },
       },
     },
@@ -134,8 +140,9 @@ v1Router.get('/github/user/:githubHandle/gitpoaps', async function (req, res) {
       createdAt: true,
       mintedAt: true,
       poapTokenId: true,
-      pullRequestEarned: true,
       needsRevalidation: true,
+      wasEarnedByMention: true,
+      mentionedAt: true,
       gitPOAP: {
         select: {
           id: true,
@@ -153,6 +160,11 @@ v1Router.get('/github/user/:githubHandle/gitpoaps', async function (req, res) {
               },
             },
           },
+        },
+      },
+      pullRequestEarned: {
+        select: {
+          githubMergedAt: true,
         },
       },
     },

@@ -3,6 +3,7 @@ import { DateTime } from 'luxon';
 import { retrievePOAPEventInfo } from '../../external/poap';
 import { createScopedLogger } from '../../logging';
 import { GitPOAPResultType, GitPOAPEventResultType } from './types';
+import { getEarnedAt } from '../../lib/claims';
 
 type Claim = {
   poapTokenId: string | null;
@@ -19,11 +20,15 @@ type Claim = {
       }[];
     };
   };
-  pullRequestEarned: GithubPullRequest | null;
+  pullRequestEarned: {
+    githubMergedAt: Date | null;
+  } | null;
   id: number;
   createdAt: Date;
   mintedAt: Date | null;
   needsRevalidation: boolean;
+  wasEarnedByMention: boolean;
+  mentionedAt: Date | null;
 };
 
 type GitPOAP = {
@@ -66,9 +71,7 @@ export const mapClaimsToGitPOAPResults = async (
     });
 
     // Default to created at time of the Claim (e.g. for hackathons)
-    const earnedAt = claim.pullRequestEarned
-      ? claim.pullRequestEarned.githubMergedAt
-      : claim.createdAt;
+    const earnedAt = getEarnedAt(claim);
 
     results.push({
       gitPoapId: claim.id,

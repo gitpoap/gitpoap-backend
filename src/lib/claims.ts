@@ -43,6 +43,7 @@ export async function upsertClaim(
 ): Promise<Claim> {
   let pullRequestEarned = undefined;
   let issueEarned = undefined;
+  let mentionedAt = null;
 
   if ('pullRequest' in contribution) {
     pullRequestEarned = {
@@ -59,6 +60,11 @@ export async function upsertClaim(
     };
   }
 
+  if (wasEarnedByMention) {
+    // Set mentionedAt to now
+    mentionedAt = new Date();
+  }
+
   return await context.prisma.claim.upsert({
     where: {
       gitPOAPId_userId: {
@@ -69,6 +75,7 @@ export async function upsertClaim(
     update: {},
     create: {
       wasEarnedByMention,
+      mentionedAt,
       gitPOAP: {
         connect: {
           id: gitPOAP.id,
@@ -241,4 +248,43 @@ export async function retrieveClaimsCreatedByIssue(
   });
 
   return claims;
+}
+
+type EarnedAtClaimData = {
+  id: number;
+  wasEarnedByMention: boolean;
+  mentionedAt: Date | null;
+  pullRequestEarned: {
+    githubMergedAt: Date | null;
+  } | null;
+  createdAt: Date;
+};
+
+export function getEarnedAt(claim: EarnedAtClaimData): Date {
+  const logger = createScopedLogger('getEarnedAt');
+
+  if (claim.wasEarnedByMention) {
+    if (claim.mentionedAt === null) {
+      logger.error(`Claim ID ${claim.id} was earned by mention but mentionedAt is null`);
+    } else {
+      return claim.mentionedAt;
+    }
+  } else {
+    if (claim.pullRequestEarned) {
+      if (claim.pullRequestEarned.githubMergedAt === null) {
+        logger.error(
+          `Claim ID ${claim.id} was not earned by mention and has pullRequestEarned set with null githubMergedAt`,
+        );
+      } else {
+        return claim.pullRequestEarned.githubMergedAt;
+      }
+    }
+
+    // Since we don't issue claims for closed issues right now,
+    // we can skip the similar logic for issues
+    // (only mentioned at issues can have claims)
+  }
+
+  // Default to createdAt (e.g. for hackathon GitPOAPs)
+  return claim.createdAt;
 }
