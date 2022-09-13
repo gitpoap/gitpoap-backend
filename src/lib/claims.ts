@@ -180,23 +180,12 @@ export async function createNewClaimsForRepoContributionHelper(
   );
 }
 
-export async function retrieveClaimsCreatedByPR(
-  pullRequestId: number,
-  wasEarnedByMention: boolean,
-): Promise<ClaimData[]> {
-  let pullRequestEarnedId: number | undefined = pullRequestId;
-  let mentionEarned = undefined;
-  if (wasEarnedByMention) {
-    pullRequestEarnedId = undefined;
-    mentionEarned = { pullRequestId };
-  }
-
+export async function retrieveClaimsCreatedByPR(pullRequestId: number): Promise<ClaimData[]> {
   // Retrieve any new claims created by this PR
   // No need to filter out DEPRECATED since the claims aren't created for DEPRECATED GitPOAPs
   const claims: ClaimData[] = await context.prisma.claim.findMany({
     where: {
-      pullRequestEarnedId,
-      mentionEarned,
+      pullRequestEarnedId: pullRequestId,
       gitPOAP: {
         isEnabled: true,
       },
@@ -223,24 +212,12 @@ export async function retrieveClaimsCreatedByPR(
   return claims;
 }
 
-export async function retrieveClaimsCreatedByIssue(
-  issueId: number,
-  wasEarnedByMention: boolean,
-): Promise<ClaimData[]> {
-  const logger = createScopedLogger('retrieveClaimsCreatedByIssue');
-
-  if (!wasEarnedByMention) {
-    logger.error("Closed issues currently can't generate Claims but was requested to look them up");
-    return [];
-  }
-
+export async function retrieveClaimsCreatedByMention(mentionId: number): Promise<ClaimData[]> {
   // Retrieve any new claims created by this Mention
   // No need to filter out DEPRECATED since the claims aren't created for DEPRECATED GitPOAPs
   const claims: ClaimData[] = await context.prisma.claim.findMany({
     where: {
-      mentionEarned: {
-        issueId,
-      },
+      mentionEarnedId: mentionId,
       gitPOAP: {
         isEnabled: true,
       },
