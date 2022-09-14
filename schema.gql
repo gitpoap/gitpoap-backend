@@ -874,7 +874,7 @@ input GithubMentionWhereInput {
   id: IntFilter
   createdAt: DateTimeFilter
   updatedAt: DateTimeFilter
-  mentionedAt: DateTimeFilter
+  githubMentionedAt: DateTimeFilter
   repoId: IntFilter
   repo: RepoRelationFilter
   userId: IntFilter
@@ -1162,7 +1162,7 @@ input GithubMentionOrderByWithRelationInput {
   id: SortOrder
   createdAt: SortOrder
   updatedAt: SortOrder
-  mentionedAt: SortOrder
+  githubMentionedAt: SortOrder
   repoId: SortOrder
   repo: RepoOrderByWithRelationInput
   userId: SortOrder
@@ -1538,7 +1538,7 @@ type GithubMention {
   id: Int!
   createdAt: DateTime!
   updatedAt: DateTime!
-  mentionedAt: DateTime!
+  githubMentionedAt: DateTime!
   repoId: Int!
   userId: Int!
   pullRequestId: Int
@@ -1572,7 +1572,7 @@ enum GithubMentionScalarFieldEnum {
   id
   createdAt
   updatedAt
-  mentionedAt
+  githubMentionedAt
   repoId
   userId
   pullRequestId
@@ -2688,7 +2688,7 @@ type GithubMentionCountAggregate {
   id: Int!
   createdAt: Int!
   updatedAt: Int!
-  mentionedAt: Int!
+  githubMentionedAt: Int!
   repoId: Int!
   userId: Int!
   pullRequestId: Int!
@@ -2716,7 +2716,7 @@ type GithubMentionMinAggregate {
   id: Int
   createdAt: DateTime
   updatedAt: DateTime
-  mentionedAt: DateTime
+  githubMentionedAt: DateTime
   repoId: Int
   userId: Int
   pullRequestId: Int
@@ -2727,7 +2727,7 @@ type GithubMentionMaxAggregate {
   id: Int
   createdAt: DateTime
   updatedAt: DateTime
-  mentionedAt: DateTime
+  githubMentionedAt: DateTime
   repoId: Int
   userId: Int
   pullRequestId: Int
@@ -2738,7 +2738,7 @@ type GithubMentionGroupBy {
   id: Int!
   createdAt: DateTime!
   updatedAt: DateTime!
-  mentionedAt: DateTime!
+  githubMentionedAt: DateTime!
   repoId: Int!
   userId: Int!
   pullRequestId: Int
@@ -2754,7 +2754,7 @@ input GithubMentionOrderByWithAggregationInput {
   id: SortOrder
   createdAt: SortOrder
   updatedAt: SortOrder
-  mentionedAt: SortOrder
+  githubMentionedAt: SortOrder
   repoId: SortOrder
   userId: SortOrder
   pullRequestId: SortOrder
@@ -2770,7 +2770,7 @@ input GithubMentionCountOrderByAggregateInput {
   id: SortOrder
   createdAt: SortOrder
   updatedAt: SortOrder
-  mentionedAt: SortOrder
+  githubMentionedAt: SortOrder
   repoId: SortOrder
   userId: SortOrder
   pullRequestId: SortOrder
@@ -2789,7 +2789,7 @@ input GithubMentionMaxOrderByAggregateInput {
   id: SortOrder
   createdAt: SortOrder
   updatedAt: SortOrder
-  mentionedAt: SortOrder
+  githubMentionedAt: SortOrder
   repoId: SortOrder
   userId: SortOrder
   pullRequestId: SortOrder
@@ -2800,7 +2800,7 @@ input GithubMentionMinOrderByAggregateInput {
   id: SortOrder
   createdAt: SortOrder
   updatedAt: SortOrder
-  mentionedAt: SortOrder
+  githubMentionedAt: SortOrder
   repoId: SortOrder
   userId: SortOrder
   pullRequestId: SortOrder
@@ -2822,7 +2822,7 @@ input GithubMentionScalarWhereWithAggregatesInput {
   id: IntWithAggregatesFilter
   createdAt: DateTimeWithAggregatesFilter
   updatedAt: DateTimeWithAggregatesFilter
-  mentionedAt: DateTimeWithAggregatesFilter
+  githubMentionedAt: DateTimeWithAggregatesFilter
   repoId: IntWithAggregatesFilter
   userId: IntWithAggregatesFilter
   pullRequestId: IntNullableWithAggregatesFilter

@@ -14,7 +14,7 @@ describe('prisma/schema assumptions', () => {
 
     const mention1 = await context.prisma.githubMention.create({
       data: {
-        mentionedAt: new Date(),
+        githubMentionedAt: new Date(),
         pullRequest: {
           connect: {
             id: pullRequests[0].id,
@@ -35,7 +35,7 @@ describe('prisma/schema assumptions', () => {
 
     const mention2 = await context.prisma.githubMention.create({
       data: {
-        mentionedAt: new Date(),
+        githubMentionedAt: new Date(),
         pullRequest: {
           connect: {
             id: pullRequests[1].id,
@@ -100,7 +100,7 @@ describe('prisma/schema assumptions', () => {
 
     const mention1 = await context.prisma.githubMention.create({
       data: {
-        mentionedAt: new Date(),
+        githubMentionedAt: new Date(),
         issue: {
           connect: {
             id: issue1.id,
@@ -121,7 +121,7 @@ describe('prisma/schema assumptions', () => {
 
     const mention2 = await context.prisma.githubMention.create({
       data: {
-        mentionedAt: new Date(),
+        githubMentionedAt: new Date(),
         issue: {
           connect: {
             id: issue2.id,

@@ -70,7 +70,7 @@ v1Router.get('/address/:address/gitpoaps', async function (req, res) {
       },
       mentionEarned: {
         select: {
-          mentionedAt: true,
+          githubMentionedAt: true,
         },
       },
     },
@@ -170,7 +170,7 @@ v1Router.get('/github/user/:githubHandle/gitpoaps', async function (req, res) {
       },
       mentionEarned: {
         select: {
-          mentionedAt: true,
+          githubMentionedAt: true,
         },
       },
     },

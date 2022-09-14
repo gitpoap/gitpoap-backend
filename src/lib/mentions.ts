@@ -61,8 +61,8 @@ export async function upsertGithubMention(
     where,
     update: {},
     create: {
-      // Set mentionedAt to now
-      mentionedAt: new Date(),
+      // Set githubMentionedAt to now
+      githubMentionedAt: new Date(),
       repo: {
         connect: {
           id: repoId,

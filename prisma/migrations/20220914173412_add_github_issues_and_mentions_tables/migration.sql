@@ -23,7 +23,7 @@ CREATE TABLE "GithubMention" (
     "id" SERIAL NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "mentionedAt" TIMESTAMP(3) NOT NULL,
+    "githubMentionedAt" TIMESTAMP(3) NOT NULL,
     "repoId" INTEGER NOT NULL,
     "userId" INTEGER NOT NULL,
     "pullRequestId" INTEGER,
