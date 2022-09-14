@@ -24,7 +24,7 @@ type Claim = {
     githubMergedAt: Date | null;
   } | null;
   mentionEarned: {
-    mentionedAt: Date;
+    githubMentionedAt: Date;
   } | null;
   id: number;
   createdAt: Date;
