@@ -6,14 +6,11 @@ import {
 import { createScopedLogger } from '../logging';
 import { getRepoByName } from './repos';
 import { upsertUser } from './users';
-import {
-  Contribution,
-  RestrictedContribution,
-  createNewClaimsForRepoContributionHelper,
-} from './claims';
+import { createNewClaimsForRepoContributionHelper } from './claims';
 import { extractMergeCommitSha, upsertGithubPullRequest } from './pullRequests';
 import { upsertGithubIssue } from './issues';
 import { upsertGithubMention } from './mentions';
+import { Contribution, RestrictedContribution } from './contributions';
 
 export enum BotCreateClaimsErrorType {
   BotUser,

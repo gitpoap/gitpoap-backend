@@ -1,8 +1,9 @@
 import { GithubMention } from '@prisma/client';
 import { context } from '../context';
 import { createScopedLogger } from '../logging';
+import { PullRequestContribution, IssueContribution } from './contributions';
 
-type ContributionReference = { pullRequest: { id: number } } | { issue: { id: number } };
+type ContributionReference = PullRequestContribution | IssueContribution;
 
 export async function upsertGithubMention(
   repoId: number,
