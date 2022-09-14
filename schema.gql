@@ -754,12 +754,12 @@ input RepoWhereInput {
   updatedAt: DateTimeFilter
   organizationId: IntFilter
   organization: OrganizationRelationFilter
-  GithubPullRequest: GithubPullRequestListRelationFilter
   projectId: IntFilter
   project: ProjectRelationFilter
   lastPRUpdatedAt: DateTimeFilter
-  GithubIssue: GithubIssueListRelationFilter
-  GithubMention: GithubMentionListRelationFilter
+  githubPullRequests: GithubPullRequestListRelationFilter
+  githubIssues: GithubIssueListRelationFilter
+  githubMentions: GithubMentionListRelationFilter
 }
 
 input OrganizationRelationFilter {
@@ -803,8 +803,8 @@ input GithubPullRequestWhereInput {
   repo: RepoRelationFilter
   userId: IntFilter
   user: UserRelationFilter
-  Claim: ClaimListRelationFilter
-  GithubMention: GithubMentionListRelationFilter
+  claims: ClaimListRelationFilter
+  githubMentions: GithubMentionListRelationFilter
 }
 
 input RepoRelationFilter {
@@ -827,9 +827,9 @@ input UserWhereInput {
   createdAt: DateTimeFilter
   updatedAt: DateTimeFilter
   claims: ClaimListRelationFilter
-  GithubPullRequest: GithubPullRequestListRelationFilter
-  GithubIssue: GithubIssueListRelationFilter
-  GithubMention: GithubMentionListRelationFilter
+  githubPullRequests: GithubPullRequestListRelationFilter
+  githubIssues: GithubIssueListRelationFilter
+  githubMentions: GithubMentionListRelationFilter
 }
 
 input ClaimListRelationFilter {
@@ -858,7 +858,7 @@ input GithubIssueWhereInput {
   repo: RepoRelationFilter
   userId: IntFilter
   user: UserRelationFilter
-  GithubMention: GithubMentionListRelationFilter
+  githubMentions: GithubMentionListRelationFilter
 }
 
 input GithubMentionListRelationFilter {
@@ -883,7 +883,7 @@ input GithubMentionWhereInput {
   pullRequest: GithubPullRequestRelationFilter
   issueId: IntNullableFilter
   issue: GithubIssueRelationFilter
-  Claim: ClaimListRelationFilter
+  claims: ClaimListRelationFilter
 }
 
 input IntNullableFilter {
@@ -993,7 +993,7 @@ input EventWhereInput {
   githubHandle: StringNullableFilter
   twitterHandle: StringNullableFilter
   siteUrl: StringNullableFilter
-  GitPOAP: GitPOAPListRelationFilter
+  gitPOAPs: GitPOAPListRelationFilter
 }
 
 input GithubMentionRelationFilter {
@@ -1087,7 +1087,7 @@ input EventOrderByWithRelationInput {
   githubHandle: SortOrder
   twitterHandle: SortOrder
   siteUrl: SortOrder
-  GitPOAP: GitPOAPOrderByRelationAggregateInput
+  gitPOAPs: GitPOAPOrderByRelationAggregateInput
 }
 
 input UserOrderByWithRelationInput {
@@ -1097,9 +1097,9 @@ input UserOrderByWithRelationInput {
   createdAt: SortOrder
   updatedAt: SortOrder
   claims: ClaimOrderByRelationAggregateInput
-  GithubPullRequest: GithubPullRequestOrderByRelationAggregateInput
-  GithubIssue: GithubIssueOrderByRelationAggregateInput
-  GithubMention: GithubMentionOrderByRelationAggregateInput
+  githubPullRequests: GithubPullRequestOrderByRelationAggregateInput
+  githubIssues: GithubIssueOrderByRelationAggregateInput
+  githubMentions: GithubMentionOrderByRelationAggregateInput
 }
 
 input GithubPullRequestOrderByRelationAggregateInput {
@@ -1126,8 +1126,8 @@ input GithubPullRequestOrderByWithRelationInput {
   repo: RepoOrderByWithRelationInput
   userId: SortOrder
   user: UserOrderByWithRelationInput
-  Claim: ClaimOrderByRelationAggregateInput
-  GithubMention: GithubMentionOrderByRelationAggregateInput
+  claims: ClaimOrderByRelationAggregateInput
+  githubMentions: GithubMentionOrderByRelationAggregateInput
 }
 
 input RepoOrderByWithRelationInput {
@@ -1138,12 +1138,12 @@ input RepoOrderByWithRelationInput {
   updatedAt: SortOrder
   organizationId: SortOrder
   organization: OrganizationOrderByWithRelationInput
-  GithubPullRequest: GithubPullRequestOrderByRelationAggregateInput
   projectId: SortOrder
   project: ProjectOrderByWithRelationInput
   lastPRUpdatedAt: SortOrder
-  GithubIssue: GithubIssueOrderByRelationAggregateInput
-  GithubMention: GithubMentionOrderByRelationAggregateInput
+  githubPullRequests: GithubPullRequestOrderByRelationAggregateInput
+  githubIssues: GithubIssueOrderByRelationAggregateInput
+  githubMentions: GithubMentionOrderByRelationAggregateInput
 }
 
 input OrganizationOrderByWithRelationInput {
@@ -1171,7 +1171,7 @@ input GithubMentionOrderByWithRelationInput {
   pullRequest: GithubPullRequestOrderByWithRelationInput
   issueId: SortOrder
   issue: GithubIssueOrderByWithRelationInput
-  Claim: ClaimOrderByRelationAggregateInput
+  claims: ClaimOrderByRelationAggregateInput
 }
 
 input GithubIssueOrderByWithRelationInput {
@@ -1185,7 +1185,7 @@ input GithubIssueOrderByWithRelationInput {
   repo: RepoOrderByWithRelationInput
   userId: SortOrder
   user: UserOrderByWithRelationInput
-  GithubMention: GithubMentionOrderByRelationAggregateInput
+  githubMentions: GithubMentionOrderByRelationAggregateInput
 }
 
 input ClaimWhereUniqueInput {
@@ -1301,7 +1301,8 @@ type Repo {
   lastPRUpdatedAt: DateTime!
   _count: RepoCount
   organization: Organization!
-  GithubPullRequest(
+  project: Project!
+  githubPullRequests(
     where: GithubPullRequestWhereInput
     orderBy: [GithubPullRequestOrderByWithRelationInput!]
     cursor: GithubPullRequestWhereUniqueInput
@@ -1309,8 +1310,7 @@ type Repo {
     skip: Int
     distinct: [GithubPullRequestScalarFieldEnum!]
   ): [GithubPullRequest!]!
-  project: Project!
-  GithubIssue(
+  githubIssues(
     where: GithubIssueWhereInput
     orderBy: [GithubIssueOrderByWithRelationInput!]
     cursor: GithubIssueWhereUniqueInput
@@ -1318,7 +1318,7 @@ type Repo {
     skip: Int
     distinct: [GithubIssueScalarFieldEnum!]
   ): [GithubIssue!]!
-  GithubMention(
+  githubMentions(
     where: GithubMentionWhereInput
     orderBy: [GithubMentionOrderByWithRelationInput!]
     cursor: GithubMentionWhereUniqueInput
@@ -1329,9 +1329,9 @@ type Repo {
 }
 
 type RepoCount {
-  GithubPullRequest: Int!
-  GithubIssue: Int!
-  GithubMention: Int!
+  githubPullRequests: Int!
+  githubIssues: Int!
+  githubMentions: Int!
 }
 
 type Organization {
@@ -1387,7 +1387,7 @@ type GithubPullRequest {
   _count: GithubPullRequestCount
   repo: Repo!
   user: User!
-  Claim(
+  claims(
     where: ClaimWhereInput
     orderBy: [ClaimOrderByWithRelationInput!]
     cursor: ClaimWhereUniqueInput
@@ -1395,7 +1395,7 @@ type GithubPullRequest {
     skip: Int
     distinct: [ClaimScalarFieldEnum!]
   ): [Claim!]!
-  GithubMention(
+  githubMentions(
     where: GithubMentionWhereInput
     orderBy: [GithubMentionOrderByWithRelationInput!]
     cursor: GithubMentionWhereUniqueInput
@@ -1406,8 +1406,8 @@ type GithubPullRequest {
 }
 
 type GithubPullRequestCount {
-  Claim: Int!
-  GithubMention: Int!
+  claims: Int!
+  githubMentions: Int!
 }
 
 type User {
@@ -1425,7 +1425,7 @@ type User {
     skip: Int
     distinct: [ClaimScalarFieldEnum!]
   ): [Claim!]!
-  GithubPullRequest(
+  githubPullRequests(
     where: GithubPullRequestWhereInput
     orderBy: [GithubPullRequestOrderByWithRelationInput!]
     cursor: GithubPullRequestWhereUniqueInput
@@ -1433,7 +1433,7 @@ type User {
     skip: Int
     distinct: [GithubPullRequestScalarFieldEnum!]
   ): [GithubPullRequest!]!
-  GithubIssue(
+  githubIssues(
     where: GithubIssueWhereInput
     orderBy: [GithubIssueOrderByWithRelationInput!]
     cursor: GithubIssueWhereUniqueInput
@@ -1441,7 +1441,7 @@ type User {
     skip: Int
     distinct: [GithubIssueScalarFieldEnum!]
   ): [GithubIssue!]!
-  GithubMention(
+  githubMentions(
     where: GithubMentionWhereInput
     orderBy: [GithubMentionOrderByWithRelationInput!]
     cursor: GithubMentionWhereUniqueInput
@@ -1454,9 +1454,9 @@ type User {
 type UserCount {
   claims: Int!
   authTokens: Int!
-  GithubPullRequest: Int!
-  GithubIssue: Int!
-  GithubMention: Int!
+  githubPullRequests: Int!
+  githubIssues: Int!
+  githubMentions: Int!
 }
 
 enum ClaimScalarFieldEnum {
@@ -1510,7 +1510,7 @@ type GithubIssue {
 }
 
 type GithubIssueCount {
-  GithubMention: Int!
+  githubMentions: Int!
 }
 
 input GithubIssueWhereUniqueInput {
@@ -1547,7 +1547,7 @@ type GithubMention {
 }
 
 type GithubMentionCount {
-  Claim: Int!
+  claims: Int!
 }
 
 input GithubMentionWhereUniqueInput {
@@ -1652,7 +1652,7 @@ type Event {
 }
 
 type EventCount {
-  GitPOAP: Int!
+  gitPOAPs: Int!
 }
 
 type ClaimGroupBy {
@@ -3821,7 +3821,8 @@ type RepoReturnData {
   lastPRUpdatedAt: DateTime!
   _count: RepoCount
   organization: Organization!
-  GithubPullRequest(
+  project: Project!
+  githubPullRequests(
     where: GithubPullRequestWhereInput
     orderBy: [GithubPullRequestOrderByWithRelationInput!]
     cursor: GithubPullRequestWhereUniqueInput
@@ -3829,8 +3830,7 @@ type RepoReturnData {
     skip: Int
     distinct: [GithubPullRequestScalarFieldEnum!]
   ): [GithubPullRequest!]!
-  project: Project!
-  GithubIssue(
+  githubIssues(
     where: GithubIssueWhereInput
     orderBy: [GithubIssueOrderByWithRelationInput!]
     cursor: GithubIssueWhereUniqueInput
@@ -3838,7 +3838,7 @@ type RepoReturnData {
     skip: Int
     distinct: [GithubIssueScalarFieldEnum!]
   ): [GithubIssue!]!
-  GithubMention(
+  githubMentions(
     where: GithubMentionWhereInput
     orderBy: [GithubMentionOrderByWithRelationInput!]
     cursor: GithubMentionWhereUniqueInput

@@ -1,5 +1,13 @@
 import { context } from '../context';
 
+export type PullRequestContribution = { pullRequest: { id: number } };
+export type IssueContribution = { issue: { id: number } };
+export type MentionContribution = { mention: { id: number } };
+
+export type RestrictedContribution = PullRequestContribution | MentionContribution;
+
+export type Contribution = RestrictedContribution | IssueContribution;
+
 export async function countContributionsForClaim(
   user: { id: number },
   repos: { id: number }[],
