@@ -23,9 +23,7 @@ import { backloadGithubPullRequestData } from '../lib/pullRequests';
 import { upsertUser } from '../lib/users';
 import {
   ClaimData,
-  Contribution,
   RepoData,
-  RestrictedContribution,
   retrieveClaimsCreatedByMention,
   retrieveClaimsCreatedByPR,
 } from '../lib/claims';
@@ -33,6 +31,7 @@ import { checkIfClaimTransferred } from '../lib/transfers';
 import { upsertProfile } from '../lib/profiles';
 import { z } from 'zod';
 import { BotCreateClaimsErrorType, createClaimsForPR, createClaimsForIssue } from '../lib/bot';
+import { RestrictedContribution } from '../lib/contributions';
 
 export const claimsRouter = Router();
 
