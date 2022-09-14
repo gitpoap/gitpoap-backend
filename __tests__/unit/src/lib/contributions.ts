@@ -34,7 +34,7 @@ describe('countContributionsForClaim', () => {
       where: {
         userId: user.id,
         repoId: { in: repoIds },
-        mentionedAt: dateRange,
+        githubMentionedAt: dateRange,
       },
     });
   });
@@ -61,7 +61,7 @@ describe('countContributionsForClaim', () => {
       where: {
         userId: user.id,
         repoId: { in: repoIds },
-        mentionedAt: dateRange,
+        githubMentionedAt: dateRange,
       },
     });
   });
@@ -88,7 +88,7 @@ describe('countContributionsForClaim', () => {
       where: {
         userId: user.id,
         repoId: { in: repoIds },
-        mentionedAt: dateRange,
+        githubMentionedAt: dateRange,
       },
     });
   });
@@ -115,7 +115,7 @@ describe('countContributionsForClaim', () => {
       where: {
         userId: user.id,
         repoId: { in: repoIds },
-        mentionedAt: dateRange,
+        githubMentionedAt: dateRange,
       },
     });
   });

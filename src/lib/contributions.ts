@@ -40,7 +40,7 @@ export async function countContributionsForClaim(
         repoId: {
           in: repoIds,
         },
-        mentionedAt: dateRange,
+        githubMentionedAt: dateRange,
       },
     }),
   ]);

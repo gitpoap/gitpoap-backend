@@ -234,7 +234,7 @@ type EarnedAtClaimData = {
     githubMergedAt: Date | null;
   } | null;
   mentionEarned: {
-    mentionedAt: Date;
+    githubMentionedAt: Date;
   } | null;
   createdAt: Date;
 };
@@ -251,7 +251,7 @@ export function getEarnedAt(claim: EarnedAtClaimData): Date {
       return claim.pullRequestEarned.githubMergedAt;
     }
   } else if (claim.mentionEarned) {
-    return claim.mentionEarned.mentionedAt;
+    return claim.mentionEarned.githubMentionedAt;
   }
 
   // Default to createdAt (e.g. for hackathon GitPOAPs)
