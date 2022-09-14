@@ -56,7 +56,7 @@ yarn docker:background
 then you can easily work on the backend API while making code changes locally (which will restart after any changes) via:
 ```sh
 # First time to migrate and seed the DB:
-yarn first-time-dev
+yarn dev:first-time
 # After we've already seeded the DB but want to restart the server for some reason:
 yarn dev
 ```

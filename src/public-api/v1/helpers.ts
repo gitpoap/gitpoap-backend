@@ -71,9 +71,6 @@ export const mapClaimsToGitPOAPResults = async (
       return `${repo.organization.name}/${repo.name}`;
     });
 
-    // Default to created at time of the Claim (e.g. for hackathons)
-    const earnedAt = getEarnedAt(claim);
-
     results.push({
       gitPoapId: claim.id,
       gitPoapEventId: claim.gitPOAP.id,
@@ -85,7 +82,7 @@ export const mapClaimsToGitPOAPResults = async (
       description: poapEventData.description,
       imageUrl: poapEventData.image_url,
       repositories,
-      earnedAt: DateTime.fromJSDate(<Date>earnedAt).toFormat('yyyy-MM-dd'),
+      earnedAt: DateTime.fromJSDate(getEarnedAt(claim)).toFormat('yyyy-MM-dd'),
       mintedAt: claim.mintedAt ? DateTime.fromJSDate(claim.mintedAt).toFormat('yyyy-MM-dd') : null,
       needsRevalidation: claim.needsRevalidation,
       isDeprecated: claim.gitPOAP.status === GitPOAPStatus.DEPRECATED,

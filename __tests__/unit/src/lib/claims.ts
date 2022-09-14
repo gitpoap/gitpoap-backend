@@ -1,10 +1,7 @@
 import { contextMock } from '../../../../__mocks__/src/context';
-import {
-  Contribution,
-  RepoData,
-  createNewClaimsForRepoContributionHelper,
-} from '../../../../src/lib/claims';
+import { RepoData, createNewClaimsForRepoContributionHelper } from '../../../../src/lib/claims';
 import { countContributionsForClaim } from '../../../../src/lib/contributions';
+import { Contribution } from '../../../../src/lib/contributions';
 
 jest.mock('../../../../src/lib/contributions');
 

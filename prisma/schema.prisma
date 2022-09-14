@@ -19,18 +19,18 @@ datasource db {
 }
 
 model User {
-  id                Int                 @id @default(autoincrement())
-  githubId          Int                 @unique
-  githubHandle      String              @db.VarChar(255)
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
-  claims            Claim[]
+  id                 Int                 @id @default(autoincrement())
+  githubId           Int                 @unique
+  githubHandle       String              @db.VarChar(255)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  claims             Claim[]
   // Hide user.authTokens from generated resolvers
   /// @TypeGraphQL.omit(output: true, input: true)
-  authTokens        AuthToken[]
-  GithubPullRequest GithubPullRequest[]
-  GithubIssue       GithubIssue[]
-  GithubMention     GithubMention[]
+  authTokens         AuthToken[]
+  githubPullRequests GithubPullRequest[]
+  githubIssues       GithubIssue[]
+  githubMentions     GithubMention[]
 }
 
 model Profile {
@@ -63,21 +63,21 @@ model Organization {
 }
 
 model Repo {
-  id                Int                 @id @default(autoincrement())
-  name              String              @db.VarChar(50)
-  githubRepoId      Int                 @unique
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
-  organizationId    Int
-  organization      Organization        @relation(fields: [organizationId], references: [id])
-  GithubPullRequest GithubPullRequest[]
-  projectId         Int
-  project           Project             @relation(fields: [projectId], references: [id])
+  id                 Int                 @id @default(autoincrement())
+  name               String              @db.VarChar(50)
+  githubRepoId       Int                 @unique
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  organizationId     Int
+  organization       Organization        @relation(fields: [organizationId], references: [id])
+  projectId          Int
+  project            Project             @relation(fields: [projectId], references: [id])
   // Default to the beginning of the year, but this will update when contributions
   // are initially uploaded
-  lastPRUpdatedAt   DateTime            @default(dbgenerated("date_trunc('year'::text, now())"))
-  GithubIssue       GithubIssue[]
-  GithubMention     GithubMention[]
+  lastPRUpdatedAt    DateTime            @default(dbgenerated("date_trunc('year'::text, now())"))
+  githubPullRequests GithubPullRequest[]
+  githubIssues       GithubIssue[]
+  githubMentions     GithubMention[]
 }
 
 model Project {
@@ -202,8 +202,8 @@ model GithubPullRequest {
   repo                 Repo            @relation(fields: [repoId], references: [id])
   userId               Int
   user                 User            @relation(fields: [userId], references: [id])
-  Claim                Claim[]
-  GithubMention        GithubMention[]
+  claims               Claim[]
+  githubMentions       GithubMention[]
 
   @@unique([repoId, githubPullNumber])
 }
@@ -223,7 +223,7 @@ model GithubIssue {
   repo              Repo            @relation(fields: [repoId], references: [id])
   userId            Int
   user              User            @relation(fields: [userId], references: [id])
-  GithubMention     GithubMention[]
+  githubMentions    GithubMention[]
 
   @@unique([repoId, githubIssueNumber])
 }
@@ -243,7 +243,7 @@ model GithubMention {
   pullRequest   GithubPullRequest? @relation(fields: [pullRequestId], references: [id])
   issueId       Int?
   issue         GithubIssue?       @relation(fields: [issueId], references: [id])
-  Claim         Claim[]
+  claims        Claim[]
 
   @@unique([repoId, userId, pullRequestId])
   @@unique([repoId, userId, issueId])
@@ -263,7 +263,7 @@ model Event {
   githubHandle  String?   @db.VarChar(255)
   twitterHandle String?   @db.VarChar(255)
   siteUrl       String?   @db.VarChar(255)
-  GitPOAP       GitPOAP[]
+  gitPOAPs      GitPOAP[]
 }
 
 enum GitPOAPStatus {

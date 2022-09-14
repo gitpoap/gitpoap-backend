@@ -1,7 +1,7 @@
 import { context } from '../context';
 import { createScopedLogger } from '../logging';
 import { Claim } from '@generated/type-graphql';
-import { countContributionsForClaim } from './contributions';
+import { RestrictedContribution, countContributionsForClaim } from './contributions';
 
 type GitPOAPs = {
   id: number;
@@ -32,10 +32,6 @@ export type ClaimData = {
     threshold: number;
   };
 };
-
-export type RestrictedContribution = { pullRequest: { id: number } } | { mention: { id: number } };
-
-export type Contribution = RestrictedContribution | { issue: { id: number } };
 
 export async function upsertClaim(
   user: { id: number },
