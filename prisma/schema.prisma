@@ -27,7 +27,7 @@ model User {
   claims            Claim[]
   // Hide user.authTokens from generated resolvers
   /// @TypeGraphQL.omit(output: true, input: true)
-  authTokens        GitHubOAuthToken[]
+  authTokens        AuthToken[]
   GithubPullRequest GithubPullRequest[]
   addresses         Address[]
 }
@@ -177,7 +177,7 @@ model GitPOAP {
   isEnabled   Boolean       @default(true)
 }
 
-model GitHubOAuthToken {
+model AuthToken {
   id               Int    @id @default(autoincrement())
   generation       Int    @default(0)
   githubOAuthToken String
