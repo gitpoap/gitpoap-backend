@@ -32,3 +32,4 @@
 - Remove oldAddress from Profile
 - Remove oldMintedAddress from Claim
 - Convert optional addressId on Profile to be required / not null
+- Convert required githubUserId on Claim to optional
