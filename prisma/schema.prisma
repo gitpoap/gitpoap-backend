@@ -18,7 +18,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model GitHubUser {
+model User {
   id                Int                 @id @default(autoincrement())
   githubId          Int                 @unique
   githubHandle      String              @db.VarChar(255)
@@ -29,7 +29,7 @@ model GitHubUser {
   /// @TypeGraphQL.omit(output: true, input: true)
   authTokens        GitHubOAuthToken[]
   GithubPullRequest GithubPullRequest[]
-  Address           Address[]
+  addresses         Address[]
 }
 
 model Profile {
@@ -49,22 +49,21 @@ model Profile {
 }
 
 model Address {
-  id                     Int                      @id @default(autoincrement())
-  address                String                   @unique @db.VarChar(255)
-  email                  String                   @db.VarChar(255)
-  createdAt              DateTime                 @default(now())
-  updatedAt              DateTime                 @updatedAt
-  Profile                Profile?
-  gitHubUserId           Int
-  githubUser             GitHubUser               @relation(fields: [gitHubUserId], references: [id])
-  ensAvatarImageUrl      String?                  @db.VarChar(255)
-  ensName                String?                  @db.VarChar(255)
-  Organization           Organization[]
-  OrganizationMembership OrganizationMembership[]
-  issuedClaims           Claim[]                  @relation("issuedClaims")
-  Claim                  Claim[]                  @relation("mintedClaims")
+  id                Int                      @id @default(autoincrement())
+  ethAddress        String                   @unique @db.VarChar(255)
+  email             String                   @db.VarChar(255)
+  createdAt         DateTime                 @default(now())
+  updatedAt         DateTime                 @updatedAt
+  Profile           Profile?
+  githubUserId      Int
+  githubUser        User                     @relation(fields: [githubUserId], references: [id])
+  ensAvatarImageUrl String?                  @db.VarChar(255)
+  ensName           String?                  @db.VarChar(255)
+  memberships       OrganizationMembership[]
+  issuedClaims      Claim[]                  @relation("issuedClaims")
+  mintedClaims      Claim[]                  @relation("mintedClaims")
 
-  @@index([address])
+  @@index([ethAddress])
 }
 
 model OrganizationMembership {
@@ -76,24 +75,21 @@ model OrganizationMembership {
   addressId      Int
   address        Address        @relation(fields: [addressId], references: [id])
   role           MembershipRole
-  isActive       Boolean        @default(true)
 
   @@unique([organizationId, addressId])
 }
 
 model Organization {
-  id                     Int                      @id @default(autoincrement())
-  githubOrgId            Int                      @unique
-  name                   String                   @db.VarChar(50)
-  createdAt              DateTime                 @default(now())
-  updatedAt              DateTime                 @updatedAt
-  description            String?
-  twitterHandle          String?                  @db.VarChar(255)
-  url                    String?                  @db.VarChar(255)
-  ownerAddressId         Int?
-  owner                  Address?                 @relation(fields: [ownerAddressId], references: [id])
-  repos                  Repo[]
-  OrganizationMembership OrganizationMembership[]
+  id            Int                      @id @default(autoincrement())
+  githubOrgId   Int                      @unique
+  name          String                   @db.VarChar(50)
+  createdAt     DateTime                 @default(now())
+  updatedAt     DateTime                 @updatedAt
+  description   String?
+  twitterHandle String?                  @db.VarChar(255)
+  url           String?                  @db.VarChar(255)
+  repos         Repo[]
+  memberships   OrganizationMembership[]
 }
 
 model Repo {
@@ -133,8 +129,8 @@ model Claim {
   gitPOAPId           Int
   gitPOAP             GitPOAP            @relation(fields: [gitPOAPId], references: [id])
   // Claim can be 'issued' to a github user, eth address, or email
-  githHubUserId       Int
-  gitHubUser          GitHubUser         @relation(fields: [githHubUserId], references: [id])
+  githubUserId        Int?
+  githubUser          User?              @relation(fields: [githubUserId], references: [id])
   addressId           Int?
   address             Address?           @relation("issuedClaims", fields: [addressId], references: [id])
   email               String?            @db.VarChar(255)
@@ -146,7 +142,10 @@ model Claim {
   pullRequestEarned   GithubPullRequest? @relation(fields: [pullRequestEarnedId], references: [id])
   needsRevalidation   Boolean            @default(false)
 
-  @@unique([gitPOAPId, githHubUserId])
+  @@unique([gitPOAPId, mintedAddressId])
+  @@unique([gitPOAPId, addressId])
+  @@unique([gitPOAPId, githubUserId])
+  @@unique([gitPOAPId, email])
 }
 
 model GitPOAP {
@@ -179,11 +178,11 @@ model GitPOAP {
 }
 
 model GitHubOAuthToken {
-  id               Int        @id @default(autoincrement())
-  generation       Int        @default(0)
+  id               Int    @id @default(autoincrement())
+  generation       Int    @default(0)
   githubOAuthToken String
   githubId         Int
-  user             GitHubUser @relation(fields: [githubId], references: [githubId])
+  user             User   @relation(fields: [githubId], references: [githubId])
 }
 
 model FeaturedPOAP {
@@ -223,19 +222,19 @@ model BatchTiming {
 }
 
 model GithubPullRequest {
-  id                   Int        @id @default(autoincrement())
+  id                   Int      @id @default(autoincrement())
   // Note that the following two fields are named in relation
   // to an instance of GithubPullRequest
-  createdAt            DateTime   @default(now())
-  updatedAt            DateTime   @updatedAt
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
   githubPullNumber     Int
   githubTitle          String
   githubMergedAt       DateTime
-  githubMergeCommitSha String     @db.VarChar(41)
+  githubMergeCommitSha String   @db.VarChar(41)
   repoId               Int
-  repo                 Repo       @relation(fields: [repoId], references: [id])
+  repo                 Repo     @relation(fields: [repoId], references: [id])
   userId               Int
-  user                 GitHubUser @relation(fields: [userId], references: [id])
+  user                 User     @relation(fields: [userId], references: [id])
   Claim                Claim[]
 
   @@unique([repoId, githubPullNumber])
@@ -279,7 +278,7 @@ enum ClaimType {
 }
 
 enum MembershipRole {
-  MEMBER
   ADMIN
   OWNER
+  MEMBER
 }
