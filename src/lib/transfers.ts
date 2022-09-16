@@ -17,7 +17,7 @@ export async function handleGitPOAPTransfer(
     where: {
       poapTokenId,
       profile: {
-        address: oldAddress,
+        oldAddress: oldAddress,
       },
     },
   });
@@ -30,7 +30,7 @@ export async function handleGitPOAPTransfer(
       id: claimId,
     },
     data: {
-      address: newAddress.toLowerCase(),
+      oldMintedAddress: newAddress.toLowerCase(),
       needsRevalidation: true,
     },
   });
@@ -45,7 +45,7 @@ export async function checkIfClaimTransferred(claimId: number): Promise<string |
     },
     select: {
       status: true,
-      address: true,
+      oldMintedAddress: true,
       poapTokenId: true,
     },
   });
@@ -63,7 +63,7 @@ export async function checkIfClaimTransferred(claimId: number): Promise<string |
     return null;
   }
 
-  const address = claimData.address;
+  const address = claimData.oldMintedAddress;
 
   if (address === null) {
     logger.error(`Claim ID ${claimId} has poapTokenId set but address is null`);
@@ -81,7 +81,7 @@ export async function checkIfClaimTransferred(claimId: number): Promise<string |
     return null;
   }
 
-  if (newData.owner !== claimData.address) {
+  if (newData.owner !== claimData.oldMintedAddress) {
     logger.info(`Found transferred GitPOAP Token ID: ${claimId}`);
 
     await handleGitPOAPTransfer(claimId, poapTokenId, address, newData.owner);

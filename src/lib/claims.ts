@@ -82,7 +82,7 @@ export async function upsertClaim(
 }
 
 export function createYearlyGitPOAPsMap(gitPOAPs: GitPOAPs): YearlyGitPOAPsMap {
-  let yearlyGitPOAPsMap: YearlyGitPOAPsMap = {};
+  const yearlyGitPOAPsMap: YearlyGitPOAPsMap = {};
 
   for (const gitPOAP of gitPOAPs) {
     const yearString = gitPOAP.year.toString();
@@ -120,7 +120,7 @@ export async function createNewClaimsForRepoContribution(
 
   logger.debug(`Found ${years.length} years with GitPOAPs`);
 
-  let claims = [];
+  const claims = [];
   for (const year of years) {
     const gitPOAPs = yearlyGitPOAPsMap[year];
 

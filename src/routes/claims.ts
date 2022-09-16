@@ -267,7 +267,7 @@ claimsRouter.post('/', jwtWithOAuth(), async function (req, res) {
       },
       data: {
         status: ClaimStatus.PENDING,
-        address: resolvedAddress.toLowerCase(),
+        oldMintedAddress: resolvedAddress.toLowerCase(),
       },
     });
 
@@ -297,7 +297,7 @@ claimsRouter.post('/', jwtWithOAuth(), async function (req, res) {
         },
         data: {
           status: ClaimStatus.UNCLAIMED,
-          address: null,
+          oldMintedAddress: null,
         },
       });
 
@@ -650,7 +650,7 @@ claimsRouter.post('/revalidate', jwtWithOAuth(), async (req, res) => {
       },
       select: {
         status: true,
-        address: true,
+        oldMintedAddress: true,
         user: {
           select: {
             githubId: true,
@@ -670,7 +670,7 @@ claimsRouter.post('/revalidate', jwtWithOAuth(), async (req, res) => {
     // If the claim address is not set to the user sending the request,
     // assume the user is correct and that perhaps we haven't seen the
     // transfer yet in our backend
-    if (claim.address !== resolvedAddress.toLowerCase()) {
+    if (claim.oldMintedAddress !== resolvedAddress.toLowerCase()) {
       const newAddress = await checkIfClaimTransferred(claimId);
 
       if (newAddress !== resolvedAddress.toLowerCase()) {

@@ -48,11 +48,11 @@ featuredRouter.put('/', async function (req, res) {
   // Get the profile and create one if it doesn't exist
   const profile = await context.prisma.profile.upsert({
     where: {
-      address: resolvedAddress.toLowerCase(),
+      oldAddress: resolvedAddress.toLowerCase(),
     },
     update: {},
     create: {
-      address: resolvedAddress.toLowerCase(),
+      oldAddress: resolvedAddress.toLowerCase(),
     },
   });
 
@@ -147,7 +147,7 @@ featuredRouter.delete('/:id', async function (req, res) {
 
   const profile = await context.prisma.profile.findUnique({
     where: {
-      address: resolvedAddress.toLowerCase(),
+      oldAddress: resolvedAddress.toLowerCase(),
     },
   });
   if (profile === null) {
