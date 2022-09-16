@@ -521,7 +521,7 @@ claimsRouter.post(
 
       for (let contribution of contributions) {
         if (contribution === null) {
-          newClaims = [];
+          continue;
         } else if ('pullRequest' in contribution) {
           const newClaimsForContribution = await retrieveClaimsCreatedByPR(
             contribution.pullRequest.id,
@@ -575,7 +575,7 @@ claimsRouter.post(
 
       for (let contribution of contributions) {
         if (contribution === null) {
-          newClaims = [];
+          continue;
         } else if ('mention' in contribution) {
           const newClaimsForContribution = await retrieveClaimsCreatedByMention(
             contribution.mention.id,
