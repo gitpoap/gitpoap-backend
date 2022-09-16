@@ -26,8 +26,10 @@ describe('CustomProfileResolver', () => {
     expect(data.lastMonthContributors).toEqual(1);
   });
 
-  it('profileData', async () => {
-    const data = await client.request(gql`
+  it(
+    'profileData',
+    async () => {
+      const data = await client.request(gql`
       {
         profileData(address: "${ADDRESSES.burz}") {
           ensName
@@ -36,15 +38,19 @@ describe('CustomProfileResolver', () => {
       }
     `);
 
-    expect(data.profileData).not.toEqual(null);
-    expect(data.profileData.ensName).toEqual('burz.eth');
-    expect(data.profileData.githubHandle).toEqual(null);
-  }, 10 * MILLISECONDS_PER_SECOND);
+      expect(data.profileData).not.toEqual(null);
+      expect(data.profileData.ensName).toEqual('burz.eth');
+      expect(data.profileData.githubHandle).toEqual(null);
+    },
+    10 * MILLISECONDS_PER_SECOND,
+  );
 
-  it('profileData - nullable', async () => {
-    const address = ADDRESSES.jay.substr(0, 5) + 'c' + ADDRESSES.jay.substr(6);
+  it(
+    'profileData - nullable',
+    async () => {
+      const address = ADDRESSES.jay.substr(0, 5) + 'c' + ADDRESSES.jay.substr(6);
 
-    const data = await client.request(gql`
+      const data = await client.request(gql`
       {
         profileData(address: "${address}") {
           ensName
@@ -56,13 +62,15 @@ describe('CustomProfileResolver', () => {
       }
     `);
 
-    expect(data.profileData).not.toEqual(null);
-    expect(data.profileData.ensName).toEqual(null);
-    expect(data.profileData.address).toEqual(address);
-    expect(data.profileData.name).toEqual(null);
-    expect(data.profileData.githubHandle).toEqual(null);
-    expect(data.profileData.isVisibleOnLeaderboard).toEqual(true);
-  }, 10 * MILLISECONDS_PER_SECOND);
+      expect(data.profileData).not.toEqual(null);
+      expect(data.profileData.ensName).toEqual(null);
+      expect(data.profileData.address).toEqual(address);
+      expect(data.profileData.name).toEqual(null);
+      expect(data.profileData.githubHandle).toEqual(null);
+      expect(data.profileData.isVisibleOnLeaderboard).toEqual(true);
+    },
+    10 * MILLISECONDS_PER_SECOND,
+  );
 
   it('mostHonoredContributors', async () => {
     const data = await client.request(gql`
@@ -88,7 +96,7 @@ describe('CustomProfileResolver', () => {
   const setAddressVisibility = async (address: string, isVisibleOnLeaderboard: boolean) => {
     await context.prisma.profile.update({
       where: {
-        address: address.toLowerCase(),
+        oldAddress: address.toLowerCase(),
       },
       data: { isVisibleOnLeaderboard },
     });

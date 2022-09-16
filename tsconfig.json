@@ -19,5 +19,5 @@
     "strictPropertyInitialization": false
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
-  "exclude": ["__mocks__", "__tests__", "aws", "node_modules"]
+  "exclude": ["aws", "node_modules"]
 }
