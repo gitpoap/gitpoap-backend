@@ -630,7 +630,7 @@ export class CustomGitPOAPResolver {
     const claimStatusSelect = Prisma.sql`
       SELECT COUNT(c2.id)::INTEGER FROM "Claim" AS c2
       INNER JOIN "GitPOAP" AS g ON g.id = c2."gitPOAPId"
-      WHERE p.address = c2.address
+      WHERE p."oldAddress" = c2."oldMintedAddress"
         AND c2.status IN (
           ${ClaimStatus.MINTING}::"ClaimStatus",
           ${ClaimStatus.CLAIMED}::"ClaimStatus"
@@ -644,7 +644,7 @@ export class CustomGitPOAPResolver {
           results = await prisma.$queryRaw`
             SELECT p.*, u."githubHandle", (${claimStatusSelect}) AS "claimsCount"
             FROM "Claim" AS c
-            INNER JOIN "Profile" AS p ON c.address = p.address
+            INNER JOIN "Profile" AS p ON c."oldMintedAddress" = p."oldAddress"
             INNER JOIN "User" AS u ON u.id = c."userId"
             WHERE c."gitPOAPId" = ${gitPOAPId} AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
             ORDER BY c."updatedAt" DESC
@@ -654,7 +654,7 @@ export class CustomGitPOAPResolver {
           results = await prisma.$queryRaw`
             SELECT p.*, u."githubHandle", (${claimStatusSelect}) AS "claimsCount"
             FROM "Claim" AS c
-            JOIN "Profile" AS p ON c.address = p.address
+            JOIN "Profile" AS p ON c."oldMintedAddress" = p."oldAddress"
             JOIN "User" AS u ON u.id = c."userId"
             WHERE c."gitPOAPId" = ${gitPOAPId} AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
             ORDER BY c."updatedAt" DESC
@@ -666,7 +666,7 @@ export class CustomGitPOAPResolver {
           results = await prisma.$queryRaw`
             SELECT p.*, u."githubHandle", (${claimStatusSelect}) AS "claimsCount"
             FROM "Claim" AS c
-            JOIN "Profile" AS p ON c.address = p.address
+            JOIN "Profile" AS p ON c."oldMintedAddress" = p."oldAddress"
             JOIN "User" AS u ON u.id = c."userId"
             WHERE c."gitPOAPId" = ${gitPOAPId} AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
             ORDER BY "claimsCount" DESC
@@ -676,7 +676,7 @@ export class CustomGitPOAPResolver {
           results = await prisma.$queryRaw`
             SELECT p.*, u."githubHandle", (${claimStatusSelect}) AS "claimsCount"
             FROM "Claim" AS c
-            JOIN "Profile" AS p ON c.address = p.address
+            JOIN "Profile" AS p ON c."oldMintedAddress" = p."oldAddress"
             JOIN "User" AS u ON u.id = c."userId"
             WHERE c."gitPOAPId" = ${gitPOAPId} AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
             ORDER BY "claimsCount" DESC

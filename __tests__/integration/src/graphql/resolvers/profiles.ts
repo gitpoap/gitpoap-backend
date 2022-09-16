@@ -77,7 +77,7 @@ describe('CustomProfileResolver', () => {
       {
         mostHonoredContributors(count: 2) {
           profile {
-            address
+            oldAddress
           }
           claimsCount
         }
@@ -86,10 +86,10 @@ describe('CustomProfileResolver', () => {
 
     expect(data.mostHonoredContributors.length).toEqual(2);
 
-    expect(data.mostHonoredContributors[0].profile.address).toEqual(ADDRESSES.burz);
+    expect(data.mostHonoredContributors[0].profile.oldAddress).toEqual(ADDRESSES.burz);
     expect(data.mostHonoredContributors[0].claimsCount).toEqual(6);
 
-    expect(data.mostHonoredContributors[1].profile.address).toEqual(ADDRESSES.jay);
+    expect(data.mostHonoredContributors[1].profile.oldAddress).toEqual(ADDRESSES.jay);
     expect(data.mostHonoredContributors[1].claimsCount).toEqual(4);
   });
 
@@ -109,7 +109,7 @@ describe('CustomProfileResolver', () => {
       {
         mostHonoredContributors(count: 1) {
           profile {
-            address
+            oldAddress
           }
           claimsCount
         }
@@ -120,7 +120,7 @@ describe('CustomProfileResolver', () => {
 
     expect(data.mostHonoredContributors.length).toEqual(1);
 
-    expect(data.mostHonoredContributors[0].profile.address).toEqual(ADDRESSES.jay);
+    expect(data.mostHonoredContributors[0].profile.oldAddress).toEqual(ADDRESSES.jay);
     expect(data.mostHonoredContributors[0].claimsCount).toEqual(4);
   });
 
@@ -129,7 +129,7 @@ describe('CustomProfileResolver', () => {
       {
         repoMostHonoredContributors(repoId: 1, page: 1, perPage: 4) {
           profile {
-            address
+            oldAddress
           }
           claimsCount
         }
@@ -138,7 +138,7 @@ describe('CustomProfileResolver', () => {
 
     expect(data.repoMostHonoredContributors.length).toEqual(1);
 
-    expect(data.repoMostHonoredContributors[0].profile.address).toEqual(ADDRESSES.jay);
+    expect(data.repoMostHonoredContributors[0].profile.oldAddress).toEqual(ADDRESSES.jay);
     expect(data.repoMostHonoredContributors[0].claimsCount).toEqual(1);
   });
 
@@ -149,7 +149,7 @@ describe('CustomProfileResolver', () => {
       {
         repoMostHonoredContributors(repoId: 1, page: 1, perPage: 1) {
           profile {
-            address
+            oldAddress
           }
           claimsCount
         }
