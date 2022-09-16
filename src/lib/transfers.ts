@@ -76,6 +76,11 @@ export async function checkIfClaimTransferred(claimId: number): Promise<string |
 
   const newData = await retrievePOAPTokenInfo(poapTokenId);
 
+  if (newData === null) {
+    logger.error(`Failed to retrieve POAP Token ID ${poapTokenId} from POAP API`);
+    return null;
+  }
+
   if (newData.owner !== claimData.address) {
     logger.info(`Found transferred GitPOAP Token ID: ${claimId}`);
 
