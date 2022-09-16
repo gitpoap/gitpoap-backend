@@ -112,7 +112,7 @@
     "seed": "ts-node prisma/seed.ts"
   },
   "lint-staged": {
-    "src/**/*.{ts,tsx}": [
+    "{scripts,src,prisma,__tests__,__mocks__}/**/*.{ts,tsx}": [
       "prettier --write"
     ]
   }
