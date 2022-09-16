@@ -57,8 +57,8 @@ model Address {
   email             String                   @db.VarChar(255)
   createdAt         DateTime                 @default(now())
   updatedAt         DateTime                 @updatedAt
-  githubUserId      Int
-  githubUser        User                     @relation(fields: [githubUserId], references: [id])
+  githubUserId      Int?
+  githubUser        User?                    @relation(fields: [githubUserId], references: [id])
   ensAvatarImageUrl String?                  @db.VarChar(255)
   ensName           String?                  @db.VarChar(255)
   memberships       OrganizationMembership[]
