@@ -31,11 +31,12 @@ model User {
   githubPullRequests GithubPullRequest[]
   githubIssues       GithubIssue[]
   githubMentions     GithubMention[]
+  addresses          Address[]
 }
 
 model Profile {
   id                     Int            @id @default(autoincrement())
-  address                String         @unique @db.VarChar(255)
+  oldAddress             String         @unique @db.VarChar(255)
   createdAt              DateTime       @default(now())
   updatedAt              DateTime       @updatedAt
   bio                    String?
@@ -50,16 +51,45 @@ model Profile {
   featuredPOAPs          FeaturedPOAP[]
 }
 
+model Address {
+  id                Int                      @id @default(autoincrement())
+  ethAddress        String                   @unique @db.VarChar(255)
+  email             String                   @db.VarChar(255)
+  createdAt         DateTime                 @default(now())
+  updatedAt         DateTime                 @updatedAt
+  githubUserId      Int
+  githubUser        User                     @relation(fields: [githubUserId], references: [id])
+  ensAvatarImageUrl String?                  @db.VarChar(255)
+  ensName           String?                  @db.VarChar(255)
+  memberships       OrganizationMembership[]
+
+  @@index([ethAddress])
+}
+
+model OrganizationMembership {
+  id             Int            @id @default(autoincrement())
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  organizationId Int
+  organization   Organization   @relation(fields: [organizationId], references: [id])
+  addressId      Int
+  address        Address        @relation(fields: [addressId], references: [id])
+  role           MembershipRole
+
+  @@unique([organizationId, addressId])
+}
+
 model Organization {
-  id            Int      @id @default(autoincrement())
-  githubOrgId   Int      @unique
-  name          String   @db.VarChar(50)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id            Int                      @id @default(autoincrement())
+  githubOrgId   Int                      @unique
+  name          String                   @db.VarChar(50)
+  createdAt     DateTime                 @default(now())
+  updatedAt     DateTime                 @updatedAt
   description   String?
-  twitterHandle String?  @db.VarChar(255)
-  url           String?  @db.VarChar(255)
+  twitterHandle String?                  @db.VarChar(255)
+  url           String?                  @db.VarChar(255)
   repos         Repo[]
+  memberships   OrganizationMembership[]
 }
 
 model Repo {
@@ -98,11 +128,14 @@ model Claim {
   /// @TypeGraphQL.omit(output: true, input: true)
   qrHash              String?            @db.VarChar(10)
   poapTokenId         String?            @unique @db.VarChar(255)
-  address             String?            @db.VarChar(255)
+  oldMintedAddress    String?            @db.VarChar(255)
   gitPOAPId           Int
   gitPOAP             GitPOAP            @relation(fields: [gitPOAPId], references: [id])
+  // Start: Issuance Fields; Claim can be 'issued' to a Github user, ETH address, or email
   userId              Int
   user                User               @relation(fields: [userId], references: [id])
+  email               String?            @db.VarChar(255)
+  // End: Issuance fields
   // Note that not all Claims have pull request they were earned in (e.g. Hackathon GitPOAPs)
   pullRequestEarnedId Int?
   pullRequestEarned   GithubPullRequest? @relation(fields: [pullRequestEarnedId], references: [id])
@@ -278,4 +311,10 @@ enum ClaimType {
   ANNUAL
   QUARTERLY
   MANUAL
+}
+
+enum MembershipRole {
+  ADMIN
+  OWNER
+  MEMBER
 }
