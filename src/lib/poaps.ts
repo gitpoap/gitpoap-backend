@@ -32,7 +32,7 @@ async function generateGitPOAPPOAPEventIdSet() {
     },
   });
 
-  let poapEventIdSet = new Set<number>();
+  const poapEventIdSet = new Set<number>();
 
   for (const gitPOAP of gitPOAPs) {
     poapEventIdSet.add(gitPOAP.poapEventId);
@@ -71,7 +71,7 @@ async function handlePotentialTransferIn(
   });
 
   if (claimData !== null) {
-    const address = claimData.address;
+    const address = claimData.oldMintedAddress;
 
     if (address === null) {
       logger.error(`Claim ID ${claimData.id} has poapTokenId set but address is null`);
@@ -112,7 +112,7 @@ async function handleTransferPostProcessing(
   const featuredData = await context.prisma.featuredPOAP.findMany({
     where: {
       profile: {
-        address: ownerAddress.toLowerCase(),
+        oldAddress: ownerAddress.toLowerCase(),
       },
     },
     select: {
@@ -155,7 +155,7 @@ export async function splitUsersPOAPs(address: string): Promise<SplitUsersPOAPsR
 
   const claims = await context.prisma.claim.findMany({
     where: {
-      address: addressLower,
+      oldMintedAddress: addressLower,
       status: { in: [ClaimStatus.CLAIMED, ClaimStatus.MINTING] },
     },
     include: {
@@ -230,7 +230,7 @@ export async function splitUsersPOAPs(address: string): Promise<SplitUsersPOAPsR
         if (result === null) {
           continue;
         }
-        // If it's a transfered in GitPOAP
+        // If it's a transferred in GitPOAP
         if (result.gitPOAP !== null) {
           gitPOAPsOnly.push(result.gitPOAP);
           continue;

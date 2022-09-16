@@ -49,7 +49,7 @@ async function resolveENSAvatar(ensName: string, resolvedAddress: string) {
       avatarURL,
       s3configProfile.buckets.ensAvatarCache,
       addressLower, // Using ENS may cause issues (emoji ENSs/etc)
-      true, // Make the image publically accessible
+      true, // Make the image publicly accessible
       contentTypeCallback, // Convert SVGs to PNGs before uploading
     );
 
@@ -65,7 +65,7 @@ async function resolveENSAvatar(ensName: string, resolvedAddress: string) {
 
   await context.prisma.profile.update({
     where: {
-      address: addressLower,
+      oldAddress: addressLower,
     },
     data: {
       ensAvatarImageUrl: avatarURL,

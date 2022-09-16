@@ -42,7 +42,7 @@ export class CustomOrganizationResolver {
       return null;
     }
 
-    let results = await prisma.$queryRaw<OrganizationData[]>`
+    const results = await prisma.$queryRaw<OrganizationData[]>`
       SELECT o.*,
         COUNT(DISTINCT c."userId")::INTEGER AS "contributorCount",
         COUNT(DISTINCT g.id)::INTEGER AS "gitPOAPCount",
@@ -170,7 +170,7 @@ export class CustomOrganizationResolver {
       return null;
     }
 
-    let pagination = page
+    const pagination = page
       ? Prisma.sql`OFFSET ${(page - 1) * <number>perPage} ROWS FETCH NEXT ${perPage} ROWS ONLY`
       : Prisma.empty;
 

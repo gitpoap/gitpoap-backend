@@ -128,9 +128,9 @@ export class CustomProfileResolver {
       return null;
     }
 
-    let result = await prisma.profile.findUnique({
+    const result = await prisma.profile.findUnique({
       where: {
-        address: resolvedAddress.toLowerCase(),
+        oldAddress: resolvedAddress.toLowerCase(),
       },
       include: {
         featuredPOAPs: true,
@@ -170,6 +170,7 @@ export class CustomProfileResolver {
 
     const resultWithEns: NullableProfile = {
       ...result,
+      address: result.oldAddress,
       ensName,
     };
 
@@ -205,7 +206,7 @@ export class CustomProfileResolver {
       LIMIT ${count}
     `;
 
-    let finalResults = [];
+    const finalResults = [];
 
     for (const result of results) {
       const { claimsCount, ...profile } = result;
@@ -254,7 +255,7 @@ export class CustomProfileResolver {
       LIMIT ${<number>perPage} OFFSET ${(<number>page - 1) * <number>perPage}
     `;
 
-    let finalResults = [];
+    const finalResults = [];
 
     for (const result of results) {
       const { claimsCount, ...profile } = result;
