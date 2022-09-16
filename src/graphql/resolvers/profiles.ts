@@ -74,9 +74,9 @@ export class CustomProfileResolver {
     const endTimer = gqlRequestDurationSeconds.startTimer('totalContributors');
 
     const result: { count: number }[] = await prisma.$queryRaw`
-      SELECT COUNT(DISTINCT c.address)::INTEGER
+      SELECT COUNT(DISTINCT c."oldMintedAddress")::INTEGER
       FROM "Claim" AS c
-      WHERE c.address IS NOT NULL
+      WHERE c."oldMintedAddress" IS NOT NULL
         AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
     `;
 
@@ -96,9 +96,9 @@ export class CustomProfileResolver {
     const endTimer = gqlRequestDurationSeconds.startTimer('lastMonthContributors');
 
     const result: { count: number }[] = await prisma.$queryRaw`
-      SELECT COUNT(DISTINCT c.address)::INTEGER
+      SELECT COUNT(DISTINCT c."oldMintedAddress")::INTEGER
       FROM "Claim" AS c
-      WHERE c.address IS NOT NULL
+      WHERE c."oldMintedAddress" IS NOT NULL
         AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
         AND c."mintedAt" > ${getLastMonthStartDatetime()}
     `;
@@ -198,7 +198,7 @@ export class CustomProfileResolver {
     const results: ResultType[] = await prisma.$queryRaw`
       SELECT p.*, COUNT(c.id)::INTEGER AS "claimsCount"
       FROM "Profile" AS p
-      INNER JOIN "Claim" AS c ON c.address = p.address
+      INNER JOIN "Claim" AS c ON c."oldMintedAddress" = p."oldAddress"
         AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
       WHERE p."isVisibleOnLeaderboard" IS TRUE
       GROUP BY p.id
@@ -243,7 +243,7 @@ export class CustomProfileResolver {
     const results: ResultType[] = await prisma.$queryRaw`
       SELECT pf.*, COUNT(c.id)::INTEGER AS "claimsCount"
       FROM "Profile" AS pf
-      INNER JOIN "Claim" AS c ON c.address = pf.address
+      INNER JOIN "Claim" AS c ON c."oldMintedAddress" = pf."oldAddress"
         AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
       INNER JOIN "GitPOAP" AS gp ON gp.id = c."gitPOAPId"
       INNER JOIN "Project" AS pr ON pr.id = gp."projectId"
