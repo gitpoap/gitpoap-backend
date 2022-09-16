@@ -28,7 +28,7 @@ const claim2 = {
   poapTokenId: 'yolo',
   status: ClaimStatus.CLAIMED,
   gitPOAP: {
-    id: 89, 
+    id: 89,
     poapEventId: 'swag',
   },
 };
@@ -46,7 +46,7 @@ const poap1 = genPOAP(claim1);
 const poap2 = genPOAP(claim2);
 
 describe('splitUsersPOAPs', () => {
-  it("Returns an error when call to POAP API fails", async () => {
+  it('Returns an error when call to POAP API fails', async () => {
     contextMock.prisma.claim.findMany.mockResolvedValue([]);
     mockedRetrieveUsersPOAPs.mockResolvedValue(null);
     contextMock.prisma.gitPOAP.findMany.mockResolvedValue([]);
@@ -73,7 +73,7 @@ describe('splitUsersPOAPs', () => {
     expect(contextMock.prisma.claim.findUnique).toHaveBeenCalledTimes(0);
   });
 
-  it("Returns a single GitPOAP", async () => {
+  it('Returns a single GitPOAP', async () => {
     contextMock.prisma.claim.findMany.mockResolvedValue([claim1] as any);
     mockedRetrieveUsersPOAPs.mockResolvedValue([poap1] as any);
     contextMock.prisma.gitPOAP.findMany.mockResolvedValue([
@@ -84,9 +84,7 @@ describe('splitUsersPOAPs', () => {
     const result = await splitUsersPOAPs(ADDRESSES.burz);
 
     expect(result).toEqual({
-      gitPOAPsOnly: [
-        { claim: claim1, event: poap1.event },
-      ],
+      gitPOAPsOnly: [{ claim: claim1, event: poap1.event }],
       poapsOnly: [],
     });
 
@@ -96,7 +94,7 @@ describe('splitUsersPOAPs', () => {
     expect(contextMock.prisma.claim.findUnique).toHaveBeenCalledTimes(0);
   });
 
-  it('Skips Claims in a bad state', async () =>  {
+  it('Skips Claims in a bad state', async () => {
     const claim1BadState = { ...claim1, poapTokenId: null };
 
     contextMock.prisma.claim.findMany.mockResolvedValue([claim1BadState] as any);
@@ -140,7 +138,7 @@ describe('splitUsersPOAPs', () => {
     expect(contextMock.prisma.claim.findUnique).toHaveBeenCalledTimes(0);
   });
 
-  it("Returns a single MINTING GitPOAP", async () => {
+  it('Returns a single MINTING GitPOAP', async () => {
     const claim1Minting = { ...claim1, status: ClaimStatus.MINTING, poapTokenId: null };
 
     contextMock.prisma.claim.findMany.mockResolvedValue([claim1Minting] as any);
@@ -154,9 +152,7 @@ describe('splitUsersPOAPs', () => {
     const result = await splitUsersPOAPs(ADDRESSES.burz);
 
     expect(result).toEqual({
-      gitPOAPsOnly: [
-        { claim: claim1Minting, event: poap1.event },
-      ],
+      gitPOAPsOnly: [{ claim: claim1Minting, event: poap1.event }],
       poapsOnly: [],
     });
 
@@ -167,7 +163,7 @@ describe('splitUsersPOAPs', () => {
     expect(contextMock.prisma.claim.findUnique).toHaveBeenCalledTimes(0);
   });
 
-  it("Returns a single POAP", async () => {
+  it('Returns a single POAP', async () => {
     contextMock.prisma.claim.findMany.mockResolvedValue([]);
     mockedRetrieveUsersPOAPs.mockResolvedValue([poap1] as any);
     contextMock.prisma.gitPOAP.findMany.mockResolvedValue([]);
@@ -191,10 +187,8 @@ describe('splitUsersPOAPs', () => {
     const result = await splitUsersPOAPs(ADDRESSES.burz);
 
     expect(result).toEqual({
-      gitPOAPsOnly: [
-        { claim: claim1, event: poap1.event },
-      ],
-      poapsOnly: [poap2]
+      gitPOAPsOnly: [{ claim: claim1, event: poap1.event }],
+      poapsOnly: [poap2],
     });
 
     expect(contextMock.prisma.featuredPOAP.delete).toHaveBeenCalledTimes(0);
@@ -246,7 +240,7 @@ describe('splitUsersPOAPs', () => {
     ] as any);
     contextMock.prisma.claim.findUnique.mockResolvedValue({
       id: claim1.id,
-      address: ADDRESSES.jay,
+      oldMintedAddress: ADDRESSES.jay,
       gitPOAP: claim1.gitPOAP,
     } as any);
     contextMock.prisma.featuredPOAP.findMany.mockResolvedValue([]);
@@ -255,10 +249,8 @@ describe('splitUsersPOAPs', () => {
     const result = await splitUsersPOAPs(ADDRESSES.burz);
 
     expect(result).toEqual({
-      gitPOAPsOnly: [
-        { claim: claim1, event: poap1.event },
-      ],
-      poapsOnly: []
+      gitPOAPsOnly: [{ claim: claim1, event: poap1.event }],
+      poapsOnly: [],
     });
 
     expect(contextMock.prisma.featuredPOAP.delete).toHaveBeenCalledTimes(0);

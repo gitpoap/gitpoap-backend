@@ -19,16 +19,19 @@ const fakeSignature = {
 describe('POST /profiles', () => {
   it('Fails on bad fields in request', async () => {
     const result = await request(await setupApp())
-      .post('/profiles').send({ foobar: 'yeet' });
+      .post('/profiles')
+      .send({ foobar: 'yeet' });
 
     expect(result.statusCode).toEqual(400);
   });
 
   it('Fails on missing signature', async () => {
-    const result = await request(await setupApp()).post('/profiles').send({
-      address: goodAddress,
-      data: { githubHandle: null },
-    });
+    const result = await request(await setupApp())
+      .post('/profiles')
+      .send({
+        address: goodAddress,
+        data: { githubHandle: null },
+      });
 
     expect(result.statusCode).toEqual(400);
   });
@@ -36,14 +39,16 @@ describe('POST /profiles', () => {
   it('Fails on bad address', async () => {
     mockedResolveENS.mockResolvedValue(null);
 
-    const result = await request(await setupApp()).post('/profiles').send({
-      address: 'foobar',
-      signature: {
-        data: 'yeet',
-        createdAt: 1647987506199,
-      },
-      data: { githubHandle: null },
-    });
+    const result = await request(await setupApp())
+      .post('/profiles')
+      .send({
+        address: 'foobar',
+        signature: {
+          data: 'yeet',
+          createdAt: 1647987506199,
+        },
+        data: { githubHandle: null },
+      });
 
     expect(result.statusCode).toEqual(400);
   });
@@ -54,11 +59,13 @@ describe('POST /profiles', () => {
 
     const data = { githubHandle: null };
 
-    const result = await request(await setupApp()).post('/profiles').send({
-      address: goodAddress,
-      signature: fakeSignature,
-      data,
-    });
+    const result = await request(await setupApp())
+      .post('/profiles')
+      .send({
+        address: goodAddress,
+        signature: fakeSignature,
+        data,
+      });
 
     expect(result.statusCode).toEqual(401);
     expect(mockedIsSignatureValid).toHaveBeenCalledTimes(1);
@@ -74,10 +81,10 @@ describe('POST /profiles', () => {
     const address = goodAddress.toLowerCase();
 
     expect(contextMock.prisma.profile.upsert).toHaveBeenCalledWith({
-      where: { address },
+      where: { oldAddress: address },
       update: data,
       create: {
-        address,
+        oldAddress: address,
         ...data,
       },
     });
@@ -89,11 +96,13 @@ describe('POST /profiles', () => {
 
     const data = {};
 
-    const result = await request(await setupApp()).post('/profiles').send({
-      address: goodAddress,
-      signature: fakeSignature,
-      data,
-    });
+    const result = await request(await setupApp())
+      .post('/profiles')
+      .send({
+        address: goodAddress,
+        signature: fakeSignature,
+        data,
+      });
 
     expect(result.statusCode).toEqual(200);
 
@@ -117,11 +126,13 @@ describe('POST /profiles', () => {
       isVisibleOnLeaderboard: true,
     };
 
-    const result = await request(await setupApp()).post('/profiles').send({
-      address: goodAddress,
-      signature: fakeSignature,
-      data,
-    });
+    const result = await request(await setupApp())
+      .post('/profiles')
+      .send({
+        address: goodAddress,
+        signature: fakeSignature,
+        data,
+      });
 
     expect(result.statusCode).toEqual(200);
 
@@ -144,11 +155,13 @@ describe('POST /profiles', () => {
       personalSiteUrl: null,
     };
 
-    const result = await request(await setupApp()).post('/profiles').send({
-      address: goodAddress,
-      signature: fakeSignature,
-      data,
-    });
+    const result = await request(await setupApp())
+      .post('/profiles')
+      .send({
+        address: goodAddress,
+        signature: fakeSignature,
+        data,
+      });
 
     expect(result.statusCode).toEqual(200);
 
@@ -165,11 +178,13 @@ describe('POST /profiles', () => {
       isVisibleOnLeaderboard: false,
     };
 
-    let result = await request(await setupApp()).post('/profiles').send({
-      address: goodAddress,
-      signature: fakeSignature,
-      data,
-    });
+    let result = await request(await setupApp())
+      .post('/profiles')
+      .send({
+        address: goodAddress,
+        signature: fakeSignature,
+        data,
+      });
 
     expect(result.statusCode).toEqual(200);
 
@@ -179,11 +194,13 @@ describe('POST /profiles', () => {
 
     data.isVisibleOnLeaderboard = true;
 
-    result = await request(await setupApp()).post('/profiles').send({
-      address: goodAddress,
-      signature: fakeSignature,
-      data,
-    });
+    result = await request(await setupApp())
+      .post('/profiles')
+      .send({
+        address: goodAddress,
+        signature: fakeSignature,
+        data,
+      });
 
     expect(result.statusCode).toEqual(200);
 
