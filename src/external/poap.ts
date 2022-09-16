@@ -87,7 +87,7 @@ async function generatePOAPHeaders(hasBody: boolean) {
   const lastIndex = POAP_API_URL.lastIndexOf('/');
   const host = POAP_API_URL.substr(lastIndex + 1);
 
-  let base = {
+  const base = {
     Authorization: `Bearer ${await retrievePOAPToken()}`,
     'X-API-Key': POAP_API_KEY,
     Accept: 'application/json',
@@ -325,7 +325,17 @@ export async function retrieveUsersPOAPs(address: string) {
   return poapResponse;
 }
 
-export async function retrievePOAPTokenInfo(poapTokenId: string) {
+type POAPTokenInfoResponse = {
+  owner: string;
+  tokenId: string;
+  chain: string;
+  created: string;
+  event: POAPEventInfoResponse;
+};
+
+export async function retrievePOAPTokenInfo(
+  poapTokenId: string,
+): Promise<POAPTokenInfoResponse | null> {
   const logger = createScopedLogger('retrievePOAPTokenInfo');
 
   const cacheResponse = await context.redis.getValue(POAP_TOKEN_CACHE_PREFIX, poapTokenId);
@@ -368,7 +378,7 @@ export async function createPOAPEvent(
   city?: string,
   country?: string,
 ) {
-  let form = new FormData();
+  const form = new FormData();
 
   form.append('name', name);
   form.append('description', description);
@@ -386,7 +396,7 @@ export async function createPOAPEvent(
   form.append('email', email);
   form.append('requested_codes', num_requested_codes);
   form.append('private_event', 'false');
-  let headers = { ...form.getHeaders(), ...(await generatePOAPHeaders(false)) };
+  const headers = { ...form.getHeaders(), ...(await generatePOAPHeaders(false)) };
 
   return await makeGenericPOAPRequest(`${POAP_API_URL}/events`, 'POST', headers, form);
 }
