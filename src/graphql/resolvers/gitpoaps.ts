@@ -125,7 +125,9 @@ class Holders {
   holders: Holder[];
 }
 
-export async function addPRCountData(userGitPOAPData: GitPOAPReturnData[]): Promise<UserGitPOAPData[]> {
+export async function addPRCountData(
+  userGitPOAPData: GitPOAPReturnData[],
+): Promise<UserGitPOAPData[]> {
   const results: UserGitPOAPData[] = [];
 
   if (userGitPOAPData.length === 0) {
@@ -134,7 +136,7 @@ export async function addPRCountData(userGitPOAPData: GitPOAPReturnData[]): Prom
 
   const profile = await context.prisma.profile.findUnique({
     where: {
-      address: userGitPOAPData[0].claim.address ?? undefined,
+      oldAddress: userGitPOAPData[0].claim.oldMintedAddress ?? undefined,
     },
   });
 
@@ -410,7 +412,7 @@ export class CustomGitPOAPResolver {
       return null;
     }
 
-    let gitPOAPsWithEvents = [];
+    const gitPOAPsWithEvents = [];
     for (const gitPOAP of repo.project.gitPOAPs) {
       if (!gitPOAP.isEnabled) {
         logger.info(`Skipping non-enabled GitPOAP ID: ${gitPOAP.id}`);
@@ -501,7 +503,7 @@ export class CustomGitPOAPResolver {
       LIMIT ${count}
     `;
 
-    let finalResults = [];
+    const finalResults = [];
 
     for (const result of results) {
       const { claimsCount, ...gitPOAP } = result;
@@ -542,14 +544,14 @@ export class CustomGitPOAPResolver {
       return null;
     }
 
-    let results: UserFeaturedPOAPs = {
+    const results: UserFeaturedPOAPs = {
       gitPOAPs: [],
       poaps: [],
     };
 
     const profile = await prisma.profile.findUnique({
       where: {
-        address: resolvedAddress.toLowerCase(),
+        oldAddress: resolvedAddress.toLowerCase(),
       },
       select: {
         id: true,
@@ -699,7 +701,7 @@ export class CustomGitPOAPResolver {
       holders: results.map(r => {
         return <Holder>{
           profileId: r.id,
-          address: r.address,
+          address: r.oldAddress,
           bio: r.bio,
           profileImageUrl: r.profileImageUrl,
           twitterHandle: r.twitterHandle,

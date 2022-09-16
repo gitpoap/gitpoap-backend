@@ -1,4 +1,4 @@
-import { GithubPullRequest, GitPOAPStatus } from '@prisma/client';
+import { GitPOAPStatus } from '@prisma/client';
 import { DateTime } from 'luxon';
 import { retrievePOAPEventInfo } from '../../external/poap';
 import { createScopedLogger } from '../../logging';
@@ -97,7 +97,7 @@ export async function mapGitPOAPsToGitPOAPResults(
 ): Promise<GitPOAPEventResultType[] | null> {
   const logger = createScopedLogger('mapGitPOAPsToGitPOAPResults');
 
-  let results: GitPOAPEventResultType[] = [];
+  const results: GitPOAPEventResultType[] = [];
 
   for (const gitPOAP of gitPOAPs) {
     const poapEventData = await retrievePOAPEventInfo(gitPOAP.poapEventId);

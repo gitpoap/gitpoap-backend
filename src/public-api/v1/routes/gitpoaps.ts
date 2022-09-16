@@ -3,7 +3,6 @@ import { context } from '../../../context';
 import { httpRequestDurationSeconds } from '../../../metrics';
 import { createScopedLogger } from '../../../logging';
 import { ClaimStatus } from '@generated/type-graphql';
-import { GitPOAPEventResultType } from '../types';
 import { mapGitPOAPsToGitPOAPResults } from '../helpers';
 
 export const gitpoapsRouter = Router();
@@ -33,16 +32,16 @@ gitpoapsRouter.get('/:gitpoapId/addresses', async function (req, res) {
   const addresses = await context.prisma.claim.findMany({
     where: {
       gitPOAPId,
-      address: {
+      oldMintedAddress: {
         not: null,
       },
     },
     select: {
-      address: true,
+      oldMintedAddress: true,
     },
   });
 
-  const mappedAddresses = addresses.map(address => address.address);
+  const mappedAddresses = addresses.map(address => address.oldMintedAddress);
   endTimer({ status: 200 });
   logger.info(
     `Completed request to get all addresses that possess GitPOAP id ${req.params.gitpoapId}`,
@@ -57,18 +56,18 @@ gitpoapsRouter.get('/addresses', async function (req, res) {
   const endTimer = httpRequestDurationSeconds.startTimer('GET', '/v1/gitpoaps/addresses');
 
   const addresses = await context.prisma.claim.findMany({
-    distinct: ['address'],
+    distinct: ['oldMintedAddress'],
     where: {
-      address: {
+      oldMintedAddress: {
         not: null,
       },
     },
     select: {
-      address: true,
+      oldMintedAddress: true,
     },
   });
 
-  const mappedAddresses = addresses.map(address => address.address);
+  const mappedAddresses = addresses.map(address => address.oldMintedAddress);
   endTimer({ status: 200 });
   logger.info(`Completed request to get all addresses that possess any GitPOAP`);
 

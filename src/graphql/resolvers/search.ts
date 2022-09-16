@@ -71,7 +71,7 @@ export class CustomSearchResolver {
 
     const profilesByAddress = await prisma.profile.findMany({
       where: {
-        address: {
+        oldAddress: {
           contains: matchText,
           mode: 'insensitive',
         },
@@ -83,7 +83,7 @@ export class CustomSearchResolver {
     if (resolvedAddress !== text && resolvedAddress !== null) {
       const result = await prisma.profile.findUnique({
         where: {
-          address: resolvedAddress.toLowerCase(),
+          oldAddress: resolvedAddress.toLowerCase(),
         },
       });
       if (result !== null) {

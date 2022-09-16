@@ -47,10 +47,10 @@ profilesRouter.post('/', async function (req, res) {
   const address = resolvedAddress.toLowerCase();
 
   await context.prisma.profile.upsert({
-    where: { address },
+    where: { oldAddress: address },
     update: req.body.data,
     create: {
-      address,
+      oldAddress: address,
       ...req.body.data,
     },
   });

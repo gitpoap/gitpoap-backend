@@ -141,7 +141,7 @@ export async function checkForNewPOAPCodes() {
 
   logger.info(`Found ${gitPOAPsAwaitingCodes.length} GitPOAPs awaiting new codes`);
 
-  let repoIds = new Set<number>();
+  const repoIds = new Set<number>();
 
   for (const gitPOAP of gitPOAPsAwaitingCodes) {
     (await checkGitPOAPForNewCodes(gitPOAP)).forEach(r => repoIds.add(r));
