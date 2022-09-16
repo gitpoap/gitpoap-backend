@@ -4079,7 +4079,7 @@ type OrganizationData {
 
 type NullableProfile {
   id: Float
-  oldAddress: String!
+  address: String!
   ensName: String
   createdAt: DateTime
   updatedAt: DateTime

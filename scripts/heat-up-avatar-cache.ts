@@ -14,14 +14,16 @@ async function heatUpAvatarCache() {
   const logger = createScopedLogger('heatUpAvatarCache');
 
   // Only run on profiles without the avatars setup
-  const addresses = (await context.prisma.profile.findMany({
-    where: {
-      ensAvatarImageUrl: null,
-    },
-    select: {
-      address: true,
-    },
-  })).map(p => p.address);
+  const addresses = (
+    await context.prisma.profile.findMany({
+      where: {
+        ensAvatarImageUrl: null,
+      },
+      select: {
+        oldAddress: true,
+      },
+    })
+  ).map(p => p.oldAddress);
 
   logger.info(`Checking ${addresses.length} addresses for ENS Avatars`);
 
@@ -32,7 +34,7 @@ async function heatUpAvatarCache() {
     // profiles with less than 1 claim
     const claimsCount = await context.prisma.claim.count({
       where: {
-        address,
+        oldMintedAddress: address,
         status: ClaimStatus.CLAIMED,
       },
     });
@@ -56,9 +58,7 @@ async function heatUpAvatarCache() {
   }
 
   const skipped = addresses.length - checkedCount;
-  logger.info(
-    `${checkedCount} profiles were checked for ENS avatars (${skipped} were skipped)`
-  );
+  logger.info(`${checkedCount} profiles were checked for ENS avatars (${skipped} were skipped)`);
 
   const avatarCount = await context.prisma.profile.count({
     where: {

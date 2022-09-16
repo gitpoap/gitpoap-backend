@@ -5,11 +5,11 @@ export async function upsertProfile(address: string) {
 
   await context.prisma.profile.upsert({
     where: {
-      address: addressLower,
+      oldAddress: addressLower,
     },
     update: {},
     create: {
-      address: addressLower,
+      oldAddress: addressLower,
     },
   });
 }
