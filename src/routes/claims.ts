@@ -492,7 +492,7 @@ claimsRouter.post(
       return res.status(400).send({ issues: schemaResult.error.issues });
     }
 
-    let newClaims: ClaimData[];
+    let newClaims: ClaimData[] = [];
     if ('pullRequest' in req.body) {
       const reqBody: z.infer<typeof CreateGitPOAPBotClaimsForPRSchema> = req.body.pullRequest;
 
@@ -501,7 +501,7 @@ claimsRouter.post(
         `Request to create claim for${mentionInfo} PR #${reqBody.pullRequestNumber} on "${reqBody.organization}/${reqBody.repo}"`,
       );
 
-      let contribution: RestrictedContribution | null = null;
+      let contributions: RestrictedContribution[] = [];
       for (const githubId of reqBody.contributorGithubIds) {
         const newContribution = await createClaimsForPR(
           reqBody.organization,
@@ -515,17 +515,25 @@ claimsRouter.post(
         } else if (newContribution === BotCreateClaimsErrorType.GithubRecordNotFound) {
           return res.status(404).send({ msg: 'Failed to find repo on GitHub' });
         } else if (newContribution !== BotCreateClaimsErrorType.BotUser) {
-          contribution = newContribution;
+          contributions.push(newContribution);
         }
       }
 
-      if (contribution === null) {
-        newClaims = [];
-      } else if ('pullRequest' in contribution) {
-        newClaims = await retrieveClaimsCreatedByPR(contribution.pullRequest.id);
-      } else {
-        // 'mention' in contribution
-        newClaims = await retrieveClaimsCreatedByMention(contribution.mention.id);
+      for (let contribution of contributions) {
+        if (contribution === null) {
+          newClaims = [];
+        } else if ('pullRequest' in contribution) {
+          const newClaimsForContribution = await retrieveClaimsCreatedByPR(
+            contribution.pullRequest.id,
+          );
+          newClaims = [...newClaims, ...newClaimsForContribution];
+        } else {
+          // 'mention' in contribution
+          const newClaimsForContribution = await retrieveClaimsCreatedByMention(
+            contribution.mention.id,
+          );
+          newClaims = [...newClaims, ...newClaimsForContribution];
+        }
       }
 
       logger.debug(
@@ -548,7 +556,7 @@ claimsRouter.post(
         `Request to create claim for mention in Issue #${reqBody.issueNumber} on "${reqBody.organization}/${reqBody.repo}"`,
       );
 
-      let contribution: RestrictedContribution | null = null;
+      let contributions: RestrictedContribution[] = [];
       for (const githubId of reqBody.contributorGithubIds) {
         const newContribution = await createClaimsForIssue(
           reqBody.organization,
@@ -561,18 +569,23 @@ claimsRouter.post(
         } else if (newContribution === BotCreateClaimsErrorType.GithubRecordNotFound) {
           return res.status(404).send({ msg: 'Failed to find repo on GitHub' });
         } else if (newContribution !== BotCreateClaimsErrorType.BotUser) {
-          contribution = newContribution;
+          contributions.push(newContribution);
         }
       }
 
-      if (contribution === null) {
-        newClaims = [];
-      } else if ('mention' in contribution) {
-        newClaims = await retrieveClaimsCreatedByMention(contribution.mention.id);
-      } else {
-        // 'pullRequest' in contribution
-        logger.error('Got back a pull request from createClaimsForIssue');
-        return res.status(500).send({ msg: 'createClaimsForIssue failed' });
+      for (let contribution of contributions) {
+        if (contribution === null) {
+          newClaims = [];
+        } else if ('mention' in contribution) {
+          const newClaimsForContribution = await retrieveClaimsCreatedByMention(
+            contribution.mention.id,
+          );
+          newClaims = [...newClaims, ...newClaimsForContribution];
+        } else {
+          // 'pullRequest' in contribution
+          logger.error('Got back a pull request from createClaimsForIssue');
+          return res.status(500).send({ msg: 'createClaimsForIssue failed' });
+        }
       }
 
       logger.debug(
