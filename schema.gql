@@ -440,7 +440,7 @@ type ClaimCountAggregate {
   oldMintedAddress: Int!
   gitPOAPId: Int!
   userId: Int!
-  email: Int!
+  emailId: Int!
   pullRequestEarnedId: Int!
   mentionEarnedId: Int!
   needsRevalidation: Int!
@@ -451,6 +451,7 @@ type ClaimAvgAggregate {
   id: Float
   gitPOAPId: Float
   userId: Float
+  emailId: Float
   pullRequestEarnedId: Float
   mentionEarnedId: Float
 }
@@ -459,6 +460,7 @@ type ClaimSumAggregate {
   id: Int
   gitPOAPId: Int
   userId: Int
+  emailId: Int
   pullRequestEarnedId: Int
   mentionEarnedId: Int
 }
@@ -474,7 +476,7 @@ type ClaimMinAggregate {
   oldMintedAddress: String
   gitPOAPId: Int
   userId: Int
-  email: String
+  emailId: Int
   pullRequestEarnedId: Int
   mentionEarnedId: Int
   needsRevalidation: Boolean
@@ -501,7 +503,7 @@ type ClaimMaxAggregate {
   oldMintedAddress: String
   gitPOAPId: Int
   userId: Int
-  email: String
+  emailId: Int
   pullRequestEarnedId: Int
   mentionEarnedId: Int
   needsRevalidation: Boolean
@@ -522,7 +524,8 @@ input ClaimWhereInput {
   gitPOAP: GitPOAPRelationFilter
   userId: IntFilter
   user: UserRelationFilter
-  email: StringNullableFilter
+  emailId: IntNullableFilter
+  email: EmailRelationFilter
   pullRequestEarnedId: IntNullableFilter
   pullRequestEarned: GithubPullRequestRelationFilter
   mentionEarnedId: IntNullableFilter
@@ -818,7 +821,8 @@ input AddressWhereInput {
   NOT: [AddressWhereInput!]
   id: IntFilter
   ethAddress: StringFilter
-  email: StringFilter
+  emailId: IntNullableFilter
+  email: EmailRelationFilter
   createdAt: DateTimeFilter
   updatedAt: DateTimeFilter
   githubUserId: IntNullableFilter
@@ -850,6 +854,35 @@ input NestedIntNullableFilter {
   not: NestedIntNullableFilter
 }
 
+input EmailRelationFilter {
+  is: EmailWhereInput
+  isNot: EmailWhereInput
+}
+
+input EmailWhereInput {
+  AND: [EmailWhereInput!]
+  OR: [EmailWhereInput!]
+  NOT: [EmailWhereInput!]
+  id: IntFilter
+  address: StringFilter
+  createdAt: DateTimeFilter
+  updatedAt: DateTimeFilter
+  addresses: AddressListRelationFilter
+  claims: ClaimListRelationFilter
+}
+
+input AddressListRelationFilter {
+  every: AddressWhereInput
+  some: AddressWhereInput
+  none: AddressWhereInput
+}
+
+input ClaimListRelationFilter {
+  every: ClaimWhereInput
+  some: ClaimWhereInput
+  none: ClaimWhereInput
+}
+
 input UserRelationFilter {
   is: UserWhereInput
   isNot: UserWhereInput
@@ -869,12 +902,6 @@ input UserWhereInput {
   githubIssues: GithubIssueListRelationFilter
   githubMentions: GithubMentionListRelationFilter
   addresses: AddressListRelationFilter
-}
-
-input ClaimListRelationFilter {
-  every: ClaimWhereInput
-  some: ClaimWhereInput
-  none: ClaimWhereInput
 }
 
 input GithubPullRequestListRelationFilter {
@@ -963,12 +990,6 @@ input GithubIssueListRelationFilter {
   every: GithubIssueWhereInput
   some: GithubIssueWhereInput
   none: GithubIssueWhereInput
-}
-
-input AddressListRelationFilter {
-  every: AddressWhereInput
-  some: AddressWhereInput
-  none: AddressWhereInput
 }
 
 input EnumMembershipRoleFilter {
@@ -1086,7 +1107,8 @@ input ClaimOrderByWithRelationInput {
   gitPOAP: GitPOAPOrderByWithRelationInput
   userId: SortOrder
   user: UserOrderByWithRelationInput
-  email: SortOrder
+  emailId: SortOrder
+  email: EmailOrderByWithRelationInput
   pullRequestEarnedId: SortOrder
   pullRequestEarned: GithubPullRequestOrderByWithRelationInput
   mentionEarnedId: SortOrder
@@ -1193,6 +1215,15 @@ input AddressOrderByRelationAggregateInput {
   _count: SortOrder
 }
 
+input EmailOrderByWithRelationInput {
+  id: SortOrder
+  address: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  addresses: AddressOrderByRelationAggregateInput
+  claims: ClaimOrderByRelationAggregateInput
+}
+
 input GithubPullRequestOrderByWithRelationInput {
   id: SortOrder
   createdAt: SortOrder
@@ -1293,12 +1324,13 @@ type Claim {
   oldMintedAddress: String
   gitPOAPId: Int!
   userId: Int!
-  email: String
+  emailId: Int
   pullRequestEarnedId: Int
   mentionEarnedId: Int
   needsRevalidation: Boolean!
   gitPOAP: GitPOAP!
   user: User!
+  email: Email
   pullRequestEarned: GithubPullRequest
   mentionEarned: GithubMention
 }
@@ -1491,7 +1523,8 @@ input OrganizationMembershipOrderByWithRelationInput {
 input AddressOrderByWithRelationInput {
   id: SortOrder
   ethAddress: SortOrder
-  email: SortOrder
+  emailId: SortOrder
+  email: EmailOrderByWithRelationInput
   createdAt: SortOrder
   updatedAt: SortOrder
   githubUserId: SortOrder
@@ -1625,7 +1658,7 @@ enum ClaimScalarFieldEnum {
   oldMintedAddress
   gitPOAPId
   userId
-  email
+  emailId
   pullRequestEarnedId
   mentionEarnedId
   needsRevalidation
@@ -1738,7 +1771,7 @@ enum GithubMentionScalarFieldEnum {
 type Address {
   id: Int!
   ethAddress: String!
-  email: String!
+  emailId: Int
   createdAt: DateTime!
   updatedAt: DateTime!
   githubUserId: Int
@@ -1759,7 +1792,7 @@ input AddressWhereUniqueInput {
 enum AddressScalarFieldEnum {
   id
   ethAddress
-  email
+  emailId
   createdAt
   updatedAt
   githubUserId
@@ -1843,6 +1876,19 @@ type EventCount {
   gitPOAPs: Int!
 }
 
+type Email {
+  id: Int!
+  address: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  _count: EmailCount
+}
+
+type EmailCount {
+  addresses: Int!
+  claims: Int!
+}
+
 type ClaimGroupBy {
   id: Int!
   createdAt: DateTime!
@@ -1854,7 +1900,7 @@ type ClaimGroupBy {
   oldMintedAddress: String
   gitPOAPId: Int!
   userId: Int!
-  email: String
+  emailId: Int
   pullRequestEarnedId: Int
   mentionEarnedId: Int
   needsRevalidation: Boolean!
@@ -1875,7 +1921,7 @@ input ClaimOrderByWithAggregationInput {
   oldMintedAddress: SortOrder
   gitPOAPId: SortOrder
   userId: SortOrder
-  email: SortOrder
+  emailId: SortOrder
   pullRequestEarnedId: SortOrder
   mentionEarnedId: SortOrder
   needsRevalidation: SortOrder
@@ -1896,7 +1942,7 @@ input ClaimCountOrderByAggregateInput {
   oldMintedAddress: SortOrder
   gitPOAPId: SortOrder
   userId: SortOrder
-  email: SortOrder
+  emailId: SortOrder
   pullRequestEarnedId: SortOrder
   mentionEarnedId: SortOrder
   needsRevalidation: SortOrder
@@ -1906,6 +1952,7 @@ input ClaimAvgOrderByAggregateInput {
   id: SortOrder
   gitPOAPId: SortOrder
   userId: SortOrder
+  emailId: SortOrder
   pullRequestEarnedId: SortOrder
   mentionEarnedId: SortOrder
 }
@@ -1920,7 +1967,7 @@ input ClaimMaxOrderByAggregateInput {
   oldMintedAddress: SortOrder
   gitPOAPId: SortOrder
   userId: SortOrder
-  email: SortOrder
+  emailId: SortOrder
   pullRequestEarnedId: SortOrder
   mentionEarnedId: SortOrder
   needsRevalidation: SortOrder
@@ -1936,7 +1983,7 @@ input ClaimMinOrderByAggregateInput {
   oldMintedAddress: SortOrder
   gitPOAPId: SortOrder
   userId: SortOrder
-  email: SortOrder
+  emailId: SortOrder
   pullRequestEarnedId: SortOrder
   mentionEarnedId: SortOrder
   needsRevalidation: SortOrder
@@ -1946,6 +1993,7 @@ input ClaimSumOrderByAggregateInput {
   id: SortOrder
   gitPOAPId: SortOrder
   userId: SortOrder
+  emailId: SortOrder
   pullRequestEarnedId: SortOrder
   mentionEarnedId: SortOrder
 }
@@ -1963,7 +2011,7 @@ input ClaimScalarWhereWithAggregatesInput {
   oldMintedAddress: StringNullableWithAggregatesFilter
   gitPOAPId: IntWithAggregatesFilter
   userId: IntWithAggregatesFilter
-  email: StringNullableWithAggregatesFilter
+  emailId: IntNullableWithAggregatesFilter
   pullRequestEarnedId: IntNullableWithAggregatesFilter
   mentionEarnedId: IntNullableWithAggregatesFilter
   needsRevalidation: BoolWithAggregatesFilter
