@@ -199,7 +199,6 @@ export class CustomProfileResolver {
       FROM "Profile" AS p
       INNER JOIN "Claim" AS c ON c.address = p.address
         AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
-        AND c."needsRevalidation" IS FALSE
       WHERE p."isVisibleOnLeaderboard" IS TRUE
       GROUP BY p.id
       ORDER BY "claimsCount" DESC
@@ -245,7 +244,6 @@ export class CustomProfileResolver {
       FROM "Profile" AS pf
       INNER JOIN "Claim" AS c ON c.address = pf.address
         AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
-        AND c."needsRevalidation" IS FALSE
       INNER JOIN "GitPOAP" AS gp ON gp.id = c."gitPOAPId"
       INNER JOIN "Project" AS pr ON pr.id = gp."projectId"
       INNER JOIN "Repo" AS r ON r."projectId" = pr.id
