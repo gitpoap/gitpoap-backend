@@ -54,7 +54,8 @@ model Profile {
 model Address {
   id                Int                      @id @default(autoincrement())
   ethAddress        String                   @unique @db.VarChar(255)
-  email             String                   @db.VarChar(255)
+  emailId           Int?
+  email             Email?                   @relation(fields: [emailId], references: [id])
   createdAt         DateTime                 @default(now())
   updatedAt         DateTime                 @updatedAt
   githubUserId      Int?
@@ -64,6 +65,15 @@ model Address {
   memberships       OrganizationMembership[]
 
   @@index([ethAddress])
+}
+
+model Email {
+  id        Int       @id @default(autoincrement())
+  address   String    @unique @db.VarChar(255)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  addresses Address[]
+  claims    Claim[]
 }
 
 model OrganizationMembership {
@@ -134,7 +144,8 @@ model Claim {
   // Start: Issuance Fields; Claim can be 'issued' to a Github user, ETH address, or email
   userId              Int
   user                User               @relation(fields: [userId], references: [id])
-  email               String?            @db.VarChar(255)
+  emailId             Int?
+  email               Email?             @relation(fields: [emailId], references: [id])
   // End: Issuance fields
   // Note that not all Claims have pull request they were earned in (e.g. Hackathon GitPOAPs)
   pullRequestEarnedId Int?
