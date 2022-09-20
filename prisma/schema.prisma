@@ -37,6 +37,8 @@ model User {
 model Profile {
   id                     Int            @id @default(autoincrement())
   oldAddress             String         @unique @db.VarChar(255)
+  addressId              Int?           @unique
+  address                Address?       @relation(fields: [addressId], references: [id])
   createdAt              DateTime       @default(now())
   updatedAt              DateTime       @updatedAt
   bio                    String?
@@ -63,6 +65,9 @@ model Address {
   ensAvatarImageUrl String?                  @db.VarChar(255)
   ensName           String?                  @db.VarChar(255)
   memberships       OrganizationMembership[]
+  profile           Profile?
+  issuedClaims      Claim[]                  @relation("issuedClaims")
+  mintedClaims      Claim[]                  @relation("mintedClaims")
 
   @@index([ethAddress])
 }
@@ -139,6 +144,8 @@ model Claim {
   qrHash              String?            @db.VarChar(10)
   poapTokenId         String?            @unique @db.VarChar(255)
   oldMintedAddress    String?            @db.VarChar(255)
+  mintedAddressId     Int?
+  mintedAddress       Address?           @relation("mintedClaims", fields: [mintedAddressId], references: [id])
   gitPOAPId           Int
   gitPOAP             GitPOAP            @relation(fields: [gitPOAPId], references: [id])
   // Start: Issuance Fields; Claim can be 'issued' to a Github user, ETH address, or email
@@ -146,6 +153,8 @@ model Claim {
   user                User               @relation(fields: [userId], references: [id])
   emailId             Int?
   email               Email?             @relation(fields: [emailId], references: [id])
+  addressId           Int?
+  address             Address?           @relation("issuedClaims", fields: [addressId], references: [id])
   // End: Issuance fields
   // Note that not all Claims have pull request they were earned in (e.g. Hackathon GitPOAPs)
   pullRequestEarnedId Int?
@@ -157,6 +166,9 @@ model Claim {
   needsRevalidation   Boolean            @default(false)
 
   @@unique([gitPOAPId, userId])
+  @@unique([gitPOAPId, mintedAddressId])
+  @@unique([gitPOAPId, addressId])
+  @@unique([gitPOAPId, emailId])
 }
 
 model GitPOAP {
