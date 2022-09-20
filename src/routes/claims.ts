@@ -185,9 +185,9 @@ claimsRouter.post('/', jwtWithOAuth(), async function (req, res) {
     return res.status(401).send({ msg: 'The signature is not valid for this address and data' });
   }
 
-  let foundClaims: number[] = [];
-  let qrHashes: string[] = [];
-  let invalidClaims: { claimId: number; reason: string }[] = [];
+  const foundClaims: number[] = [];
+  const qrHashes: string[] = [];
+  const invalidClaims: { claimId: number; reason: string }[] = [];
 
   for (const claimId of req.body.claimIds) {
     const claim = await context.prisma.claim.findUnique({
@@ -406,7 +406,7 @@ claimsRouter.post('/create', jwtWithAdminOAuth(), async function (req, res) {
     return res.status(400).send({ msg });
   }
 
-  let notFound = [];
+  const notFound = [];
   for (const githubId of req.body.recipientGithubIds) {
     const githubUserInfo = await getGithubUserById(
       githubId,
@@ -501,7 +501,7 @@ claimsRouter.post(
         `Request to create claim for${mentionInfo} PR #${reqBody.pullRequestNumber} on "${reqBody.organization}/${reqBody.repo}"`,
       );
 
-      let contributions: RestrictedContribution[] = [];
+      const contributions: RestrictedContribution[] = [];
       for (const githubId of reqBody.contributorGithubIds) {
         const newContribution = await createClaimsForPR(
           reqBody.organization,
@@ -511,7 +511,7 @@ claimsRouter.post(
           reqBody.wasEarnedByMention,
         );
         if (newContribution === BotCreateClaimsErrorType.RepoNotFound) {
-          return res.status(404).send({ msg: 'Failed to find repo' });
+          return res.status(404).send({ msg: `Failed to find repo with name ${reqBody.repo}` });
         } else if (newContribution === BotCreateClaimsErrorType.GithubRecordNotFound) {
           return res.status(404).send({ msg: 'Failed to find repo on GitHub' });
         } else if (newContribution !== BotCreateClaimsErrorType.BotUser) {
@@ -556,7 +556,7 @@ claimsRouter.post(
         `Request to create claim for mention in Issue #${reqBody.issueNumber} on "${reqBody.organization}/${reqBody.repo}"`,
       );
 
-      let contributions: RestrictedContribution[] = [];
+      const contributions: RestrictedContribution[] = [];
       for (const githubId of reqBody.contributorGithubIds) {
         const newContribution = await createClaimsForIssue(
           reqBody.organization,
@@ -565,7 +565,7 @@ claimsRouter.post(
           githubId,
         );
         if (newContribution === BotCreateClaimsErrorType.RepoNotFound) {
-          return res.status(404).send({ msg: 'Failed to find repo' });
+          return res.status(404).send({ msg: `Failed to find repo with name ${reqBody.repo}` });
         } else if (newContribution === BotCreateClaimsErrorType.GithubRecordNotFound) {
           return res.status(404).send({ msg: 'Failed to find repo on GitHub' });
         } else if (newContribution !== BotCreateClaimsErrorType.BotUser) {
@@ -573,7 +573,7 @@ claimsRouter.post(
         }
       }
 
-      for (let contribution of contributions) {
+      for (const contribution of contributions) {
         if (contribution === null) {
           continue;
         } else if ('mention' in contribution) {
@@ -640,8 +640,8 @@ claimsRouter.post('/revalidate', jwtWithOAuth(), async (req, res) => {
     return res.status(401).send({ msg: 'The signature is not valid for this address and data' });
   }
 
-  let foundClaims: number[] = [];
-  let invalidClaims: { claimId: number; reason: string }[] = [];
+  const foundClaims: number[] = [];
+  const invalidClaims: { claimId: number; reason: string }[] = [];
 
   for (const claimId of req.body.claimIds) {
     const claim = await context.prisma.claim.findUnique({
