@@ -92,7 +92,11 @@ export async function createRepoByGithubId(
   return await createRepoHelper(repoInfo, projectId);
 }
 
-export async function getRepoByName(owner: string, repo: string): Promise<RepoData | null> {
+export async function getRepoByName(
+  owner: string,
+  repo: string,
+  isPRBased?: boolean,
+): Promise<RepoData | null> {
   const logger = createScopedLogger('getRepoByName');
 
   const result = await context.prisma.repo.findMany({
@@ -109,6 +113,7 @@ export async function getRepoByName(owner: string, repo: string): Promise<RepoDa
           gitPOAPs: {
             where: {
               ongoing: true,
+              isPRBased,
               NOT: {
                 status: GitPOAPStatus.DEPRECATED,
               },
