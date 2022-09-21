@@ -39,7 +39,11 @@ export async function createClaimsForPR(
     return BotCreateClaimsErrorType.BotUser;
   }
 
-  const repoData = await getRepoByName(organization, repo);
+  // We need to skip any GitPOAPs that are not PR-based if
+  // the bot called this endpoint because a PR was newly merged
+  let mustBePRBased: boolean | undefined = wasEarnedByMention ? undefined : true;
+
+  const repoData = await getRepoByName(organization, repo, mustBePRBased);
   if (repoData === null) {
     logger.warn(`Failed to find repo: "${organization}/${repo}"`);
     return BotCreateClaimsErrorType.RepoNotFound;
