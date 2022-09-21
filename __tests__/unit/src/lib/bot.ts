@@ -107,7 +107,7 @@ describe('createClaimsForPR', () => {
     expect(mockedGetGithubUserByIdAsAdmin).toHaveBeenCalledWith(githubId);
 
     expect(mockedGetRepoByName).toHaveBeenCalledTimes(1);
-    expect(mockedGetRepoByName).toHaveBeenCalledWith(organization, repo);
+    expect(mockedGetRepoByName).toHaveBeenCalledWith(organization, repo, true);
 
     expect(mockedGetSingleGithubRepositoryPullAsAdmin).toHaveBeenCalledTimes(0);
   });
@@ -132,7 +132,7 @@ describe('createClaimsForPR', () => {
     expect(mockedGetGithubUserByIdAsAdmin).toHaveBeenCalledWith(githubId);
 
     expect(mockedGetRepoByName).toHaveBeenCalledTimes(1);
-    expect(mockedGetRepoByName).toHaveBeenCalledWith(organization, repo);
+    expect(mockedGetRepoByName).toHaveBeenCalledWith(organization, repo, true);
 
     expect(mockedGetSingleGithubRepositoryPullAsAdmin).toHaveBeenCalledTimes(1);
     expect(mockedGetSingleGithubRepositoryPullAsAdmin).toHaveBeenCalledWith(
@@ -177,7 +177,7 @@ describe('createClaimsForPR', () => {
     expect(mockedGetGithubUserByIdAsAdmin).toHaveBeenCalledWith(githubId);
 
     expect(mockedGetRepoByName).toHaveBeenCalledTimes(1);
-    expect(mockedGetRepoByName).toHaveBeenCalledWith(organization, repo);
+    expect(mockedGetRepoByName).toHaveBeenCalledWith(organization, repo, true);
 
     expect(mockedGetSingleGithubRepositoryPullAsAdmin).toHaveBeenCalledTimes(1);
     expect(mockedGetSingleGithubRepositoryPullAsAdmin).toHaveBeenCalledWith(
@@ -244,7 +244,7 @@ describe('createClaimsForPR', () => {
     expect(mockedGetGithubUserByIdAsAdmin).toHaveBeenCalledWith(githubId);
 
     expect(mockedGetRepoByName).toHaveBeenCalledTimes(1);
-    expect(mockedGetRepoByName).toHaveBeenCalledWith(organization, repo);
+    expect(mockedGetRepoByName).toHaveBeenCalledWith(organization, repo, undefined);
 
     expect(mockedGetSingleGithubRepositoryPullAsAdmin).toHaveBeenCalledTimes(1);
     expect(mockedGetSingleGithubRepositoryPullAsAdmin).toHaveBeenCalledWith(
