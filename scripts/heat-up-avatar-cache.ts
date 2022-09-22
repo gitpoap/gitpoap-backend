@@ -17,7 +17,7 @@ async function heatUpAvatarCache() {
   const addresses = (
     await context.prisma.profile.findMany({
       where: {
-        ensAvatarImageUrl: null,
+        oldEnsAvatarImageUrl: null,
       },
       select: {
         oldAddress: true,
@@ -63,7 +63,7 @@ async function heatUpAvatarCache() {
   const avatarCount = await context.prisma.profile.count({
     where: {
       NOT: {
-        ensAvatarImageUrl: null,
+        oldEnsAvatarImageUrl: null,
       },
     },
   });
