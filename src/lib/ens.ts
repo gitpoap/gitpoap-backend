@@ -68,7 +68,7 @@ async function resolveENSAvatar(ensName: string, resolvedAddress: string) {
       oldAddress: addressLower,
     },
     data: {
-      ensAvatarImageUrl: avatarURL,
+      oldEnsAvatarImageUrl: avatarURL,
     },
   });
 }
