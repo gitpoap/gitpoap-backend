@@ -1,7 +1,12 @@
 import { Arg, Ctx, Field, ObjectType, Resolver, Query } from 'type-graphql';
 import { ClaimStatus, FeaturedPOAP, Profile } from '@generated/type-graphql';
 import { Context } from '../../context';
-import { resolveENS, resolveAddress } from '../../lib/ens';
+import {
+  resolveAddress,
+  resolveAddressCached,
+  resolveENS,
+  resolveENSAvatarCached,
+} from '../../lib/ens';
 import { createScopedLogger } from '../../logging';
 import { gqlRequestDurationSeconds } from '../../metrics';
 import { getLastMonthStartDatetime } from './util';
@@ -48,7 +53,7 @@ class NullableProfile {
   isVisibleOnLeaderboard: boolean;
 
   @Field(() => String, { nullable: true })
-  oldEnsAvatarImageUrl: string | null;
+  ensAvatarImageUrl: string | null;
 
   @Field(() => [FeaturedPOAP])
   featuredPOAPs: FeaturedPOAP[];
@@ -137,22 +142,22 @@ export class CustomProfileResolver {
       },
     });
 
-    /*
-     * Saves us from having to resolve the ENS name from an address again ~ it's implied
-     * that the ENS name was successfully resolved earlier.
-     */
-    const ensName = addressOrEns.endsWith('.eth')
-      ? addressOrEns
-      : await resolveAddress(resolvedAddress);
-
     if (result === null) {
       logger.debug(`Profile for ${addressOrEns} not created yet, returning blank profile.`);
       endTimer({ success: 1 });
 
+      const ensName = addressOrEns.endsWith('.eth')
+        ? addressOrEns
+        : await resolveAddressCached(resolvedAddress);
+
+      const ensAvatarImageUrl = ensName.endsWith('.eth')
+        ? await resolveENSAvatarCached(ensName)
+        : null;
+
       return {
         id: null,
         address: resolvedAddress,
-        ensName: ensName,
+        ensName,
         createdAt: null,
         updatedAt: null,
         bio: null,
@@ -163,7 +168,7 @@ export class CustomProfileResolver {
         twitterHandle: null,
         personalSiteUrl: null,
         isVisibleOnLeaderboard: true,
-        oldEnsAvatarImageUrl: null,
+        ensAvatarImageUrl,
         featuredPOAPs: [],
       };
     }
@@ -171,7 +176,8 @@ export class CustomProfileResolver {
     const resultWithEns: NullableProfile = {
       ...result,
       address: result.oldAddress,
-      ensName,
+      ensName: result.oldEnsName,
+      ensAvatarImageUrl: result.oldEnsAvatarImageUrl,
     };
 
     logger.debug(`Completed request for profile data for address: ${addressOrEns}`);

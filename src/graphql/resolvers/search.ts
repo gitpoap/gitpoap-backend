@@ -1,18 +1,8 @@
 import { Arg, Ctx, Field, ObjectType, Resolver, Query } from 'type-graphql';
 import { Profile, User } from '@generated/type-graphql';
 import { Context } from '../../context';
-import { resolveENS } from '../../lib/ens';
 import { createScopedLogger } from '../../logging';
 import { gqlRequestDurationSeconds } from '../../metrics';
-
-@ObjectType()
-class ProfileWithENS {
-  @Field(() => Profile)
-  profile: Profile;
-
-  @Field()
-  ens: string;
-}
 
 @ObjectType()
 class SearchResults {
@@ -25,8 +15,8 @@ class SearchResults {
   @Field(() => [Profile])
   profilesByAddress: Profile[];
 
-  @Field(() => ProfileWithENS, { nullable: true })
-  profileByENS: ProfileWithENS | null;
+  @Field(() => [Profile])
+  profilesByENS: Profile[];
 }
 
 @Resolver()
@@ -40,13 +30,13 @@ export class CustomSearchResolver {
     const endTimer = gqlRequestDurationSeconds.startTimer('search');
 
     if (text.length < 2) {
-      logger.info('Skipping search for single character');
+      logger.info('Skipping search for less than two characters');
       endTimer({ success: 1 });
       return {
         usersByGithubHandle: [],
         profilesByName: [],
         profilesByAddress: [],
-        profileByENS: null,
+        profilesByENS: [],
       };
     }
 
@@ -78,21 +68,14 @@ export class CustomSearchResolver {
       },
     });
 
-    let profileByENS = null;
-    const resolvedAddress = await resolveENS(text);
-    if (resolvedAddress !== text && resolvedAddress !== null) {
-      const result = await prisma.profile.findUnique({
-        where: {
-          oldAddress: resolvedAddress.toLowerCase(),
+    let profilesByENS = await prisma.profile.findMany({
+      where: {
+        oldEnsName: {
+          contains: matchText,
+          mode: 'insensitive',
         },
-      });
-      if (result !== null) {
-        profileByENS = {
-          profile: result,
-          ens: text,
-        };
-      }
-    }
+      },
+    });
 
     logger.debug(`Completed request to search for "${text}"`);
 
@@ -102,7 +85,7 @@ export class CustomSearchResolver {
       usersByGithubHandle,
       profilesByName,
       profilesByAddress,
-      profileByENS,
+      profilesByENS,
     };
   }
 }
