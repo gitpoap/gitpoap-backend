@@ -5,8 +5,10 @@ import { ContentTypeCallback, getS3URL, s3configProfile, uploadFileFromURL } fro
 import { SECONDS_PER_HOUR } from '../constants';
 import sharp from 'sharp';
 
+const ENS_NAME_LAST_RUN_CACHE_PREFIX = 'ens#name-last-run';
 const ENS_AVATAR_LAST_RUN_CACHE_PREFIX = 'ens#avatar-last-run';
 
+const ENS_NAME_MAX_CHECK_FREQUENCY_HOURS = 1;
 const ENS_AVATAR_MAX_CHECK_FREQUENCY_HOURS = 1;
 
 const DEFAULT_SVG_IMAGE_SIZE = 500;
@@ -73,6 +75,46 @@ async function resolveENSAvatar(ensName: string, resolvedAddress: string) {
   });
 }
 
+async function updateENSNameLastChecked(address: string) {
+  context.redis.setValue(
+    ENS_NAME_LAST_RUN_CACHE_PREFIX,
+    address.toLowerCase(),
+    'checked',
+    ENS_NAME_MAX_CHECK_FREQUENCY_HOURS * SECONDS_PER_HOUR,
+  );
+}
+
+async function updateENSName(address: string) {
+  const logger = createScopedLogger('updateENSName');
+
+  const addressLower = address.toLowerCase();
+
+  const lastRunValue = await context.redis.getValue(ENS_NAME_LAST_RUN_CACHE_PREFIX, addressLower);
+  if (lastRunValue !== null) {
+    logger.debug(`Not enough time has elapsed to check for a new ENS name for ${address}`);
+    return;
+  }
+
+  await updateENSNameLastChecked(addressLower);
+
+  let ensName = await resolveENSInternal(address);
+
+  if (ensName !== null) {
+    logger.info(`Stored ENS name ${ensName} for ${address}`);
+  }
+
+  await context.prisma.profile.update({
+    where: {
+      oldAddress: addressLower,
+    },
+    data: {
+      oldEnsName: ensName,
+    },
+  });
+
+  return ensName;
+}
+
 /**
  * Resolve an ENS name to an ETH address.
  *
@@ -85,6 +127,16 @@ export async function resolveENS(ensName: string): Promise<string | null> {
   if (result !== null && ensName.endsWith('.eth')) {
     // Run in the background
     resolveENSAvatar(ensName, result);
+
+    updateENSNameLastChecked(result);
+    context.prisma.profile.update({
+      where: {
+        oldAddress: result.toLowerCase(),
+      },
+      data: {
+        oldEnsName: ensName,
+      },
+    });
   }
 
   return result;
@@ -101,15 +153,26 @@ export async function resolveAddress(
   address: string,
   synchronous?: boolean,
 ): Promise<string | null> {
-  const result = await resolveAddressInternal(address);
+  const result = await context.prisma.profile.findUnique({
+    where: {
+      oldAddress: address.toLowerCase(),
+    },
+    select: {
+      oldEnsName: true,
+    },
+  });
 
-  if (result !== null) {
-    const avatarPromise = resolveENSAvatar(result, address);
+  updateENSName(address);
+
+  if (result !== null && result.oldEnsName !== null) {
+    const avatarPromise = resolveENSAvatar(result.oldEnsName, address);
 
     if (synchronous) {
       await avatarPromise;
     }
+
+    return result.oldEnsName;
   }
 
-  return result;
+  return null;
 }
