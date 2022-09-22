@@ -1,6 +1,10 @@
 import { createScopedLogger } from '../logging';
 import { context } from '../context';
-import { getAvatar, resolveENSInternal, resolveAddressInternal } from '../external/ens';
+import {
+  resolveAddressInternal,
+  resolveENSAvatarInternal,
+  resolveENSInternal,
+} from '../external/ens';
 import { ContentTypeCallback, getS3URL, s3configProfile, uploadFileFromURL } from '../external/s3';
 import { SECONDS_PER_HOUR } from '../constants';
 import sharp from 'sharp';
@@ -114,7 +118,7 @@ async function resolveENSAvatar(ensName: string, resolvedAddress: string) {
 
   const addressLower = resolvedAddress.toLowerCase();
 
-  let avatarURL = await getAvatar(ensName);
+  let avatarURL = await resolveENSAvatarInternal(ensName);
 
   if (avatarURL !== null) {
     const response = await uploadFileFromURL(
