@@ -8,10 +8,80 @@ import sharp from 'sharp';
 const ENS_NAME_LAST_RUN_CACHE_PREFIX = 'ens#name-last-run';
 const ENS_AVATAR_LAST_RUN_CACHE_PREFIX = 'ens#avatar-last-run';
 
-const ENS_NAME_MAX_CHECK_FREQUENCY_HOURS = 1;
-const ENS_AVATAR_MAX_CHECK_FREQUENCY_HOURS = 1;
+// Assume that these change infrequently
+const ENS_NAME_MAX_CHECK_FREQUENCY_HOURS = 12;
+const ENS_AVATAR_MAX_CHECK_FREQUENCY_HOURS = 6;
 
 const DEFAULT_SVG_IMAGE_SIZE = 500;
+
+async function updateENSNameInDB(address: string, ensName: string | null) {
+  const logger = createScopedLogger('updateENSNameInDB');
+
+  // Catch throws in the case the profile doesn't exist (yet)
+  try {
+    await context.prisma.profile.update({
+      where: {
+        oldAddress: address.toLowerCase(),
+      },
+      data: {
+        oldEnsName: ensName,
+      },
+    });
+  } catch (err) {
+    logger.debug(`Caught error while update ENS for ${address}: ${err}`);
+  }
+}
+
+async function updateENSAvatarInDB(address: string, avatarURL: string | null) {
+  const logger = createScopedLogger('updateENSAvatarInDB');
+
+  // Catch throws in the case the profile doesn't exist (yet)
+  try {
+    await context.prisma.profile.update({
+      where: {
+        oldAddress: address.toLowerCase(),
+      },
+      data: {
+        oldEnsAvatarImageUrl: avatarURL,
+      },
+    });
+  } catch (err) {
+    logger.debug(`Caught error while update ENS for ${address}: ${err}`);
+  }
+}
+
+async function updateENSNameLastChecked(address: string) {
+  context.redis.setValue(
+    ENS_NAME_LAST_RUN_CACHE_PREFIX,
+    address.toLowerCase(),
+    'checked',
+    ENS_NAME_MAX_CHECK_FREQUENCY_HOURS * SECONDS_PER_HOUR,
+  );
+}
+
+async function updateENSName(address: string) {
+  const logger = createScopedLogger('updateENSName');
+
+  const addressLower = address.toLowerCase();
+
+  const lastRunValue = await context.redis.getValue(ENS_NAME_LAST_RUN_CACHE_PREFIX, addressLower);
+  if (lastRunValue !== null) {
+    logger.debug(`Not enough time has elapsed to check for a new ENS name for ${address}`);
+    return;
+  }
+
+  await updateENSNameLastChecked(addressLower);
+
+  let ensName = await resolveENSInternal(address);
+
+  if (ensName !== null) {
+    logger.info(`Stored ENS name ${ensName} for ${address}`);
+  }
+
+  await updateENSNameInDB(address, ensName);
+
+  return ensName;
+}
 
 const contentTypeCallback: ContentTypeCallback = async (contentType: string, buffer: Buffer) => {
   if (contentType === 'image/svg+xml') {
@@ -65,54 +135,7 @@ async function resolveENSAvatar(ensName: string, resolvedAddress: string) {
     logger.info(`Cached ENS avatar for ${ensName}`);
   }
 
-  await context.prisma.profile.update({
-    where: {
-      oldAddress: addressLower,
-    },
-    data: {
-      oldEnsAvatarImageUrl: avatarURL,
-    },
-  });
-}
-
-async function updateENSNameLastChecked(address: string) {
-  context.redis.setValue(
-    ENS_NAME_LAST_RUN_CACHE_PREFIX,
-    address.toLowerCase(),
-    'checked',
-    ENS_NAME_MAX_CHECK_FREQUENCY_HOURS * SECONDS_PER_HOUR,
-  );
-}
-
-async function updateENSName(address: string) {
-  const logger = createScopedLogger('updateENSName');
-
-  const addressLower = address.toLowerCase();
-
-  const lastRunValue = await context.redis.getValue(ENS_NAME_LAST_RUN_CACHE_PREFIX, addressLower);
-  if (lastRunValue !== null) {
-    logger.debug(`Not enough time has elapsed to check for a new ENS name for ${address}`);
-    return;
-  }
-
-  await updateENSNameLastChecked(addressLower);
-
-  let ensName = await resolveENSInternal(address);
-
-  if (ensName !== null) {
-    logger.info(`Stored ENS name ${ensName} for ${address}`);
-  }
-
-  await context.prisma.profile.update({
-    where: {
-      oldAddress: addressLower,
-    },
-    data: {
-      oldEnsName: ensName,
-    },
-  });
-
-  return ensName;
+  await updateENSAvatarInDB(addressLower, avatarURL);
 }
 
 /**
@@ -129,14 +152,7 @@ export async function resolveENS(ensName: string): Promise<string | null> {
     resolveENSAvatar(ensName, result);
 
     updateENSNameLastChecked(result);
-    context.prisma.profile.update({
-      where: {
-        oldAddress: result.toLowerCase(),
-      },
-      data: {
-        oldEnsName: ensName,
-      },
-    });
+    updateENSNameInDB(result, ensName);
   }
 
   return result;
