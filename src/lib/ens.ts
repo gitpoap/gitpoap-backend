@@ -182,16 +182,18 @@ export async function resolveAddress(
     },
   });
 
-  updateENSName(address);
+  const namePromise = updateENSName(address);
 
   if (result !== null && result.oldEnsName !== null) {
     const avatarPromise = resolveENSAvatar(result.oldEnsName, address);
 
     if (synchronous) {
-      await avatarPromise;
+      await Promise.all([namePromise, avatarPromise]);
     }
 
     return result.oldEnsName;
+  } else if (synchronous) {
+    await namePromise;
   }
 
   return null;
