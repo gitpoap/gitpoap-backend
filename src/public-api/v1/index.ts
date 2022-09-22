@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { context } from '../../context';
 import { httpRequestDurationSeconds } from '../../metrics';
 import { createScopedLogger } from '../../logging';
-import { resolveENSInternal } from '../../external/ens';
+import { resolveENS } from '../../lib/ens';
 import { ClaimStatus } from '@generated/type-graphql';
 import { badgen } from 'badgen';
 import { GitPOAPMiniLogo } from './constants';
@@ -25,7 +25,7 @@ v1Router.get('/address/:address/gitpoaps', async function (req, res) {
 
   const endTimer = httpRequestDurationSeconds.startTimer('GET', '/v1/address/:address/gitpoaps');
 
-  const resolvedAddress = await resolveENSInternal(req.params.address);
+  const resolvedAddress = await resolveENS(req.params.address);
   if (resolvedAddress === null) {
     logger.warn('Request address is invalid');
     endTimer({ status: 400 });
