@@ -10,14 +10,21 @@ import { ClaimStatus } from '@generated/type-graphql';
 
 const HEATER_DELAY_BETWEEN_ADDRESSES_SECONDS = 1;
 
-async function heatUpAvatarCache() {
-  const logger = createScopedLogger('heatUpAvatarCache');
+async function heatUpENSCache() {
+  const logger = createScopedLogger('heatUpENSCache');
 
   // Only run on profiles without the avatars setup
   const addresses = (
     await context.prisma.profile.findMany({
       where: {
-        oldEnsAvatarImageUrl: null,
+        OR: [
+          {
+            oldEnsName: null,
+          },
+          {
+            oldEnsAvatarImageUrl: null,
+          },
+        ],
       },
       select: {
         oldAddress: true,
@@ -25,7 +32,7 @@ async function heatUpAvatarCache() {
     })
   ).map(p => p.oldAddress);
 
-  logger.info(`Checking ${addresses.length} addresses for ENS Avatars`);
+  logger.info(`Checking ${addresses.length} addresses for ENS names/avatars`);
 
   let checkedCount = 0;
   for (const address of addresses) {
@@ -58,16 +65,28 @@ async function heatUpAvatarCache() {
   }
 
   const skipped = addresses.length - checkedCount;
-  logger.info(`${checkedCount} profiles were checked for ENS avatars (${skipped} were skipped)`);
+  logger.info(
+    `${checkedCount} profiles were checked for ENS names/avatars (${skipped} were skipped)`,
+  );
 
-  const avatarCount = await context.prisma.profile.count({
-    where: {
-      NOT: {
-        oldEnsAvatarImageUrl: null,
+  const [nameCount, avatarCount] = await Promise.all([
+    context.prisma.profile.count({
+      where: {
+        NOT: {
+          oldEnsName: null,
+        },
       },
-    },
-  });
+    }),
+    context.prisma.profile.count({
+      where: {
+        NOT: {
+          oldEnsAvatarImageUrl: null,
+        },
+      },
+    }),
+  ]);
 
+  logger.info(`${nameCount} profiles have ENS names`);
   logger.info(`${avatarCount} profiles have ENS avatars`);
 }
 
@@ -83,7 +102,7 @@ const main = async () => {
   await context.redis.connect();
   logger.info('Connected to redis');
 
-  await heatUpAvatarCache();
+  await heatUpENSCache();
 
   await context.redis.disconnect();
 };
