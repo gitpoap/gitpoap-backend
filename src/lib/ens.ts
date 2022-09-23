@@ -80,7 +80,7 @@ async function updateENSName(address: string) {
 
   await updateENSNameLastChecked(addressLower);
 
-  let ensName = await resolveENSInternal(address);
+  let ensName = await resolveAddressInternal(address);
 
   if (ensName !== null) {
     logger.info(`Stored ENS name ${ensName} for ${address}`);
