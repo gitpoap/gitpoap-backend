@@ -47,6 +47,8 @@ services:
       - '8080:8080'
     volumes:
       - $HOME/.aws/credentials:/root/.aws/credentials:ro
+    environment:
+      - TEST_ENV=${TEST_ENV}
     depends_on:
       - db
       - redis
