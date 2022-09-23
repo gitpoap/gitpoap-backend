@@ -153,8 +153,8 @@ model Claim {
   user                User               @relation(fields: [userId], references: [id])
   emailId             Int?
   email               Email?             @relation(fields: [emailId], references: [id])
-  addressId           Int?
-  address             Address?           @relation("issuedClaims", fields: [addressId], references: [id])
+  issuedAddressId     Int?
+  issuedAddress       Address?           @relation("issuedClaims", fields: [issuedAddressId], references: [id])
   // End: Issuance fields
   // Note that not all Claims have pull request they were earned in (e.g. Hackathon GitPOAPs)
   pullRequestEarnedId Int?
@@ -167,7 +167,7 @@ model Claim {
 
   @@unique([gitPOAPId, userId])
   @@unique([gitPOAPId, mintedAddressId])
-  @@unique([gitPOAPId, addressId])
+  @@unique([gitPOAPId, issuedAddressId])
   @@unique([gitPOAPId, emailId])
 }
 
