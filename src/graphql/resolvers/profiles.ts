@@ -150,9 +150,8 @@ export class CustomProfileResolver {
         ? addressOrEns
         : await resolveAddressCached(resolvedAddress);
 
-      const ensAvatarImageUrl = ensName.endsWith('.eth')
-        ? await resolveENSAvatarCached(ensName)
-        : null;
+      const ensAvatarImageUrl =
+        ensName !== null && ensName.endsWith('.eth') ? await resolveENSAvatarCached(ensName) : null;
 
       return {
         id: null,
