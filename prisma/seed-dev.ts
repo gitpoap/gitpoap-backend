@@ -78,335 +78,83 @@ export const seed = async (prisma: PrismaClient) => {
   const org6 = await OrganizationFactory.createOrganization(81711181, 'stake-house');
 
   /* Create Repos */
-  const gitpoapFeRepo = await RepoFactory.createRepo(
-    'gitpoap-fe',
-    439490658,
-    org4.id,
-    frontendProject.id,
-  ); // real id
-  const gitpoapBackendRepo = await RepoFactory.createRepo(
-    'gitpoap-backend',
-    416584564,
-    org4.id,
-    backendProject.id,
-  ); // real id
+  const gitpoapFeRepo = await RepoFactory.createRepo('gitpoap-fe', 439490658, org4.id, frontendProject.id); // real id
+  const gitpoapBackendRepo = await RepoFactory.createRepo('gitpoap-backend', 416584564, org4.id, backendProject.id); // real id
   const repo7 = await RepoFactory.createRepo('repo7', 7, org2.id, repo7Project.id);
   const repo34 = await RepoFactory.createRepo('repo34', 34, org1.id, repo34Project.id);
   const repo568 = await RepoFactory.createRepo('repo568', 568, org3.id, repo568Project.id);
   const repoDopex = await RepoFactory.createRepo('dopex', 127534193, org5.id, dopexProject.id);
-  const repoWagyuInstaller = await RepoFactory.createRepo(
-    'wagyu-installer',
-    336862756,
-    org6.id,
-    wagyuInstallerProject.id,
-  );
-  const gitpoapBotTestRepo = await RepoFactory.createRepo(
-    'gitpoap-bot-test-repo',
-    502133931,
-    org4.id,
-    botTestProject.id,
-  ); // real id
+  const repoWagyuInstaller = await RepoFactory.createRepo('wagyu-installer', 336862756, org6.id, wagyuInstallerProject.id);
+  const gitpoapBotTestRepo = await RepoFactory.createRepo('gitpoap-bot-test-repo', 502133931, org4.id, botTestProject.id); // real id
 
   /* Create GitPOAPs */
-  const gitpoap1 = await GitPOAPFactory.createGitPOAPFromEvent(
-    repo34Project.id,
-    event1,
-    GitPOAPStatus.APPROVED,
-  );
-  const gitpoap2 = await GitPOAPFactory.createGitPOAPFromEvent(
-    repo7Project.id,
-    event2,
-    GitPOAPStatus.APPROVED,
-  );
-  const gitpoap3 = await GitPOAPFactory.createGitPOAPFromEvent(
-    repo568Project.id,
-    event3,
-    GitPOAPStatus.APPROVED,
-  );
+  const gitpoap1 = await GitPOAPFactory.createGitPOAPFromEvent(repo34Project.id, event1, GitPOAPStatus.APPROVED);
+  const gitpoap2 = await GitPOAPFactory.createGitPOAPFromEvent(repo7Project.id, event2, GitPOAPStatus.APPROVED);
+  const gitpoap3 = await GitPOAPFactory.createGitPOAPFromEvent(repo568Project.id, event3, GitPOAPStatus.APPROVED);
   // For GitPOAP FE Repo ~ Using generic GitPOAP related POAP for now ~ eventID: 19375
-  const gitpoap4 = await GitPOAPFactory.createGitPOAPFromEvent(
-    frontendProject.id,
-    event19375,
-    GitPOAPStatus.APPROVED,
-  );
+  const gitpoap4 = await GitPOAPFactory.createGitPOAPFromEvent(frontendProject.id, event19375, GitPOAPStatus.APPROVED);
   // For GitPOAP BE Repo ~ Using GitPOAP Strategy Meeting POAP for now ~ eventID: 29009
-  const gitpoap5 = await GitPOAPFactory.createGitPOAPFromEvent(
-    backendProject.id,
-    event29009,
-    GitPOAPStatus.APPROVED,
-  );
+  const gitpoap5 = await GitPOAPFactory.createGitPOAPFromEvent(backendProject.id, event29009, GitPOAPStatus.APPROVED);
   // For burz/dopex repo ~ eventID: 34634
   const gitpoap6 = await GitPOAPFactory.createGitPOAPFromEvent(dopexProject.id, event34634);
 
   // For the gitpoaps created for the bug bash -~- March 2022
-  const gitpoap7 = await GitPOAPFactory.createGitPOAPFromEvent(
-    frontendProject.id,
-    event36568,
-    GitPOAPStatus.APPROVED,
-  );
-  const gitpoap8 = await GitPOAPFactory.createGitPOAPFromEvent(
-    frontendProject.id,
-    event36569,
-    GitPOAPStatus.APPROVED,
-    false,
-    2,
-    2,
-  );
-  const gitpoap9 = await GitPOAPFactory.createGitPOAPFromEvent(
-    backendProject.id,
-    event36570,
-    GitPOAPStatus.APPROVED,
-  );
-  const gitpoap10 = await GitPOAPFactory.createGitPOAPFromEvent(
-    backendProject.id,
-    event36571,
-    GitPOAPStatus.APPROVED,
-    false,
-    2,
-    2,
-  );
-  const gitpoap11 = await GitPOAPFactory.createGitPOAPFromEvent(
-    backendProject.id,
-    event36572,
-    GitPOAPStatus.APPROVED,
-    false,
-    3,
-    3,
-  );
+  const gitpoap7 = await GitPOAPFactory.createGitPOAPFromEvent(frontendProject.id, event36568, GitPOAPStatus.APPROVED);
+  const gitpoap8 = await GitPOAPFactory.createGitPOAPFromEvent(frontendProject.id, event36569, GitPOAPStatus.APPROVED, false, 2, 2);
+  const gitpoap9 = await GitPOAPFactory.createGitPOAPFromEvent(backendProject.id, event36570, GitPOAPStatus.APPROVED);
+  const gitpoap10 = await GitPOAPFactory.createGitPOAPFromEvent(backendProject.id, event36571, GitPOAPStatus.APPROVED, false, 2, 2);
+  const gitpoap11 = await GitPOAPFactory.createGitPOAPFromEvent(backendProject.id, event36572, GitPOAPStatus.APPROVED, false, 3, 3);
   // Not the real POAP secret!
-  const gitpoap12 = await GitPOAPFactory.createGitPOAPFromEvent(
-    wagyuInstallerProject.id,
-    event37428,
-    GitPOAPStatus.UNAPPROVED,
-    true,
-  );
-  const gitpoap13 = await GitPOAPFactory.createGitPOAPFromEvent(
-    wagyuInstallerProject.id,
-    event37429,
-    GitPOAPStatus.UNAPPROVED,
-    true,
-    2,
-    2,
-  );
-  const gitpoap14 = await GitPOAPFactory.createGitPOAPFromEvent(
-    wagyuInstallerProject.id,
-    event37430,
-    GitPOAPStatus.UNAPPROVED,
-    true,
-    3,
-    3,
-  );
+  const gitpoap12 = await GitPOAPFactory.createGitPOAPFromEvent(wagyuInstallerProject.id, event37428, GitPOAPStatus.UNAPPROVED, true);
+  const gitpoap13 = await GitPOAPFactory.createGitPOAPFromEvent(wagyuInstallerProject.id, event37429, GitPOAPStatus.UNAPPROVED, true, 2, 2);
+  const gitpoap14 = await GitPOAPFactory.createGitPOAPFromEvent(wagyuInstallerProject.id, event37430, GitPOAPStatus.UNAPPROVED, true, 3, 3);
 
   // For gitpoap-bot-test-repo (uses random POAP IDs)
-  const gitpoap15 = await GitPOAPFactory.createGitPOAPFromEvent(
-    botTestProject.id,
-    event36573,
-    GitPOAPStatus.APPROVED,
-    true,
-  );
-  const gitpoap16 = await GitPOAPFactory.createGitPOAPFromEvent(
-    botTestProject.id,
-    event36574,
-    GitPOAPStatus.APPROVED,
-    true,
-    2,
-    2,
-  );
+  const gitpoap15 = await GitPOAPFactory.createGitPOAPFromEvent(botTestProject.id, event36573, GitPOAPStatus.APPROVED, true);
+  const gitpoap16 = await GitPOAPFactory.createGitPOAPFromEvent(botTestProject.id, event36574, GitPOAPStatus.APPROVED, true, 2, 2);
   // Add one that is NOT enabled
-  const gitpoap17 = await GitPOAPFactory.createGitPOAPFromEvent(
-    botTestProject.id,
-    event36575,
-    GitPOAPStatus.APPROVED,
-    true,
-    3,
-    3,
-    false,
-  );
+  const gitpoap17 = await GitPOAPFactory.createGitPOAPFromEvent(botTestProject.id, event36575, GitPOAPStatus.APPROVED, true, 3, 3, false);
   // Add one that is deprecated
-  const gitpoap18 = await GitPOAPFactory.createGitPOAPFromEvent(
-    botTestProject.id,
-    event36576,
-    GitPOAPStatus.DEPRECATED,
-  );
+  const gitpoap18 = await GitPOAPFactory.createGitPOAPFromEvent(botTestProject.id, event36576, GitPOAPStatus.DEPRECATED);
 
   /* Add codes */
-  await RedeemCodeFactory.addRedeemCodes(
-    [
-      '6j8wda',
-      'tqaq9y',
-      'd4tdh0',
-      'o9uorf',
-      'eeyewe',
-      '09wqld',
-      'tsl7wt',
-      'i52wvt',
-      'mshofb',
-      'v9cbcd',
-    ],
-    gitpoap7.id,
-  );
-  await RedeemCodeFactory.addRedeemCodes(
-    [
-      '7s4dn3',
-      'q9237f',
-      'd0e21q',
-      'qzaj5c',
-      'ozy2c9',
-      'p7yqjo',
-      'cgsevm',
-      'hou5kq',
-      'j6sxom',
-      '058qv8',
-    ],
-    gitpoap8.id,
-  );
-  await RedeemCodeFactory.addRedeemCodes(
-    [
-      'plw7uf',
-      'rea9f5',
-      '1etkax',
-      'l4uulx',
-      '8hnrqa',
-      '2mfo3x',
-      'me3qfx',
-      's8znfh',
-      'gelwgm',
-      'ebafk6',
-    ],
-    gitpoap9.id,
-  );
-  await RedeemCodeFactory.addRedeemCodes(
-    [
-      '492wr5',
-      'zzxoaa',
-      'fnc0cn',
-      'hrir8p',
-      'v1258v',
-      'i7lt58',
-      'erxgdb',
-      'za5od3',
-      'v8a1wg',
-      'uazjii',
-    ],
-    gitpoap10.id,
-  );
-  await RedeemCodeFactory.addRedeemCodes(
-    [
-      'hh3zf2',
-      'ivnnil',
-      'wylm9j',
-      'c8i5qj',
-      '8inyd8',
-      'xyrepl',
-      'q4564p',
-      'aienlq',
-      'ohgtbi',
-      'qtr3ju',
-    ],
-    gitpoap11.id,
-  );
+  await RedeemCodeFactory.addRedeemCodes(['6j8wda', 'tqaq9y', 'd4tdh0', 'o9uorf', 'eeyewe', '09wqld', 'tsl7wt', 'i52wvt', 'mshofb', 'v9cbcd'], gitpoap7.id);
+  await RedeemCodeFactory.addRedeemCodes(['7s4dn3', 'q9237f', 'd0e21q', 'qzaj5c', 'ozy2c9', 'p7yqjo', 'cgsevm', 'hou5kq', 'j6sxom', '058qv8'], gitpoap8.id);
+  await RedeemCodeFactory.addRedeemCodes(['plw7uf', 'rea9f5', '1etkax', 'l4uulx', '8hnrqa', '2mfo3x', 'me3qfx', 's8znfh', 'gelwgm', 'ebafk6'], gitpoap9.id);
+  await RedeemCodeFactory.addRedeemCodes(['492wr5', 'zzxoaa', 'fnc0cn', 'hrir8p', 'v1258v', 'i7lt58', 'erxgdb', 'za5od3', 'v8a1wg', 'uazjii'], gitpoap10.id);
+  await RedeemCodeFactory.addRedeemCodes(['hh3zf2', 'ivnnil', 'wylm9j', 'c8i5qj', '8inyd8', 'xyrepl', 'q4564p', 'aienlq', 'ohgtbi', 'qtr3ju'], gitpoap11.id);
 
   /* Create Claims */
   // GitPOAP 1
-  const claim1 = await ClaimFactory.createClaim(
-    gitpoap1.id,
-    vitalik.id,
-    ClaimStatus.CLAIMED,
-    ADDRESSES.test1,
-    'thunderdome',
-    DateTime.utc(2020, 1, 1).toJSDate(),
-  );
-  const claim2 = await ClaimFactory.createClaim(
-    gitpoap1.id,
-    jay.id,
-    ClaimStatus.CLAIMED,
-    ADDRESSES.jay,
-    '4068606',
-    DateTime.utc(2020, 1, 2).toJSDate(),
-  );
+  const claim1 = await ClaimFactory.createClaim(gitpoap1.id, vitalik.id, ClaimStatus.CLAIMED, ADDRESSES.test1, 'thunderdome', DateTime.utc(2020, 1, 1).toJSDate());
+  const claim2 = await ClaimFactory.createClaim(gitpoap1.id, jay.id, ClaimStatus.CLAIMED, ADDRESSES.jay, '4068606', DateTime.utc(2020, 1, 2).toJSDate());
   const claim3 = await ClaimFactory.createClaim(gitpoap1.id, tyler.id);
 
   // GitPOAP 2
-  const claim4 = await ClaimFactory.createClaim(
-    gitpoap2.id,
-    vitalik.id,
-    ClaimStatus.CLAIMED,
-    ADDRESSES.test1,
-    'ethdenver',
-    DateTime.utc(2020, 1, 3).toJSDate(),
-  );
-  const claim5 = await ClaimFactory.createClaim(
-    gitpoap2.id,
-    jay.id,
-    ClaimStatus.CLAIMED,
-    ADDRESSES.jay,
-    '4078452',
-    DateTime.utc(2020, 1, 4).toJSDate(),
-  );
+  const claim4 = await ClaimFactory.createClaim(gitpoap2.id, vitalik.id, ClaimStatus.CLAIMED, ADDRESSES.test1, 'ethdenver', DateTime.utc(2020, 1, 3).toJSDate());
+  const claim5 = await ClaimFactory.createClaim(gitpoap2.id, jay.id, ClaimStatus.CLAIMED, ADDRESSES.jay, '4078452', DateTime.utc(2020, 1, 4).toJSDate());
   const claim6 = await ClaimFactory.createClaim(gitpoap2.id, burz.id);
   const claim7 = await ClaimFactory.createClaim(gitpoap2.id, tyler.id);
 
   // GitPOAP 3
-  const claim8 = await ClaimFactory.createClaim(
-    gitpoap3.id,
-    burz.id,
-    ClaimStatus.CLAIMED,
-    ADDRESSES.burz,
-    'pizza-pie',
-    DateTime.utc(2022, 4, 5).toJSDate(),
-  );
-  const claim9 = await ClaimFactory.createClaim(
-    gitpoap3.id,
-    jay.id,
-    ClaimStatus.CLAIMED,
-    ADDRESSES.jay,
-    '4082459',
-    DateTime.utc(2020, 1, 5).toJSDate(),
-  );
+  const claim8 = await ClaimFactory.createClaim(gitpoap3.id, burz.id, ClaimStatus.CLAIMED, ADDRESSES.burz, 'pizza-pie', DateTime.utc(2022, 4, 5).toJSDate());
+  const claim9 = await ClaimFactory.createClaim(gitpoap3.id, jay.id, ClaimStatus.CLAIMED, ADDRESSES.jay, '4082459', DateTime.utc(2020, 1, 5).toJSDate());
   const claim10 = await ClaimFactory.createClaim(gitpoap3.id, tyler.id);
 
   // GitPOAP 4 - GitPOAP FE Repo
   const claim11 = await ClaimFactory.createClaim(gitpoap4.id, burz.id);
   const claim12 = await ClaimFactory.createClaim(gitpoap4.id, colfax.id);
   const claim13 = await ClaimFactory.createClaim(gitpoap4.id, vitalik.id);
-  const claim14 = await ClaimFactory.createClaim(
-    gitpoap4.id,
-    jay.id,
-    ClaimStatus.CLAIMED,
-    ADDRESSES.jay,
-    '3217451',
-    DateTime.utc(2020, 1, 6).toJSDate(),
-  );
+  const claim14 = await ClaimFactory.createClaim(gitpoap4.id, jay.id, ClaimStatus.CLAIMED, ADDRESSES.jay, '3217451', DateTime.utc(2020, 1, 6).toJSDate());
   const claim15 = await ClaimFactory.createClaim(gitpoap4.id, tyler.id);
 
   // GitPOAP 5 - GitPOAP BE Repo
-  const claim16 = await ClaimFactory.createClaim(
-    gitpoap5.id,
-    burz.id,
-    ClaimStatus.CLAIMED,
-    ADDRESSES.burz,
-    '3973554',
-    DateTime.utc(2020, 1, 7).toJSDate(),
-  );
-  const claim17 = await ClaimFactory.createClaim(
-    gitpoap5.id,
-    colfax.id,
-    ClaimStatus.CLAIMED,
-    ADDRESSES.colfax,
-    '4126448',
-    DateTime.utc(2020, 1, 8).toJSDate(),
-  );
+  const claim16 = await ClaimFactory.createClaim(gitpoap5.id, burz.id, ClaimStatus.CLAIMED, ADDRESSES.burz, '3973554', DateTime.utc(2020, 1, 7).toJSDate());
+  const claim17 = await ClaimFactory.createClaim(gitpoap5.id, colfax.id, ClaimStatus.CLAIMED, ADDRESSES.colfax, '4126448', DateTime.utc(2020, 1, 8).toJSDate());
   const claim18 = await ClaimFactory.createClaim(gitpoap5.id, jay.id);
   const claim19 = await ClaimFactory.createClaim(gitpoap5.id, tyler.id);
   const claim20 = await ClaimFactory.createClaim(gitpoap5.id, vitalik.id);
-  const claim21 = await ClaimFactory.createClaim(
-    gitpoap5.id,
-    burz2.id,
-    ClaimStatus.CLAIMED,
-    ADDRESSES.burz2,
-    '123456789',
-    DateTime.utc(2020, 1, 9).toJSDate(),
-  );
+  const claim21 = await ClaimFactory.createClaim(gitpoap5.id, burz2.id, ClaimStatus.CLAIMED, ADDRESSES.burz2, '123456789', DateTime.utc(2020, 1, 9).toJSDate());
 
   // GitPOAPs 7 - GitPOAP BugBash Repos
   const claim22 = await ClaimFactory.createClaim(gitpoap7.id, jay.id);
@@ -422,104 +170,38 @@ export const seed = async (prisma: PrismaClient) => {
 
   // GitPOAPs 9 - GitPOAP BugBash Repos
   const claim30 = await ClaimFactory.createClaim(gitpoap9.id, jay.id);
-  const claim31 = await ClaimFactory.createClaim(
-    gitpoap9.id,
-    burz.id,
-    ClaimStatus.CLAIMED,
-    ADDRESSES.burz,
-    '1234567891',
-    DateTime.utc(2020, 1, 9).toJSDate(),
-  );
-  const claim32 = await ClaimFactory.createClaim(
-    gitpoap9.id,
-    colfax.id,
-    ClaimStatus.CLAIMED,
-    ADDRESSES.colfax,
-    '1234567892',
-    DateTime.utc(2020, 1, 9).toJSDate(),
-  );
+  const claim31 = await ClaimFactory.createClaim(gitpoap9.id, burz.id, ClaimStatus.CLAIMED, ADDRESSES.burz, '1234567891', DateTime.utc(2020, 1, 9).toJSDate());
+  const claim32 = await ClaimFactory.createClaim(gitpoap9.id, colfax.id, ClaimStatus.CLAIMED, ADDRESSES.colfax, '1234567892', DateTime.utc(2020, 1, 9).toJSDate());
   const claim33 = await ClaimFactory.createClaim(gitpoap9.id, aldo.id);
 
   // GitPOAPs 10 - GitPOAP BugBash Repos
   const claim34 = await ClaimFactory.createClaim(gitpoap10.id, jay.id);
   const claim35 = await ClaimFactory.createClaim(gitpoap10.id, burz.id);
-  const claim36 = await ClaimFactory.createClaim(
-    gitpoap10.id,
-    colfax.id,
-    ClaimStatus.CLAIMED,
-    ADDRESSES.colfax,
-    '1234567893',
-    DateTime.utc(2020, 1, 9).toJSDate(),
-  );
+  const claim36 = await ClaimFactory.createClaim(gitpoap10.id, colfax.id, ClaimStatus.CLAIMED, ADDRESSES.colfax, '1234567893', DateTime.utc(2020, 1, 9).toJSDate());
   const claim37 = await ClaimFactory.createClaim(gitpoap10.id, aldo.id);
 
   // GitPOAPs 11 - GitPOAP BugBash Repos
   const claim38 = await ClaimFactory.createClaim(gitpoap11.id, jay.id);
   const claim39 = await ClaimFactory.createClaim(gitpoap11.id, burz.id);
   const claim40 = await ClaimFactory.createClaim(gitpoap11.id, colfax.id);
-  const claim41 = await ClaimFactory.createClaim(
-    gitpoap11.id,
-    aldo.id,
-    ClaimStatus.CLAIMED,
-    ADDRESSES.aldo,
-    '1234567894',
-    DateTime.utc().minus({ days: 2 }).toJSDate(),
-  );
+  const claim41 = await ClaimFactory.createClaim(gitpoap11.id, aldo.id, ClaimStatus.CLAIMED, ADDRESSES.aldo, '1234567894', DateTime.utc().minus({ days: 2 }).toJSDate());
 
   // GitPOAP 18 - Deprecated
-  const claim42 = await ClaimFactory.createClaim(
-    gitpoap18.id,
-    burz.id,
-    ClaimStatus.CLAIMED,
-    ADDRESSES.burz,
-    '77777',
-    DateTime.utc(2019, 12, 11).toJSDate(),
-  );
-  const claim43 = await ClaimFactory.createClaim(
-    gitpoap18.id,
-    kayleen.id,
-    ClaimStatus.CLAIMED,
-    ADDRESSES.kayleen,
-    '77778',
-    DateTime.utc(2019, 12, 11).toJSDate(),
-  );
+  const claim42 = await ClaimFactory.createClaim(gitpoap18.id, burz.id, ClaimStatus.CLAIMED, ADDRESSES.burz, '77777', DateTime.utc(2019, 12, 11).toJSDate());
+  const claim43 = await ClaimFactory.createClaim(gitpoap18.id, kayleen.id, ClaimStatus.CLAIMED, ADDRESSES.kayleen, '77778', DateTime.utc(2019, 12, 11).toJSDate());
 
   /* Create Profiles */
   const profile1 = await ProfileFactory.createProfile(ADDRESSES.colfax, 'I like brisket.');
-  const profile2 = await ProfileFactory.createProfile(
-    '0x89dab21047e6de0e77deee5f4f286d72be50b942',
-    'I like bbq.',
-  );
-  const profileJay = await ProfileFactory.createProfile(
-    ADDRESSES.jay,
-    'I like factorio.',
-    'Jay PB',
-    '0xpeebeejay',
-    'jaypb1',
-    'https://s.jay.gg',
-  );
-  const profile4 = await ProfileFactory.createProfile(
-    ADDRESSES.burz,
-    'I am addicted to POAPs',
-    'Anna Burzillo',
-  );
+  const profile2 = await ProfileFactory.createProfile('0x89dab21047e6de0e77deee5f4f286d72be50b942', 'I like bbq.');
+  const profileJay = await ProfileFactory.createProfile(ADDRESSES.jay, 'I like factorio.', 'Jay PB', '0xpeebeejay', 'jaypb1', 'https://s.jay.gg');
+  const profile4 = await ProfileFactory.createProfile(ADDRESSES.burz, 'I am addicted to POAPs', 'Anna Burzillo');
   const profile5 = await ProfileFactory.createProfile(ADDRESSES.burz2, 'I am not real');
   const profile6 = await ProfileFactory.createProfile(ADDRESSES.vitalik, 'I like unicorns');
-  const profile7 = await ProfileFactory.createProfile(
-    ADDRESSES.aldo,
-    'I like surfing',
-    'Aldo Lamberti',
-  );
+  const profile7 = await ProfileFactory.createProfile(ADDRESSES.aldo, 'I like surfing', 'Aldo Lamberti');
 
   /* Create Featured POAPs */
-  const featured1 = await FeaturedPOAPFactory.createFeaturedPOAP(
-    claim14.poapTokenId!,
-    profileJay.id,
-  ); // Featured GitPOAP
-  const featured2 = await FeaturedPOAPFactory.createFeaturedPOAP(
-    claim9.poapTokenId!,
-    profileJay.id,
-  ); // Featured GitPOAP
+  const featured1 = await FeaturedPOAPFactory.createFeaturedPOAP(claim14.poapTokenId!, profileJay.id); // Featured GitPOAP
+  const featured2 = await FeaturedPOAPFactory.createFeaturedPOAP(claim9.poapTokenId!, profileJay.id); // Featured GitPOAP
   const featured3 = await FeaturedPOAPFactory.createFeaturedPOAP('3976027', profileJay.id); // Featured Classic POAP - Bangia Night
 
   console.log('DB Seeding complete. ');

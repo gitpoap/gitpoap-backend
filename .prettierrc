@@ -10,7 +10,7 @@
   "arrowParens": "avoid",
   "overrides": [
     {
-      "files": "prisma/seed.ts",
+      "files": "prisma/seed*.ts",
       "options": {
         "printWidth": 170
       }
