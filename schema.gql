@@ -4239,7 +4239,7 @@ type NullableProfile {
   twitterHandle: String
   personalSiteUrl: String
   isVisibleOnLeaderboard: Boolean!
-  oldEnsAvatarImageUrl: String
+  ensAvatarImageUrl: String
   featuredPOAPs: [FeaturedPOAP!]!
 }
 
@@ -4252,10 +4252,5 @@ type SearchResults {
   usersByGithubHandle: [User!]!
   profilesByName: [Profile!]!
   profilesByAddress: [Profile!]!
-  profileByENS: ProfileWithENS
-}
-
-type ProfileWithENS {
-  profile: Profile!
-  ens: String!
+  profilesByENS: [Profile!]!
 }

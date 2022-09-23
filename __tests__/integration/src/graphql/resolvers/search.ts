@@ -49,20 +49,19 @@ describe('CustomSearchResolver', () => {
     expect(data.search.profilesByAddress[0].id).toEqual(1);
   });
 
-  it('search - profileByENS', async () => {
+  it('search - profilesByENS', async () => {
     const data = await client.request(gql`
       {
-        search(text: "burz.eth") {
-          profileByENS {
-            profile {
-              id
-            }
+        search(text: "burz") {
+          profilesByENS {
+            id
           }
         }
       }
     `);
 
-    expect(data.search.profileByENS).not.toEqual(null);
-    expect(data.search.profileByENS.profile.id).toEqual(4);
+    expect(data.search.profilesByENS).not.toEqual(null);
+    expect(data.search.profilesByENS.length).toEqual(1);
+    expect(data.search.profilesByENS[0].id).toEqual(4);
   });
 });
