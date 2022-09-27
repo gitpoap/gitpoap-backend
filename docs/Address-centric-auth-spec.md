@@ -92,6 +92,11 @@ also the GitHub-related fields in the JWT AuthToken be valid.
 
 ## Summary
 
+This involves three parts of changes (to be done in a single PR):
+1. Update the DB
+2. Update JWT middleware and AuthToken functionality/endpoints
+3. Update existing endpoints (removing signature requirements/new checks on GitHub logins/etc)
+
 The frontend will only need to update to:
 1. Remove all signature requirements except when logging in
 2. Handle situations where user needs to relogin
