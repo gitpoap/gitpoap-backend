@@ -9,7 +9,6 @@ import { fromIni } from '@aws-sdk/credential-provider-ini';
 import { AWS_PROFILE, NODE_ENV } from '../environment';
 import fetch from 'cross-fetch';
 import { createScopedLogger } from '../logging';
-import parseDataURL from 'data-urls';
 
 type S3ClientConfigProfile = S3ClientConfig & {
   buckets: Record<string, string>;
@@ -52,43 +51,18 @@ export const uploadMulterFile = async (
   return await s3.send(new PutObjectCommand(params));
 };
 
-export type ContentTypeCallback = (
-  contentType: string,
-  buffer: Buffer,
-) => Promise<{
-  contentType: string;
-  buffer: Buffer;
-}>;
-
-const defaultContentTypeCallback: ContentTypeCallback = async (
-  contentType: string,
-  buffer: Buffer,
-) => {
-  return { contentType, buffer };
-};
-
 export const uploadFileFromURL = async (
   url: string,
   bucket: string,
   key: string,
   isPublic?: boolean,
-  contentTypeCallback: ContentTypeCallback = defaultContentTypeCallback,
 ): Promise<PutObjectCommandOutput | null> => {
   const logger = createScopedLogger('uploadFileFromURL');
 
-  let contentType: string;
-  let buffer: Buffer;
-  // Handle data URLs
+  // Skip data URLs
   if (url.startsWith('data:')) {
-    const result = parseDataURL(url);
-
-    if (result === null) {
-      logger.error(`Failed to parse data URL "${url}"`);
-      return null;
-    }
-
-    contentType = result.mimeType.toString();
-    buffer = Buffer.from(result.body);
+    logger.warn('Attempted to upload file with "data:*" URL');
+    return null;
   } else {
     let response;
     try {
@@ -117,21 +91,16 @@ export const uploadFileFromURL = async (
       return null;
     }
 
-    contentType = headerContentType;
-    buffer = Buffer.from(await response.arrayBuffer());
+    const params: PutObjectCommandInput = {
+      Bucket: bucket,
+      Key: key,
+      Body: Buffer.from(await response.arrayBuffer()),
+      ContentType: headerContentType,
+      ACL: isPublic ? 'public-read' : undefined,
+    };
+
+    return await s3.send(new PutObjectCommand(params));
   }
-
-  const updatedData = await contentTypeCallback(contentType, buffer);
-
-  const params: PutObjectCommandInput = {
-    Bucket: bucket,
-    Key: key,
-    Body: updatedData.buffer,
-    ContentType: updatedData.contentType,
-    ACL: isPublic ? 'public-read' : undefined,
-  };
-
-  return await s3.send(new PutObjectCommand(params));
 };
 
 export function getS3URL(bucket: string, key: string): string {
