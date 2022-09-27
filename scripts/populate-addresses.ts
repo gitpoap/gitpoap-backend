@@ -4,6 +4,7 @@ import 'reflect-metadata';
 import { createScopedLogger, updateLogLevel } from '../src/logging';
 import minimist from 'minimist';
 import { context } from '../src/context';
+import { upsertAddress } from '../src/lib/addresses';
 
 async function populateAddresses() {
   const logger = createScopedLogger('populateAddresses');
@@ -33,18 +34,11 @@ async function populateAddresses() {
       } for profile ${profile.id} - `,
     );
 
-    const addressResult = await context.prisma.address.upsert({
-      where: { ethAddress: profile.oldAddress.toLowerCase() },
-      create: {
-        ethAddress: profile.oldAddress.toLowerCase(),
-        ensName: profile.oldEnsName,
-        ensAvatarImageUrl: profile?.oldEnsAvatarImageUrl,
-      },
-      update: {
-        ensName: profile.oldEnsName,
-        ensAvatarImageUrl: profile.oldEnsAvatarImageUrl,
-      },
-    });
+    const addressResult = await upsertAddress(
+      profile.oldAddress,
+      profile.oldEnsName,
+      profile.oldEnsAvatarImageUrl,
+    );
 
     /* Associate the address to the profile */
     await context.prisma.profile.update({
@@ -83,10 +77,10 @@ async function populateAddresses() {
       );
       const addressResult = await context.prisma.address.upsert({
         where: {
-          ethAddress: claim.oldMintedAddress.toLowerCase(),
+          ethAddress: claim.oldMintedAddress,
         },
         create: {
-          ethAddress: claim.oldMintedAddress.toLowerCase(),
+          ethAddress: claim.oldMintedAddress,
         },
         update: {},
       });
