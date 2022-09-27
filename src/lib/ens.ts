@@ -5,9 +5,8 @@ import {
   resolveENSAvatarInternal,
   resolveENSInternal,
 } from '../external/ens';
-import { ContentTypeCallback, getS3URL, s3configProfile, uploadFileFromURL } from '../external/s3';
+import { getS3URL, s3configProfile, uploadFileFromURL } from '../external/s3';
 import { SECONDS_PER_HOUR } from '../constants';
-import sharp from 'sharp';
 
 const ENS_NAME_LAST_RUN_CACHE_PREFIX = 'ens#name-last-run';
 const ENS_AVATAR_LAST_RUN_CACHE_PREFIX = 'ens#avatar-last-run';
@@ -89,19 +88,6 @@ async function updateENSName(address: string) {
   return ensName;
 }
 
-const contentTypeCallback: ContentTypeCallback = async (contentType: string, buffer: Buffer) => {
-  if (contentType === 'image/svg+xml') {
-    const newBuffer = await sharp(buffer).resize(DEFAULT_SVG_IMAGE_SIZE).png().toBuffer();
-
-    return {
-      contentType: 'image/png',
-      buffer: newBuffer,
-    };
-  } else {
-    return { contentType, buffer };
-  }
-};
-
 async function resolveENSAvatar(ensName: string, resolvedAddress: string) {
   const logger = createScopedLogger('resolveAvatar');
 
@@ -123,22 +109,25 @@ async function resolveENSAvatar(ensName: string, resolvedAddress: string) {
   let avatarURL = await resolveENSAvatarInternal(ensName);
 
   if (avatarURL !== null) {
-    const response = await uploadFileFromURL(
-      avatarURL,
-      s3configProfile.buckets.ensAvatarCache,
-      addressLower, // Using ENS may cause issues (emoji ENSs/etc)
-      true, // Make the image publicly accessible
-      contentTypeCallback, // Convert SVGs to PNGs before uploading
-    );
+    if (!avatarURL.startsWith('data:')) {
+      const response = await uploadFileFromURL(
+        avatarURL,
+        s3configProfile.buckets.ensAvatarCache,
+        addressLower, // Using ENS may cause issues (emoji ENSs/etc)
+        true, // Make the image publicly accessible
+      );
 
-    if (response === null) {
-      logger.error(`Failed to upload ENS Avatar for ${ensName} at "${avatarURL}" to s3 cache`);
-      return;
+      if (response === null) {
+        logger.error(`Failed to upload ENS Avatar for ${ensName} at "${avatarURL}" to s3 cache`);
+        return;
+      }
+
+      avatarURL = getS3URL(s3configProfile.buckets.ensAvatarCache, addressLower);
+
+      logger.info(`Cached ENS avatar in s3 for ${ensName}`);
+    } else {
+      logger.info(`Saved "data:*" URL with ENS avatar for "${ensName}"`);
     }
-
-    avatarURL = getS3URL(s3configProfile.buckets.ensAvatarCache, addressLower);
-
-    logger.info(`Cached ENS avatar for ${ensName}`);
   }
 
   await upsertENSAvatarInDB(addressLower, avatarURL);
