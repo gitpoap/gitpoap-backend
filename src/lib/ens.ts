@@ -88,13 +88,19 @@ async function updateENSName(address: string) {
   return ensName;
 }
 
-async function resolveENSAvatar(ensName: string, resolvedAddress: string) {
+async function resolveENSAvatar(
+  ensName: string,
+  resolvedAddress: string,
+  forceCheck: boolean = false,
+) {
   const logger = createScopedLogger('resolveAvatar');
 
-  const lastRunValue = await context.redis.getValue(ENS_AVATAR_LAST_RUN_CACHE_PREFIX, ensName);
-  if (lastRunValue !== null) {
-    logger.debug(`Not enough time has elapsed to check for new avatars for ${ensName}`);
-    return;
+  if (!forceCheck) {
+    const lastRunValue = await context.redis.getValue(ENS_AVATAR_LAST_RUN_CACHE_PREFIX, ensName);
+    if (lastRunValue !== null) {
+      logger.debug(`Not enough time has elapsed to check for new avatars for ${ensName}`);
+      return;
+    }
   }
 
   context.redis.setValue(
@@ -137,15 +143,20 @@ async function resolveENSAvatar(ensName: string, resolvedAddress: string) {
  * Resolve an ENS name to an ETH address.
  *
  * @param ensName - the ENS name to resolve
- * @param synchronous - should the function wait to return until ENS name & avatar checks are done
+ * @param forceAvatarCheck - should the ENS avatar check be forced to run? (default: false)
+ * @param synchronous - should the function wait to return until ENS name & avatar checks are done? (default: false)
  * @returns the resolved ETH address associated with the ENS name or null
  */
-export async function resolveENS(ensName: string, synchronous?: boolean): Promise<string | null> {
+export async function resolveENS(
+  ensName: string,
+  forceAvatarCheck: boolean = false,
+  synchronous: boolean = false,
+): Promise<string | null> {
   const result = await resolveENSInternal(ensName);
 
   if (result !== null && ensName.endsWith('.eth')) {
     // Run in the background
-    const avatarPromise = resolveENSAvatar(ensName, result);
+    const avatarPromise = resolveENSAvatar(ensName, result, forceAvatarCheck);
 
     updateENSNameLastChecked(result);
     const namePromise = upsertENSNameInDB(result, ensName);
@@ -162,12 +173,14 @@ export async function resolveENS(ensName: string, synchronous?: boolean): Promis
  * ENS Reverse Resolution - Resolve an ETH address to an ENS name
  *
  * @param address - the ETH address to resolve
- * @param synchronous - should the function wait to return until ENS avatar checks are done?
+ * @param forceAvatarCheck - should the ENS avatar check be forced to run? (default: false)
+ * @param synchronous - should the function wait to return until ENS avatar checks are done? (default: false)
  * @returns the resolved ENS name associated with the ETH address or null
  */
 export async function resolveAddress(
   address: string,
-  synchronous?: boolean,
+  forceAvatarCheck: boolean = false,
+  synchronous: boolean = false,
 ): Promise<string | null> {
   const result = await context.prisma.profile.findUnique({
     where: {
@@ -181,7 +194,7 @@ export async function resolveAddress(
   const namePromise = updateENSName(address);
 
   if (result !== null && result.oldEnsName !== null) {
-    const avatarPromise = resolveENSAvatar(result.oldEnsName, address);
+    const avatarPromise = resolveENSAvatar(result.oldEnsName, address, forceAvatarCheck);
 
     if (synchronous) {
       await Promise.all([namePromise, avatarPromise]);
