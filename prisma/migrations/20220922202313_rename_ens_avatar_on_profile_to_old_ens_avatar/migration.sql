@@ -5,5 +5,4 @@
 
 */
 -- AlterTable
-ALTER TABLE "Profile" DROP COLUMN "ensAvatarImageUrl",
-ADD COLUMN     "oldEnsAvatarImageUrl" VARCHAR(255);
+ALTER TABLE "Profile" RENAME "ensAvatarImageUrl" TO "oldEnsAvatarImageUrl";

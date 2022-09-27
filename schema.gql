@@ -4147,7 +4147,8 @@ type Holder {
   profileImageUrl: String
   twitterHandle: String
   personalSiteUrl: String
-  oldEnsAvatarImageUrl: String
+  ensName: String
+  ensAvatarImageUrl: String
   githubHandle: String!
   gitPOAPCount: Float!
 }
@@ -4249,8 +4250,6 @@ type ProfileWithClaimsCount {
 }
 
 type SearchResults {
-  usersByGithubHandle: [User!]!
-  profilesByName: [Profile!]!
-  profilesByAddress: [Profile!]!
-  profilesByENS: [Profile!]!
+  users: [User!]!
+  profiles: [Profile!]!
 }
