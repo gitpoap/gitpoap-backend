@@ -29,7 +29,8 @@
     "docker:run-integration-tests": "docker-compose --profile integration-tests up --force-recreate --renew-anon-volumes --abort-on-container-exit",
     "quick-integration-test": "docker-compose up --no-deps --build integration-tests",
     "integration-test": "yarn docker:build-integration-tests && yarn docker:run-integration-tests",
-    "heat-up-ens-cache": "APP_NAME=heat-up-ens-cache ts-node-dev ./scripts/heat-up-ens-cache.ts"
+    "heat-up-ens-cache": "APP_NAME=heat-up-ens-cache ts-node-dev ./scripts/heat-up-ens-cache.ts",
+    "populate-addresses": "APP_NAME=populate-addresses ts-node-dev ./scripts/populate-addresses.ts"
   },
   "devDependencies": {
     "@types/badgen": "^2.7.1",
