@@ -58,7 +58,8 @@ async function heatUpENSCache() {
     // has an ENS avatar
     await resolveAddress(
       address,
-      true, // Run the ENS avatar check synchronously
+      true, // Force re-checking of the ENS avatar
+      true, // Run the ENS checks synchronously
     );
 
     sleep(HEATER_DELAY_BETWEEN_ADDRESSES_SECONDS);
