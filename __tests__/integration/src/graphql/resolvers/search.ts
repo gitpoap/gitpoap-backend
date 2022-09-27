@@ -4,64 +4,63 @@ import { ADDRESSES, GH_HANDLES } from '../../../../../prisma/constants';
 describe('CustomSearchResolver', () => {
   const client = new GraphQLClient('http://server:3001/graphql');
 
-  it('search - usersByGithubHandle', async () => {
+  it('search - users', async () => {
     const data = await client.request(gql`
       {
         search(text: "${GH_HANDLES.aldo}") {
-          usersByGithubHandle {
+          users {
             id
           }
         }
       }
     `);
 
-    expect(data.search.usersByGithubHandle.length).toEqual(1);
-    expect(data.search.usersByGithubHandle[0].id).toEqual(5);
+    expect(data.search.users.length).toEqual(1);
+    expect(data.search.users[0].id).toEqual(5);
   });
 
-  it('search - profilesByName', async () => {
+  it('search - profiles by name', async () => {
     const data = await client.request(gql`
       {
         search(text: "PB") {
-          profilesByName {
+          profiles {
             id
           }
         }
       }
     `);
 
-    expect(data.search.profilesByName.length).toEqual(1);
-    expect(data.search.profilesByName[0].id).toEqual(3);
+    expect(data.search.profiles.length).toEqual(1);
+    expect(data.search.profiles[0].id).toEqual(3);
   });
 
-  it('search - profilesByAddress', async () => {
+  it('search - profiles by address', async () => {
     const data = await client.request(gql`
       {
         search(text: "${ADDRESSES.colfax}") {
-          profilesByAddress {
+          profiles {
             id
           }
         }
       }
     `);
 
-    expect(data.search.profilesByAddress.length).toEqual(1);
-    expect(data.search.profilesByAddress[0].id).toEqual(1);
+    expect(data.search.profiles.length).toEqual(1);
+    expect(data.search.profiles[0].id).toEqual(1);
   });
 
-  it('search - profilesByENS', async () => {
+  it('search - profiles by ENS', async () => {
     const data = await client.request(gql`
       {
-        search(text: "burz") {
-          profilesByENS {
+        search(text: "burz.e") {
+          profiles {
             id
           }
         }
       }
     `);
 
-    expect(data.search.profilesByENS).not.toEqual(null);
-    expect(data.search.profilesByENS.length).toEqual(1);
-    expect(data.search.profilesByENS[0].id).toEqual(4);
+    expect(data.search.profiles.length).toEqual(1);
+    expect(data.search.profiles[0].id).toEqual(4);
   });
 });

@@ -1,22 +1,18 @@
 import { Arg, Ctx, Field, ObjectType, Resolver, Query } from 'type-graphql';
-import { Profile, User } from '@generated/type-graphql';
-import { Context } from '../../context';
+import { Profile as ProfileValue, User as UserValue } from '@generated/type-graphql';
 import { createScopedLogger } from '../../logging';
 import { gqlRequestDurationSeconds } from '../../metrics';
+import { resolveENS } from '../../lib/ens';
+import { Context, context } from '../../context';
+import { Profile, User } from '@prisma/client';
 
 @ObjectType()
 class SearchResults {
-  @Field(() => [User])
-  usersByGithubHandle: User[];
+  @Field(() => [UserValue])
+  users: User[];
 
-  @Field(() => [Profile])
-  profilesByName: Profile[];
-
-  @Field(() => [Profile])
-  profilesByAddress: Profile[];
-
-  @Field(() => [Profile])
-  profilesByENS: Profile[];
+  @Field(() => [ProfileValue])
+  profiles: Profile[];
 }
 
 @Resolver()
@@ -33,15 +29,14 @@ export class CustomSearchResolver {
       logger.info('Skipping search for less than two characters');
       endTimer({ success: 1 });
       return {
-        usersByGithubHandle: [],
-        profilesByName: [],
-        profilesByAddress: [],
-        profilesByENS: [],
+        users: [],
+        profiles: [],
       };
     }
 
     const matchText = `%${text}%`;
-    const usersByGithubHandle = await prisma.user.findMany({
+
+    const users = await prisma.user.findMany({
       where: {
         githubHandle: {
           contains: matchText,
@@ -50,42 +45,62 @@ export class CustomSearchResolver {
       },
     });
 
-    const profilesByName = await prisma.profile.findMany({
+    let profiles = await prisma.profile.findMany({
+      distinct: ['id'],
       where: {
-        name: {
-          contains: matchText,
-          mode: 'insensitive',
-        },
+        OR: [
+          {
+            oldEnsName: {
+              contains: matchText,
+              mode: 'insensitive',
+            },
+          },
+          {
+            name: {
+              contains: matchText,
+              mode: 'insensitive',
+            },
+          },
+          {
+            oldAddress: {
+              contains: matchText,
+              mode: 'insensitive',
+            },
+          },
+        ],
       },
     });
 
-    const profilesByAddress = await prisma.profile.findMany({
-      where: {
-        oldAddress: {
-          contains: matchText,
-          mode: 'insensitive',
-        },
-      },
-    });
+    // Save the profile if we've never seen it before
+    if (profiles.length === 0 && text.endsWith('.eth')) {
+      const address = await resolveENS(
+        text,
+        true, // Run the background checks synchronously
+      );
 
-    let profilesByENS = await prisma.profile.findMany({
-      where: {
-        oldEnsName: {
-          contains: matchText,
-          mode: 'insensitive',
-        },
-      },
-    });
+      // If we just found a resolution, return the profile
+      if (address !== null) {
+        const profile = await context.prisma.profile.findUnique({
+          where: {
+            oldAddress: address.toLowerCase(),
+          },
+        });
+
+        if (profile === null) {
+          logger.error(`ENS name "${text}" resolved to ${address} but no Profile was created`);
+        } else {
+          profiles = [profile];
+        }
+      }
+    }
 
     logger.debug(`Completed request to search for "${text}"`);
 
     endTimer({ success: 1 });
 
     return {
-      usersByGithubHandle,
-      profilesByName,
-      profilesByAddress,
-      profilesByENS,
+      users,
+      profiles,
     };
   }
 }

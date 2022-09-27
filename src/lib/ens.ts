@@ -22,40 +22,38 @@ const DEFAULT_SVG_IMAGE_SIZE = 500;
 const ENS_ADDRESS_CACHE_PREFIX = 'ens#address';
 const ENS_AVATAR_CACHE_PREFIX = 'ens#avatar';
 
-async function updateENSNameInDB(address: string, ensName: string | null) {
-  const logger = createScopedLogger('updateENSNameInDB');
+async function upsertENSNameInDB(address: string, ensName: string | null) {
+  const addressLower = address.toLowerCase();
 
-  // Catch throws in the case the profile doesn't exist (yet)
-  try {
-    await context.prisma.profile.update({
-      where: {
-        oldAddress: address.toLowerCase(),
-      },
-      data: {
-        oldEnsName: ensName,
-      },
-    });
-  } catch (err) {
-    logger.debug(`Caught error while update ENS for ${address}: ${err}`);
-  }
+  await context.prisma.profile.upsert({
+    where: {
+      oldAddress: addressLower,
+    },
+    update: {
+      oldEnsName: ensName,
+    },
+    create: {
+      oldAddress: addressLower,
+      oldEnsName: ensName,
+    },
+  });
 }
 
-async function updateENSAvatarInDB(address: string, avatarURL: string | null) {
-  const logger = createScopedLogger('updateENSAvatarInDB');
+async function upsertENSAvatarInDB(address: string, avatarURL: string | null) {
+  const addressLower = address.toLowerCase();
 
-  // Catch throws in the case the profile doesn't exist (yet)
-  try {
-    await context.prisma.profile.update({
-      where: {
-        oldAddress: address.toLowerCase(),
-      },
-      data: {
-        oldEnsAvatarImageUrl: avatarURL,
-      },
-    });
-  } catch (err) {
-    logger.debug(`Caught error while update ENS for ${address}: ${err}`);
-  }
+  await context.prisma.profile.upsert({
+    where: {
+      oldAddress: addressLower,
+    },
+    update: {
+      oldEnsAvatarImageUrl: avatarURL,
+    },
+    create: {
+      oldAddress: addressLower,
+      oldEnsAvatarImageUrl: avatarURL,
+    },
+  });
 }
 
 async function updateENSNameLastChecked(address: string) {
@@ -86,7 +84,7 @@ async function updateENSName(address: string) {
     logger.info(`Stored ENS name ${ensName} for ${address}`);
   }
 
-  await updateENSNameInDB(address, ensName);
+  await upsertENSNameInDB(address, ensName);
 
   return ensName;
 }
@@ -143,24 +141,29 @@ async function resolveENSAvatar(ensName: string, resolvedAddress: string) {
     logger.info(`Cached ENS avatar for ${ensName}`);
   }
 
-  await updateENSAvatarInDB(addressLower, avatarURL);
+  await upsertENSAvatarInDB(addressLower, avatarURL);
 }
 
 /**
  * Resolve an ENS name to an ETH address.
  *
  * @param ensName - the ENS name to resolve
+ * @param synchronous - should the function wait to return until ENS name & avatar checks are done
  * @returns the resolved ETH address associated with the ENS name or null
  */
-export async function resolveENS(ensName: string): Promise<string | null> {
+export async function resolveENS(ensName: string, synchronous?: boolean): Promise<string | null> {
   const result = await resolveENSInternal(ensName);
 
   if (result !== null && ensName.endsWith('.eth')) {
     // Run in the background
-    resolveENSAvatar(ensName, result);
+    const avatarPromise = resolveENSAvatar(ensName, result);
 
     updateENSNameLastChecked(result);
-    updateENSNameInDB(result, ensName);
+    const namePromise = upsertENSNameInDB(result, ensName);
+
+    if (synchronous) {
+      await Promise.all([avatarPromise, namePromise]);
+    }
   }
 
   return result;

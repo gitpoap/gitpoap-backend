@@ -107,7 +107,10 @@ class Holder {
   personalSiteUrl: string | null;
 
   @Field(() => String, { nullable: true })
-  oldEnsAvatarImageUrl: string | null;
+  ensName: string | null;
+
+  @Field(() => String, { nullable: true })
+  ensAvatarImageUrl: string | null;
 
   @Field()
   githubHandle: string;
@@ -708,7 +711,8 @@ export class CustomGitPOAPResolver {
           personalSiteUrl: r.personalSiteUrl,
           githubHandle: r.githubHandle,
           gitPOAPCount: r.claimsCount,
-          oldEnsAvatarImageUrl: r.oldEnsAvatarImageUrl,
+          ensName: r.oldEnsName,
+          ensAvatarImageUrl: r.oldEnsAvatarImageUrl,
         };
       }),
     };
