@@ -50,7 +50,7 @@ model Profile {
   twitterHandle          String?        @db.VarChar(255)
   personalSiteUrl        String?        @db.VarChar(255)
   isVisibleOnLeaderboard Boolean        @default(true)
-  oldEnsAvatarImageUrl   String?        @db.VarChar(255)
+  oldEnsAvatarImageUrl   String?
   featuredPOAPs          FeaturedPOAP[]
 }
 
@@ -63,7 +63,7 @@ model Address {
   updatedAt         DateTime                 @updatedAt
   githubUserId      Int?
   githubUser        User?                    @relation(fields: [githubUserId], references: [id])
-  ensAvatarImageUrl String?                  @db.VarChar(255)
+  ensAvatarImageUrl String?
   ensName           String?                  @db.VarChar(255)
   memberships       OrganizationMembership[]
   profile           Profile?
