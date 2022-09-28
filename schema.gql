@@ -799,7 +799,7 @@ input GithubPullRequestWhereInput {
   githubPullNumber: IntFilter
   githubTitle: StringFilter
   githubMergedAt: DateTimeNullableFilter
-  githubMergeCommitSha: StringFilter
+  githubMergeCommitSha: StringNullableFilter
   repoId: IntFilter
   repo: RepoRelationFilter
   userId: IntFilter
@@ -1680,7 +1680,7 @@ type GithubPullRequest {
   githubPullNumber: Int!
   githubTitle: String!
   githubMergedAt: DateTime
-  githubMergeCommitSha: String!
+  githubMergeCommitSha: String
   repoId: Int!
   userId: Int!
   _count: GithubPullRequestCount
@@ -3190,7 +3190,7 @@ type GithubPullRequestGroupBy {
   githubPullNumber: Int!
   githubTitle: String!
   githubMergedAt: DateTime
-  githubMergeCommitSha: String!
+  githubMergeCommitSha: String
   repoId: Int!
   userId: Int!
   _count: GithubPullRequestCountAggregate
@@ -3277,7 +3277,7 @@ input GithubPullRequestScalarWhereWithAggregatesInput {
   githubPullNumber: IntWithAggregatesFilter
   githubTitle: StringWithAggregatesFilter
   githubMergedAt: DateTimeNullableWithAggregatesFilter
-  githubMergeCommitSha: StringWithAggregatesFilter
+  githubMergeCommitSha: StringNullableWithAggregatesFilter
   repoId: IntWithAggregatesFilter
   userId: IntWithAggregatesFilter
 }
