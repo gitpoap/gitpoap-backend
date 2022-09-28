@@ -18,9 +18,6 @@ const ENS_AVATAR_MAX_CHECK_FREQUENCY_HOURS = 6;
 
 const DEFAULT_SVG_IMAGE_SIZE = 500;
 
-const ENS_ADDRESS_CACHE_PREFIX = 'ens#address';
-const ENS_AVATAR_CACHE_PREFIX = 'ens#avatar';
-
 async function upsertENSNameInDB(address: string, ensName: string | null) {
   const addressLower = address.toLowerCase();
 
@@ -88,7 +85,7 @@ async function updateENSName(address: string) {
   return ensName;
 }
 
-async function resolveENSAvatar(
+export async function resolveENSAvatar(
   ensName: string,
   resolvedAddress: string,
   forceCheck: boolean = false,
@@ -206,62 +203,4 @@ export async function resolveAddress(
   }
 
   return null;
-}
-
-// This should only be used for addresses that are known to not have a
-// Profile associated with them (e.g. if the user checks their profile but they
-// have no UNCLAIMED Claims or GitPOAPs)
-export async function resolveAddressCached(address: string): Promise<string | null> {
-  const logger = createScopedLogger('resolveAddressCached');
-
-  const addressLower = address.toLowerCase();
-
-  const cacheResponse = await context.redis.getValue(ENS_ADDRESS_CACHE_PREFIX, addressLower);
-
-  if (cacheResponse !== null) {
-    logger.debug(`Found resolved ENS name for address ${address} in cache`);
-
-    return JSON.parse(cacheResponse).ensName;
-  }
-
-  logger.debug(`Resolving non-Profile ENS name for address ${address}`);
-
-  const ensName = await resolveAddressInternal(address);
-
-  context.redis.setValue(
-    ENS_ADDRESS_CACHE_PREFIX,
-    addressLower,
-    JSON.stringify({ ensName }),
-    ENS_ADDRESS_MAX_CHECK_FREQUENCY_HOURS * SECONDS_PER_HOUR,
-  );
-
-  return ensName;
-}
-
-// This should only be used for addresses that are known to not have a
-// Profile associated with them (e.g. if the user checks their profile but they
-// have no UNCLAIMED Claims or GitPOAPs)
-export async function resolveENSAvatarCached(ensName: string): Promise<string | null> {
-  const logger = createScopedLogger('resolveENSAvatarCached');
-
-  const cacheResponse = await context.redis.getValue(ENS_AVATAR_CACHE_PREFIX, ensName);
-
-  if (cacheResponse !== null) {
-    logger.debug(`Found resolved ENS avatar for ENS name ${ensName} in cache`);
-
-    return JSON.parse(cacheResponse).avatarURL;
-  }
-
-  logger.debug(`Resolving non-Profile ENS avatar for ENS name ${ensName}`);
-
-  const avatarURL = await resolveENSAvatarInternal(ensName);
-
-  context.redis.setValue(
-    ENS_AVATAR_CACHE_PREFIX,
-    ensName,
-    JSON.stringify({ avatarURL }),
-    ENS_AVATAR_MAX_CHECK_FREQUENCY_HOURS * SECONDS_PER_HOUR,
-  );
-
-  return avatarURL;
 }
