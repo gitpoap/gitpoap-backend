@@ -106,26 +106,38 @@ describe('CustomRepoResolver', () => {
   it('trendingRepos - count', async () => {
     const data = await client.request(gql`
       {
-        trendingRepos(count: 3, numDays: 10000) {
+        trendingRepos(count: 1, numDays: 10000) {
+          name
           mintedGitPOAPCount
         }
       }
     `);
 
-    expect(data.trendingRepos.length).toEqual(3);
+    expect(data.trendingRepos.length).toEqual(1);
+    expect(data.trendingRepos[0].name).toEqual('gitpoap-backend');
+    expect(data.trendingRepos[0].mintedGitPOAPCount).toEqual(3);
   });
 
   it('trendingRepos - orderby mintedGitPOAPCount', async () => {
     const data = await client.request(gql`
       {
         trendingRepos(count: 2, numDays: 10000) {
+          name
           mintedGitPOAPCount
+          contributorCount
+          gitPOAPCount
         }
       }
     `);
 
     expect(data.trendingRepos.length).toEqual(2);
-    expect(data.trendingRepos[0].mintedGitPOAPCount).toEqual(7);
-    expect(data.trendingRepos[1].mintedGitPOAPCount).toEqual(2);
+    expect(data.trendingRepos[0].name).toEqual('gitpoap-backend');
+    expect(data.trendingRepos[0].mintedGitPOAPCount).toEqual(3);
+    expect(data.trendingRepos[0].contributorCount).toEqual(2);
+    expect(data.trendingRepos[0].gitPOAPCount).toEqual(4);
+    expect(data.trendingRepos[1].name).toEqual('gitpoap-fe');
+    expect(data.trendingRepos[1].mintedGitPOAPCount).toEqual(1);
+    expect(data.trendingRepos[1].contributorCount).toEqual(1);
+    expect(data.trendingRepos[1].gitPOAPCount).toEqual(3);
   });
 });
