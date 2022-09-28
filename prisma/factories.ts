@@ -58,6 +58,88 @@ export class ClaimFactory {
 
     return claim;
   };
+
+  static createForPR = async (
+    gitPOAPId: number,
+    userId: number,
+    githubPullRequestId: number,
+    status?: ClaimStatus,
+    mintedAddressId?: number,
+    poapTokenId?: string,
+    mintedAt?: Date,
+    issuedAddressId?: number,
+  ): Promise<Claim> => {
+    const issuedAddressData = issuedAddressId ? { connect: { id: issuedAddressId } } : undefined;
+    const mintedAddressData = mintedAddressId ? { connect: { id: mintedAddressId } } : undefined;
+
+    const data: Prisma.ClaimCreateInput = {
+      gitPOAP: {
+        connect: {
+          id: gitPOAPId,
+        },
+      },
+      user: {
+        connect: {
+          id: userId,
+        },
+      },
+      status,
+      issuedAddress: issuedAddressData,
+      mintedAddress: mintedAddressData,
+      poapTokenId,
+      mintedAt,
+      pullRequestEarned: {
+        connect: {
+          id: githubPullRequestId,
+        },
+      },
+    };
+    const claim = await prisma.claim.create({ data });
+    logger.debug(`Creating claim with id: ${claim.id}`);
+
+    return claim;
+  };
+
+  static createForMention = async (
+    gitPOAPId: number,
+    userId: number,
+    githubMentionId: number,
+    status?: ClaimStatus,
+    mintedAddressId?: number,
+    poapTokenId?: string,
+    mintedAt?: Date,
+    issuedAddressId?: number,
+  ): Promise<Claim> => {
+    const issuedAddressData = issuedAddressId ? { connect: { id: issuedAddressId } } : undefined;
+    const mintedAddressData = mintedAddressId ? { connect: { id: mintedAddressId } } : undefined;
+
+    const data: Prisma.ClaimCreateInput = {
+      gitPOAP: {
+        connect: {
+          id: gitPOAPId,
+        },
+      },
+      user: {
+        connect: {
+          id: userId,
+        },
+      },
+      status,
+      issuedAddress: issuedAddressData,
+      mintedAddress: mintedAddressData,
+      poapTokenId,
+      mintedAt,
+      mentionEarned: {
+        connect: {
+          id: githubMentionId,
+        },
+      },
+    };
+    const claim = await prisma.claim.create({ data });
+    logger.debug(`Creating claim with id: ${claim.id}`);
+
+    return claim;
+  };
 }
 
 export class UserFactory {
