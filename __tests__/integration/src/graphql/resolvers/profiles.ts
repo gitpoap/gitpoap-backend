@@ -50,6 +50,13 @@ describe('CustomProfileResolver', () => {
     async () => {
       const address = ADDRESSES.jay.substr(0, 5) + 'c' + ADDRESSES.jay.substr(6);
 
+      // Ensure the record doesn't already exist
+      const startingRecord = await context.prisma.profile.findUnique({
+        where: { oldAddress: address },
+      });
+
+      expect(startingRecord).toEqual(null);
+
       const data = await client.request(gql`
       {
         profileData(address: "${address}") {
@@ -68,6 +75,13 @@ describe('CustomProfileResolver', () => {
       expect(data.profileData.name).toEqual(null);
       expect(data.profileData.githubHandle).toEqual(null);
       expect(data.profileData.isVisibleOnLeaderboard).toEqual(true);
+
+      // Ensure that the record has been upserted
+      const endingRecord = await context.prisma.profile.findUnique({
+        where: { oldAddress: address },
+      });
+
+      expect(endingRecord).not.toEqual(null);
     },
     10 * MILLISECONDS_PER_SECOND,
   );
