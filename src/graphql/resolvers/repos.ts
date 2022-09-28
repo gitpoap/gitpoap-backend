@@ -1,14 +1,14 @@
 import { Arg, Ctx, Field, ObjectType, Resolver, Query } from 'type-graphql';
-import { ClaimStatus, Repo, RepoOrderByWithRelationInput } from '@generated/type-graphql';
+import { Repo as RepoValue, RepoOrderByWithRelationInput } from '@generated/type-graphql';
 import { getLastMonthStartDatetime, getXDaysAgoStartDatetime } from './util';
 import { Context } from '../../context';
 import { createScopedLogger } from '../../logging';
 import { gqlRequestDurationSeconds } from '../../metrics';
 import { getGithubRepositoryStarCount } from '../../external/github';
-import { Prisma } from '@prisma/client';
+import { ClaimStatus, Prisma, Repo } from '@prisma/client';
 
 @ObjectType()
-export class RepoReturnData extends Repo {
+export class RepoReturnData extends RepoValue {
   @Field()
   contributorCount: number;
   @Field()
@@ -17,7 +17,7 @@ export class RepoReturnData extends Repo {
   mintedGitPOAPCount: number;
 }
 
-@Resolver(of => Repo)
+@Resolver(of => RepoValue)
 export class CustomRepoResolver {
   @Query(returns => RepoReturnData, { nullable: true })
   async repoData(
@@ -174,11 +174,11 @@ export class CustomRepoResolver {
     return result._count.id;
   }
 
-  @Query(returns => [Repo])
+  @Query(returns => [RepoValue])
   async recentlyAddedRepos(
     @Ctx() { prisma }: Context,
     @Arg('count', { defaultValue: 10 }) count: number,
-  ): Promise<Repo[]> {
+  ): Promise<RepoValue[]> {
     const logger = createScopedLogger('GQL recentlyAddedRepos');
 
     logger.info(`Request for the ${count} most recently added repos`);
@@ -202,13 +202,13 @@ export class CustomRepoResolver {
     return results;
   }
 
-  @Query(returns => [Repo], { nullable: true })
+  @Query(returns => [RepoValue], { nullable: true })
   async allRepos(
     @Ctx() { prisma }: Context,
     @Arg('sort', { defaultValue: 'alphabetical' }) sort: string,
     @Arg('perPage', { defaultValue: null }) perPage?: number,
     @Arg('page', { defaultValue: null }) page?: number,
-  ): Promise<Repo[] | null> {
+  ): Promise<RepoValue[] | null> {
     const logger = createScopedLogger('GQL allRepos');
 
     logger.info(
@@ -250,7 +250,7 @@ export class CustomRepoResolver {
       return null;
     }
 
-    let results: Repo[];
+    let results: RepoValue[];
     if (sort !== 'gitpoap-count') {
       results = await prisma.repo.findMany({
         orderBy,
@@ -261,7 +261,7 @@ export class CustomRepoResolver {
       // Unfortunately prisma doesn't allow us to sort on relations two levels down
       const skip = page ? Prisma.sql`OFFSET ${(page - 1) * <number>perPage}` : Prisma.empty;
       const take = perPage ? Prisma.sql`LIMIT ${perPage}` : Prisma.empty;
-      results = await prisma.$queryRaw<Repo[]>`
+      results = await prisma.$queryRaw<RepoValue[]>`
         SELECT r.* FROM "Repo" AS r
         INNER JOIN "Project" AS p ON p.id = r."projectId"
         INNER JOIN "GitPOAP" AS g ON g."projectId" = p.id
@@ -294,24 +294,85 @@ export class CustomRepoResolver {
 
     const endTimer = gqlRequestDurationSeconds.startTimer('trendingRepos');
 
-    const results = await prisma.$queryRaw<RepoReturnData[]>`
-      SELECT r.*, 
-          COUNT(DISTINCT c."userId")::INTEGER AS "contributorCount",
-          COUNT(DISTINCT g.id)::INTEGER AS "gitPOAPCount",
-          COUNT(c.id)::INTEGER AS "mintedGitPOAPCount"
-        FROM "Repo" as r
-        INNER JOIN "Project" AS p ON r."projectId" = p.id
-        INNER JOIN "GitPOAP" AS g ON g."projectId" = p.id
-        LEFT JOIN "Claim" AS c ON c."gitPOAPId" = g.id 
-          AND c."status" = 'CLAIMED' 
-          AND c."mintedAt" >= ${getXDaysAgoStartDatetime(numDays)}
-        GROUP BY r.id
-        ORDER BY "mintedGitPOAPCount" DESC
-        LIMIT ${count}
+    type BasedResult = Repo & {
+      claimId: number;
+      userId: number;
+    };
+
+    // Common query to select all valid claims
+    const claimsSelect = Prisma.sql`
+      SELECT r.*, c.id AS "claimId", c."userId"
+      FROM "Repo" as r
+      INNER JOIN "Project" AS p ON r."projectId" = p.id
+      INNER JOIN "GitPOAP" AS g ON g."projectId" = p.id
+      INNER JOIN "Claim" AS c ON c."gitPOAPId" = g.id
+        AND c."status" = ${ClaimStatus.CLAIMED}::"ClaimStatus"
+        AND c."mintedAt" >= ${getXDaysAgoStartDatetime(numDays)}
     `;
+
+    const prBasedResults = await prisma.$queryRaw<BasedResult[]>`
+      ${claimsSelect}
+      INNER JOIN "GithubPullRequest" AS gpr ON gpr.id = c."pullRequestEarnedId"
+    `;
+    // Pre-fetch this
+    const mentionBasedResultsPromise = prisma.$queryRaw<BasedResult[]>`
+      ${claimsSelect}
+      INNER JOIN "GithubMention" AS gm ON gm.id = c."mentionEarnedId"
+    `;
+
+    type ResultsMapValue = Repo & {
+      mintedGitPOAPCount: number; // The claimIds must be distinct so we can simply count
+      userIds: Set<number>;
+      gitPOAPCount: number;
+    };
+
+    let resultsMap: Record<string, ResultsMapValue> = {};
+
+    const handleRow = async (result: BasedResult) => {
+      const key = result.id.toString();
+
+      if (key in resultsMap) {
+        resultsMap[key].mintedGitPOAPCount++;
+        resultsMap[key].userIds.add(result.userId);
+      } else {
+        resultsMap[key] = {
+          ...result,
+          mintedGitPOAPCount: 1,
+          userIds: new Set<number>([result.userId]),
+          gitPOAPCount: await prisma.gitPOAP.count({
+            where: {
+              project: {
+                repos: {
+                  some: {
+                    id: result.id,
+                  },
+                },
+              },
+            },
+          }),
+        };
+      }
+    };
+
+    prBasedResults.forEach(handleRow);
+    (await mentionBasedResultsPromise).forEach(handleRow);
+
+    const results: RepoReturnData[] = Object.values(resultsMap).map((value: ResultsMapValue) => ({
+      ...value,
+      contributorCount: value.userIds.size,
+    }));
+
+    results.sort((left, right) => {
+      if (left.mintedGitPOAPCount > right.mintedGitPOAPCount) {
+        return -1;
+      } else if (left.mintedGitPOAPCount < right.mintedGitPOAPCount) {
+        return 1;
+      }
+      return 0;
+    });
 
     endTimer({ success: 1 });
 
-    return results;
+    return results.slice(0, count);
   }
 }
