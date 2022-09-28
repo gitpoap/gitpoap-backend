@@ -1,15 +1,12 @@
 import { Arg, Ctx, Field, ObjectType, Resolver, Query } from 'type-graphql';
 import { ClaimStatus, FeaturedPOAP, Profile } from '@generated/type-graphql';
 import { Context } from '../../context';
-import {
-  resolveAddress,
-  resolveAddressCached,
-  resolveENS,
-  resolveENSAvatarCached,
-} from '../../lib/ens';
+import { resolveAddressInternal } from '../../external/ens';
+import { resolveAddress, resolveENS, resolveENSAvatar } from '../../lib/ens';
 import { createScopedLogger } from '../../logging';
 import { gqlRequestDurationSeconds } from '../../metrics';
 import { getLastMonthStartDatetime } from './util';
+import { upsertProfile } from '../../lib/profiles';
 
 @ObjectType()
 class NullableProfile {
@@ -133,7 +130,7 @@ export class CustomProfileResolver {
       return null;
     }
 
-    const result = await prisma.profile.findUnique({
+    let result = await prisma.profile.findUnique({
       where: {
         oldAddress: resolvedAddress.toLowerCase(),
       },
@@ -143,33 +140,21 @@ export class CustomProfileResolver {
     });
 
     if (result === null) {
-      logger.debug(`Profile for ${addressOrEns} not created yet, returning blank profile.`);
-      endTimer({ success: 1 });
+      logger.debug(`Profile for ${addressOrEns} not created yet, creating a new profile.`);
 
       const ensName = addressOrEns.endsWith('.eth')
         ? addressOrEns
-        : await resolveAddressCached(resolvedAddress);
+        : await resolveAddressInternal(resolvedAddress);
 
-      const ensAvatarImageUrl =
-        ensName !== null && ensName.endsWith('.eth') ? await resolveENSAvatarCached(ensName) : null;
-
-      return {
-        id: null,
-        address: resolvedAddress,
-        ensName,
-        createdAt: null,
-        updatedAt: null,
-        bio: null,
-        bannerImageUrl: null,
-        name: null,
-        profileImageUrl: null,
-        githubHandle: null,
-        twitterHandle: null,
-        personalSiteUrl: null,
-        isVisibleOnLeaderboard: true,
-        ensAvatarImageUrl,
+      result = {
+        ...(await upsertProfile(resolvedAddress, ensName)),
         featuredPOAPs: [],
       };
+
+      if (ensName !== null) {
+        // Resolve avatar in background
+        resolveENSAvatar(ensName, resolvedAddress);
+      }
     }
 
     const resultWithEns: NullableProfile = {
