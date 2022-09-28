@@ -21,6 +21,7 @@ export async function upsertGithubIssue(
       },
     },
     update: {
+      githubTitle,
       githubClosedAt,
     },
     create: {

@@ -81,7 +81,7 @@ export async function upsertGithubPullRequest(
   githubPullNumber: number,
   githubTitle: string,
   githubMergedAt: Date | null,
-  githubMergeCommitSha: string,
+  githubMergeCommitSha: string | null,
   userId: number,
 ): Promise<GithubPullRequest> {
   const logger = createScopedLogger('upsertGithubPullRequest');
@@ -96,8 +96,8 @@ export async function upsertGithubPullRequest(
       },
     },
     update: {
-      githubMergedAt,
       githubTitle,
+      githubMergedAt,
       githubMergeCommitSha,
     },
     create: {
@@ -152,7 +152,7 @@ async function backloadGithubPullRequest(
     pr.number,
     pr.title,
     mergedAt,
-    extractMergeCommitSha(pr),
+    extractMergeCommitSha(pr), // This must be final since it's been merged
     user.id,
   );
 

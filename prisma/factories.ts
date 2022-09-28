@@ -5,6 +5,9 @@ import {
   Email,
   FeaturedPOAP,
   GitPOAP,
+  GithubIssue,
+  GithubMention,
+  GithubPullRequest,
   Organization,
   Prisma,
   Profile,
@@ -50,7 +53,6 @@ export class ClaimFactory {
       poapTokenId,
       mintedAt,
     };
-
     const claim = await prisma.claim.create({ data });
     logger.debug(`Creating claim with id: ${claim.id}`);
 
@@ -293,5 +295,129 @@ export class EmailFactory {
     logger.debug(`Creating email with id: ${emailObj.id}`);
 
     return emailObj;
+  };
+}
+
+export class GithubPullRequestFactory {
+  static create = async (
+    githubPullNumber: number,
+    githubTitle: string,
+    githubMergedAt: Date | null,
+    githubMergeCommitSha: string | null,
+    repoId: number,
+    userId: number,
+  ): Promise<GithubPullRequest> => {
+    const data: Prisma.GithubPullRequestCreateInput = {
+      githubPullNumber,
+      githubTitle,
+      githubMergedAt,
+      githubMergeCommitSha,
+      repo: {
+        connect: {
+          id: repoId,
+        },
+      },
+      user: {
+        connect: {
+          id: userId,
+        },
+      },
+    };
+    const githubPullRequest = await prisma.githubPullRequest.create({ data });
+    logger.debug(`Creating GithubPullRequest with ID: ${githubPullRequest.id}`);
+
+    return githubPullRequest;
+  };
+}
+
+export class GithubIssueFactory {
+  static create = async (
+    githubIssueNumber: number,
+    githubTitle: string,
+    githubClosedAt: Date | null,
+    repoId: number,
+    userId: number,
+  ): Promise<GithubIssue> => {
+    const data: Prisma.GithubIssueCreateInput = {
+      githubIssueNumber,
+      githubTitle,
+      githubClosedAt,
+      repo: {
+        connect: {
+          id: repoId,
+        },
+      },
+      user: {
+        connect: {
+          id: userId,
+        },
+      },
+    };
+    const githubIssue = await prisma.githubIssue.create({ data });
+    logger.debug(`Creating GithubIssue with ID: ${githubIssue.id}`);
+
+    return githubIssue;
+  };
+}
+
+export class GithubMentionFactory {
+  static createForPR = async (
+    githubMentionedAt: Date,
+    repoId: number,
+    userId: number,
+    pullRequestId: number,
+  ): Promise<GithubMention> => {
+    const data: Prisma.GithubMentionCreateInput = {
+      githubMentionedAt,
+      repo: {
+        connect: {
+          id: repoId,
+        },
+      },
+      user: {
+        connect: {
+          id: userId,
+        },
+      },
+      pullRequest: {
+        connect: {
+          id: pullRequestId,
+        },
+      },
+    };
+    const githubMention = await prisma.githubMention.create({ data });
+    logger.debug(`Creating GithubMention with ID: ${githubMention.id}`);
+
+    return githubMention;
+  };
+
+  static createForIssue = async (
+    githubMentionedAt: Date,
+    repoId: number,
+    userId: number,
+    issueId: number,
+  ): Promise<GithubMention> => {
+    const data: Prisma.GithubMentionCreateInput = {
+      githubMentionedAt,
+      repo: {
+        connect: {
+          id: repoId,
+        },
+      },
+      user: {
+        connect: {
+          id: userId,
+        },
+      },
+      issue: {
+        connect: {
+          id: issueId,
+        },
+      },
+    };
+    const githubMention = await prisma.githubMention.create({ data });
+    logger.debug(`Creating GithubMention with ID: ${githubMention.id}`);
+
+    return githubMention;
   };
 }
