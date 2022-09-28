@@ -58,12 +58,20 @@ export async function createClaimsForPR(
   // Ensure that we've created a user in our system for the claim
   const user = await upsertUser(userInfo.id, userInfo.login);
 
+  let mergedAt: Date | null = null;
+  let mergeCommitSha: string | null = null;
+  if (pull.merged_at !== null) {
+    mergedAt = new Date(pull.merged_at);
+    // We only set this if the merge commit is final
+    mergeCommitSha = extractMergeCommitSha(pull);
+  }
+
   const githubPullRequest = await upsertGithubPullRequest(
     repoData.id,
     pullRequestNumber,
     pull.title,
-    pull.merged_at === null ? null : new Date(pull.merged_at),
-    extractMergeCommitSha(pull),
+    mergedAt,
+    mergeCommitSha,
     user.id,
   );
 

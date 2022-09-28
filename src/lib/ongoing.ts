@@ -96,7 +96,7 @@ export async function handleNewPull(
     pull.number,
     pull.title,
     new Date(pull.merged_at),
-    extractMergeCommitSha(pull),
+    extractMergeCommitSha(pull), // This must be final since it's been merged
     user.id,
   );
 
