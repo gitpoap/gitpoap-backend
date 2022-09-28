@@ -16,6 +16,8 @@ import {
   RedeemCodeFactory,
   RepoFactory,
   UserFactory,
+  GithubPullRequestFactory,
+  GithubMentionFactory,
 } from './factories';
 import { DateTime } from 'luxon';
 import { ADDRESSES, GH_HANDLES, GH_IDS } from './constants';
@@ -135,6 +137,17 @@ export const seed = async () => {
   await RedeemCodeFactory.addRedeemCodes(['492wr5', 'zzxoaa', 'fnc0cn', 'hrir8p', 'v1258v', 'i7lt58', 'erxgdb', 'za5od3', 'v8a1wg', 'uazjii'], gitpoap10.id);
   await RedeemCodeFactory.addRedeemCodes(['hh3zf2', 'ivnnil', 'wylm9j', 'c8i5qj', '8inyd8', 'xyrepl', 'q4564p', 'aienlq', 'ohgtbi', 'qtr3ju'], gitpoap11.id);
 
+  /* Create GithubPullRequests */
+  const githubPullRequest1 = await GithubPullRequestFactory.create(23, 'PR23', DateTime.utc(2021, 1, 2).toJSDate(), 'sha23', gitpoapFeRepo.id, jay.id);
+  const githubPullRequest2 = await GithubPullRequestFactory.create(101, 'PR101', null, null, gitpoapBackendRepo.id, burz.id);
+  const githubPullRequest3 = await GithubPullRequestFactory.create(102, 'PR102', DateTime.utc(2022, 1, 3).toJSDate(), 'sha102', gitpoapBackendRepo.id, colfax.id);
+  const githubPullRequest4 = await GithubPullRequestFactory.create(145, 'PR145', null, null, gitpoapBackendRepo.id, burz.id);
+
+  /* Create GithubMentions */
+  const githubMention1 = await GithubMentionFactory.createForPR(DateTime.utc(2022, 1, 1).toJSDate(), gitpoapBackendRepo.id, burz.id, githubPullRequest2.id);
+  const githubMention2 = await GithubMentionFactory.createForPR(DateTime.utc(2022, 1, 2).toJSDate(), gitpoapBackendRepo.id, vitalik.id, githubPullRequest2.id);
+  const githubMention3 = await GithubMentionFactory.createForPR(DateTime.utc(2022, 6, 7).toJSDate(), gitpoapBackendRepo.id, burz.id, githubPullRequest4.id);
+
   /* Create Claims */
   // GitPOAP 1
   const claim1 = await ClaimFactory.create(gitpoap1.id, vitalik.id, ClaimStatus.CLAIMED, addressVitalik.id, 'thunderdome', DateTime.utc(2020, 1, 1).toJSDate());
@@ -156,15 +169,15 @@ export const seed = async () => {
   const claim11 = await ClaimFactory.create(gitpoap4.id, burz.id);
   const claim12 = await ClaimFactory.create(gitpoap4.id, colfax.id);
   const claim13 = await ClaimFactory.create(gitpoap4.id, vitalik.id);
-  const claim14 = await ClaimFactory.create(gitpoap4.id, jay.id, ClaimStatus.CLAIMED, addressJay.id, '3217451', DateTime.utc(2020, 1, 6).toJSDate());
+  const claim14 = await ClaimFactory.createForPR(gitpoap4.id, jay.id, githubPullRequest1.id, ClaimStatus.CLAIMED, addressJay.id, '3217451', DateTime.utc(2020, 1, 6).toJSDate());
   const claim15 = await ClaimFactory.create(gitpoap4.id, tyler.id);
 
   // GitPOAP 5 - GitPOAP BE Repo
-  const claim16 = await ClaimFactory.create(gitpoap5.id, burz.id, ClaimStatus.CLAIMED, addressBurz.id, '3973554', DateTime.utc(2020, 1, 7).toJSDate());
-  const claim17 = await ClaimFactory.create(gitpoap5.id, colfax.id, ClaimStatus.CLAIMED, addressColfax.id, '4126448', DateTime.utc(2020, 1, 8).toJSDate());
+  const claim16 = await ClaimFactory.createForMention(gitpoap5.id, burz.id, githubMention1.id, ClaimStatus.CLAIMED, addressBurz.id, '3973554', DateTime.utc(2020, 1, 7).toJSDate());
+  const claim17 = await ClaimFactory.createForPR(gitpoap5.id, colfax.id, githubPullRequest3.id, ClaimStatus.CLAIMED, addressColfax.id, '4126448', DateTime.utc(2020, 1, 8).toJSDate());
   const claim18 = await ClaimFactory.create(gitpoap5.id, jay.id);
   const claim19 = await ClaimFactory.create(gitpoap5.id, tyler.id);
-  const claim20 = await ClaimFactory.create(gitpoap5.id, vitalik.id);
+  const claim20 = await ClaimFactory.createForMention(gitpoap5.id, vitalik.id, githubMention2.id);
   const claim21 = await ClaimFactory.create(gitpoap5.id, burz2.id, ClaimStatus.CLAIMED, addressBurz2.id, '123456789', DateTime.utc(2020, 1, 9).toJSDate());
 
   // GitPOAPs 7 - GitPOAP BugBash Repos
@@ -181,7 +194,7 @@ export const seed = async () => {
 
   // GitPOAPs 9 - GitPOAP BugBash Repos
   const claim30 = await ClaimFactory.create(gitpoap9.id, jay.id);
-  const claim31 = await ClaimFactory.create(gitpoap9.id, burz.id, ClaimStatus.CLAIMED, addressBurz.id, '1234567891', DateTime.utc(2020, 1, 9).toJSDate());
+  const claim31 = await ClaimFactory.createForMention(gitpoap9.id, burz.id, githubMention3.id, ClaimStatus.CLAIMED, addressBurz.id, '1234567891', DateTime.utc(2020, 1, 9).toJSDate());
   const claim32 = await ClaimFactory.create(gitpoap9.id, colfax.id, ClaimStatus.CLAIMED, addressColfax.id, '1234567892', DateTime.utc(2020, 1, 9).toJSDate());
   const claim33 = await ClaimFactory.create(gitpoap9.id, aldo.id);
 
