@@ -21,16 +21,19 @@ const DEFAULT_SVG_IMAGE_SIZE = 500;
 async function upsertENSNameInDB(address: string, ensName: string | null) {
   const addressLower = address.toLowerCase();
 
+  const addressRecord = await context.prisma.address.upsert({
+    where: { ethAddress: addressLower },
+    update: { ensName },
+    create: { ethAddress: addressLower, ensName },
+  });
+
   await context.prisma.profile.upsert({
     where: {
-      oldAddress: addressLower,
+      addressId: addressRecord.id,
     },
-    update: {
-      oldEnsName: ensName,
-    },
+    update: {},
     create: {
-      oldAddress: addressLower,
-      oldEnsName: ensName,
+      addressId: addressRecord.id,
     },
   });
 }
@@ -38,16 +41,19 @@ async function upsertENSNameInDB(address: string, ensName: string | null) {
 async function upsertENSAvatarInDB(address: string, avatarURL: string | null) {
   const addressLower = address.toLowerCase();
 
+  const addressRecord = await context.prisma.address.upsert({
+    where: { ethAddress: addressLower },
+    update: { ensAvatarImageUrl: avatarURL },
+    create: { ethAddress: addressLower, ensAvatarImageUrl: avatarURL },
+  });
+
   await context.prisma.profile.upsert({
     where: {
-      oldAddress: addressLower,
+      addressId: addressRecord.id,
     },
-    update: {
-      oldEnsAvatarImageUrl: avatarURL,
-    },
+    update: {},
     create: {
-      oldAddress: addressLower,
-      oldEnsAvatarImageUrl: avatarURL,
+      addressId: addressRecord.id,
     },
   });
 }
@@ -74,7 +80,7 @@ async function updateENSName(address: string) {
 
   await updateENSNameLastChecked(addressLower);
 
-  let ensName = await resolveAddressInternal(address);
+  const ensName = await resolveAddressInternal(address);
 
   if (ensName !== null) {
     logger.info(`Stored ENS name ${ensName} for ${address}`);
@@ -179,25 +185,25 @@ export async function resolveAddress(
   forceAvatarCheck: boolean = false,
   synchronous: boolean = false,
 ): Promise<string | null> {
-  const result = await context.prisma.profile.findUnique({
+  const result = await context.prisma.address.findUnique({
     where: {
-      oldAddress: address.toLowerCase(),
+      ethAddress: address.toLowerCase(),
     },
     select: {
-      oldEnsName: true,
+      ensName: true,
     },
   });
 
   const namePromise = updateENSName(address);
 
-  if (result !== null && result.oldEnsName !== null) {
-    const avatarPromise = resolveENSAvatar(result.oldEnsName, address, forceAvatarCheck);
+  if (result !== null && result.ensName !== null) {
+    const avatarPromise = resolveENSAvatar(result.ensName, address, forceAvatarCheck);
 
     if (synchronous) {
       await Promise.all([namePromise, avatarPromise]);
     }
 
-    return result.oldEnsName;
+    return result.ensName;
   } else if (synchronous) {
     await namePromise;
   }

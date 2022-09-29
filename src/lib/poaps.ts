@@ -57,6 +57,7 @@ async function handlePotentialTransferIn(
       poapTokenId: poapTokenId,
     },
     include: {
+      mintedAddress: true,
       user: true,
       gitPOAP: {
         include: {
@@ -71,7 +72,7 @@ async function handlePotentialTransferIn(
   });
 
   if (claimData !== null) {
-    const address = claimData.oldMintedAddress;
+    const address = claimData.mintedAddress?.ethAddress ?? null;
 
     if (address === null) {
       logger.error(`Claim ID ${claimData.id} has poapTokenId set but address is null`);
@@ -112,7 +113,9 @@ async function handleTransferPostProcessing(
   const featuredData = await context.prisma.featuredPOAP.findMany({
     where: {
       profile: {
-        oldAddress: ownerAddress.toLowerCase(),
+        address: {
+          ethAddress: ownerAddress.toLowerCase(),
+        },
       },
     },
     select: {
@@ -155,10 +158,13 @@ export async function splitUsersPOAPs(address: string): Promise<SplitUsersPOAPsR
 
   const claims = await context.prisma.claim.findMany({
     where: {
-      oldMintedAddress: addressLower,
+      mintedAddress: {
+        ethAddress: addressLower,
+      },
       status: { in: [ClaimStatus.CLAIMED, ClaimStatus.MINTING] },
     },
     include: {
+      mintedAddress: true,
       user: true,
       gitPOAP: {
         include: {
