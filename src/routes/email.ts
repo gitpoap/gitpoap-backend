@@ -36,12 +36,10 @@ const sendVerificationEmail = async (email: string, activeToken: string) => {
     TemplateModel: {
       product_url: 'gitpoap.io',
       product_name: 'GitPOAP',
+      token: activeToken,
       support_email: 'team@gitpoap.io',
       company_name: 'MetaRep Labs Inc',
       company_address: 'One Broadway, Cambridge MA 02142',
-      sender_name: 'GitPOAP Team',
-      help_url: 'https://docs.gitpoap.io',
-      activeToken: activeToken,
     },
   });
 };
