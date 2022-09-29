@@ -19,18 +19,22 @@ async function heatUpENSCache() {
       where: {
         OR: [
           {
-            oldEnsName: null,
+            address: {
+              ensName: null,
+            },
           },
           {
-            oldEnsAvatarImageUrl: null,
+            address: {
+              ensAvatarImageUrl: null,
+            },
           },
         ],
       },
       select: {
-        oldAddress: true,
+        address: true,
       },
     })
-  ).map(p => p.oldAddress);
+  ).map(p => p.address.ethAddress);
 
   logger.info(`Checking ${addresses.length} addresses for ENS names/avatars`);
 
@@ -41,7 +45,9 @@ async function heatUpENSCache() {
     // profiles with less than 1 claim
     const claimsCount = await context.prisma.claim.count({
       where: {
-        oldMintedAddress: address,
+        mintedAddress: {
+          ethAddress: address,
+        },
         status: ClaimStatus.CLAIMED,
       },
     });
@@ -73,15 +79,19 @@ async function heatUpENSCache() {
   const [nameCount, avatarCount] = await Promise.all([
     context.prisma.profile.count({
       where: {
-        NOT: {
-          oldEnsName: null,
+        address: {
+          NOT: {
+            ensName: null,
+          },
         },
       },
     }),
     context.prisma.profile.count({
       where: {
-        NOT: {
-          oldEnsAvatarImageUrl: null,
+        address: {
+          NOT: {
+            ensAvatarImageUrl: null,
+          },
         },
       },
     }),
