@@ -50,9 +50,11 @@ export class CustomSearchResolver {
       where: {
         OR: [
           {
-            oldEnsName: {
-              contains: matchText,
-              mode: 'insensitive',
+            address: {
+              ensName: {
+                contains: matchText,
+                mode: 'insensitive',
+              },
             },
           },
           {
@@ -62,9 +64,11 @@ export class CustomSearchResolver {
             },
           },
           {
-            oldAddress: {
-              contains: matchText,
-              mode: 'insensitive',
+            address: {
+              ethAddress: {
+                contains: matchText,
+                mode: 'insensitive',
+              },
             },
           },
         ],
@@ -80,9 +84,11 @@ export class CustomSearchResolver {
 
       // If we just found a resolution, return the profile
       if (address !== null) {
-        const profile = await context.prisma.profile.findUnique({
+        const profile = await context.prisma.profile.findFirst({
           where: {
-            oldAddress: address.toLowerCase(),
+            address: {
+              ethAddress: address.toLowerCase(),
+            },
           },
         });
 

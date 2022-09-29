@@ -6,6 +6,7 @@ import { isSignatureValid } from '../signatures';
 import { retrievePOAPTokenInfo } from '../external/poap';
 import { createScopedLogger } from '../logging';
 import { httpRequestDurationSeconds } from '../metrics';
+import { getProfileByAddress, upsertProfile } from '../lib/profiles';
 
 export const featuredRouter = Router();
 
@@ -45,16 +46,7 @@ featuredRouter.put('/', async function (req, res) {
     return res.status(401).send({ msg: 'The signature is not valid for this address and data' });
   }
 
-  // Get the profile and create one if it doesn't exist
-  const profile = await context.prisma.profile.upsert({
-    where: {
-      oldAddress: resolvedAddress.toLowerCase(),
-    },
-    update: {},
-    create: {
-      oldAddress: resolvedAddress.toLowerCase(),
-    },
-  });
+  const profile = await upsertProfile(resolvedAddress);
 
   const poapData = await retrievePOAPTokenInfo(req.body.poapTokenId);
   if (poapData === null) {
@@ -145,11 +137,8 @@ featuredRouter.delete('/:id', async function (req, res) {
     return res.status(401).send({ msg: 'The signature is not valid for this address and data' });
   }
 
-  const profile = await context.prisma.profile.findUnique({
-    where: {
-      oldAddress: resolvedAddress.toLowerCase(),
-    },
-  });
+  const profile = await getProfileByAddress(resolvedAddress);
+
   if (profile === null) {
     logger.warn(`No profile for address: ${req.body.address}`);
     endTimer({ status: 404 });

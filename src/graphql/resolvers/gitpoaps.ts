@@ -137,9 +137,11 @@ export async function addPRCountData(
     return results;
   }
 
-  const profile = await context.prisma.profile.findUnique({
+  const profile = await context.prisma.profile.findFirst({
     where: {
-      oldAddress: userGitPOAPData[0].claim.oldMintedAddress ?? undefined,
+      address: {
+        ethAddress: userGitPOAPData[0].claim.mintedAddress?.ethAddress,
+      },
     },
   });
 
@@ -552,9 +554,11 @@ export class CustomGitPOAPResolver {
       poaps: [],
     };
 
-    const profile = await prisma.profile.findUnique({
+    const profile = await prisma.profile.findFirst({
       where: {
-        oldAddress: resolvedAddress.toLowerCase(),
+        address: {
+          ethAddress: resolvedAddress.toLowerCase(),
+        },
       },
       select: {
         id: true,
@@ -633,7 +637,7 @@ export class CustomGitPOAPResolver {
     const claimStatusSelect = Prisma.sql`
       SELECT COUNT(c2.id)::INTEGER FROM "Claim" AS c2
       INNER JOIN "GitPOAP" AS g ON g.id = c2."gitPOAPId"
-      WHERE p."oldAddress" = c2."oldMintedAddress"
+      WHERE p."addressId" = c2."mintedAddressId"
         AND c2.status IN (
           ${ClaimStatus.MINTING}::"ClaimStatus",
           ${ClaimStatus.CLAIMED}::"ClaimStatus"
@@ -647,7 +651,7 @@ export class CustomGitPOAPResolver {
           results = await prisma.$queryRaw`
             SELECT p.*, u."githubHandle", (${claimStatusSelect}) AS "claimsCount"
             FROM "Claim" AS c
-            INNER JOIN "Profile" AS p ON c."oldMintedAddress" = p."oldAddress"
+            INNER JOIN "Profile" AS p ON c."mintedAddressId" = p."addressId"
             INNER JOIN "User" AS u ON u.id = c."userId"
             WHERE c."gitPOAPId" = ${gitPOAPId} AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
             ORDER BY c."updatedAt" DESC
@@ -657,7 +661,7 @@ export class CustomGitPOAPResolver {
           results = await prisma.$queryRaw`
             SELECT p.*, u."githubHandle", (${claimStatusSelect}) AS "claimsCount"
             FROM "Claim" AS c
-            JOIN "Profile" AS p ON c."oldMintedAddress" = p."oldAddress"
+            JOIN "Profile" AS p ON c."mintedAddressId" = p."addressId"
             JOIN "User" AS u ON u.id = c."userId"
             WHERE c."gitPOAPId" = ${gitPOAPId} AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
             ORDER BY c."updatedAt" DESC
@@ -669,7 +673,7 @@ export class CustomGitPOAPResolver {
           results = await prisma.$queryRaw`
             SELECT p.*, u."githubHandle", (${claimStatusSelect}) AS "claimsCount"
             FROM "Claim" AS c
-            JOIN "Profile" AS p ON c."oldMintedAddress" = p."oldAddress"
+            JOIN "Profile" AS p ON c."mintedAddressId" = p."addressId"
             JOIN "User" AS u ON u.id = c."userId"
             WHERE c."gitPOAPId" = ${gitPOAPId} AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
             ORDER BY "claimsCount" DESC
@@ -679,7 +683,7 @@ export class CustomGitPOAPResolver {
           results = await prisma.$queryRaw`
             SELECT p.*, u."githubHandle", (${claimStatusSelect}) AS "claimsCount"
             FROM "Claim" AS c
-            JOIN "Profile" AS p ON c."oldMintedAddress" = p."oldAddress"
+            JOIN "Profile" AS p ON c."mintedAddressId" = p."addressId"
             JOIN "User" AS u ON u.id = c."userId"
             WHERE c."gitPOAPId" = ${gitPOAPId} AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
             ORDER BY "claimsCount" DESC
@@ -702,18 +706,20 @@ export class CustomGitPOAPResolver {
     const holders = {
       totalHolders: totalHolders,
       holders: results.map(r => {
-        return <Holder>{
+        const holder: Holder = {
           profileId: r.id,
-          address: r.oldAddress,
-          bio: r.bio,
-          profileImageUrl: r.profileImageUrl,
-          twitterHandle: r.twitterHandle,
-          personalSiteUrl: r.personalSiteUrl,
+          address: r.address?.ethAddress ?? '',
+          bio: r.bio ?? null,
+          profileImageUrl: r.profileImageUrl ?? null,
+          twitterHandle: r.twitterHandle ?? null,
+          personalSiteUrl: r.personalSiteUrl ?? null,
           githubHandle: r.githubHandle,
           gitPOAPCount: r.claimsCount,
-          ensName: r.oldEnsName,
-          ensAvatarImageUrl: r.oldEnsAvatarImageUrl,
+          ensName: r.address?.ensName ?? null,
+          ensAvatarImageUrl: r.address?.ensAvatarImageUrl ?? null,
         };
+
+        return holder;
       }),
     };
 
