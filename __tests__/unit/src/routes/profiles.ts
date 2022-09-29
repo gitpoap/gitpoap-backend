@@ -16,6 +16,17 @@ const fakeSignature = {
   createdAt: 1647987506199,
 };
 
+const mockAddressRecord = {
+  id: 0,
+  ethAddress: goodAddress,
+  ensName: null,
+  ensAvatarImageUrl: null,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  githubUserId: null,
+  emailId: null,
+};
+
 describe('POST /profiles', () => {
   it('Fails on bad fields in request', async () => {
     const result = await request(await setupApp())
@@ -78,13 +89,13 @@ describe('POST /profiles', () => {
   });
 
   const validateUpsert = (data: Record<string, any>) => {
-    const address = goodAddress.toLowerCase();
-
     expect(contextMock.prisma.profile.upsert).toHaveBeenCalledWith({
-      where: { oldAddress: address },
+      where: { addressId: mockAddressRecord.id },
       update: data,
       create: {
-        oldAddress: address,
+        address: {
+          connect: { id: mockAddressRecord.id },
+        },
         ...data,
       },
     });
@@ -93,6 +104,7 @@ describe('POST /profiles', () => {
   it('Allows missing data fields', async () => {
     mockedIsSignatureValid.mockReturnValue(true);
     mockedResolveENS.mockResolvedValue(goodAddress);
+    contextMock.prisma.address.upsert.mockResolvedValue(mockAddressRecord);
 
     const data = {};
 
@@ -114,6 +126,7 @@ describe('POST /profiles', () => {
   it('Allows setting of all fields', async () => {
     mockedIsSignatureValid.mockReturnValue(true);
     mockedResolveENS.mockResolvedValue(goodAddress);
+    contextMock.prisma.address.upsert.mockResolvedValue(mockAddressRecord);
 
     const data = {
       bio: 'foo',
@@ -144,6 +157,7 @@ describe('POST /profiles', () => {
   it('Allows nullification of most fields', async () => {
     mockedIsSignatureValid.mockReturnValue(true);
     mockedResolveENS.mockResolvedValue(goodAddress);
+    contextMock.prisma.address.upsert.mockResolvedValue(mockAddressRecord);
 
     const data = {
       bio: null,
@@ -173,8 +187,9 @@ describe('POST /profiles', () => {
   it('Allows toggling of leaderboard visibility', async () => {
     mockedIsSignatureValid.mockReturnValue(true);
     mockedResolveENS.mockResolvedValue(goodAddress);
+    contextMock.prisma.address.upsert.mockResolvedValue(mockAddressRecord);
 
-    let data = {
+    const data = {
       isVisibleOnLeaderboard: false,
     };
 
