@@ -4,7 +4,6 @@
  */
 
 import 'reflect-metadata';
-import { PrismaClient } from '@prisma/client';
 import { ClaimStatus, GitPOAPStatus } from '@generated/type-graphql';
 import {
   AddressFactory,
@@ -41,7 +40,7 @@ import {
   event37430,
 } from './data';
 
-export const seed = async (prisma: PrismaClient) => {
+export const seed = async () => {
   console.log('Starting DB seeding...');
 
   /* Create Users */
