@@ -1,19 +1,41 @@
 import { context } from '../context';
-import { Profile } from '@prisma/client';
 
-export async function upsertProfile(address: string, oldEnsName?: string | null): Promise<Profile> {
+export async function upsertProfile(address: string, ensName?: string | null) {
   const addressLower = address.toLowerCase();
 
-  return await context.prisma.profile.upsert({
+  // Get the address record OR create one if it doesn't exist
+  const addressResult = await context.prisma.address.upsert({
+    where: { ethAddress: addressLower },
+    update: { ensName },
+    create: { ethAddress: addressLower, ensName },
+  });
+
+  // Get the profile OR create one if it doesn't exist
+  const profile = await context.prisma.profile.upsert({
     where: {
-      oldAddress: addressLower,
+      addressId: addressResult.id,
     },
-    update: {
-      oldEnsName,
-    },
+    update: {},
     create: {
-      oldAddress: addressLower,
-      oldEnsName,
+      address: {
+        connect: {
+          id: addressResult.id,
+        },
+      },
+    },
+    include: {
+      address: true,
     },
   });
+
+  return profile;
 }
+
+export const getProfileByAddress = async (addressToFind: string) =>
+  await context.prisma.profile.findFirst({
+    where: {
+      address: {
+        ethAddress: addressToFind.toLowerCase(),
+      },
+    },
+  });

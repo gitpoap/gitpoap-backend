@@ -7,7 +7,7 @@ import {
 } from '../schemas/claims';
 import { Router, Request } from 'express';
 import { context } from '../context';
-import { ClaimStatus, GitPOAP, GitPOAPStatus, User } from '@prisma/client';
+import { ClaimStatus, GitPOAP, GitPOAPStatus } from '@prisma/client';
 import { resolveENS } from '../lib/ens';
 import { isSignatureValid } from '../signatures';
 import { jwtWithOAuth, jwtWithAdminOAuth, gitpoapBotAuth } from '../middleware';
@@ -17,15 +17,14 @@ import { getGithubUserById } from '../external/github';
 import { createScopedLogger } from '../logging';
 import { MINIMUM_REMAINING_REDEEM_CODES, REDEEM_CODE_STEP_SIZE } from '../constants';
 import { httpRequestDurationSeconds } from '../metrics';
-import { DateTime } from 'luxon';
 import { sleep } from '../lib/sleep';
 import { backloadGithubPullRequestData } from '../lib/pullRequests';
 import { upsertUser } from '../lib/users';
 import {
   ClaimData,
-  RepoData,
   retrieveClaimsCreatedByMention,
   retrieveClaimsCreatedByPR,
+  updateClaimStatusById,
 } from '../lib/claims';
 import { checkIfClaimTransferred } from '../lib/transfers';
 import { upsertProfile } from '../lib/profiles';
@@ -260,16 +259,7 @@ claimsRouter.post('/', jwtWithOAuth(), async function (req, res) {
       logger.error(`Tried to delete a RedeemCode that was already deleted: ${err}`);
     }
 
-    // Mark that we are processing the claim
-    await context.prisma.claim.update({
-      where: {
-        id: claimId,
-      },
-      data: {
-        status: ClaimStatus.PENDING,
-        oldMintedAddress: resolvedAddress.toLowerCase(),
-      },
-    });
+    await updateClaimStatusById(claimId, ClaimStatus.PENDING, resolvedAddress);
 
     const poapData = await redeemPOAP(req.body.address, redeemCode.code);
     // If minting the POAP failed we need to revert
@@ -291,15 +281,7 @@ claimsRouter.post('/', jwtWithOAuth(), async function (req, res) {
           code: redeemCode.code,
         },
       });
-      await context.prisma.claim.update({
-        where: {
-          id: claimId,
-        },
-        data: {
-          status: ClaimStatus.UNCLAIMED,
-          oldMintedAddress: null,
-        },
-      });
+      await updateClaimStatusById(claimId, ClaimStatus.UNCLAIMED, null);
 
       continue;
     }
@@ -650,7 +632,7 @@ claimsRouter.post('/revalidate', jwtWithOAuth(), async (req, res) => {
       },
       select: {
         status: true,
-        oldMintedAddress: true,
+        mintedAddress: true,
         user: {
           select: {
             githubId: true,
@@ -670,7 +652,7 @@ claimsRouter.post('/revalidate', jwtWithOAuth(), async (req, res) => {
     // If the claim address is not set to the user sending the request,
     // assume the user is correct and that perhaps we haven't seen the
     // transfer yet in our backend
-    if (claim.oldMintedAddress !== resolvedAddress.toLowerCase()) {
+    if (claim.mintedAddress?.ethAddress !== resolvedAddress.toLowerCase()) {
       const newAddress = await checkIfClaimTransferred(claimId);
 
       if (newAddress !== resolvedAddress.toLowerCase()) {

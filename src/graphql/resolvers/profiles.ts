@@ -76,9 +76,9 @@ export class CustomProfileResolver {
     const endTimer = gqlRequestDurationSeconds.startTimer('totalContributors');
 
     const result: { count: number }[] = await prisma.$queryRaw`
-      SELECT COUNT(DISTINCT c."oldMintedAddress")::INTEGER
+      SELECT COUNT(DISTINCT c."mintedAddressId")::INTEGER
       FROM "Claim" AS c
-      WHERE c."oldMintedAddress" IS NOT NULL
+      WHERE c."mintedAddressId" IS NOT NULL
         AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
     `;
 
@@ -98,9 +98,9 @@ export class CustomProfileResolver {
     const endTimer = gqlRequestDurationSeconds.startTimer('lastMonthContributors');
 
     const result: { count: number }[] = await prisma.$queryRaw`
-      SELECT COUNT(DISTINCT c."oldMintedAddress")::INTEGER
+      SELECT COUNT(DISTINCT c."mintedAddressId")::INTEGER
       FROM "Claim" AS c
-      WHERE c."oldMintedAddress" IS NOT NULL
+      WHERE c."mintedAddressId" IS NOT NULL
         AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
         AND c."mintedAt" > ${getLastMonthStartDatetime()}
     `;
@@ -130,12 +130,15 @@ export class CustomProfileResolver {
       return null;
     }
 
-    let result = await prisma.profile.findUnique({
+    let result = await prisma.profile.findFirst({
       where: {
-        oldAddress: resolvedAddress.toLowerCase(),
+        address: {
+          ethAddress: resolvedAddress.toLowerCase(),
+        },
       },
       include: {
         featuredPOAPs: true,
+        address: true,
       },
     });
 
@@ -146,8 +149,9 @@ export class CustomProfileResolver {
         ? addressOrEns
         : await resolveAddressInternal(resolvedAddress);
 
+      const newProfile = await upsertProfile(resolvedAddress, ensName);
       result = {
-        ...(await upsertProfile(resolvedAddress, ensName)),
+        ...newProfile,
         featuredPOAPs: [],
       };
 
@@ -159,9 +163,9 @@ export class CustomProfileResolver {
 
     const resultWithEns: NullableProfile = {
       ...result,
-      address: result.oldAddress,
-      ensName: result.oldEnsName,
-      ensAvatarImageUrl: result.oldEnsAvatarImageUrl,
+      address: result.address.ethAddress,
+      ensName: result.address.ensName,
+      ensAvatarImageUrl: result.address.ensAvatarImageUrl,
     };
 
     logger.debug(`Completed request for profile data for address: ${addressOrEns}`);
@@ -188,7 +192,7 @@ export class CustomProfileResolver {
     const results: ResultType[] = await prisma.$queryRaw`
       SELECT p.*, COUNT(c.id)::INTEGER AS "claimsCount"
       FROM "Profile" AS p
-      INNER JOIN "Claim" AS c ON c."oldMintedAddress" = p."oldAddress"
+      INNER JOIN "Claim" AS c ON c."mintedAddressId" = p."addressId"
         AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
       WHERE p."isVisibleOnLeaderboard" IS TRUE
       GROUP BY p.id
@@ -233,7 +237,7 @@ export class CustomProfileResolver {
     const results: ResultType[] = await prisma.$queryRaw`
       SELECT pf.*, COUNT(c.id)::INTEGER AS "claimsCount"
       FROM "Profile" AS pf
-      INNER JOIN "Claim" AS c ON c."oldMintedAddress" = pf."oldAddress"
+      INNER JOIN "Claim" AS c ON c."mintedAddressId" = pf."addressId"
         AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
       INNER JOIN "GitPOAP" AS gp ON gp.id = c."gitPOAPId"
       INNER JOIN "Project" AS pr ON pr.id = gp."projectId"

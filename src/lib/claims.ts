@@ -1,6 +1,7 @@
+import { ClaimStatus } from '@prisma/client';
+import { Claim } from '@generated/type-graphql';
 import { context } from '../context';
 import { createScopedLogger } from '../logging';
-import { Claim } from '@generated/type-graphql';
 import { RestrictedContribution, countContributionsForClaim } from './contributions';
 
 type GitPOAPs = {
@@ -77,6 +78,35 @@ export async function upsertClaim(
       },
       pullRequestEarned,
       mentionEarned,
+    },
+  });
+}
+
+export async function updateClaimStatusById(
+  claimId: number,
+  status: ClaimStatus,
+  mintedAddress: string | null,
+): Promise<Claim> {
+  const mintedAddressData = mintedAddress
+    ? {
+        connectOrCreate: {
+          where: {
+            ethAddress: mintedAddress?.toLowerCase(),
+          },
+          create: {
+            ethAddress: mintedAddress?.toLowerCase(),
+          },
+        },
+      }
+    : undefined;
+
+  return await context.prisma.claim.update({
+    where: {
+      id: claimId,
+    },
+    data: {
+      status,
+      mintedAddress: mintedAddressData,
     },
   });
 }
