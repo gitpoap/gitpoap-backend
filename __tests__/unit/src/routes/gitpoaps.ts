@@ -22,7 +22,8 @@ const gitPOAPId = 24;
 describe('PUT /gitpoaps/enable/:id', () => {
   it('Fails with no Access Token provided', async () => {
     const result = await request(await setupApp())
-      .put(`/gitpoaps/enable/${gitPOAPId}`).send();
+      .put(`/gitpoaps/enable/${gitPOAPId}`)
+      .send();
 
     expect(result.statusCode).toEqual(400);
   });
@@ -100,7 +101,8 @@ describe('PUT /gitpoaps/enable/:id', () => {
 describe('PUT /gitpoaps/deprecate/:id', () => {
   it('Fails with no Access Token provided', async () => {
     const result = await request(await setupApp())
-      .put(`/gitpoaps/deprecate/${gitPOAPId}`).send();
+      .put(`/gitpoaps/deprecate/${gitPOAPId}`)
+      .send();
 
     expect(result.statusCode).toEqual(400);
   });
