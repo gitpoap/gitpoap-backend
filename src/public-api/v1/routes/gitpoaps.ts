@@ -29,19 +29,19 @@ gitpoapsRouter.get('/:gitpoapId/addresses', async function (req, res) {
     return res.status(404).send({ message: msg });
   }
 
-  const addresses = await context.prisma.claim.findMany({
+  const claims = await context.prisma.claim.findMany({
     where: {
       gitPOAPId,
-      oldMintedAddress: {
+      mintedAddressId: {
         not: null,
       },
     },
     select: {
-      oldMintedAddress: true,
+      mintedAddress: true,
     },
   });
 
-  const mappedAddresses = addresses.map(address => address.oldMintedAddress);
+  const mappedAddresses = claims.map(claim => claim.mintedAddress?.ethAddress);
   endTimer({ status: 200 });
   logger.info(
     `Completed request to get all addresses that possess GitPOAP id ${req.params.gitpoapId}`,
@@ -55,19 +55,19 @@ gitpoapsRouter.get('/addresses', async function (req, res) {
   logger.info(`Request to get all addresses that possess any GitPOAP`);
   const endTimer = httpRequestDurationSeconds.startTimer('GET', '/v1/gitpoaps/addresses');
 
-  const addresses = await context.prisma.claim.findMany({
-    distinct: ['oldMintedAddress'],
+  const claims = await context.prisma.claim.findMany({
+    distinct: ['mintedAddressId'],
     where: {
-      oldMintedAddress: {
+      mintedAddressId: {
         not: null,
       },
     },
     select: {
-      oldMintedAddress: true,
+      mintedAddress: true,
     },
   });
 
-  const mappedAddresses = addresses.map(address => address.oldMintedAddress);
+  const mappedAddresses = claims.map(claim => claim.mintedAddress?.ethAddress);
   endTimer({ status: 200 });
   logger.info(`Completed request to get all addresses that possess any GitPOAP`);
 
