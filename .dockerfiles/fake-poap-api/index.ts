@@ -3,7 +3,6 @@ import express from 'express';
 import fetch from 'cross-fetch';
 import { z } from 'zod';
 import * as events from './src/data';
-import { POAPEvent } from './src/types/poap';
 import winston from 'winston';
 import multer from 'multer';
 import { extname } from 'path';
@@ -58,91 +57,104 @@ let eventsCache: Record<string, any> = {
 let nextEventId = 900000;
 
 let tokensCache: Record<string, any> = {
-  thunderdome: {          // Claim ID 1
+  thunderdome: {
+    // Claim ID 1
     event: events.event1, // GitPOAP ID 1
-    owner: ADDRESSES.test1,
+    owner: ADDRESSES.burz,
     tokenId: 'thunderdome',
     chain: 'xdai',
     created: '2022-03-13',
   },
-  4068606: {              // Claim ID 2
+  4068606: {
+    // Claim ID 2
     event: events.event1, // GitPOAP ID 1
     owner: ADDRESSES.jay,
     tokenId: '4068606',
     chain: 'xdai',
     created: '2022-03-14',
   },
-  ethdenver: {            // Claim ID 4
+  ethdenver: {
+    // Claim ID 4
     event: events.event2, // GitPOAP ID 2
-    owner: ADDRESSES.test1,
+    owner: ADDRESSES.burz,
     tokenId: 'ethdenver',
     chain: 'xdai',
     created: '2022-03-14',
   },
-  4078452: {              // Claim ID 5
+  4078452: {
+    // Claim ID 5
     event: events.event2, // GitPOAP ID 2
     owner: ADDRESSES.jay,
     tokenId: '4078452',
     chain: 'xdai',
     created: '2022-03-14',
   },
-  'pizza-pie': {          // Claim ID 8
+  'pizza-pie': {
+    // Claim ID 8
     event: events.event3, // GitPOAP ID 3
     owner: ADDRESSES.burz,
     tokenId: 'pizza-pie',
     chain: 'xdai',
     created: '2022-03-14',
   },
-  4082459: {              // Claim ID 9
+  4082459: {
+    // Claim ID 9
     event: events.event3, // GitPOAP ID 3
     owner: ADDRESSES.jay,
     tokenId: '4082459',
     chain: 'xdai',
     created: '2022-03-14',
   },
-  3217451: {                  // Claim ID 14
+  3217451: {
+    // Claim ID 14
     event: events.event19375, // GitPOAP ID 4
     owner: ADDRESSES.jay,
     tokenId: '3217451',
     chain: 'xdai',
     created: '2022-03-14',
   },
-  3973554: {                  // Claim ID 16
+  3973554: {
+    // Claim ID 16
     event: events.event29009, // GitPOAP ID 5
     owner: ADDRESSES.burz,
     tokenId: '3973554',
     chain: 'xdai',
     created: '2022-03-14',
   },
-  4126448: {                  // Claim ID 17
+  4126448: {
+    // Claim ID 17
     event: events.event29009, // GitPOAP ID 5
     owner: ADDRESSES.colfax,
     tokenId: '4126448',
     chain: 'xdai',
     created: '2022-03-14',
   },
-  123456789: {                // Claim ID 21
+  123456789: {
+    // Claim ID 21
     event: events.event29009, // GitPOAP ID 5
     owner: ADDRESSES.burz2,
     tokenId: '123456789',
     chain: 'xdai',
     created: '2022-03-14',
   },
-  1234567891: {               // Claim ID 9B
+  1234567891: {
+    // Claim ID 9B
     event: events.event36570, // GitPOAP ID 9
     owner: ADDRESSES.burz,
     tokenId: '1234567891',
     chain: 'xdai',
     created: '2022-03-14',
   },
-  1234567892: {               // Claim ID 9C
+  1234567892: {
+    // Claim ID 9C
     event: events.event36570, // GitPOAP ID 9
     owner: ADDRESSES.colfax,
     tokenId: '1234567892',
     chain: 'xdai',
     created: '2022-03-14',
   },
-  1234567893: {               // Claim ID 10C
+  1234567893: {
+    // Claim ID 10C
     event: events.event36571, // GitPOAP ID 10
     owner: ADDRESSES.colfax,
     tokenId: '1234567893',
