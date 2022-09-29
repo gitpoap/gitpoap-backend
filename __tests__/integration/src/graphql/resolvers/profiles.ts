@@ -48,11 +48,15 @@ describe('CustomProfileResolver', () => {
   it(
     'profileData - nullable',
     async () => {
-      const address = ADDRESSES.jay.substr(0, 5) + 'c' + ADDRESSES.jay.substr(6);
+      const address = ADDRESSES.jay.substr(0, 5) + 'c' + ADDRESSES.jay.substring(6);
 
       // Ensure the record doesn't already exist
-      const startingRecord = await context.prisma.profile.findUnique({
-        where: { oldAddress: address },
+      const startingRecord = await context.prisma.profile.findFirst({
+        where: {
+          address: {
+            ethAddress: address,
+          },
+        },
       });
 
       expect(startingRecord).toEqual(null);
@@ -77,8 +81,12 @@ describe('CustomProfileResolver', () => {
       expect(data.profileData.isVisibleOnLeaderboard).toEqual(true);
 
       // Ensure that the record has been upserted
-      const endingRecord = await context.prisma.profile.findUnique({
-        where: { oldAddress: address },
+      const endingRecord = await context.prisma.profile.findFirst({
+        where: {
+          address: {
+            ethAddress: address,
+          },
+        },
       });
 
       expect(endingRecord).not.toEqual(null);
@@ -91,7 +99,9 @@ describe('CustomProfileResolver', () => {
       {
         mostHonoredContributors(count: 2) {
           profile {
-            oldAddress
+            address {
+              ethAddress
+            }
           }
           claimsCount
         }
@@ -100,17 +110,27 @@ describe('CustomProfileResolver', () => {
 
     expect(data.mostHonoredContributors.length).toEqual(2);
 
-    expect(data.mostHonoredContributors[0].profile.oldAddress).toEqual(ADDRESSES.burz);
+    expect(data.mostHonoredContributors[0].profile.address.ethAddress).toEqual(ADDRESSES.burz);
     expect(data.mostHonoredContributors[0].claimsCount).toEqual(6);
 
-    expect(data.mostHonoredContributors[1].profile.oldAddress).toEqual(ADDRESSES.jay);
+    expect(data.mostHonoredContributors[1].profile.address.ethAddress).toEqual(ADDRESSES.jay);
     expect(data.mostHonoredContributors[1].claimsCount).toEqual(4);
   });
 
   const setAddressVisibility = async (address: string, isVisibleOnLeaderboard: boolean) => {
+    const addressRecord = await context.prisma.address.upsert({
+      where: {
+        ethAddress: address.toLowerCase(),
+      },
+      update: {},
+      create: {
+        ethAddress: address.toLowerCase(),
+      },
+    });
+
     await context.prisma.profile.update({
       where: {
-        oldAddress: address.toLowerCase(),
+        addressId: addressRecord.id,
       },
       data: { isVisibleOnLeaderboard },
     });
@@ -123,7 +143,9 @@ describe('CustomProfileResolver', () => {
       {
         mostHonoredContributors(count: 1) {
           profile {
-            oldAddress
+            address {
+              ethAddress
+            }
           }
           claimsCount
         }
@@ -134,7 +156,7 @@ describe('CustomProfileResolver', () => {
 
     expect(data.mostHonoredContributors.length).toEqual(1);
 
-    expect(data.mostHonoredContributors[0].profile.oldAddress).toEqual(ADDRESSES.jay);
+    expect(data.mostHonoredContributors[0].profile.address.ethAddress).toEqual(ADDRESSES.jay);
     expect(data.mostHonoredContributors[0].claimsCount).toEqual(4);
   });
 
@@ -143,7 +165,9 @@ describe('CustomProfileResolver', () => {
       {
         repoMostHonoredContributors(repoId: 1, page: 1, perPage: 4) {
           profile {
-            oldAddress
+            address {
+              ethAddress
+            }
           }
           claimsCount
         }
@@ -152,7 +176,7 @@ describe('CustomProfileResolver', () => {
 
     expect(data.repoMostHonoredContributors.length).toEqual(1);
 
-    expect(data.repoMostHonoredContributors[0].profile.oldAddress).toEqual(ADDRESSES.jay);
+    expect(data.repoMostHonoredContributors[0].profile.address.ethAddress).toEqual(ADDRESSES.jay);
     expect(data.repoMostHonoredContributors[0].claimsCount).toEqual(1);
   });
 
@@ -163,7 +187,9 @@ describe('CustomProfileResolver', () => {
       {
         repoMostHonoredContributors(repoId: 1, page: 1, perPage: 1) {
           profile {
-            oldAddress
+            address {
+              ethAddress
+            }
           }
           claimsCount
         }

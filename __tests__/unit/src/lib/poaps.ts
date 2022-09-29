@@ -217,6 +217,7 @@ describe('splitUsersPOAPs', () => {
         poapTokenId: claim1.poapTokenId,
       },
       include: {
+        mintedAddress: true,
         user: true,
         gitPOAP: {
           include: {
@@ -240,7 +241,9 @@ describe('splitUsersPOAPs', () => {
     ] as any);
     contextMock.prisma.claim.findUnique.mockResolvedValue({
       id: claim1.id,
-      oldMintedAddress: ADDRESSES.jay,
+      mintedAddress: {
+        ethAddress: ADDRESSES.jay,
+      },
       gitPOAP: claim1.gitPOAP,
     } as any);
     contextMock.prisma.featuredPOAP.findMany.mockResolvedValue([]);
@@ -261,6 +264,7 @@ describe('splitUsersPOAPs', () => {
         poapTokenId: claim1.poapTokenId,
       },
       include: {
+        mintedAddress: true,
         user: true,
         gitPOAP: {
           include: {
