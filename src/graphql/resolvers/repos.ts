@@ -294,6 +294,10 @@ export class CustomRepoResolver {
 
     const endTimer = gqlRequestDurationSeconds.startTimer('trendingRepos');
 
+    // We will use this map so that we can order the repos by mintedGitPOAPCount
+    // and then limit the results we need to query additional data for as we can't
+    // directly query mintedGitPOAPCount from the DB, since the fields may be linked
+    // by either claim->pullRequestEarned->repoId or claim->mentionEarned->repoId
     type RepoIdToClaimCountsMapValue = {
       repoId: number;
       mintedGitPOAPCount: number; // The claim IDs must be distinct so we can simply count
@@ -301,6 +305,8 @@ export class CustomRepoResolver {
     };
     let repoIdToClaimCountsMap: Record<string, RepoIdToClaimCountsMapValue> = {};
 
+    // This helper function is necessary so that we can ensure the same logic is used to
+    // count claims regardless if they have pullRequestEarned or mentionEarned non-null
     const handleUserClaim = (repoId: number, userId: number) => {
       const key = repoId.toString();
 
@@ -316,6 +322,9 @@ export class CustomRepoResolver {
       }
     };
 
+    // Here we select all (repoId, userId) pairs for CLAIMED claims
+    // in the past numDays and then use this data to fill out the
+    // repoIdToClaimCountsMap
     (
       await prisma.claim.findMany({
         where: {
@@ -356,12 +365,15 @@ export class CustomRepoResolver {
       } else if (result.mentionEarned !== null) {
         handleUserClaim(result.mentionEarned.repoId, result.userId);
       } else {
+        // This SHOULD NOT be able to happen, but unfortunately
+        // Prisma doesn't express this in the return type
         logger.error(
           `Prisma returned a row where pullRequestEarned and mentionEarned are null but was requested NOT to`,
         );
       }
     });
 
+    // Here we sort all of the Claim counts in the map by mintedGitPOAPCount
     const allResults: RepoIdToClaimCountsMapValue[] = Object.values(repoIdToClaimCountsMap);
     allResults.sort((left, right) => {
       if (left.mintedGitPOAPCount > right.mintedGitPOAPCount) {
@@ -372,8 +384,12 @@ export class CustomRepoResolver {
       return 0;
     });
 
+    // Now we can limit the results to only at most count records
     const limitedResults = allResults.slice(0, count);
 
+    // Finally we have only count number of records so we can request
+    // the additional data necessary to return for the trendingRepos resolver
+    // only for the records that we actually need to return
     let results: RepoReturnData[] = [];
     for (const result of limitedResults) {
       const repoData = await prisma.repo.findUnique({
@@ -382,11 +398,15 @@ export class CustomRepoResolver {
         },
       });
 
+      // This SHOULD NOT be able to happen since we've just selected the
+      // repoIds directly from the DB
       if (repoData === null) {
         logger.error(`Failed to find Repo ID ${result.repoId} in DB`);
         continue;
       }
 
+      // Select the count of GitPOAPs for the Project that contains
+      // this specific Repo
       const gitPOAPCount = await prisma.gitPOAP.count({
         where: {
           project: {
