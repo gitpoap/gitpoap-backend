@@ -36,10 +36,8 @@ model User {
 
 model Profile {
   id                     Int            @id @default(autoincrement())
-  oldAddress             String         @unique @db.VarChar(255)
-  addressId              Int?           @unique
-  address                Address?       @relation(fields: [addressId], references: [id])
-  oldEnsName             String?        @db.VarChar(255)
+  addressId              Int            @unique
+  address                Address        @relation(fields: [addressId], references: [id])
   createdAt              DateTime       @default(now())
   updatedAt              DateTime       @updatedAt
   bio                    String?
@@ -50,7 +48,6 @@ model Profile {
   twitterHandle          String?        @db.VarChar(255)
   personalSiteUrl        String?        @db.VarChar(255)
   isVisibleOnLeaderboard Boolean        @default(true)
-  oldEnsAvatarImageUrl   String?
   featuredPOAPs          FeaturedPOAP[]
 }
 
@@ -74,12 +71,12 @@ model Address {
 }
 
 model Email {
-  id        Int       @id @default(autoincrement())
-  address   String    @unique @db.VarChar(255)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  addresses Address[]
-  claims    Claim[]
+  id           Int       @id @default(autoincrement())
+  emailAddress String    @db.VarChar(255)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  addresses    Address[]
+  claims       Claim[]
 }
 
 model OrganizationMembership {
@@ -144,7 +141,6 @@ model Claim {
   /// @TypeGraphQL.omit(output: true, input: true)
   qrHash              String?            @db.VarChar(10)
   poapTokenId         String?            @unique @db.VarChar(255)
-  oldMintedAddress    String?            @db.VarChar(255)
   mintedAddressId     Int?
   mintedAddress       Address?           @relation("mintedClaims", fields: [mintedAddressId], references: [id])
   gitPOAPId           Int

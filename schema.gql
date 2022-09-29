@@ -437,7 +437,6 @@ type ClaimCountAggregate {
   status: Int!
   qrHash: Int!
   poapTokenId: Int!
-  oldMintedAddress: Int!
   mintedAddressId: Int!
   gitPOAPId: Int!
   userId: Int!
@@ -479,7 +478,6 @@ type ClaimMinAggregate {
   status: ClaimStatus
   qrHash: String
   poapTokenId: String
-  oldMintedAddress: String
   mintedAddressId: Int
   gitPOAPId: Int
   userId: Int
@@ -508,7 +506,6 @@ type ClaimMaxAggregate {
   status: ClaimStatus
   qrHash: String
   poapTokenId: String
-  oldMintedAddress: String
   mintedAddressId: Int
   gitPOAPId: Int
   userId: Int
@@ -529,7 +526,6 @@ input ClaimWhereInput {
   mintedAt: DateTimeNullableFilter
   status: EnumClaimStatusFilter
   poapTokenId: StringNullableFilter
-  oldMintedAddress: StringNullableFilter
   mintedAddressId: IntNullableFilter
   mintedAddress: AddressRelationFilter
   gitPOAPId: IntFilter
@@ -747,7 +743,7 @@ input EmailWhereInput {
   OR: [EmailWhereInput!]
   NOT: [EmailWhereInput!]
   id: IntFilter
-  address: StringFilter
+  emailAddress: StringFilter
   createdAt: DateTimeFilter
   updatedAt: DateTimeFilter
   addresses: AddressListRelationFilter
@@ -1117,10 +1113,8 @@ input ProfileWhereInput {
   OR: [ProfileWhereInput!]
   NOT: [ProfileWhereInput!]
   id: IntFilter
-  oldAddress: StringFilter
-  addressId: IntNullableFilter
+  addressId: IntFilter
   address: AddressRelationFilter
-  oldEnsName: StringNullableFilter
   createdAt: DateTimeFilter
   updatedAt: DateTimeFilter
   bio: StringNullableFilter
@@ -1131,7 +1125,6 @@ input ProfileWhereInput {
   twitterHandle: StringNullableFilter
   personalSiteUrl: StringNullableFilter
   isVisibleOnLeaderboard: BoolFilter
-  oldEnsAvatarImageUrl: StringNullableFilter
   featuredPOAPs: FeaturedPOAPListRelationFilter
 }
 
@@ -1163,7 +1156,6 @@ input ClaimOrderByWithRelationInput {
   mintedAt: SortOrder
   status: SortOrder
   poapTokenId: SortOrder
-  oldMintedAddress: SortOrder
   mintedAddressId: SortOrder
   mintedAddress: AddressOrderByWithRelationInput
   gitPOAPId: SortOrder
@@ -1205,7 +1197,7 @@ input AddressOrderByWithRelationInput {
 
 input EmailOrderByWithRelationInput {
   id: SortOrder
-  address: SortOrder
+  emailAddress: SortOrder
   createdAt: SortOrder
   updatedAt: SortOrder
   addresses: AddressOrderByRelationAggregateInput
@@ -1251,10 +1243,8 @@ input OrganizationMembershipOrderByRelationAggregateInput {
 
 input ProfileOrderByWithRelationInput {
   id: SortOrder
-  oldAddress: SortOrder
   addressId: SortOrder
   address: AddressOrderByWithRelationInput
-  oldEnsName: SortOrder
   createdAt: SortOrder
   updatedAt: SortOrder
   bio: SortOrder
@@ -1265,7 +1255,6 @@ input ProfileOrderByWithRelationInput {
   twitterHandle: SortOrder
   personalSiteUrl: SortOrder
   isVisibleOnLeaderboard: SortOrder
-  oldEnsAvatarImageUrl: SortOrder
   featuredPOAPs: FeaturedPOAPOrderByRelationAggregateInput
 }
 
@@ -1445,7 +1434,6 @@ type Claim {
   mintedAt: DateTime
   status: ClaimStatus!
   poapTokenId: String
-  oldMintedAddress: String
   mintedAddressId: Int
   gitPOAPId: Int!
   userId: Int!
@@ -1787,7 +1775,6 @@ enum ClaimScalarFieldEnum {
   status
   qrHash
   poapTokenId
-  oldMintedAddress
   mintedAddressId
   gitPOAPId
   userId
@@ -1996,7 +1983,7 @@ type EventCount {
 
 type Email {
   id: Int!
-  address: String!
+  emailAddress: String!
   createdAt: DateTime!
   updatedAt: DateTime!
   _count: EmailCount
@@ -2015,7 +2002,6 @@ type ClaimGroupBy {
   status: ClaimStatus!
   qrHash: String
   poapTokenId: String
-  oldMintedAddress: String
   mintedAddressId: Int
   gitPOAPId: Int!
   userId: Int!
@@ -2038,7 +2024,6 @@ input ClaimOrderByWithAggregationInput {
   mintedAt: SortOrder
   status: SortOrder
   poapTokenId: SortOrder
-  oldMintedAddress: SortOrder
   mintedAddressId: SortOrder
   gitPOAPId: SortOrder
   userId: SortOrder
@@ -2061,7 +2046,6 @@ input ClaimCountOrderByAggregateInput {
   mintedAt: SortOrder
   status: SortOrder
   poapTokenId: SortOrder
-  oldMintedAddress: SortOrder
   mintedAddressId: SortOrder
   gitPOAPId: SortOrder
   userId: SortOrder
@@ -2090,7 +2074,6 @@ input ClaimMaxOrderByAggregateInput {
   mintedAt: SortOrder
   status: SortOrder
   poapTokenId: SortOrder
-  oldMintedAddress: SortOrder
   mintedAddressId: SortOrder
   gitPOAPId: SortOrder
   userId: SortOrder
@@ -2108,7 +2091,6 @@ input ClaimMinOrderByAggregateInput {
   mintedAt: SortOrder
   status: SortOrder
   poapTokenId: SortOrder
-  oldMintedAddress: SortOrder
   mintedAddressId: SortOrder
   gitPOAPId: SortOrder
   userId: SortOrder
@@ -2140,7 +2122,6 @@ input ClaimScalarWhereWithAggregatesInput {
   mintedAt: DateTimeNullableWithAggregatesFilter
   status: EnumClaimStatusWithAggregatesFilter
   poapTokenId: StringNullableWithAggregatesFilter
-  oldMintedAddress: StringNullableWithAggregatesFilter
   mintedAddressId: IntNullableWithAggregatesFilter
   gitPOAPId: IntWithAggregatesFilter
   userId: IntWithAggregatesFilter
@@ -2428,9 +2409,7 @@ type FeaturedPOAP {
 
 type Profile {
   id: Int!
-  oldAddress: String!
-  addressId: Int
-  oldEnsName: String
+  addressId: Int!
   createdAt: DateTime!
   updatedAt: DateTime!
   bio: String
@@ -2441,9 +2420,8 @@ type Profile {
   twitterHandle: String
   personalSiteUrl: String
   isVisibleOnLeaderboard: Boolean!
-  oldEnsAvatarImageUrl: String
   _count: ProfileCount
-  address: Address
+  address: Address!
   featuredPOAPs(
     where: FeaturedPOAPWhereInput
     orderBy: [FeaturedPOAPOrderByWithRelationInput!]
@@ -3471,9 +3449,7 @@ type AggregateProfile {
 
 type ProfileCountAggregate {
   id: Int!
-  oldAddress: Int!
   addressId: Int!
-  oldEnsName: Int!
   createdAt: Int!
   updatedAt: Int!
   bio: Int!
@@ -3484,7 +3460,6 @@ type ProfileCountAggregate {
   twitterHandle: Int!
   personalSiteUrl: Int!
   isVisibleOnLeaderboard: Int!
-  oldEnsAvatarImageUrl: Int!
   _all: Int!
 }
 
@@ -3500,9 +3475,7 @@ type ProfileSumAggregate {
 
 type ProfileMinAggregate {
   id: Int
-  oldAddress: String
   addressId: Int
-  oldEnsName: String
   createdAt: DateTime
   updatedAt: DateTime
   bio: String
@@ -3513,14 +3486,11 @@ type ProfileMinAggregate {
   twitterHandle: String
   personalSiteUrl: String
   isVisibleOnLeaderboard: Boolean
-  oldEnsAvatarImageUrl: String
 }
 
 type ProfileMaxAggregate {
   id: Int
-  oldAddress: String
   addressId: Int
-  oldEnsName: String
   createdAt: DateTime
   updatedAt: DateTime
   bio: String
@@ -3531,20 +3501,16 @@ type ProfileMaxAggregate {
   twitterHandle: String
   personalSiteUrl: String
   isVisibleOnLeaderboard: Boolean
-  oldEnsAvatarImageUrl: String
 }
 
 input ProfileWhereUniqueInput {
   id: Int
-  oldAddress: String
   addressId: Int
 }
 
 enum ProfileScalarFieldEnum {
   id
-  oldAddress
   addressId
-  oldEnsName
   createdAt
   updatedAt
   bio
@@ -3555,14 +3521,11 @@ enum ProfileScalarFieldEnum {
   twitterHandle
   personalSiteUrl
   isVisibleOnLeaderboard
-  oldEnsAvatarImageUrl
 }
 
 type ProfileGroupBy {
   id: Int!
-  oldAddress: String!
-  addressId: Int
-  oldEnsName: String
+  addressId: Int!
   createdAt: DateTime!
   updatedAt: DateTime!
   bio: String
@@ -3573,7 +3536,6 @@ type ProfileGroupBy {
   twitterHandle: String
   personalSiteUrl: String
   isVisibleOnLeaderboard: Boolean!
-  oldEnsAvatarImageUrl: String
   _count: ProfileCountAggregate
   _avg: ProfileAvgAggregate
   _sum: ProfileSumAggregate
@@ -3583,9 +3545,7 @@ type ProfileGroupBy {
 
 input ProfileOrderByWithAggregationInput {
   id: SortOrder
-  oldAddress: SortOrder
   addressId: SortOrder
-  oldEnsName: SortOrder
   createdAt: SortOrder
   updatedAt: SortOrder
   bio: SortOrder
@@ -3596,7 +3556,6 @@ input ProfileOrderByWithAggregationInput {
   twitterHandle: SortOrder
   personalSiteUrl: SortOrder
   isVisibleOnLeaderboard: SortOrder
-  oldEnsAvatarImageUrl: SortOrder
   _count: ProfileCountOrderByAggregateInput
   _avg: ProfileAvgOrderByAggregateInput
   _max: ProfileMaxOrderByAggregateInput
@@ -3606,9 +3565,7 @@ input ProfileOrderByWithAggregationInput {
 
 input ProfileCountOrderByAggregateInput {
   id: SortOrder
-  oldAddress: SortOrder
   addressId: SortOrder
-  oldEnsName: SortOrder
   createdAt: SortOrder
   updatedAt: SortOrder
   bio: SortOrder
@@ -3619,7 +3576,6 @@ input ProfileCountOrderByAggregateInput {
   twitterHandle: SortOrder
   personalSiteUrl: SortOrder
   isVisibleOnLeaderboard: SortOrder
-  oldEnsAvatarImageUrl: SortOrder
 }
 
 input ProfileAvgOrderByAggregateInput {
@@ -3629,9 +3585,7 @@ input ProfileAvgOrderByAggregateInput {
 
 input ProfileMaxOrderByAggregateInput {
   id: SortOrder
-  oldAddress: SortOrder
   addressId: SortOrder
-  oldEnsName: SortOrder
   createdAt: SortOrder
   updatedAt: SortOrder
   bio: SortOrder
@@ -3642,14 +3596,11 @@ input ProfileMaxOrderByAggregateInput {
   twitterHandle: SortOrder
   personalSiteUrl: SortOrder
   isVisibleOnLeaderboard: SortOrder
-  oldEnsAvatarImageUrl: SortOrder
 }
 
 input ProfileMinOrderByAggregateInput {
   id: SortOrder
-  oldAddress: SortOrder
   addressId: SortOrder
-  oldEnsName: SortOrder
   createdAt: SortOrder
   updatedAt: SortOrder
   bio: SortOrder
@@ -3660,7 +3611,6 @@ input ProfileMinOrderByAggregateInput {
   twitterHandle: SortOrder
   personalSiteUrl: SortOrder
   isVisibleOnLeaderboard: SortOrder
-  oldEnsAvatarImageUrl: SortOrder
 }
 
 input ProfileSumOrderByAggregateInput {
@@ -3673,9 +3623,7 @@ input ProfileScalarWhereWithAggregatesInput {
   OR: [ProfileScalarWhereWithAggregatesInput!]
   NOT: [ProfileScalarWhereWithAggregatesInput!]
   id: IntWithAggregatesFilter
-  oldAddress: StringWithAggregatesFilter
-  addressId: IntNullableWithAggregatesFilter
-  oldEnsName: StringNullableWithAggregatesFilter
+  addressId: IntWithAggregatesFilter
   createdAt: DateTimeWithAggregatesFilter
   updatedAt: DateTimeWithAggregatesFilter
   bio: StringNullableWithAggregatesFilter
@@ -3686,7 +3634,6 @@ input ProfileScalarWhereWithAggregatesInput {
   twitterHandle: StringNullableWithAggregatesFilter
   personalSiteUrl: StringNullableWithAggregatesFilter
   isVisibleOnLeaderboard: BoolWithAggregatesFilter
-  oldEnsAvatarImageUrl: StringNullableWithAggregatesFilter
 }
 
 type AggregateProject {
