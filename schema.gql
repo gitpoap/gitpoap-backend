@@ -690,7 +690,6 @@ input AddressWhereInput {
   NOT: [AddressWhereInput!]
   id: IntFilter
   ethAddress: StringFilter
-  emailId: IntNullableFilter
   email: EmailRelationFilter
   createdAt: DateTimeFilter
   updatedAt: DateTimeFilter
@@ -744,22 +743,30 @@ input EmailWhereInput {
   NOT: [EmailWhereInput!]
   id: IntFilter
   emailAddress: StringFilter
+  addressId: IntFilter
+  address: AddressRelationFilter
   createdAt: DateTimeFilter
   updatedAt: DateTimeFilter
-  addresses: AddressListRelationFilter
   claims: ClaimListRelationFilter
-}
-
-input AddressListRelationFilter {
-  every: AddressWhereInput
-  some: AddressWhereInput
-  none: AddressWhereInput
+  isValidated: BoolFilter
+  activeToken: StringFilter
+  tokenExpiresAt: DateTimeFilter
 }
 
 input ClaimListRelationFilter {
   every: ClaimWhereInput
   some: ClaimWhereInput
   none: ClaimWhereInput
+}
+
+input BoolFilter {
+  equals: Boolean
+  not: NestedBoolFilter
+}
+
+input NestedBoolFilter {
+  equals: Boolean
+  not: NestedBoolFilter
 }
 
 input UserRelationFilter {
@@ -989,16 +996,6 @@ input NestedEnumGitPOAPStatusFilter {
   not: NestedEnumGitPOAPStatusFilter
 }
 
-input BoolFilter {
-  equals: Boolean
-  not: NestedBoolFilter
-}
-
-input NestedBoolFilter {
-  equals: Boolean
-  not: NestedBoolFilter
-}
-
 input RedeemCodeListRelationFilter {
   every: RedeemCodeWhereInput
   some: RedeemCodeWhereInput
@@ -1103,6 +1100,12 @@ input GithubIssueRelationFilter {
   isNot: GithubIssueWhereInput
 }
 
+input AddressListRelationFilter {
+  every: AddressWhereInput
+  some: AddressWhereInput
+  none: AddressWhereInput
+}
+
 input ProfileRelationFilter {
   is: ProfileWhereInput
   isNot: ProfileWhereInput
@@ -1181,7 +1184,6 @@ enum SortOrder {
 input AddressOrderByWithRelationInput {
   id: SortOrder
   ethAddress: SortOrder
-  emailId: SortOrder
   email: EmailOrderByWithRelationInput
   createdAt: SortOrder
   updatedAt: SortOrder
@@ -1198,14 +1200,14 @@ input AddressOrderByWithRelationInput {
 input EmailOrderByWithRelationInput {
   id: SortOrder
   emailAddress: SortOrder
+  addressId: SortOrder
+  address: AddressOrderByWithRelationInput
   createdAt: SortOrder
   updatedAt: SortOrder
-  addresses: AddressOrderByRelationAggregateInput
   claims: ClaimOrderByRelationAggregateInput
-}
-
-input AddressOrderByRelationAggregateInput {
-  _count: SortOrder
+  isValidated: SortOrder
+  activeToken: SortOrder
+  tokenExpiresAt: SortOrder
 }
 
 input ClaimOrderByRelationAggregateInput {
@@ -1234,6 +1236,10 @@ input GithubIssueOrderByRelationAggregateInput {
 }
 
 input GithubMentionOrderByRelationAggregateInput {
+  _count: SortOrder
+}
+
+input AddressOrderByRelationAggregateInput {
   _count: SortOrder
 }
 
@@ -1454,7 +1460,6 @@ type Claim {
 type Address {
   id: Int!
   ethAddress: String!
-  emailId: Int
   createdAt: DateTime!
   updatedAt: DateTime!
   githubUserId: Int
@@ -1897,7 +1902,6 @@ input AddressWhereUniqueInput {
 enum AddressScalarFieldEnum {
   id
   ethAddress
-  emailId
   createdAt
   updatedAt
   githubUserId
@@ -1984,13 +1988,16 @@ type EventCount {
 type Email {
   id: Int!
   emailAddress: String!
+  addressId: Int!
   createdAt: DateTime!
   updatedAt: DateTime!
+  isValidated: Boolean!
+  activeToken: String!
+  tokenExpiresAt: DateTime!
   _count: EmailCount
 }
 
 type EmailCount {
-  addresses: Int!
   claims: Int!
 }
 
