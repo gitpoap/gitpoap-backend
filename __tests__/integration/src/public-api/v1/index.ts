@@ -1,13 +1,7 @@
 import fetch from 'cross-fetch';
 import { ADDRESSES, GH_HANDLES } from '../../../../../prisma/constants';
 import cheerio from 'cheerio';
-import {
-  event2,
-  event3,
-  event29009,
-  event36571,
-  event36576,
-} from '../../../../../prisma/data';
+import { event2, event3, event29009, event36571, event36576 } from '../../../../../prisma/data';
 import { MILLISECONDS_PER_SECOND } from '../../../../../src/constants';
 
 const PUBLIC_API_URL = 'http://public-api-server:3122';
@@ -25,15 +19,19 @@ describe('public-api/v1/address/:address/gitpoaps', () => {
     expect(response.status).toEqual(400);
   });
 
-  it('Returns empty list when address is not in GitPOAP', async () => {
-    const response = await fetch(`${PUBLIC_API_URL}/v1/address/poap.eth/gitpoaps`);
+  it(
+    'Returns empty list when address is not in GitPOAP',
+    async () => {
+      const response = await fetch(`${PUBLIC_API_URL}/v1/address/poap.eth/gitpoaps`);
 
-    expect(response.status).toBeLessThan(400);
+      expect(response.status).toBeLessThan(400);
 
-    const data = await response.json();
+      const data = await response.json();
 
-    expect(data.length).toEqual(0);
-  }, 10 * MILLISECONDS_PER_SECOND);
+      expect(data.length).toEqual(0);
+    },
+    10 * MILLISECONDS_PER_SECOND,
+  );
 
   it("Returns known user's GitPOAPs", async () => {
     const response = await fetch(`${PUBLIC_API_URL}/v1/address/${ADDRESSES.burz2}/gitpoaps`);
@@ -63,7 +61,7 @@ describe('public-api/v1/address/:address/gitpoaps', () => {
     expect(data[0].needsRevalidation).toEqual(false);
   });
 
-  it("Returns DEPRECATED GitPOAPs", async () => {
+  it('Returns DEPRECATED GitPOAPs', async () => {
     const response = await fetch(`${PUBLIC_API_URL}/v1/address/${ADDRESSES.kayleen}/gitpoaps`);
 
     expect(response.status).toBeLessThan(400);
@@ -202,7 +200,7 @@ describe('public-api/v1/github/user/:githubHandle/gitpoaps', () => {
     expect(data[0].mintedAt).toBeNull();
   });
 
-  it("Returns DEPRECATED GitPOAPs", async () => {
+  it('Returns DEPRECATED GitPOAPs', async () => {
     const response = await fetch(`${PUBLIC_API_URL}/v1/github/user/${GH_HANDLES.kayleen}/gitpoaps`);
     expect(response.status).toBeLessThan(400);
     const data = await response.json();
