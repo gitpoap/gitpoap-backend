@@ -371,8 +371,18 @@ export class AddressFactory {
 }
 
 export class EmailFactory {
-  static create = async (email: string): Promise<Email> => {
-    const data: Prisma.EmailCreateInput = { emailAddress: email };
+  static create = async (
+    activeToken: string,
+    address: Prisma.EmailCreateInput['address'],
+    email: string,
+    tokenExpiresAt: string,
+  ): Promise<Email> => {
+    const data: Prisma.EmailCreateInput = {
+      activeToken,
+      address,
+      emailAddress: email,
+      tokenExpiresAt,
+    };
     const emailObj = await prisma.email.create({ data });
     logger.debug(`Creating email with id: ${emailObj.id}`);
 
