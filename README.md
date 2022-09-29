@@ -106,7 +106,7 @@ For a quicker loop when developing tests (the builds can take a while) you can u
 yarn docker:public-api
 
 # Repeat this as needed in another terminal tab:
-yarn quick-integration-test
+yarn test:quick-integration
 ```
 
 Note that the later command will not work unless all the docker services in the `public-api` profile are up (this is what the first command accomplishes).
