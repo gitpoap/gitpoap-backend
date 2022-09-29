@@ -11,4 +11,3 @@ jest.mock('../../src/logging', () => ({
   __esModule: true,
   createScopedLogger: () => mockedLogger,
 }));
-
