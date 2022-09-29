@@ -77,7 +77,7 @@ Unit tests are stored in the `__tests__/unit` folder. The structure of the insid
 
 To run the unit tests:
 ```sh
-yarn test
+yarn test:unit
 ```
 
 Please keep all common mocks used in tests within `__mocks__`. The structure of the inside of this folder should mirror that in `src/`.
@@ -88,7 +88,7 @@ Integration tests are stored in the `__tests__/integration` folder. The structur
 
 To run the integration tests:
 ```sh
-yarn integration-test
+yarn test:integration
 ```
 
 For a quicker loop when developing tests (the builds can take a while) you can use:
