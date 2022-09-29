@@ -9,6 +9,7 @@
 ## Running Locally with docker-compose
 
 Example `.env`:
+
 ```sh
 APP_NAME=gitpoap-backend
 
@@ -43,6 +44,7 @@ POSTMARK_SERVER_TOKEN="fake-token"
 
 To run all of the services (`fake-poap-api`, `fake-poap-auth`, `db`, `redis`, and `server`) locally
 (with seeded data), we can run:
+
 ```sh
 yarn docker:server
 ```
@@ -50,10 +52,13 @@ yarn docker:server
 ### Everything but the Server
 
 To run background services (`fake-poap-api`, `fake-poap-auth`, `db`, and `redis`), we can run:
+
 ```sh
 yarn docker:background
 ```
+
 then you can easily work on the backend API while making code changes locally (which will restart after any changes) via:
+
 ```sh
 # First time to migrate and seed the DB:
 yarn dev:first-time
@@ -65,6 +70,7 @@ yarn dev
 
 You can change the logging level by specifying one option (`debug`, `info`, `warn`, `error`) to the `--level` option
 on the command line. For example:
+
 ```sh
 yarn run dev --level debug
 ```
@@ -76,6 +82,7 @@ yarn run dev --level debug
 Unit tests are stored in the `__tests__/unit` folder. The structure of the inside of this folder should mirror that in `src/`.
 
 To run the unit tests:
+
 ```sh
 yarn test:unit
 ```
@@ -87,11 +94,13 @@ Please keep all common mocks used in tests within `__mocks__`. The structure of 
 Integration tests are stored in the `__tests__/integration` folder. The structure of the inside of this folder should mirror that in `src/`.
 
 To run the integration tests:
+
 ```sh
 yarn test:integration
 ```
 
 For a quicker loop when developing tests (the builds can take a while) you can use:
+
 ```sh
 # Leave this running in one terminal tab:
 yarn docker:public-api
@@ -99,16 +108,17 @@ yarn docker:public-api
 # Repeat this as needed in another terminal tab:
 yarn quick-integration-test
 ```
+
 Note that the later command will not work unless all the docker services in the `public-api` profile are up (this is what the first command accomplishes).
 Furthermore, note that you will need to rerun the first command if you need to make changes to some source location other than `__tests__` or `__mocks__`.
 
 ## Extra Resources
 
-* https://www.pullrequest.com/blog/intro-to-using-typescript-in-a-nodejs-express-project/
-* https://github.com/auth0/node-jsonwebtoken/
-* https://github.com/auth0/express-jwt
-* https://stackoverflow.com/questions/42406913/nodejs-import-require-conversion
-* https://javascript.plainenglish.io/how-to-get-typescript-type-completion-by-defining-process-env-types-6a5869174f57
-* https://stackoverflow.com/questions/66328425/jwt-argument-of-type-string-undefined-is-not-assignable-to-parameter-of-typ
-* [prisma migrations](https://www.prisma.io/docs/concepts/components/prisma-migrate)
-* [relational queries (creation)](https://www.prisma.io/docs/concepts/components/prisma-client/relation-queries#create-a-related-record)
+* [TypeScript in NodeJS Project](https://www.pullrequest.com/blog/intro-to-using-typescript-in-a-nodejs-express-project/)
+* [JSON Web Tokens](https://github.com/auth0/node-jsonwebtoken/)
+* [Express-jwt](https://github.com/auth0/express-jwt)
+* [NodeJS Import Require Conversion](https://stackoverflow.com/questions/42406913/nodejs-import-require-conversion)
+* [Defining Process Env Vars for TS](https://javascript.plainenglish.io/how-to-get-typescript-type-completion-by-defining-process-env-types-6a5869174f57)
+* [JWT Argument exception](https://stackoverflow.com/questions/66328425/jwt-argument-of-type-string-undefined-is-not-assignable-to-parameter-of-typ)
+* [Prisma Migrations](https://www.prisma.io/docs/concepts/components/prisma-migrate)
+* [Relational Queries (creation)](https://www.prisma.io/docs/concepts/components/prisma-client/relation-queries#create-a-related-record)
