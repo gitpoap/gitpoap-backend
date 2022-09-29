@@ -8,4 +8,4 @@ phases:
       - 'yarn build'
   post_build:
     commands:
-      - 'yarn test'
+      - 'yarn test:unit'
