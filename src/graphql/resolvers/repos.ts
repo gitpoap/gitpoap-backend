@@ -294,62 +294,75 @@ export class CustomRepoResolver {
 
     const endTimer = gqlRequestDurationSeconds.startTimer('trendingRepos');
 
-    type BasedResult = {
-      repoId: number;
-      userId: number;
-    };
-
-    // Common query to select all valid claims
-    // Note that we select the minimal necessary data to do
-    // sorting so we can limit the amount of additional info
-    // we need to query later
-    const claimsSelect = Prisma.sql`
-      SELECT r.id AS "repoId", c."userId"
-      FROM "Repo" AS r
-      INNER JOIN "Project" AS p ON r."projectId" = p.id
-      INNER JOIN "GitPOAP" AS g ON g."projectId" = p.id
-      INNER JOIN "Claim" AS c ON c."gitPOAPId" = g.id
-        AND c."status" = ${ClaimStatus.CLAIMED}::"ClaimStatus"
-        AND c."mintedAt" >= ${getXDaysAgoStartDatetime(numDays)}
-    `;
-
-    const prBasedResults = await prisma.$queryRaw<BasedResult[]>`
-      ${claimsSelect}
-      INNER JOIN "GithubPullRequest" AS gpr ON gpr.id = c."pullRequestEarnedId"
-    `;
-    // Pre-fetch this
-    const mentionBasedResultsPromise = prisma.$queryRaw<BasedResult[]>`
-      ${claimsSelect}
-      INNER JOIN "GithubMention" AS gm ON gm.id = c."mentionEarnedId"
-    `;
-
-    type ResultsMapValue = {
+    type RepoIdToClaimCountsMapValue = {
       repoId: number;
       mintedGitPOAPCount: number; // The claim IDs must be distinct so we can simply count
       userIds: Set<number>;
     };
+    let repoIdToClaimCountsMap: Record<string, RepoIdToClaimCountsMapValue> = {};
 
-    let resultsMap: Record<string, ResultsMapValue> = {};
+    const handleUserClaim = (repoId: number, userId: number) => {
+      const key = repoId.toString();
 
-    const handleRow = (result: BasedResult) => {
-      const key = result.repoId.toString();
-
-      if (key in resultsMap) {
-        resultsMap[key].mintedGitPOAPCount++;
-        resultsMap[key].userIds.add(result.userId);
+      if (key in repoIdToClaimCountsMap) {
+        repoIdToClaimCountsMap[key].mintedGitPOAPCount++;
+        repoIdToClaimCountsMap[key].userIds.add(userId);
       } else {
-        resultsMap[key] = {
-          repoId: result.repoId,
+        repoIdToClaimCountsMap[key] = {
+          repoId,
           mintedGitPOAPCount: 1,
-          userIds: new Set<number>([result.userId]),
+          userIds: new Set<number>([userId]),
         };
       }
     };
 
-    prBasedResults.forEach(handleRow);
-    (await mentionBasedResultsPromise).forEach(handleRow);
+    (
+      await prisma.claim.findMany({
+        where: {
+          status: ClaimStatus.CLAIMED,
+          mintedAt: {
+            gte: getXDaysAgoStartDatetime(numDays),
+          },
+          OR: [
+            {
+              NOT: {
+                pullRequestEarned: null,
+              },
+            },
+            {
+              NOT: {
+                mentionEarned: null,
+              },
+            },
+          ],
+        },
+        select: {
+          userId: true,
+          pullRequestEarned: {
+            select: {
+              repoId: true,
+            },
+          },
+          mentionEarned: {
+            select: {
+              repoId: true,
+            },
+          },
+        },
+      })
+    ).forEach(result => {
+      if (result.pullRequestEarned !== null) {
+        handleUserClaim(result.pullRequestEarned.repoId, result.userId);
+      } else if (result.mentionEarned !== null) {
+        handleUserClaim(result.mentionEarned.repoId, result.userId);
+      } else {
+        logger.error(
+          `Prisma returned a row where pullRequestEarned and mentionEarned are null but was requested NOT to`,
+        );
+      }
+    });
 
-    const allResults: ResultsMapValue[] = Object.values(resultsMap);
+    const allResults: RepoIdToClaimCountsMapValue[] = Object.values(repoIdToClaimCountsMap);
     allResults.sort((left, right) => {
       if (left.mintedGitPOAPCount > right.mintedGitPOAPCount) {
         return -1;
@@ -359,8 +372,10 @@ export class CustomRepoResolver {
       return 0;
     });
 
+    const limitedResults = allResults.slice(0, count);
+
     let results: RepoReturnData[] = [];
-    for (const result of allResults.slice(0, count)) {
+    for (const result of limitedResults) {
       const repoData = await prisma.repo.findUnique({
         where: {
           id: result.repoId,
@@ -372,21 +387,23 @@ export class CustomRepoResolver {
         continue;
       }
 
+      const gitPOAPCount = await prisma.gitPOAP.count({
+        where: {
+          project: {
+            repos: {
+              some: {
+                id: result.repoId,
+              },
+            },
+          },
+        },
+      });
+
       results.push({
         ...repoData,
         mintedGitPOAPCount: result.mintedGitPOAPCount,
         contributorCount: result.userIds.size,
-        gitPOAPCount: await prisma.gitPOAP.count({
-          where: {
-            project: {
-              repos: {
-                some: {
-                  id: result.repoId,
-                },
-              },
-            },
-          },
-        }),
+        gitPOAPCount,
       });
     }
 
