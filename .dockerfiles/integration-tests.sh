@@ -8,4 +8,4 @@ yarn heat-up-ens-cache
 
 ./.dockerfiles/wait-for.sh public-api-server:3122
 
-npx jest --setupFiles dotenv/config --testPathPattern '/integration/' --runInBand
+npx jest --verbose --setupFiles dotenv/config --testPathPattern '/integration/' --runInBand
