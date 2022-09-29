@@ -9,7 +9,7 @@ import { createScopedLogger } from '../../logging';
 import { gqlRequestDurationSeconds } from '../../metrics';
 import { GitPOAPReturnData, splitUsersPOAPs } from '../../lib/poaps';
 import { countContributionsForClaim } from '../../lib/contributions';
-import { Prisma } from '@prisma/client';
+import { Address, Prisma } from '@prisma/client';
 
 @ObjectType()
 class FullGitPOAPEventData {
@@ -629,10 +629,11 @@ export class CustomGitPOAPResolver {
       return null;
     }
 
-    type ResultType = Profile & {
-      githubHandle: string;
-      claimsCount: number;
-    };
+    type ResultType = Profile &
+      Pick<Address, 'ethAddress' | 'ensName' | 'ensAvatarImageUrl'> & {
+        githubHandle: string;
+        claimsCount: number;
+      };
 
     const claimStatusSelect = Prisma.sql`
       SELECT COUNT(c2.id)::INTEGER FROM "Claim" AS c2
@@ -649,9 +650,10 @@ export class CustomGitPOAPResolver {
       case 'claim-date':
         if (page !== null) {
           results = await prisma.$queryRaw`
-            SELECT p.*, u."githubHandle", (${claimStatusSelect}) AS "claimsCount"
+            SELECT p.*, a.*, u."githubHandle", (${claimStatusSelect}) AS "claimsCount"
             FROM "Claim" AS c
             INNER JOIN "Profile" AS p ON c."mintedAddressId" = p."addressId"
+            INNER JOIN "Address" AS a ON c."mintedAddressId" = a."id"
             INNER JOIN "User" AS u ON u.id = c."userId"
             WHERE c."gitPOAPId" = ${gitPOAPId} AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
             ORDER BY c."updatedAt" DESC
@@ -659,9 +661,10 @@ export class CustomGitPOAPResolver {
           `;
         } else {
           results = await prisma.$queryRaw`
-            SELECT p.*, u."githubHandle", (${claimStatusSelect}) AS "claimsCount"
+            SELECT p.*, a.*, u."githubHandle", (${claimStatusSelect}) AS "claimsCount"
             FROM "Claim" AS c
             JOIN "Profile" AS p ON c."mintedAddressId" = p."addressId"
+            JOIN "Address" AS a ON c."mintedAddressId" = a."id"
             JOIN "User" AS u ON u.id = c."userId"
             WHERE c."gitPOAPId" = ${gitPOAPId} AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
             ORDER BY c."updatedAt" DESC
@@ -671,9 +674,10 @@ export class CustomGitPOAPResolver {
       case 'claim-count':
         if (page !== null) {
           results = await prisma.$queryRaw`
-            SELECT p.*, u."githubHandle", (${claimStatusSelect}) AS "claimsCount"
+            SELECT p.*, a.*, u."githubHandle", (${claimStatusSelect}) AS "claimsCount"
             FROM "Claim" AS c
             JOIN "Profile" AS p ON c."mintedAddressId" = p."addressId"
+            JOIN "Address" AS a ON c."mintedAddressId" = a."id"
             JOIN "User" AS u ON u.id = c."userId"
             WHERE c."gitPOAPId" = ${gitPOAPId} AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
             ORDER BY "claimsCount" DESC
@@ -681,9 +685,10 @@ export class CustomGitPOAPResolver {
           `;
         } else {
           results = await prisma.$queryRaw`
-            SELECT p.*, u."githubHandle", (${claimStatusSelect}) AS "claimsCount"
+            SELECT p.*, a.*, u."githubHandle", (${claimStatusSelect}) AS "claimsCount"
             FROM "Claim" AS c
             JOIN "Profile" AS p ON c."mintedAddressId" = p."addressId"
+            JOIN "Address" AS a ON c."mintedAddressId" = a."id"
             JOIN "User" AS u ON u.id = c."userId"
             WHERE c."gitPOAPId" = ${gitPOAPId} AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
             ORDER BY "claimsCount" DESC
@@ -708,15 +713,15 @@ export class CustomGitPOAPResolver {
       holders: results.map(r => {
         const holder: Holder = {
           profileId: r.id,
-          address: r.address?.ethAddress ?? '',
+          address: r.ethAddress,
           bio: r.bio ?? null,
           profileImageUrl: r.profileImageUrl ?? null,
           twitterHandle: r.twitterHandle ?? null,
           personalSiteUrl: r.personalSiteUrl ?? null,
           githubHandle: r.githubHandle,
           gitPOAPCount: r.claimsCount,
-          ensName: r.address?.ensName ?? null,
-          ensAvatarImageUrl: r.address?.ensAvatarImageUrl ?? null,
+          ensName: r.ensName,
+          ensAvatarImageUrl: r.ensAvatarImageUrl,
         };
 
         return holder;
