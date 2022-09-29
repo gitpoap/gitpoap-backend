@@ -54,8 +54,7 @@ model Profile {
 model Address {
   id                Int                      @id @default(autoincrement())
   ethAddress        String                   @unique @db.VarChar(255)
-  emailId           Int?
-  email             Email?                   @relation(fields: [emailId], references: [id])
+  email             Email?
   createdAt         DateTime                 @default(now())
   updatedAt         DateTime                 @updatedAt
   githubUserId      Int?
@@ -71,12 +70,16 @@ model Address {
 }
 
 model Email {
-  id           Int       @id @default(autoincrement())
-  emailAddress String    @db.VarChar(255)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  addresses    Address[]
-  claims       Claim[]
+  id             Int       @id @default(autoincrement())
+  emailAddress   String    @db.VarChar(255)
+  addressId      Int       @unique
+  address        Address   @relation(fields: [addressId], references: [id])
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  claims         Claim[]
+  isValidated    Boolean   @default(false)
+  activeToken    String    @unique
+  tokenExpiresAt DateTime
 }
 
 model OrganizationMembership {
