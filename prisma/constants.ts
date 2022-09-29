@@ -1,5 +1,4 @@
 export const ADDRESSES = {
-  test1: '0xae95f7e7fb2fcf86148ef832faed2752ae5a358a'.toLowerCase(),
   jay: '0xaE32D159BB3ABFcAdFaBE7aBB461C2AB4805596D'.toLowerCase(),
   burz: '0xAe95f7e7fb2FCF86148ef832FAeD2752Ae5A358a'.toLowerCase(),
   burz2: '0x206e554084BEeC98e08043397be63C5132Cc01A1'.toLowerCase(),
