@@ -8,10 +8,10 @@ export const prisma = new PrismaClient();
 async function main() {
   if (process.env.TEST_ENV === 'integration') {
     console.log('Seeding DB via integration test script...');
-    await seedTest(prisma);
+    await seedTest();
   } else {
     console.log('Seeding DB via default seed script...');
-    await seedDev(prisma);
+    await seedDev();
   }
 }
 

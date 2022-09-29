@@ -4,7 +4,6 @@
  */
 
 import 'reflect-metadata';
-import { PrismaClient } from '@prisma/client';
 import { ClaimStatus, GitPOAPStatus } from '@generated/type-graphql';
 import {
   AddressFactory,
@@ -41,7 +40,7 @@ import {
   event37430,
 } from './data';
 
-export const seed = async (prism: PrismaClient) => {
+export const seed = async () => {
   console.log('Starting DB seeding...');
 
   /* Create Users */
@@ -138,12 +137,12 @@ export const seed = async (prism: PrismaClient) => {
 
   /* Create Claims */
   // GitPOAP 1
-  const claim1 = await ClaimFactory.create(gitpoap1.id, vitalik.id, ClaimStatus.CLAIMED, addressBurz.id, 'thunderdome', DateTime.utc(2020, 1, 1).toJSDate());
+  const claim1 = await ClaimFactory.create(gitpoap1.id, vitalik.id, ClaimStatus.CLAIMED, addressVitalik.id, 'thunderdome', DateTime.utc(2020, 1, 1).toJSDate());
   const claim2 = await ClaimFactory.create(gitpoap1.id, jay.id, ClaimStatus.CLAIMED, addressJay.id, '4068606', DateTime.utc(2020, 1, 2).toJSDate());
   const claim3 = await ClaimFactory.create(gitpoap1.id, tyler.id);
 
   // GitPOAP 2
-  const claim4 = await ClaimFactory.create(gitpoap2.id, vitalik.id, ClaimStatus.CLAIMED, addressBurz.id, 'ethdenver', DateTime.utc(2020, 1, 3).toJSDate());
+  const claim4 = await ClaimFactory.create(gitpoap2.id, vitalik.id, ClaimStatus.CLAIMED, addressVitalik.id, 'ethdenver', DateTime.utc(2020, 1, 3).toJSDate());
   const claim5 = await ClaimFactory.create(gitpoap2.id, jay.id, ClaimStatus.CLAIMED, addressJay.id, '4078452', DateTime.utc(2020, 1, 4).toJSDate());
   const claim6 = await ClaimFactory.create(gitpoap2.id, burz.id);
   const claim7 = await ClaimFactory.create(gitpoap2.id, tyler.id);
