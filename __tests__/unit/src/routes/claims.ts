@@ -1,7 +1,5 @@
-import { contextMock } from '../../../../__mocks__/src/context';
 import { setupApp } from '../../../../src/app';
 import request from 'supertest';
-import { generateAuthTokens } from '../../../../src/lib/authTokens';
 import { getGithubAuthenticatedApp } from '../../../../src/external/github';
 import { GITPOAP_BOT_APP_ID } from '../../../../src/constants';
 import {
@@ -45,7 +43,8 @@ const issue = {
 describe('POST /claims/gitpoap-bot/create', () => {
   it('Fails with no Access Token provided', async () => {
     const result = await request(await setupApp())
-      .post('/claims/gitpoap-bot/create').send();
+      .post('/claims/gitpoap-bot/create')
+      .send();
 
     expect(result.statusCode).toEqual(400);
   });
@@ -377,7 +376,7 @@ describe('POST /claims/gitpoap-bot/create', () => {
 
     expect(mockedRetrieveClaimsCreatedByPR).toHaveBeenCalledTimes(1);
     expect(mockedRetrieveClaimsCreatedByPR).toHaveBeenCalledWith(contributionId);
-      
+
     expect(mockedRetrieveClaimsCreatedByMention).toHaveBeenCalledTimes(1);
     expect(mockedRetrieveClaimsCreatedByMention).toHaveBeenCalledWith(contributionId);
   });

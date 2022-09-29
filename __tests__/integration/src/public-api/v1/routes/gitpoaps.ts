@@ -40,7 +40,7 @@ describe('public-api/v1/gitpoaps/:gitpoapId/addresses', () => {
 
     expect(data.addresses).not.toEqual(null);
     expect(data.addresses.length).toEqual(2);
-    expect(data.addresses).toContain(ADDRESSES.test1);
+    expect(data.addresses).toContain(ADDRESSES.burz);
     expect(data.addresses).toContain(ADDRESSES.jay);
   });
 });
@@ -55,7 +55,7 @@ describe('public-api/v1/gitpoaps/addresses', () => {
 
     expect(data.addresses).not.toEqual(null);
     expect(data.addresses.length).toEqual(6);
-    expect(data.addresses).toContain(ADDRESSES.test1);
+    expect(data.addresses).toContain(ADDRESSES.burz);
     expect(data.addresses).toContain(ADDRESSES.jay);
     expect(data.addresses).toContain(ADDRESSES.colfax);
     expect(data.addresses).toContain(ADDRESSES.burz2);
@@ -93,108 +93,56 @@ describe('public-api/v1/gitpoaps/events', () => {
 
     expect(data.gitPoapEvents).not.toEqual(null);
     expect(data.gitPoapEvents.length).toEqual(17);
-    expect(data.gitPoapEvents).toContainEqual(genExpectedDataFromEvent(
-      1,
-      event1,
-      ['org43/repo34'],
-      2,
-    ));
-    expect(data.gitPoapEvents).toContainEqual(genExpectedDataFromEvent(
-      2,
-      event2,
-      ['seven-heaven/repo7'],
-      2,
-    ));
-    expect(data.gitPoapEvents).toContainEqual(genExpectedDataFromEvent(
-      3,
-      event3,
-      ['some-other-org/repo568'],
-      2,
-    ));
-    expect(data.gitPoapEvents).toContainEqual(genExpectedDataFromEvent(
-      4,
-      event19375,
-      ['gitpoap/gitpoap-fe'],
-      1,
-    ));
-    expect(data.gitPoapEvents).toContainEqual(genExpectedDataFromEvent(
-      5,
-      event29009,
-      ['gitpoap/gitpoap-backend'],
-      3,
-    ));
-    expect(data.gitPoapEvents).toContainEqual(genExpectedDataFromEvent(
-      6,
-      event34634,
-      ['burz/dopex'],
-      0,
-    ));
-    expect(data.gitPoapEvents).toContainEqual(genExpectedDataFromEvent(
-      7,
-      event36568,
-      ['gitpoap/gitpoap-fe'],
-      0,
-    ));
-    expect(data.gitPoapEvents).toContainEqual(genExpectedDataFromEvent(
-      8,
-      event36569,
-      ['gitpoap/gitpoap-fe'],
-      0,
-    ));
-    expect(data.gitPoapEvents).toContainEqual(genExpectedDataFromEvent(
-      9,
-      event36570,
-      ['gitpoap/gitpoap-backend'],
-      2,
-    ));
-    expect(data.gitPoapEvents).toContainEqual(genExpectedDataFromEvent(
-      10,
-      event36571,
-      ['gitpoap/gitpoap-backend'],
-      1,
-    ));
-    expect(data.gitPoapEvents).toContainEqual(genExpectedDataFromEvent(
-      11,
-      event36572,
-      ['gitpoap/gitpoap-backend'],
-      1,
-    ));
-    expect(data.gitPoapEvents).toContainEqual(genExpectedDataFromEvent(
-      12,
-      event37428,
-      ['stake-house/wagyu-installer'],
-      0,
-    ));
-    expect(data.gitPoapEvents).toContainEqual(genExpectedDataFromEvent(
-      13,
-      event37429,
-      ['stake-house/wagyu-installer'],
-      0,
-    ));
-    expect(data.gitPoapEvents).toContainEqual(genExpectedDataFromEvent(
-      14,
-      event37430,
-      ['stake-house/wagyu-installer'],
-      0,
-    ));
-    expect(data.gitPoapEvents).toContainEqual(genExpectedDataFromEvent(
-      15,
-      event36573,
-      ['gitpoap/gitpoap-bot-test-repo'],
-      0,
-    ));
-    expect(data.gitPoapEvents).toContainEqual(genExpectedDataFromEvent(
-      16,
-      event36574,
-      ['gitpoap/gitpoap-bot-test-repo'],
-      0,
-    ));
-    expect(data.gitPoapEvents).toContainEqual(genExpectedDataFromEvent(
-      18,
-      event36576,
-      ['gitpoap/gitpoap-bot-test-repo'],
-      2,
-      true,
-    ));
+    expect(data.gitPoapEvents).toContainEqual(
+      genExpectedDataFromEvent(1, event1, ['org43/repo34'], 2),
+    );
+    expect(data.gitPoapEvents).toContainEqual(
+      genExpectedDataFromEvent(2, event2, ['seven-heaven/repo7'], 2),
+    );
+    expect(data.gitPoapEvents).toContainEqual(
+      genExpectedDataFromEvent(3, event3, ['some-other-org/repo568'], 2),
+    );
+    expect(data.gitPoapEvents).toContainEqual(
+      genExpectedDataFromEvent(4, event19375, ['gitpoap/gitpoap-fe'], 1),
+    );
+    expect(data.gitPoapEvents).toContainEqual(
+      genExpectedDataFromEvent(5, event29009, ['gitpoap/gitpoap-backend'], 3),
+    );
+    expect(data.gitPoapEvents).toContainEqual(
+      genExpectedDataFromEvent(6, event34634, ['burz/dopex'], 0),
+    );
+    expect(data.gitPoapEvents).toContainEqual(
+      genExpectedDataFromEvent(7, event36568, ['gitpoap/gitpoap-fe'], 0),
+    );
+    expect(data.gitPoapEvents).toContainEqual(
+      genExpectedDataFromEvent(8, event36569, ['gitpoap/gitpoap-fe'], 0),
+    );
+    expect(data.gitPoapEvents).toContainEqual(
+      genExpectedDataFromEvent(9, event36570, ['gitpoap/gitpoap-backend'], 2),
+    );
+    expect(data.gitPoapEvents).toContainEqual(
+      genExpectedDataFromEvent(10, event36571, ['gitpoap/gitpoap-backend'], 1),
+    );
+    expect(data.gitPoapEvents).toContainEqual(
+      genExpectedDataFromEvent(11, event36572, ['gitpoap/gitpoap-backend'], 1),
+    );
+    expect(data.gitPoapEvents).toContainEqual(
+      genExpectedDataFromEvent(12, event37428, ['stake-house/wagyu-installer'], 0),
+    );
+    expect(data.gitPoapEvents).toContainEqual(
+      genExpectedDataFromEvent(13, event37429, ['stake-house/wagyu-installer'], 0),
+    );
+    expect(data.gitPoapEvents).toContainEqual(
+      genExpectedDataFromEvent(14, event37430, ['stake-house/wagyu-installer'], 0),
+    );
+    expect(data.gitPoapEvents).toContainEqual(
+      genExpectedDataFromEvent(15, event36573, ['gitpoap/gitpoap-bot-test-repo'], 0),
+    );
+    expect(data.gitPoapEvents).toContainEqual(
+      genExpectedDataFromEvent(16, event36574, ['gitpoap/gitpoap-bot-test-repo'], 0),
+    );
+    expect(data.gitPoapEvents).toContainEqual(
+      genExpectedDataFromEvent(18, event36576, ['gitpoap/gitpoap-bot-test-repo'], 2, true),
+    );
   });
 });

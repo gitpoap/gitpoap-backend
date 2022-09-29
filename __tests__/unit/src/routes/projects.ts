@@ -128,7 +128,8 @@ describe('POST /projects/add-repos', () => {
 describe('PUT /projects/enable/:id', () => {
   it('Fails with no Access Token provided', async () => {
     const result = await request(await setupApp())
-      .put(`/projects/enable/${projectId}`).send();
+      .put(`/projects/enable/${projectId}`)
+      .send();
 
     expect(result.statusCode).toEqual(400);
   });
