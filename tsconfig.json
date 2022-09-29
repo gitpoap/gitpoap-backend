@@ -6,8 +6,6 @@
     "strict": true /* Enable all strict type-checking options. */,
     "forceConsistentCasingInFileNames": true /* Ensure that casing is correct in imports. */,
     "esModuleInterop": true /* Emit additional JavaScript to ease support for importing CommonJS modules. This enables `allowSyntheticDefaultImports` for type compatibility. */,
-    // "noEmit": true,
-    // "module": "esnext",
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "incremental": true,
