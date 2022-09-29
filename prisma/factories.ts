@@ -25,10 +25,10 @@ export class ClaimFactory {
     gitPOAPId: number,
     userId: number,
     status?: ClaimStatus,
-    issuedAddressId?: number,
+    mintedAddressId?: number,
     poapTokenId?: string,
     mintedAt?: Date,
-    mintedAddressId?: number,
+    issuedAddressId?: number,
   ): Promise<Claim> => {
     const issuedAddressData = issuedAddressId ? { connect: { id: issuedAddressId } } : undefined;
     const mintedAddressData = mintedAddressId ? { connect: { id: mintedAddressId } } : undefined;
