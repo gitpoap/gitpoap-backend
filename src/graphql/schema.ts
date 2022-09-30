@@ -82,6 +82,7 @@ import {
   AggregateGithubMentionResolver,
 } from '@generated/type-graphql';
 import { CustomClaimResolver } from './resolvers/claims';
+import { CustomEmailResolver } from './resolvers/emails';
 import { CustomGitPOAPResolver } from './resolvers/gitpoaps';
 import { CustomOrganizationResolver } from './resolvers/organizations';
 import { CustomProfileResolver } from './resolvers/profiles';
@@ -167,6 +168,7 @@ const allResolvers: NonEmptyArray<Function> = [
   AggregateGithubMentionResolver,
   /* ~~ Custom resolvers ~~ */
   CustomClaimResolver,
+  CustomEmailResolver,
   CustomGitPOAPResolver,
   CustomOrganizationResolver,
   CustomProfileResolver,
