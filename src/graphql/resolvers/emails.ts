@@ -10,21 +10,23 @@ export class CustomEmailResolver {
   @Query(returns => Email, { nullable: true })
   async userEmail(
     @Ctx() { prisma }: Context,
-    @Arg('addressId') addressId: number,
+    @Arg('ethAddress') ethAddress: string,
   ): Promise<Email | null> {
     const logger = createScopedLogger('GQL userEmail');
 
-    logger.info(`Request for the email of address: ${addressId}`);
+    logger.info(`Request for the email of address: ${ethAddress}`);
 
     const endTimer = gqlRequestDurationSeconds.startTimer('userEmail');
 
-    const email = await prisma.email.findUnique({
+    const email = await prisma.email.findFirst({
       where: {
-        addressId: addressId,
+        address: {
+          ethAddress: ethAddress,
+        },
       },
     });
 
-    logger.debug(`Completed request for the email of address: ${addressId}`);
+    logger.debug(`Completed request for the email of address: ${ethAddress}`);
 
     endTimer({ success: 1 });
 
