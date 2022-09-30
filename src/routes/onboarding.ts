@@ -8,6 +8,7 @@ import {
   PutItemCommand,
   PutItemCommandInput,
   ScanCommand,
+  ScanCommandInput,
   UpdateItemCommand,
   UpdateItemCommandInput,
 } from '@aws-sdk/client-dynamodb';
@@ -417,15 +418,21 @@ onboardingRouter.post<'/intake-form', {}, {}, IntakeForm>(
     /* If successful, then dispatch confirmation email to user via PostMark. Also fetch the DynamoDB item count as a proxy for queue number */
     let tableCount = undefined;
     try {
-      /* Get the count of all items within the dynamo DB table */
-      const dynamoRes = await dynamoDBClient.send(
-        new ScanCommand({
-          TableName: intakeFormTable,
-        }),
-      );
+      /* Get the count of all items within the dynamoDB table with isComplete = false */
+      const params: ScanCommandInput = {
+        Select: 'COUNT',
+        TableName: intakeFormTable,
+        FilterExpression: 'isComplete = :isComplete',
+        ExpressionAttributeValues: {
+          ':isComplete': { BOOL: false },
+        },
+      };
+
+      const dynamoRes = await dynamoDBClient.send(new ScanCommand(params));
       tableCount = dynamoRes.Count;
+
       logger.info(
-        `Retrieved count of all items in DynamoDB table ${intakeFormTable} - ${dynamoRes.Count}`,
+        `Retrieved count of all incomplete records in DynamoDB table ${intakeFormTable} - Count: ${tableCount}`,
       );
 
       await sendConfirmationEmail(req.body, tableCount);
