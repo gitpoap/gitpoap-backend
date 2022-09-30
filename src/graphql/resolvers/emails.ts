@@ -21,7 +21,7 @@ export class CustomEmailResolver {
     const email = await prisma.email.findFirst({
       where: {
         address: {
-          ethAddress: ethAddress,
+          ethAddress,
         },
       },
     });
