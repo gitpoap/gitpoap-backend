@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import { Router } from 'express';
+import { MILLISECONDS_PER_DAY } from '../constants';
 
 import { context } from '../context';
 import { postmarkClient } from '../external/postmark';
@@ -8,25 +9,38 @@ import { httpRequestDurationSeconds } from '../metrics';
 import { AddEmailSchema, RemoveEmailSchema, ValidateEmailSchema } from '../schemas/email';
 
 export const emailRouter = Router();
-const oneDay = 60 * 60 * 24 * 1000;
 
-function generateToken({
+const generateUniqueEmailToken = async ({
   stringBase = 'hex',
   byteLength = 20,
 }: {
   stringBase?: BufferEncoding;
   byteLength?: number;
-} = {}): Promise<string> {
-  return new Promise((resolve, reject) => {
-    crypto.randomBytes(byteLength, (err, buffer) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(buffer.toString(stringBase));
-      }
+} = {}): Promise<string> => {
+  let activeToken;
+  let tokenIsUnique = false;
+  do {
+    activeToken = await new Promise<string>((resolve, reject) => {
+      crypto.randomBytes(byteLength, (err, buffer) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(buffer.toString(stringBase));
+        }
+      });
     });
-  });
-}
+
+    const email = await context.prisma.email.findUnique({
+      where: {
+        activeToken,
+      },
+    });
+    // Token is unique if no email is found
+    tokenIsUnique = email === null;
+  } while (!tokenIsUnique);
+
+  return activeToken;
+};
 
 const sendVerificationEmail = async (email: string, activeToken: string) => {
   postmarkClient.sendEmailWithTemplate({
@@ -65,21 +79,10 @@ emailRouter.post('/', async function (req, res) {
   logger.info(`Request from ${req.body.address} to connect email: ${emailAddress}`);
 
   // Generate a new token
-  let activeToken;
-  let tokenIsUnique = false;
-  do {
-    activeToken = await generateToken();
-    const email = await context.prisma.email.findUnique({
-      where: {
-        activeToken,
-      },
-    });
-    // Token is unique if no email is found
-    tokenIsUnique = email === null;
-  } while (!tokenIsUnique);
+  let activeToken = await generateUniqueEmailToken();
 
   // Created expiration date 24hrs in advance
-  const tokenExpiresAt = new Date(new Date().getTime() + oneDay);
+  const tokenExpiresAt = new Date(new Date().getTime() + MILLISECONDS_PER_DAY);
 
   await context.prisma.email.upsert({
     where: {
