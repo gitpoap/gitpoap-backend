@@ -186,14 +186,14 @@ emailRouter.post('/verify', async function (req, res) {
   if (email === null) {
     logger.error(`Failed to retrieve email data for token: ${activeToken}`);
     endTimer({ status: 404 });
-    return res.status(404).send({ msg: 'Invalid token provided' });
+    return res.status(404).send({ msg: 'INVALID' });
   }
 
   if (email.isValidated) {
     logger.warn(`User attempted to validate emailAddress that has already been validated`);
 
     endTimer({ status: 400 });
-    return res.status(400).send({ msg: 'Token has already been used' });
+    return res.status(400).send({ msg: 'USED' });
   }
 
   if (email.tokenExpiresAt > new Date()) {
@@ -206,7 +206,7 @@ emailRouter.post('/verify', async function (req, res) {
     });
 
     endTimer({ status: 400 });
-    return res.status(400).send({ msg: 'Expired token provided' });
+    return res.status(400).send({ msg: 'EXPIRED' });
   }
 
   await context.prisma.email.update({
@@ -222,5 +222,5 @@ emailRouter.post('/verify', async function (req, res) {
 
   endTimer({ status: 200 });
 
-  return res.status(200).send('VERIFIED');
+  return res.status(200).send('VALID');
 });
