@@ -356,6 +356,7 @@ type Query {
   totalClaims: Float!
   lastMonthClaims: Float!
   userClaims(githubId: Float!): [FullClaimData!]
+  userEmail(addressId: Float!): Email
   totalGitPOAPs: Float!
   lastMonthGitPOAPs: Float!
   gitPOAPEvent(id: Float!): FullGitPOAPEventData
