@@ -143,7 +143,7 @@ emailRouter.delete('/', async function (req, res) {
   } catch (err) {
     logger.warn(`Tried to delete an email that doesn't exist: ${err}`);
     endTimer({ status: 404 });
-    return res.status(404).send({ msg: `There is email with id: ${id}` });
+    return res.status(404).send({ msg: `Invalid email provided` });
   }
 
   logger.debug(`Completed request to delete email with id: ${id}`);
