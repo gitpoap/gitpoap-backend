@@ -10,13 +10,10 @@ import { AddEmailSchema, RemoveEmailSchema, ValidateEmailSchema } from '../schem
 
 export const emailRouter = Router();
 
-const generateUniqueEmailToken = async ({
-  stringBase = 'hex',
-  byteLength = 20,
-}: {
-  stringBase?: BufferEncoding;
-  byteLength?: number;
-} = {}): Promise<string> => {
+const generateUniqueEmailToken = async (
+  byteLength: number = 20,
+  stringBase: BufferEncoding = 'hex',
+): Promise<string> => {
   let activeToken;
   let tokenIsUnique = false;
   do {
