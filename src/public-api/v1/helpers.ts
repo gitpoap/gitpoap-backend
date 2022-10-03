@@ -24,6 +24,12 @@ type Claim = {
     githubMergedAt: Date | null;
   } | null;
   mentionEarned: {
+    pullRequest: {
+      githubCreatedAt: Date;
+    } | null;
+    issue: {
+      githubCreatedAt: Date;
+    } | null;
     githubMentionedAt: Date;
   } | null;
   id: number;
