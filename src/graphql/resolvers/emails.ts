@@ -1,9 +1,11 @@
 import { Email } from '@generated/type-graphql';
-import { Arg, Ctx, Resolver, Query } from 'type-graphql';
+import { Arg, Ctx, Query, Resolver } from 'type-graphql';
 
 import { Context } from '../../context';
 import { createScopedLogger } from '../../logging';
 import { gqlRequestDurationSeconds } from '../../metrics';
+
+type EmailResponse = Pick<Email, 'id' | 'emailAddress' | 'isValidated' | 'tokenExpiresAt'>;
 
 @Resolver(of => Email)
 export class CustomEmailResolver {
@@ -11,7 +13,7 @@ export class CustomEmailResolver {
   async userEmail(
     @Ctx() { prisma }: Context,
     @Arg('ethAddress') ethAddress: string,
-  ): Promise<Email | null> {
+  ): Promise<EmailResponse | null> {
     const logger = createScopedLogger('GQL userEmail');
 
     logger.info(`Request for the email of address: ${ethAddress}`);
@@ -23,6 +25,12 @@ export class CustomEmailResolver {
         address: {
           ethAddress: ethAddress.toLowerCase(),
         },
+      },
+      select: {
+        id: true,
+        emailAddress: true,
+        isValidated: true,
+        tokenExpiresAt: true,
       },
     });
 
