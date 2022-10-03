@@ -139,7 +139,9 @@ gitpoapsRouter.post(
     }
 
     if (poapInfo.year !== year) {
-      logger.warn(`POAP's returned year doesn't equal the one we supplied!`);
+      logger.warn(
+        `POAP's returned year (${poapInfo.year}) doesn't equal the one we supplied (${year})`,
+      );
     }
 
     logger.debug(`Created GitPOAP in POAP system: ${JSON.stringify(poapInfo)}`);
