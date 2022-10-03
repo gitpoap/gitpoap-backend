@@ -11,7 +11,7 @@ export type Contribution = RestrictedContribution | IssueContribution;
 export async function countContributionsForClaim(
   user: { id: number },
   repos: { id: number }[],
-  gitPOAP: { year: number },
+  gitPOAP: { year: number; isPRBased: boolean },
 ): Promise<number> {
   const repoIds: number[] = repos.map(r => r.id);
 
@@ -20,10 +20,35 @@ export async function countContributionsForClaim(
     lt: new Date(gitPOAP.year + 1, 0, 1),
   };
 
-  const [prCount, mentionedCount] = await Promise.all([
-    // Count all PRs that this user has had merged into the
-    // repos
-    context.prisma.githubPullRequest.count({
+  // Count all (already existing) claims that the user
+  // got from mentions. We consider the earned at time
+  // to be when the related PR/Issue was created
+  // Note that these can be UNCLAIMED
+  const mentionedCount = await context.prisma.githubMention.count({
+    where: {
+      userId: user.id,
+      repoId: {
+        in: repoIds,
+      },
+      OR: [
+        {
+          pullRequest: {
+            githubCreatedAt: dateRange,
+          },
+        },
+        {
+          issue: {
+            githubCreatedAt: dateRange,
+          },
+        },
+      ],
+    },
+  });
+
+  // Note that if the GitPOAP is not PR-based, then we do not include
+  // the count of PRs that the user has had merged into the repos
+  if (gitPOAP.isPRBased) {
+    const prCount = await context.prisma.githubPullRequest.count({
       where: {
         userId: user.id,
         repoId: {
@@ -31,32 +56,10 @@ export async function countContributionsForClaim(
         },
         githubMergedAt: dateRange,
       },
-    }),
-    // Count all (already existing) claims that the user
-    // got from mentions. We consider the earned at time
-    // to be when the related PR/Issue was created
-    // Note that these can be UNCLAIMED
-    context.prisma.githubMention.count({
-      where: {
-        userId: user.id,
-        repoId: {
-          in: repoIds,
-        },
-        OR: [
-          {
-            pullRequest: {
-              githubCreatedAt: dateRange,
-            },
-          },
-          {
-            issue: {
-              githubCreatedAt: dateRange,
-            },
-          },
-        ],
-      },
-    }),
-  ]);
+    });
 
-  return prCount + mentionedCount;
+    return prCount + mentionedCount;
+  }
+
+  return mentionedCount;
 }
