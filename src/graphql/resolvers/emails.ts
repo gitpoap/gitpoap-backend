@@ -6,7 +6,7 @@ import { createScopedLogger } from '../../logging';
 import { gqlRequestDurationSeconds } from '../../metrics';
 
 @ObjectType()
-class EmailResponse {
+class VerifyEmailResponse {
   @Field(() => Number)
   id: number;
 
@@ -22,11 +22,11 @@ class EmailResponse {
 
 @Resolver(of => Email)
 export class CustomEmailResolver {
-  @Query(returns => EmailResponse, { nullable: true })
+  @Query(returns => VerifyEmailResponse, { nullable: true })
   async userEmail(
     @Ctx() { prisma }: Context,
     @Arg('ethAddress') ethAddress: string,
-  ): Promise<EmailResponse | null> {
+  ): Promise<VerifyEmailResponse | null> {
     const logger = createScopedLogger('GQL userEmail');
 
     logger.info(`Request for the email of address: ${ethAddress}`);
