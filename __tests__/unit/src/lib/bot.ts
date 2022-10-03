@@ -30,12 +30,21 @@ jest.mock('../../../../src/lib/issues');
 jest.mock('../../../../src/lib/mentions');
 
 const mockedGetGithubUserByIdAsAdmin = jest.mocked(getGithubUserByIdAsAdmin, true);
-const mockedGetSingleGithubRepositoryPullAsAdmin = jest.mocked(getSingleGithubRepositoryPullAsAdmin, true);
-const mockedGetSingleGithubRepositoryIssueAsAdmin = jest.mocked(getSingleGithubRepositoryIssueAsAdmin, true);
+const mockedGetSingleGithubRepositoryPullAsAdmin = jest.mocked(
+  getSingleGithubRepositoryPullAsAdmin,
+  true,
+);
+const mockedGetSingleGithubRepositoryIssueAsAdmin = jest.mocked(
+  getSingleGithubRepositoryIssueAsAdmin,
+  true,
+);
 const mockedGetRepoByName = jest.mocked(getRepoByName, true);
 const mockedUpsertUser = jest.mocked(upsertUser, true);
 const mockedUpsertGithubPullRequest = jest.mocked(upsertGithubPullRequest, true);
-const mockedCreateNewClaimsForRepoContributionHelper = jest.mocked(createNewClaimsForRepoContributionHelper, true);
+const mockedCreateNewClaimsForRepoContributionHelper = jest.mocked(
+  createNewClaimsForRepoContributionHelper,
+  true,
+);
 const mockedUpsertGithubIssue = jest.mocked(upsertGithubIssue, true);
 const mockedUpsertGithubMention = jest.mocked(upsertGithubMention, true);
 
@@ -155,6 +164,7 @@ describe('createClaimsForPR', () => {
     const pullRequest = {
       title: 'foobar',
       merge_commit_sha: 'yeet-2022',
+      created_at: '2022-01-16',
       merged_at: '2022-01-22',
     };
     mockedGetSingleGithubRepositoryPullAsAdmin.mockResolvedValue(pullRequest as any);
@@ -194,6 +204,7 @@ describe('createClaimsForPR', () => {
       repoId,
       pullRequestNumber,
       pullRequest.title,
+      new Date(pullRequest.created_at),
       new Date(pullRequest.merged_at),
       pullRequest.merge_commit_sha,
       userId,
@@ -220,6 +231,7 @@ describe('createClaimsForPR', () => {
     const pullRequest = {
       title: 'foobar',
       merge_commit_sha: 'yeet-2022',
+      created_at: '2022-01-16',
       merged_at: '2022-01-22',
     };
     mockedGetSingleGithubRepositoryPullAsAdmin.mockResolvedValue(pullRequest as any);
@@ -261,6 +273,7 @@ describe('createClaimsForPR', () => {
       repoId,
       pullRequestNumber,
       pullRequest.title,
+      new Date(pullRequest.created_at),
       new Date(pullRequest.merged_at),
       pullRequest.merge_commit_sha,
       userId,
@@ -288,12 +301,7 @@ describe('createClaimsForIssue', () => {
   it('Returns with BotUser error if user failed lookup on Github', async () => {
     mockedGetGithubUserByIdAsAdmin.mockResolvedValue(null);
 
-    const result = await createClaimsForIssue(
-      organization,
-      repo,
-      issueNumber,
-      githubId,
-    );
+    const result = await createClaimsForIssue(organization, repo, issueNumber, githubId);
 
     expect(result).toEqual(BotCreateClaimsErrorType.BotUser);
 
@@ -306,12 +314,7 @@ describe('createClaimsForIssue', () => {
   it('Returns with BotUser error if user is a bot', async () => {
     mockedGetGithubUserByIdAsAdmin.mockResolvedValue({ type: 'Bot' } as any);
 
-    const result = await createClaimsForIssue(
-      organization,
-      repo,
-      issueNumber,
-      githubId,
-    );
+    const result = await createClaimsForIssue(organization, repo, issueNumber, githubId);
 
     expect(result).toEqual(BotCreateClaimsErrorType.BotUser);
 
@@ -325,12 +328,7 @@ describe('createClaimsForIssue', () => {
     mockedGetGithubUserByIdAsAdmin.mockResolvedValue({ type: 'User' } as any);
     mockedGetRepoByName.mockResolvedValue(null);
 
-    const result = await createClaimsForIssue(
-      organization,
-      repo,
-      issueNumber,
-      githubId,
-    );
+    const result = await createClaimsForIssue(organization, repo, issueNumber, githubId);
 
     expect(result).toEqual(BotCreateClaimsErrorType.RepoNotFound);
 
@@ -348,12 +346,7 @@ describe('createClaimsForIssue', () => {
     mockedGetRepoByName.mockResolvedValue({ id: repoId } as any);
     mockedGetSingleGithubRepositoryIssueAsAdmin.mockResolvedValue(null);
 
-    const result = await createClaimsForIssue(
-      organization,
-      repo,
-      issueNumber,
-      githubId,
-    );
+    const result = await createClaimsForIssue(organization, repo, issueNumber, githubId);
 
     expect(result).toEqual(BotCreateClaimsErrorType.GithubRecordNotFound);
 
@@ -383,6 +376,7 @@ describe('createClaimsForIssue', () => {
     mockedGetRepoByName.mockResolvedValue({ id: repoId } as any);
     const issue = {
       title: 'barfoo',
+      created_at: '2022-01-16',
       closed_at: '2022-01-22',
     };
     mockedGetSingleGithubRepositoryIssueAsAdmin.mockResolvedValue(issue as any);
@@ -392,12 +386,7 @@ describe('createClaimsForIssue', () => {
     const githubMentionId = 94234;
     mockedUpsertGithubMention.mockResolvedValue({ id: githubMentionId } as any);
 
-    const result = await createClaimsForIssue(
-      organization,
-      repo,
-      issueNumber,
-      githubId,
-    );
+    const result = await createClaimsForIssue(organization, repo, issueNumber, githubId);
 
     expect(result).toEqual({ mention: { id: githubMentionId } });
 
@@ -422,6 +411,7 @@ describe('createClaimsForIssue', () => {
       repoId,
       issueNumber,
       issue.title,
+      new Date(issue.created_at),
       new Date(issue.closed_at),
       userId,
     );
