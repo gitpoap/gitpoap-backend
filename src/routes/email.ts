@@ -4,9 +4,11 @@ import { MILLISECONDS_PER_DAY } from '../constants';
 
 import { context } from '../context';
 import { postmarkClient } from '../external/postmark';
+import { resolveENS } from '../lib/ens';
 import { createScopedLogger } from '../logging';
 import { httpRequestDurationSeconds } from '../metrics';
 import { AddEmailSchema, RemoveEmailSchema, ValidateEmailSchema } from '../schemas/email';
+import { isSignatureValid } from '../signatures';
 
 export const emailRouter = Router();
 
@@ -71,19 +73,46 @@ emailRouter.post('/', async function (req, res) {
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
+  // Resolve ENS if provided
+  const resolvedAddress = await resolveENS(req.body.address);
+  if (resolvedAddress === null) {
+    logger.warn('Request address is invalid');
+    endTimer({ status: 400 });
+    return res.status(400).send({ msg: `${req.body.address} is not a valid address` });
+  }
+
+  if (
+    !isSignatureValid(resolvedAddress, 'POST /email', req.body.signature, {
+      emailAddress: req.body.emailAddress,
+    })
+  ) {
+    logger.warn('Request signature is invalid');
+    endTimer({ status: 401 });
+    return res.status(401).send({ msg: 'The signature is not valid for this address and data' });
+  }
+
+  const address = await context.prisma.address.findUnique({
+    where: { ethAddress: resolvedAddress },
+  });
+  if (address === null) {
+    logger.warn('Request address is invalid');
+    endTimer({ status: 400 });
+    return res.status(400).send({ msg: `${req.body.address} is not a valid address` });
+  }
+
   const { emailAddress } = req.body;
 
   logger.info(`Request from ${req.body.address} to connect email: ${emailAddress}`);
 
   // Generate a new token
-  let activeToken = await generateUniqueEmailToken();
+  const activeToken = await generateUniqueEmailToken();
 
   // Created expiration date 24hrs in advance
   const tokenExpiresAt = new Date(new Date().getTime() + MILLISECONDS_PER_DAY);
 
   await context.prisma.email.upsert({
     where: {
-      addressId: req.body.address,
+      addressId: address.id,
     },
     update: {},
     create: {
@@ -128,6 +157,24 @@ emailRouter.delete('/', async function (req, res) {
     );
     endTimer({ status: 400 });
     return res.status(400).send({ issues: schemaResult.error.issues });
+  }
+
+  // Resolve ENS if provided
+  const resolvedAddress = await resolveENS(req.body.address);
+  if (resolvedAddress === null) {
+    logger.warn('Request address is invalid');
+    endTimer({ status: 400 });
+    return res.status(400).send({ msg: `${req.body.address} is not a valid address` });
+  }
+
+  if (
+    !isSignatureValid(resolvedAddress, 'DELETE /email', req.body.signature, {
+      id: req.body.id,
+    })
+  ) {
+    logger.warn('Request signature is invalid');
+    endTimer({ status: 401 });
+    return res.status(401).send({ msg: 'The signature is not valid for this address and data' });
   }
 
   const { id } = req.body;
