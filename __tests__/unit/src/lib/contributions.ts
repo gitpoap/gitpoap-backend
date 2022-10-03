@@ -6,7 +6,10 @@ const user = { id: 4 };
 describe('countContributionsForClaim', () => {
   const repoIds = [5, 6];
   const repos = [{ id: repoIds[0] }, { id: repoIds[1] }];
-  const gitPOAP = { year: 2022 };
+  const gitPOAP = {
+    year: 2022,
+    isPRBased: true,
+  };
   const dateRange = {
     gte: new Date(gitPOAP.year, 0, 1),
     lt: new Date(gitPOAP.year + 1, 0, 1),
