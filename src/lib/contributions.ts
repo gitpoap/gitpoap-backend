@@ -42,7 +42,18 @@ export async function countContributionsForClaim(
         repoId: {
           in: repoIds,
         },
-        githubMentionedAt: dateRange,
+        OR: [
+          {
+            pullRequest: {
+              githubCreatedAt: dateRange,
+            },
+          },
+          {
+            issue: {
+              githubCreatedAt: dateRange,
+            },
+          },
+        ],
       },
     }),
   ]);
