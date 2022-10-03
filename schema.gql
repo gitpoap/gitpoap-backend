@@ -805,7 +805,7 @@ input GithubPullRequestWhereInput {
   updatedAt: DateTimeFilter
   githubPullNumber: IntFilter
   githubTitle: StringFilter
-  githubCreatedAt: DateTimeNullableFilter
+  githubCreatedAt: DateTimeFilter
   githubMergedAt: DateTimeNullableFilter
   githubMergeCommitSha: StringNullableFilter
   repoId: IntFilter
@@ -1058,7 +1058,7 @@ input GithubIssueWhereInput {
   updatedAt: DateTimeFilter
   githubIssueNumber: IntFilter
   githubTitle: StringFilter
-  githubCreatedAt: DateTimeNullableFilter
+  githubCreatedAt: DateTimeFilter
   githubClosedAt: DateTimeNullableFilter
   repoId: IntFilter
   repo: RepoRelationFilter
@@ -1688,7 +1688,7 @@ type GithubPullRequest {
   updatedAt: DateTime!
   githubPullNumber: Int!
   githubTitle: String!
-  githubCreatedAt: DateTime
+  githubCreatedAt: DateTime!
   githubMergedAt: DateTime
   githubMergeCommitSha: String
   repoId: Int!
@@ -1824,7 +1824,7 @@ type GithubIssue {
   updatedAt: DateTime!
   githubIssueNumber: Int!
   githubTitle: String!
-  githubCreatedAt: DateTime
+  githubCreatedAt: DateTime!
   githubClosedAt: DateTime
   repoId: Int!
   userId: Int!
@@ -2902,7 +2902,7 @@ type GithubIssueGroupBy {
   updatedAt: DateTime!
   githubIssueNumber: Int!
   githubTitle: String!
-  githubCreatedAt: DateTime
+  githubCreatedAt: DateTime!
   githubClosedAt: DateTime
   repoId: Int!
   userId: Int!
@@ -2989,7 +2989,7 @@ input GithubIssueScalarWhereWithAggregatesInput {
   updatedAt: DateTimeWithAggregatesFilter
   githubIssueNumber: IntWithAggregatesFilter
   githubTitle: StringWithAggregatesFilter
-  githubCreatedAt: DateTimeNullableWithAggregatesFilter
+  githubCreatedAt: DateTimeWithAggregatesFilter
   githubClosedAt: DateTimeNullableWithAggregatesFilter
   repoId: IntWithAggregatesFilter
   userId: IntWithAggregatesFilter
@@ -3216,7 +3216,7 @@ type GithubPullRequestGroupBy {
   updatedAt: DateTime!
   githubPullNumber: Int!
   githubTitle: String!
-  githubCreatedAt: DateTime
+  githubCreatedAt: DateTime!
   githubMergedAt: DateTime
   githubMergeCommitSha: String
   repoId: Int!
@@ -3308,7 +3308,7 @@ input GithubPullRequestScalarWhereWithAggregatesInput {
   updatedAt: DateTimeWithAggregatesFilter
   githubPullNumber: IntWithAggregatesFilter
   githubTitle: StringWithAggregatesFilter
-  githubCreatedAt: DateTimeNullableWithAggregatesFilter
+  githubCreatedAt: DateTimeWithAggregatesFilter
   githubMergedAt: DateTimeNullableWithAggregatesFilter
   githubMergeCommitSha: StringNullableWithAggregatesFilter
   repoId: IntWithAggregatesFilter
