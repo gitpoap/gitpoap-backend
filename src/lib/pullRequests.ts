@@ -99,6 +99,7 @@ export async function upsertGithubPullRequest(
     },
     update: {
       githubTitle,
+      githubCreatedAt,
       githubMergedAt,
       githubMergeCommitSha,
     },
