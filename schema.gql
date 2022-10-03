@@ -805,6 +805,7 @@ input GithubPullRequestWhereInput {
   updatedAt: DateTimeFilter
   githubPullNumber: IntFilter
   githubTitle: StringFilter
+  githubCreatedAt: DateTimeNullableFilter
   githubMergedAt: DateTimeNullableFilter
   githubMergeCommitSha: StringNullableFilter
   repoId: IntFilter
@@ -1057,6 +1058,7 @@ input GithubIssueWhereInput {
   updatedAt: DateTimeFilter
   githubIssueNumber: IntFilter
   githubTitle: StringFilter
+  githubCreatedAt: DateTimeNullableFilter
   githubClosedAt: DateTimeNullableFilter
   repoId: IntFilter
   repo: RepoRelationFilter
@@ -1335,6 +1337,7 @@ input GithubPullRequestOrderByWithRelationInput {
   updatedAt: SortOrder
   githubPullNumber: SortOrder
   githubTitle: SortOrder
+  githubCreatedAt: SortOrder
   githubMergedAt: SortOrder
   githubMergeCommitSha: SortOrder
   repoId: SortOrder
@@ -1396,6 +1399,7 @@ input GithubIssueOrderByWithRelationInput {
   updatedAt: SortOrder
   githubIssueNumber: SortOrder
   githubTitle: SortOrder
+  githubCreatedAt: SortOrder
   githubClosedAt: SortOrder
   repoId: SortOrder
   repo: RepoOrderByWithRelationInput
@@ -1684,6 +1688,7 @@ type GithubPullRequest {
   updatedAt: DateTime!
   githubPullNumber: Int!
   githubTitle: String!
+  githubCreatedAt: DateTime
   githubMergedAt: DateTime
   githubMergeCommitSha: String
   repoId: Int!
@@ -1806,6 +1811,7 @@ enum GithubPullRequestScalarFieldEnum {
   updatedAt
   githubPullNumber
   githubTitle
+  githubCreatedAt
   githubMergedAt
   githubMergeCommitSha
   repoId
@@ -1818,6 +1824,7 @@ type GithubIssue {
   updatedAt: DateTime!
   githubIssueNumber: Int!
   githubTitle: String!
+  githubCreatedAt: DateTime
   githubClosedAt: DateTime
   repoId: Int!
   userId: Int!
@@ -1844,6 +1851,7 @@ enum GithubIssueScalarFieldEnum {
   updatedAt
   githubIssueNumber
   githubTitle
+  githubCreatedAt
   githubClosedAt
   repoId
   userId
@@ -2843,6 +2851,7 @@ type GithubIssueCountAggregate {
   updatedAt: Int!
   githubIssueNumber: Int!
   githubTitle: Int!
+  githubCreatedAt: Int!
   githubClosedAt: Int!
   repoId: Int!
   userId: Int!
@@ -2869,6 +2878,7 @@ type GithubIssueMinAggregate {
   updatedAt: DateTime
   githubIssueNumber: Int
   githubTitle: String
+  githubCreatedAt: DateTime
   githubClosedAt: DateTime
   repoId: Int
   userId: Int
@@ -2880,6 +2890,7 @@ type GithubIssueMaxAggregate {
   updatedAt: DateTime
   githubIssueNumber: Int
   githubTitle: String
+  githubCreatedAt: DateTime
   githubClosedAt: DateTime
   repoId: Int
   userId: Int
@@ -2891,6 +2902,7 @@ type GithubIssueGroupBy {
   updatedAt: DateTime!
   githubIssueNumber: Int!
   githubTitle: String!
+  githubCreatedAt: DateTime
   githubClosedAt: DateTime
   repoId: Int!
   userId: Int!
@@ -2907,6 +2919,7 @@ input GithubIssueOrderByWithAggregationInput {
   updatedAt: SortOrder
   githubIssueNumber: SortOrder
   githubTitle: SortOrder
+  githubCreatedAt: SortOrder
   githubClosedAt: SortOrder
   repoId: SortOrder
   userId: SortOrder
@@ -2923,6 +2936,7 @@ input GithubIssueCountOrderByAggregateInput {
   updatedAt: SortOrder
   githubIssueNumber: SortOrder
   githubTitle: SortOrder
+  githubCreatedAt: SortOrder
   githubClosedAt: SortOrder
   repoId: SortOrder
   userId: SortOrder
@@ -2941,6 +2955,7 @@ input GithubIssueMaxOrderByAggregateInput {
   updatedAt: SortOrder
   githubIssueNumber: SortOrder
   githubTitle: SortOrder
+  githubCreatedAt: SortOrder
   githubClosedAt: SortOrder
   repoId: SortOrder
   userId: SortOrder
@@ -2952,6 +2967,7 @@ input GithubIssueMinOrderByAggregateInput {
   updatedAt: SortOrder
   githubIssueNumber: SortOrder
   githubTitle: SortOrder
+  githubCreatedAt: SortOrder
   githubClosedAt: SortOrder
   repoId: SortOrder
   userId: SortOrder
@@ -2973,6 +2989,7 @@ input GithubIssueScalarWhereWithAggregatesInput {
   updatedAt: DateTimeWithAggregatesFilter
   githubIssueNumber: IntWithAggregatesFilter
   githubTitle: StringWithAggregatesFilter
+  githubCreatedAt: DateTimeNullableWithAggregatesFilter
   githubClosedAt: DateTimeNullableWithAggregatesFilter
   repoId: IntWithAggregatesFilter
   userId: IntWithAggregatesFilter
@@ -3145,6 +3162,7 @@ type GithubPullRequestCountAggregate {
   updatedAt: Int!
   githubPullNumber: Int!
   githubTitle: Int!
+  githubCreatedAt: Int!
   githubMergedAt: Int!
   githubMergeCommitSha: Int!
   repoId: Int!
@@ -3172,6 +3190,7 @@ type GithubPullRequestMinAggregate {
   updatedAt: DateTime
   githubPullNumber: Int
   githubTitle: String
+  githubCreatedAt: DateTime
   githubMergedAt: DateTime
   githubMergeCommitSha: String
   repoId: Int
@@ -3184,6 +3203,7 @@ type GithubPullRequestMaxAggregate {
   updatedAt: DateTime
   githubPullNumber: Int
   githubTitle: String
+  githubCreatedAt: DateTime
   githubMergedAt: DateTime
   githubMergeCommitSha: String
   repoId: Int
@@ -3196,6 +3216,7 @@ type GithubPullRequestGroupBy {
   updatedAt: DateTime!
   githubPullNumber: Int!
   githubTitle: String!
+  githubCreatedAt: DateTime
   githubMergedAt: DateTime
   githubMergeCommitSha: String
   repoId: Int!
@@ -3213,6 +3234,7 @@ input GithubPullRequestOrderByWithAggregationInput {
   updatedAt: SortOrder
   githubPullNumber: SortOrder
   githubTitle: SortOrder
+  githubCreatedAt: SortOrder
   githubMergedAt: SortOrder
   githubMergeCommitSha: SortOrder
   repoId: SortOrder
@@ -3230,6 +3252,7 @@ input GithubPullRequestCountOrderByAggregateInput {
   updatedAt: SortOrder
   githubPullNumber: SortOrder
   githubTitle: SortOrder
+  githubCreatedAt: SortOrder
   githubMergedAt: SortOrder
   githubMergeCommitSha: SortOrder
   repoId: SortOrder
@@ -3249,6 +3272,7 @@ input GithubPullRequestMaxOrderByAggregateInput {
   updatedAt: SortOrder
   githubPullNumber: SortOrder
   githubTitle: SortOrder
+  githubCreatedAt: SortOrder
   githubMergedAt: SortOrder
   githubMergeCommitSha: SortOrder
   repoId: SortOrder
@@ -3261,6 +3285,7 @@ input GithubPullRequestMinOrderByAggregateInput {
   updatedAt: SortOrder
   githubPullNumber: SortOrder
   githubTitle: SortOrder
+  githubCreatedAt: SortOrder
   githubMergedAt: SortOrder
   githubMergeCommitSha: SortOrder
   repoId: SortOrder
@@ -3283,6 +3308,7 @@ input GithubPullRequestScalarWhereWithAggregatesInput {
   updatedAt: DateTimeWithAggregatesFilter
   githubPullNumber: IntWithAggregatesFilter
   githubTitle: StringWithAggregatesFilter
+  githubCreatedAt: DateTimeNullableWithAggregatesFilter
   githubMergedAt: DateTimeNullableWithAggregatesFilter
   githubMergeCommitSha: StringNullableWithAggregatesFilter
   repoId: IntWithAggregatesFilter

@@ -70,15 +70,15 @@ model Address {
 }
 
 model Email {
-  id             Int       @id @default(autoincrement())
-  emailAddress   String    @db.VarChar(255)
-  addressId      Int       @unique
-  address        Address   @relation(fields: [addressId], references: [id])
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  id             Int      @id @default(autoincrement())
+  emailAddress   String   @db.VarChar(255)
+  addressId      Int      @unique
+  address        Address  @relation(fields: [addressId], references: [id])
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
   claims         Claim[]
-  isValidated    Boolean   @default(false)
-  activeToken    String    @unique
+  isValidated    Boolean  @default(false)
+  activeToken    String   @unique
   tokenExpiresAt DateTime
 }
 
@@ -250,6 +250,7 @@ model GithubPullRequest {
   updatedAt            DateTime        @updatedAt
   githubPullNumber     Int
   githubTitle          String
+  githubCreatedAt      DateTime?
   githubMergedAt       DateTime?
   githubMergeCommitSha String?         @db.VarChar(41)
   repoId               Int
@@ -268,6 +269,7 @@ model GithubIssue {
   updatedAt         DateTime        @updatedAt
   githubIssueNumber Int
   githubTitle       String
+  githubCreatedAt   DateTime?
   // If the user was tagged in an issue for the bot the issue may not have
   // been closed yet (or ever)
   githubClosedAt    DateTime?
