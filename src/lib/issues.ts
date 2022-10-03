@@ -23,6 +23,7 @@ export async function upsertGithubIssue(
     },
     update: {
       githubTitle,
+      githubCreatedAt,
       githubClosedAt,
     },
     create: {
