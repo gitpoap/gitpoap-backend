@@ -394,6 +394,7 @@ export class GithubPullRequestFactory {
   static create = async (
     githubPullNumber: number,
     githubTitle: string,
+    githubCreatedAt: Date,
     githubMergedAt: Date | null,
     githubMergeCommitSha: string | null,
     repoId: number,
@@ -402,6 +403,7 @@ export class GithubPullRequestFactory {
     const data: Prisma.GithubPullRequestCreateInput = {
       githubPullNumber,
       githubTitle,
+      githubCreatedAt,
       githubMergedAt,
       githubMergeCommitSha,
       repo: {
@@ -426,6 +428,7 @@ export class GithubIssueFactory {
   static create = async (
     githubIssueNumber: number,
     githubTitle: string,
+    githubCreatedAt: Date,
     githubClosedAt: Date | null,
     repoId: number,
     userId: number,
@@ -433,6 +436,7 @@ export class GithubIssueFactory {
     const data: Prisma.GithubIssueCreateInput = {
       githubIssueNumber,
       githubTitle,
+      githubCreatedAt,
       githubClosedAt,
       repo: {
         connect: {
