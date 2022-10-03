@@ -46,6 +46,7 @@ async function getRepoInfo(repoId: number): Promise<ExtraRepoData | null> {
               id: true,
               year: true,
               threshold: true,
+              isPRBased: true,
             },
           },
           repos: {
