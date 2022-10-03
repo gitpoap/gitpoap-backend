@@ -80,6 +80,7 @@ export async function upsertGithubPullRequest(
   repoId: number,
   githubPullNumber: number,
   githubTitle: string,
+  githubCreatedAt: Date,
   githubMergedAt: Date | null,
   githubMergeCommitSha: string | null,
   userId: number,
@@ -103,6 +104,7 @@ export async function upsertGithubPullRequest(
     create: {
       githubPullNumber,
       githubTitle,
+      githubCreatedAt,
       githubMergedAt,
       githubMergeCommitSha,
       repo: {
@@ -151,6 +153,7 @@ async function backloadGithubPullRequest(
     repo.id,
     pr.number,
     pr.title,
+    new Date(pr.created_at),
     mergedAt,
     extractMergeCommitSha(pr), // This must be final since it's been merged
     user.id,
