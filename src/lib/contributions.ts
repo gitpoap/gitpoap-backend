@@ -33,7 +33,9 @@ export async function countContributionsForClaim(
       },
     }),
     // Count all (already existing) claims that the user
-    // got from mentions. Note that these can be UNCLAIMED
+    // got from mentions. We consider the earned at time
+    // to be when the related PR/Issue was created
+    // Note that these can be UNCLAIMED
     context.prisma.githubMention.count({
       where: {
         userId: user.id,
