@@ -4,7 +4,7 @@ import { handleNewPull, RepoReturnType } from '../../../../src/lib/ongoing';
 import { GithubPullRequestData } from '../../../../src/external/github';
 import { upsertUser } from '../../../../src/lib/users';
 import { upsertGithubPullRequest } from '../../../../src/lib/pullRequests';
-import { User } from '@generated/type-graphql';
+import { GithubPullRequest, User } from '@prisma/client';
 import {
   createNewClaimsForRepoContribution,
   createYearlyGitPOAPsMap,
@@ -43,9 +43,7 @@ const repo: RepoReturnType = {
         threshold: 1,
       },
     ],
-    repos: [
-      { id: 5 },
-    ],
+    repos: [{ id: 5 }],
   },
   organization: {
     name: 'org',
@@ -67,6 +65,7 @@ describe('handleNewPull', () => {
         type: 'User',
       },
       merged_at: null,
+      created_at: '2022-05-20',
       updated_at: '2022-06-13',
       merge_commit_sha: 'lkjsdlkfjalskjfdlkajs',
       head: {
@@ -91,6 +90,7 @@ describe('handleNewPull', () => {
         login: user.githubHandle,
         type: 'User',
       },
+      created_at: '2022-05-20',
       merged_at: '2022-06-09',
       updated_at: '2022-06-09',
       merge_commit_sha: 'lkdlk324fjalskjfdlkajs',
@@ -118,6 +118,7 @@ describe('handleNewPull', () => {
         login: user.githubHandle,
         type: 'User',
       },
+      created_at: '2023-05-20',
       merged_at: '2023-06-09',
       updated_at: '2023-06-09',
       merge_commit_sha: 'lk324fjalskjfdlkajs',
@@ -139,6 +140,7 @@ describe('handleNewPull', () => {
       repo.id,
       pull.number,
       pull.title,
+      new Date(pull.created_at),
       new Date(<string>pull.merged_at),
       pull.merge_commit_sha,
       user.id,
@@ -160,6 +162,7 @@ describe('handleNewPull', () => {
         login: user.githubHandle,
         type: 'User',
       },
+      created_at: '2021-03-20',
       merged_at: '2021-04-19',
       updated_at: '2022-06-13',
       merge_commit_sha: 'aaaa4fjalskjfdlkajs',
@@ -181,6 +184,7 @@ describe('handleNewPull', () => {
       repo.id,
       pull.number,
       pull.title,
+      new Date(pull.created_at),
       new Date(<string>pull.merged_at),
       pull.merge_commit_sha,
       user.id,
@@ -202,6 +206,7 @@ describe('handleNewPull', () => {
         login: user.githubHandle,
         type: 'User',
       },
+      created_at: '2022-03-20',
       merged_at: '2022-06-13',
       updated_at: '2022-06-13',
       merge_commit_sha: '444aaaa4fjalskjfdlkajs',
@@ -210,12 +215,13 @@ describe('handleNewPull', () => {
       },
     };
 
-    const pr = {
+    const pr: GithubPullRequest = {
       id: 233,
       createdAt: new Date('2022-06-13'),
       updatedAt: new Date('2022-06-13'),
       githubPullNumber: pull.number,
       githubTitle: pull.title,
+      githubCreatedAt: new Date('2022-03-20'),
       githubMergedAt: new Date(<string>pull.merged_at),
       githubMergeCommitSha: pull.merge_commit_sha,
       repoId: repo.id,
@@ -239,6 +245,7 @@ describe('handleNewPull', () => {
       repo.id,
       pull.number,
       pull.title,
+      new Date(pull.created_at),
       new Date(<string>pull.merged_at),
       pull.merge_commit_sha,
       user.id,
@@ -264,6 +271,7 @@ describe('handleNewPull', () => {
         login: user.githubHandle,
         type: 'Bot',
       },
+      created_at: '2022-04-20',
       merged_at: '2022-06-13',
       updated_at: '2022-06-13',
       merge_commit_sha: '444aaaa4fjalskjfdlkajs',
@@ -272,12 +280,13 @@ describe('handleNewPull', () => {
       },
     };
 
-    const pr = {
+    const pr: GithubPullRequest = {
       id: 233,
       createdAt: new Date('2022-06-13'),
       updatedAt: new Date('2022-06-13'),
       githubPullNumber: pull.number,
       githubTitle: pull.title,
+      githubCreatedAt: new Date('2022-04-20'),
       githubMergedAt: new Date(<string>pull.merged_at),
       githubMergeCommitSha: pull.merge_commit_sha,
       repoId: repo.id,
