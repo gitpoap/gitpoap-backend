@@ -122,6 +122,7 @@ export async function getRepoByName(
               id: true,
               year: true,
               threshold: true,
+              isPRBased: true,
             },
           },
           repos: {

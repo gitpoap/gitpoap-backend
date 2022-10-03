@@ -41,6 +41,7 @@ export type RepoReturnType = {
       id: number;
       year: number;
       threshold: number;
+      isPRBased: boolean;
     }[];
     repos: { id: number }[];
   };
@@ -217,6 +218,7 @@ export async function runOngoingIssuanceUpdater() {
                 id: true,
                 year: true,
                 threshold: true,
+                isPRBased: true,
               },
             },
             repos: {
