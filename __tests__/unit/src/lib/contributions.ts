@@ -11,6 +11,23 @@ describe('countContributionsForClaim', () => {
     gte: new Date(gitPOAP.year, 0, 1),
     lt: new Date(gitPOAP.year + 1, 0, 1),
   };
+  const pullRequestCountArgObj = {
+    where: {
+      userId: user.id,
+      repoId: { in: repoIds },
+      githubMergedAt: dateRange,
+    },
+  };
+  const mentionCountArgObj = {
+    where: {
+      userId: user.id,
+      repoId: { in: repoIds },
+      OR: [
+        { pullRequest: { githubCreatedAt: dateRange } },
+        { issue: { githubCreatedAt: dateRange } },
+      ],
+    },
+  };
 
   it('Returns 0 when there are no contributions', async () => {
     contextMock.prisma.githubPullRequest.count.mockResolvedValue(0);
@@ -21,22 +38,10 @@ describe('countContributionsForClaim', () => {
     expect(result).toEqual(0);
 
     expect(contextMock.prisma.githubPullRequest.count).toHaveBeenCalledTimes(1);
-    expect(contextMock.prisma.githubPullRequest.count).toHaveBeenCalledWith({
-      where: {
-        userId: user.id,
-        repoId: { in: repoIds },
-        githubMergedAt: dateRange,
-      },
-    });
+    expect(contextMock.prisma.githubPullRequest.count).toHaveBeenCalledWith(pullRequestCountArgObj);
 
     expect(contextMock.prisma.githubMention.count).toHaveBeenCalledTimes(1);
-    expect(contextMock.prisma.githubMention.count).toHaveBeenCalledWith({
-      where: {
-        userId: user.id,
-        repoId: { in: repoIds },
-        githubMentionedAt: dateRange,
-      },
-    });
+    expect(contextMock.prisma.githubMention.count).toHaveBeenCalledWith(mentionCountArgObj);
   });
 
   it('Returns PR count when there are no Issue contributions', async () => {
@@ -48,22 +53,10 @@ describe('countContributionsForClaim', () => {
     expect(result).toEqual(4);
 
     expect(contextMock.prisma.githubPullRequest.count).toHaveBeenCalledTimes(1);
-    expect(contextMock.prisma.githubPullRequest.count).toHaveBeenCalledWith({
-      where: {
-        userId: user.id,
-        repoId: { in: repoIds },
-        githubMergedAt: dateRange,
-      },
-    });
+    expect(contextMock.prisma.githubPullRequest.count).toHaveBeenCalledWith(pullRequestCountArgObj);
 
     expect(contextMock.prisma.githubMention.count).toHaveBeenCalledTimes(1);
-    expect(contextMock.prisma.githubMention.count).toHaveBeenCalledWith({
-      where: {
-        userId: user.id,
-        repoId: { in: repoIds },
-        githubMentionedAt: dateRange,
-      },
-    });
+    expect(contextMock.prisma.githubMention.count).toHaveBeenCalledWith(mentionCountArgObj);
   });
 
   it('Returns Issue count when there are no PR contributions', async () => {
@@ -75,22 +68,10 @@ describe('countContributionsForClaim', () => {
     expect(result).toEqual(7);
 
     expect(contextMock.prisma.githubPullRequest.count).toHaveBeenCalledTimes(1);
-    expect(contextMock.prisma.githubPullRequest.count).toHaveBeenCalledWith({
-      where: {
-        userId: user.id,
-        repoId: { in: repoIds },
-        githubMergedAt: dateRange,
-      },
-    });
+    expect(contextMock.prisma.githubPullRequest.count).toHaveBeenCalledWith(pullRequestCountArgObj);
 
     expect(contextMock.prisma.githubMention.count).toHaveBeenCalledTimes(1);
-    expect(contextMock.prisma.githubMention.count).toHaveBeenCalledWith({
-      where: {
-        userId: user.id,
-        repoId: { in: repoIds },
-        githubMentionedAt: dateRange,
-      },
-    });
+    expect(contextMock.prisma.githubMention.count).toHaveBeenCalledWith(mentionCountArgObj);
   });
 
   it('Returns sum of contributions', async () => {
@@ -102,21 +83,9 @@ describe('countContributionsForClaim', () => {
     expect(result).toEqual(10);
 
     expect(contextMock.prisma.githubPullRequest.count).toHaveBeenCalledTimes(1);
-    expect(contextMock.prisma.githubPullRequest.count).toHaveBeenCalledWith({
-      where: {
-        userId: user.id,
-        repoId: { in: repoIds },
-        githubMergedAt: dateRange,
-      },
-    });
+    expect(contextMock.prisma.githubPullRequest.count).toHaveBeenCalledWith(pullRequestCountArgObj);
 
     expect(contextMock.prisma.githubMention.count).toHaveBeenCalledTimes(1);
-    expect(contextMock.prisma.githubMention.count).toHaveBeenCalledWith({
-      where: {
-        userId: user.id,
-        repoId: { in: repoIds },
-        githubMentionedAt: dateRange,
-      },
-    });
+    expect(contextMock.prisma.githubMention.count).toHaveBeenCalledWith(mentionCountArgObj);
   });
 });
