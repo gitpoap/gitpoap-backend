@@ -264,6 +264,12 @@ type EarnedAtClaimData = {
     githubMergedAt: Date | null;
   } | null;
   mentionEarned: {
+    pullRequest: {
+      githubCreatedAt: Date;
+    } | null;
+    issue: {
+      githubCreatedAt: Date;
+    } | null;
     githubMentionedAt: Date;
   } | null;
   createdAt: Date;
@@ -272,7 +278,7 @@ type EarnedAtClaimData = {
 export function getEarnedAt(claim: EarnedAtClaimData): Date {
   const logger = createScopedLogger('getEarnedAt');
 
-  if (claim.pullRequestEarned) {
+  if (claim.pullRequestEarned !== null) {
     if (claim.pullRequestEarned.githubMergedAt === null) {
       logger.error(
         `Claim ID ${claim.id} was not earned by mention and has pullRequestEarned set with null githubMergedAt`,
@@ -280,7 +286,18 @@ export function getEarnedAt(claim: EarnedAtClaimData): Date {
     } else {
       return claim.pullRequestEarned.githubMergedAt;
     }
-  } else if (claim.mentionEarned) {
+  } else if (claim.mentionEarned !== null) {
+    if (claim.mentionEarned.pullRequest !== null) {
+      return claim.mentionEarned.pullRequest.githubCreatedAt;
+    } else if (claim.mentionEarned.issue !== null) {
+      return claim.mentionEarned.issue.githubCreatedAt;
+    }
+
+    logger.error(
+      `Claim ID ${claim.id} was earned by mention but bot pullRequest and issue on the mention are null`,
+    );
+
+    // Default to metionedAt
     return claim.mentionEarned.githubMentionedAt;
   }
 

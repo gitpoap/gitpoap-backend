@@ -72,6 +72,16 @@ v1Router.get('/address/:address/gitpoaps', async function (req, res) {
       },
       mentionEarned: {
         select: {
+          pullRequest: {
+            select: {
+              githubCreatedAt: true,
+            },
+          },
+          issue: {
+            select: {
+              githubCreatedAt: true,
+            },
+          },
           githubMentionedAt: true,
         },
       },
@@ -172,6 +182,16 @@ v1Router.get('/github/user/:githubHandle/gitpoaps', async function (req, res) {
       },
       mentionEarned: {
         select: {
+          pullRequest: {
+            select: {
+              githubCreatedAt: true,
+            },
+          },
+          issue: {
+            select: {
+              githubCreatedAt: true,
+            },
+          },
           githubMentionedAt: true,
         },
       },
