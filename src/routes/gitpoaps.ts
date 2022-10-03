@@ -113,6 +113,8 @@ gitpoapsRouter.post(
     // modify the event and allow minting of POAPs
     const secretCode = generatePOAPSecret();
 
+    const year = parseInt(req.body.year, 10);
+
     // Call the POAP API to create the event
     const poapInfo = await createPOAPEvent(
       req.body.name,
@@ -120,7 +122,7 @@ gitpoapsRouter.post(
       req.body.startDate,
       req.body.endDate,
       req.body.expiryDate,
-      parseInt(req.body.year, 10),
+      year,
       req.body.eventUrl,
       req.file.originalname,
       req.file.buffer,
@@ -136,6 +138,10 @@ gitpoapsRouter.post(
       return res.status(500).send({ msg: 'Failed to create POAP via API' });
     }
 
+    if (poapInfo.year !== year) {
+      logger.warn(`POAP's returned year doesn't equal the one we supplied!`);
+    }
+
     logger.debug(`Created GitPOAP in POAP system: ${JSON.stringify(poapInfo)}`);
 
     await context.prisma.gitPOAP.create({
@@ -143,7 +149,7 @@ gitpoapsRouter.post(
         name: poapInfo.name,
         imageUrl: poapInfo.image_url,
         description: poapInfo.description,
-        year: poapInfo.year,
+        year,
         poapEventId: poapInfo.id,
         project: {
           connect: {
