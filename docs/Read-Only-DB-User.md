@@ -9,24 +9,25 @@ tr -dc A-Za-z0-9 </dev/urandom | head -c 50 ; echo ''
 Then log into the DB via `psql` and run:
 
 ```sql
-CREATE ROLE <Your-User> LOGIN PASSWORD 'yyy';
-GRANT USAGE ON SCHEMA public TO <Your-User>;
+CREATE ROLE $READONLY_USER LOGIN PASSWORD 'yyy';
+GRANT USAGE ON SCHEMA public TO $READONLY_USER;
 ```
 
 We should only be allowing access to non-secret tables, so we can run the following
 to allow only `SELECT` statements on these tables:
 
 ```sql
-GRANT SELECT ON "Claim" TO <Your-User>;
-GRANT SELECT ON "FeaturedPOAP" TO <Your-User>;
-GRANT SELECT ON "GithubPullRequest" TO <Your-User>;
-GRANT SELECT ON "GitPOAP" TO <Your-User>;
-GRANT SELECT ON "Organization" TO <Your-User>;
-GRANT SELECT ON "Profile" TO <Your-User>;
-GRANT SELECT ON "Repo" TO <Your-User>;
-GRANT SELECT ON "User" TO <Your-User>;
-GRANT SELECT ON "Project" TO <Your-User>;
--- We need to expose more on Secret so the public API can interface with POAP
-GRANT SELECT, INSERT, UPDATE ON "Secret" TO <Your-User>;
-GRANT USAGE, SELECT ON SEQUENCE "Secret_id_seq" TO <Your-User>;
+GRANT SELECT ON "Address" TO $READONLY_USER;
+GRANT SELECT ON "Claim" TO $READONLY_USER;
+GRANT SELECT ON "Email" TO $READONLY_USER;
+GRANT SELECT ON "FeaturedPOAP" TO $READONLY_USER;
+GRANT SELECT ON "GithubIssue" TO $READONLY_USER;
+GRANT SELECT ON "GithubPullRequest" TO $READONLY_USER;
+GRANT SELECT ON "GithubMention" TO $READONLY_USER;
+GRANT SELECT ON "GitPOAP" TO $READONLY_USER;
+GRANT SELECT ON "Organization" TO $READONLY_USER;
+GRANT SELECT ON "Profile" TO $READONLY_USER;
+GRANT SELECT ON "Repo" TO $READONLY_USER;
+GRANT SELECT ON "User" TO $READONLY_USER;
+GRANT SELECT ON "Project" TO $READONLY_USER;
 ```
