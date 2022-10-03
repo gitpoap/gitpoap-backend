@@ -41,6 +41,7 @@ const repo: RepoReturnType = {
         id: 50,
         year: 2022,
         threshold: 1,
+        isPRBased: true,
       },
     ],
     repos: [{ id: 5 }],

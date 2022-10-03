@@ -9,11 +9,7 @@ const mockedCountContributionsForClaim = jest.mocked(countContributionsForClaim,
 
 const user = { id: 4 };
 
-function fillInUpsert(
-  userId: number,
-  gitPOAPId: number,
-  contribution: Contribution,
-) {
+function fillInUpsert(userId: number, gitPOAPId: number, contribution: Contribution) {
   let pullRequestEarned = undefined;
   let issueEarned = undefined;
   let mentionEarned = undefined;
@@ -25,7 +21,8 @@ function fillInUpsert(
     issueEarned = {
       connect: contribution.issue,
     };
-  } else { // 'mention' in contribution
+  } else {
+    // 'mention' in contribution
     mentionEarned = {
       connect: contribution.mention,
     };
@@ -71,11 +68,10 @@ describe('createNewClaimsForRepoContribution', () => {
             id: 2,
             year: 9001,
             threshold: 2,
+            isPRBased: true,
           },
         ],
-        repos: [
-          { id: 43 },
-        ],
+        repos: [{ id: 43 }],
       },
     };
 
@@ -97,11 +93,10 @@ describe('createNewClaimsForRepoContribution', () => {
             id: 2,
             year: 9001,
             threshold: 1,
+            isPRBased: true,
           },
         ],
-        repos: [
-          { id: 43 },
-        ],
+        repos: [{ id: 43 }],
       },
     };
 
@@ -126,21 +121,22 @@ describe('createNewClaimsForRepoContribution', () => {
             id: 2,
             year: 9001,
             threshold: 1,
+            isPRBased: true,
           },
           {
             id: 3,
             year: 9001,
             threshold: 3,
+            isPRBased: true,
           },
           {
             id: 5,
             year: 9001,
             threshold: 5,
+            isPRBased: true,
           },
         ],
-        repos: [
-          { id: 43 },
-        ],
+        repos: [{ id: 43 }],
       },
     };
 
@@ -168,16 +164,16 @@ describe('createNewClaimsForRepoContribution', () => {
             id: 2,
             year: 9001,
             threshold: 1,
+            isPRBased: true,
           },
           {
             id: 3,
             year: 9001,
             threshold: 1,
+            isPRBased: true,
           },
         ],
-        repos: [
-          { id: 43 },
-        ],
+        repos: [{ id: 43 }],
       },
     };
 
@@ -192,4 +188,5 @@ describe('createNewClaimsForRepoContribution', () => {
     expect(contextMock.prisma.claim.upsert).toHaveBeenCalledWith(
       fillInUpsert(user.id, repo.project.gitPOAPs[1].id, { pullRequest: pr }),
     );
-  }); });
+  });
+});
