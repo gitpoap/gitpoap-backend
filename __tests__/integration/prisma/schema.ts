@@ -67,6 +67,7 @@ describe('prisma/schema assumptions', () => {
   it('Allows creating multiple GithubMention records with issueId = null', async () => {
     const issue1 = await context.prisma.githubIssue.create({
       data: {
+        githubCreatedAt: new Date(),
         githubIssueNumber: 234,
         githubTitle: 'Big Issue',
         user: {
@@ -79,10 +80,11 @@ describe('prisma/schema assumptions', () => {
             id: 1,
           },
         },
-      }
+      },
     });
     const issue2 = await context.prisma.githubIssue.create({
       data: {
+        githubCreatedAt: new Date(),
         githubIssueNumber: 34,
         githubTitle: 'Small Issue',
         user: {
