@@ -250,7 +250,7 @@ model GithubPullRequest {
   updatedAt            DateTime        @updatedAt
   githubPullNumber     Int
   githubTitle          String
-  githubCreatedAt      DateTime?
+  githubCreatedAt      DateTime
   githubMergedAt       DateTime?
   githubMergeCommitSha String?         @db.VarChar(41)
   repoId               Int
@@ -269,7 +269,7 @@ model GithubIssue {
   updatedAt         DateTime        @updatedAt
   githubIssueNumber Int
   githubTitle       String
-  githubCreatedAt   DateTime?
+  githubCreatedAt   DateTime
   // If the user was tagged in an issue for the bot the issue may not have
   // been closed yet (or ever)
   githubClosedAt    DateTime?
