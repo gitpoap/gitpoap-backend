@@ -68,7 +68,7 @@ gitpoapsRouter.post(
     let project: { id: number } | null = null;
     if ('projectId' in projectChoice && projectChoice.projectId) {
       logger.info(
-        `Request to create a new GitPOAP "${req.body.name}" for project ${projectChoice.projectId}`,
+        `Request to create a new GitPOAP "${req.body.name}" for year ${req.body.year} in Project ID ${projectChoice.projectId}`,
       );
 
       project = await context.prisma.project.findUnique({
@@ -87,7 +87,7 @@ gitpoapsRouter.post(
       }
     } else if ('githubRepoIds' in projectChoice) {
       logger.info(
-        `Request to create a new GitPOAP "${req.body.name}" for project with Github Repo IDs: ${projectChoice.githubRepoIds}`,
+        `Request to create a new GitPOAP "${req.body.name}" for year ${req.body.year} in Project with Github Repo IDs: ${projectChoice.githubRepoIds}`,
       );
       if (projectChoice.githubRepoIds.length === 1) {
         project = await getOrCreateProjectWithGithubRepoId(
