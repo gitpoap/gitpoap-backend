@@ -23,6 +23,7 @@ export type GithubPullRequestData = {
   number: number;
   title: string;
   user: GithubUserResponse;
+  created_at: string;
   merged_at: string | null;
   updated_at: string;
   merge_commit_sha: string;
@@ -35,6 +36,7 @@ export type GithubIssueData = {
   number: number;
   title: string;
   user: GithubUserResponse;
+  created_at: string;
   closed_at: string | null;
   updated_at: string;
 };
