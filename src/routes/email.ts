@@ -92,7 +92,7 @@ emailRouter.post('/', async function (req, res) {
   }
 
   const address = await context.prisma.address.findUnique({
-    where: { ethAddress: resolvedAddress },
+    where: { ethAddress: req.body.address.toLowerCase() },
   });
   if (address === null) {
     logger.warn('Request address is invalid');
@@ -118,7 +118,7 @@ emailRouter.post('/', async function (req, res) {
     create: {
       address: {
         connect: {
-          id: req.body.address,
+          id: address.id,
         },
       },
       emailAddress,
@@ -243,7 +243,7 @@ emailRouter.post('/verify', async function (req, res) {
     return res.status(400).send({ msg: 'USED' });
   }
 
-  if (email.tokenExpiresAt > new Date()) {
+  if (email.tokenExpiresAt < new Date()) {
     logger.warn(`User attempted to use expired token: ${activeToken}`);
 
     await context.prisma.email.delete({
@@ -269,5 +269,5 @@ emailRouter.post('/verify', async function (req, res) {
 
   endTimer({ status: 200 });
 
-  return res.status(200).send('VALID');
+  return res.status(200).send({ msg: 'VALID' });
 });
