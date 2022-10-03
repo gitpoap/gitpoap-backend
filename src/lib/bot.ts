@@ -70,6 +70,7 @@ export async function createClaimsForPR(
     repoData.id,
     pullRequestNumber,
     pull.title,
+    new Date(pull.created_at),
     mergedAt,
     mergeCommitSha,
     user.id,
@@ -126,6 +127,7 @@ export async function createClaimsForIssue(
     repoData.id,
     issueNumber,
     issue.title,
+    new Date(issue.created_at),
     issue.closed_at === null ? null : new Date(issue.closed_at),
     user.id,
   );

@@ -6,6 +6,7 @@ export async function upsertGithubIssue(
   repoId: number,
   githubIssueNumber: number,
   githubTitle: string,
+  githubCreatedAt: Date,
   githubClosedAt: Date | null,
   userId: number,
 ): Promise<GithubIssue> {
@@ -27,6 +28,7 @@ export async function upsertGithubIssue(
     create: {
       githubIssueNumber,
       githubTitle,
+      githubCreatedAt,
       githubClosedAt,
       repo: {
         connect: {
