@@ -8,6 +8,7 @@ type GitPOAPs = {
   id: number;
   year: number;
   threshold: number;
+  isPRBased: boolean;
 }[];
 
 export type YearlyGitPOAPsMap = Record<string, GitPOAPs>;
