@@ -2033,6 +2033,15 @@ type Email {
   isValidated: Boolean!
   tokenExpiresAt: DateTime!
   _count: EmailCount
+  address: Address!
+  claims(
+    where: ClaimWhereInput
+    orderBy: [ClaimOrderByWithRelationInput!]
+    cursor: ClaimWhereUniqueInput
+    take: Int
+    skip: Int
+    distinct: [ClaimScalarFieldEnum!]
+  ): [Claim!]!
 }
 
 type EmailCount {
