@@ -31,6 +31,38 @@ type Query {
     take: Int
     skip: Int
   ): [ClaimGroupBy!]!
+  aggregateEmail(
+    where: EmailWhereInput
+    orderBy: [EmailOrderByWithRelationInput!]
+    cursor: EmailWhereUniqueInput
+    take: Int
+    skip: Int
+  ): AggregateEmail!
+  findFirstEmail(
+    where: EmailWhereInput
+    orderBy: [EmailOrderByWithRelationInput!]
+    cursor: EmailWhereUniqueInput
+    take: Int
+    skip: Int
+    distinct: [EmailScalarFieldEnum!]
+  ): Email
+  emails(
+    where: EmailWhereInput
+    orderBy: [EmailOrderByWithRelationInput!]
+    cursor: EmailWhereUniqueInput
+    take: Int
+    skip: Int
+    distinct: [EmailScalarFieldEnum!]
+  ): [Email!]!
+  email(where: EmailWhereUniqueInput!): Email
+  groupByEmail(
+    where: EmailWhereInput
+    orderBy: [EmailOrderByWithAggregationInput!]
+    by: [EmailScalarFieldEnum!]!
+    having: EmailScalarWhereWithAggregatesInput
+    take: Int
+    skip: Int
+  ): [EmailGroupBy!]!
   aggregateFeaturedPOAP(
     where: FeaturedPOAPWhereInput
     orderBy: [FeaturedPOAPOrderByWithRelationInput!]
@@ -356,7 +388,6 @@ type Query {
   totalClaims: Float!
   lastMonthClaims: Float!
   userClaims(githubId: Float!): [FullClaimData!]
-  userEmail(ethAddress: String!): VerifyEmailResponse
   totalGitPOAPs: Float!
   lastMonthGitPOAPs: Float!
   gitPOAPEvent(id: Float!): FullGitPOAPEventData
@@ -750,7 +781,6 @@ input EmailWhereInput {
   updatedAt: DateTimeFilter
   claims: ClaimListRelationFilter
   isValidated: BoolFilter
-  activeToken: StringFilter
   tokenExpiresAt: DateTimeFilter
 }
 
@@ -1209,7 +1239,6 @@ input EmailOrderByWithRelationInput {
   updatedAt: SortOrder
   claims: ClaimOrderByRelationAggregateInput
   isValidated: SortOrder
-  activeToken: SortOrder
   tokenExpiresAt: SortOrder
 }
 
@@ -2002,7 +2031,6 @@ type Email {
   createdAt: DateTime!
   updatedAt: DateTime!
   isValidated: Boolean!
-  activeToken: String!
   tokenExpiresAt: DateTime!
   _count: EmailCount
 }
@@ -2362,6 +2390,193 @@ input NestedBoolWithAggregatesFilter {
   _max: NestedBoolFilter
 }
 
+type AggregateEmail {
+  _count: EmailCountAggregate
+  _avg: EmailAvgAggregate
+  _sum: EmailSumAggregate
+  _min: EmailMinAggregate
+  _max: EmailMaxAggregate
+}
+
+type EmailCountAggregate {
+  id: Int!
+  emailAddress: Int!
+  addressId: Int!
+  createdAt: Int!
+  updatedAt: Int!
+  isValidated: Int!
+  activeToken: Int!
+  tokenExpiresAt: Int!
+  _all: Int!
+}
+
+type EmailAvgAggregate {
+  id: Float
+  addressId: Float
+}
+
+type EmailSumAggregate {
+  id: Int
+  addressId: Int
+}
+
+type EmailMinAggregate {
+  id: Int
+  emailAddress: String
+  addressId: Int
+  createdAt: DateTime
+  updatedAt: DateTime
+  isValidated: Boolean
+  activeToken: String
+  tokenExpiresAt: DateTime
+}
+
+type EmailMaxAggregate {
+  id: Int
+  emailAddress: String
+  addressId: Int
+  createdAt: DateTime
+  updatedAt: DateTime
+  isValidated: Boolean
+  activeToken: String
+  tokenExpiresAt: DateTime
+}
+
+input EmailWhereUniqueInput {
+  id: Int
+  addressId: Int
+}
+
+enum EmailScalarFieldEnum {
+  id
+  emailAddress
+  addressId
+  createdAt
+  updatedAt
+  isValidated
+  activeToken
+  tokenExpiresAt
+}
+
+type EmailGroupBy {
+  id: Int!
+  emailAddress: String!
+  addressId: Int!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  isValidated: Boolean!
+  activeToken: String!
+  tokenExpiresAt: DateTime!
+  _count: EmailCountAggregate
+  _avg: EmailAvgAggregate
+  _sum: EmailSumAggregate
+  _min: EmailMinAggregate
+  _max: EmailMaxAggregate
+}
+
+input EmailOrderByWithAggregationInput {
+  id: SortOrder
+  emailAddress: SortOrder
+  addressId: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  isValidated: SortOrder
+  tokenExpiresAt: SortOrder
+  _count: EmailCountOrderByAggregateInput
+  _avg: EmailAvgOrderByAggregateInput
+  _max: EmailMaxOrderByAggregateInput
+  _min: EmailMinOrderByAggregateInput
+  _sum: EmailSumOrderByAggregateInput
+}
+
+input EmailCountOrderByAggregateInput {
+  id: SortOrder
+  emailAddress: SortOrder
+  addressId: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  isValidated: SortOrder
+  tokenExpiresAt: SortOrder
+}
+
+input EmailAvgOrderByAggregateInput {
+  id: SortOrder
+  addressId: SortOrder
+}
+
+input EmailMaxOrderByAggregateInput {
+  id: SortOrder
+  emailAddress: SortOrder
+  addressId: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  isValidated: SortOrder
+  tokenExpiresAt: SortOrder
+}
+
+input EmailMinOrderByAggregateInput {
+  id: SortOrder
+  emailAddress: SortOrder
+  addressId: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  isValidated: SortOrder
+  tokenExpiresAt: SortOrder
+}
+
+input EmailSumOrderByAggregateInput {
+  id: SortOrder
+  addressId: SortOrder
+}
+
+input EmailScalarWhereWithAggregatesInput {
+  AND: [EmailScalarWhereWithAggregatesInput!]
+  OR: [EmailScalarWhereWithAggregatesInput!]
+  NOT: [EmailScalarWhereWithAggregatesInput!]
+  id: IntWithAggregatesFilter
+  emailAddress: StringWithAggregatesFilter
+  addressId: IntWithAggregatesFilter
+  createdAt: DateTimeWithAggregatesFilter
+  updatedAt: DateTimeWithAggregatesFilter
+  isValidated: BoolWithAggregatesFilter
+  tokenExpiresAt: DateTimeWithAggregatesFilter
+}
+
+input StringWithAggregatesFilter {
+  equals: String
+  in: [String!]
+  notIn: [String!]
+  lt: String
+  lte: String
+  gt: String
+  gte: String
+  contains: String
+  startsWith: String
+  endsWith: String
+  mode: QueryMode
+  not: NestedStringWithAggregatesFilter
+  _count: NestedIntFilter
+  _min: NestedStringFilter
+  _max: NestedStringFilter
+}
+
+input NestedStringWithAggregatesFilter {
+  equals: String
+  in: [String!]
+  notIn: [String!]
+  lt: String
+  lte: String
+  gt: String
+  gte: String
+  contains: String
+  startsWith: String
+  endsWith: String
+  not: NestedStringWithAggregatesFilter
+  _count: NestedIntFilter
+  _min: NestedStringFilter
+  _max: NestedStringFilter
+}
+
 type AggregateFeaturedPOAP {
   _count: FeaturedPOAPCountAggregate
   _avg: FeaturedPOAPAvgAggregate
@@ -2516,41 +2731,6 @@ input FeaturedPOAPScalarWhereWithAggregatesInput {
   id: IntWithAggregatesFilter
   poapTokenId: StringWithAggregatesFilter
   profileId: IntWithAggregatesFilter
-}
-
-input StringWithAggregatesFilter {
-  equals: String
-  in: [String!]
-  notIn: [String!]
-  lt: String
-  lte: String
-  gt: String
-  gte: String
-  contains: String
-  startsWith: String
-  endsWith: String
-  mode: QueryMode
-  not: NestedStringWithAggregatesFilter
-  _count: NestedIntFilter
-  _min: NestedStringFilter
-  _max: NestedStringFilter
-}
-
-input NestedStringWithAggregatesFilter {
-  equals: String
-  in: [String!]
-  notIn: [String!]
-  lt: String
-  lte: String
-  gt: String
-  gte: String
-  contains: String
-  startsWith: String
-  endsWith: String
-  not: NestedStringWithAggregatesFilter
-  _count: NestedIntFilter
-  _min: NestedStringFilter
-  _max: NestedStringFilter
 }
 
 type AggregateGitPOAP {
@@ -4073,13 +4253,6 @@ type POAPEvent {
   end_date: String!
   expiry_date: String!
   supply: Float!
-}
-
-type VerifyEmailResponse {
-  id: Float!
-  emailAddress: String!
-  isValidated: Boolean!
-  tokenExpiresAt: DateTime!
 }
 
 type FullGitPOAPEventData {
