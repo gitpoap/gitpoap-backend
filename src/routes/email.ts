@@ -1,9 +1,9 @@
-import crypto from 'crypto';
 import { Router } from 'express';
 import { DateTime } from 'luxon';
 
 import { context } from '../context';
 import { postmarkClient } from '../external/postmark';
+import { generateUniqueEmailToken } from '../lib/email';
 import { resolveENS } from '../lib/ens';
 import { createScopedLogger } from '../logging';
 import { httpRequestDurationSeconds } from '../metrics';
@@ -11,42 +11,6 @@ import { AddEmailSchema, RemoveEmailSchema, ValidateEmailSchema } from '../schem
 import { isSignatureValid } from '../signatures';
 
 export const emailRouter = Router();
-
-const generateEmailToken = async (
-  byteLength: number = 20,
-  stringBase: BufferEncoding = 'hex',
-): Promise<string> => {
-  return new Promise<string>((resolve, reject) => {
-    crypto.randomBytes(byteLength, (err, buffer) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(buffer.toString(stringBase));
-      }
-    });
-  });
-};
-
-const generateUniqueEmailToken = async (
-  byteLength: number = 20,
-  stringBase: BufferEncoding = 'hex',
-): Promise<string> => {
-  let activeToken;
-  let isTokenUnique = false;
-  do {
-    activeToken = await generateEmailToken(byteLength, stringBase);
-
-    const email = await context.prisma.email.findUnique({
-      where: {
-        activeToken,
-      },
-    });
-    // Token is unique if no email is found
-    isTokenUnique = email === null;
-  } while (!isTokenUnique);
-
-  return activeToken;
-};
 
 const sendVerificationEmail = async (email: string, activeToken: string) => {
   postmarkClient.sendEmailWithTemplate({
@@ -80,6 +44,7 @@ emailRouter.post('/', async function (req, res) {
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
+  /* BEGIN: Will be removed following address updates */
   // Resolve ENS if provided
   const resolvedAddress = await resolveENS(req.body.address);
   if (resolvedAddress === null) {
@@ -106,6 +71,7 @@ emailRouter.post('/', async function (req, res) {
     endTimer({ status: 400 });
     return res.status(400).send({ msg: `${req.body.address} is not a valid address` });
   }
+  /* END: Will be removed following address updates */
 
   const { emailAddress } = req.body;
 
@@ -166,6 +132,7 @@ emailRouter.delete('/', async function (req, res) {
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
+  /* BEGIN: Will be removed following address updates */
   // Resolve ENS if provided
   const resolvedAddress = await resolveENS(req.body.address);
   if (resolvedAddress === null) {
@@ -183,6 +150,7 @@ emailRouter.delete('/', async function (req, res) {
     endTimer({ status: 401 });
     return res.status(401).send({ msg: 'The signature is not valid for this address and data' });
   }
+  /* END: Will be removed following address updates */
 
   const { id } = req.body;
 
