@@ -80,9 +80,14 @@ import {
   FindManyGithubMentionResolver,
   GroupByGithubMentionResolver,
   AggregateGithubMentionResolver,
+  /* Auto-generated Email Resolvers */
+  FindUniqueEmailResolver,
+  FindFirstEmailResolver,
+  FindManyEmailResolver,
+  GroupByEmailResolver,
+  AggregateEmailResolver,
 } from '@generated/type-graphql';
 import { CustomClaimResolver } from './resolvers/claims';
-import { CustomEmailResolver } from './resolvers/emails';
 import { CustomGitPOAPResolver } from './resolvers/gitpoaps';
 import { CustomOrganizationResolver } from './resolvers/organizations';
 import { CustomProfileResolver } from './resolvers/profiles';
@@ -166,9 +171,14 @@ const allResolvers: NonEmptyArray<Function> = [
   FindManyGithubMentionResolver,
   GroupByGithubMentionResolver,
   AggregateGithubMentionResolver,
+  /* Auto-generated Email Resolvers */
+  FindUniqueEmailResolver,
+  FindFirstEmailResolver,
+  FindManyEmailResolver,
+  GroupByEmailResolver,
+  AggregateEmailResolver,
   /* ~~ Custom resolvers ~~ */
   CustomClaimResolver,
-  CustomEmailResolver,
   CustomGitPOAPResolver,
   CustomOrganizationResolver,
   CustomProfileResolver,

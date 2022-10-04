@@ -84,6 +84,8 @@ model Email {
   updatedAt      DateTime @updatedAt
   claims         Claim[]
   isValidated    Boolean  @default(false)
+  // Hide email.activeToken from generated resolvers
+  /// @TypeGraphQL.omit(output: true, input: true)
   activeToken    String   @unique
   tokenExpiresAt DateTime
 }

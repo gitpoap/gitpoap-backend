@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import { Router } from 'express';
-import { MILLISECONDS_PER_DAY } from '../constants';
+import { DateTime } from 'luxon';
 
 import { context } from '../context';
 import { postmarkClient } from '../external/postmark';
@@ -12,22 +12,29 @@ import { isSignatureValid } from '../signatures';
 
 export const emailRouter = Router();
 
+const generateEmailToken = async (
+  byteLength: number = 20,
+  stringBase: BufferEncoding = 'hex',
+): Promise<string> => {
+  return new Promise<string>((resolve, reject) => {
+    crypto.randomBytes(byteLength, (err, buffer) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(buffer.toString(stringBase));
+      }
+    });
+  });
+};
+
 const generateUniqueEmailToken = async (
   byteLength: number = 20,
   stringBase: BufferEncoding = 'hex',
 ): Promise<string> => {
   let activeToken;
-  let tokenIsUnique = false;
+  let isTokenUnique = false;
   do {
-    activeToken = await new Promise<string>((resolve, reject) => {
-      crypto.randomBytes(byteLength, (err, buffer) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(buffer.toString(stringBase));
-        }
-      });
-    });
+    activeToken = await generateEmailToken(byteLength, stringBase);
 
     const email = await context.prisma.email.findUnique({
       where: {
@@ -35,8 +42,8 @@ const generateUniqueEmailToken = async (
       },
     });
     // Token is unique if no email is found
-    tokenIsUnique = email === null;
-  } while (!tokenIsUnique);
+    isTokenUnique = email === null;
+  } while (!isTokenUnique);
 
   return activeToken;
 };
@@ -108,7 +115,7 @@ emailRouter.post('/', async function (req, res) {
   const activeToken = await generateUniqueEmailToken();
 
   // Created expiration date 24hrs in advance
-  const tokenExpiresAt = new Date(new Date().getTime() + MILLISECONDS_PER_DAY);
+  const tokenExpiresAt = DateTime.now().plus({ day: 1 }).toJSDate();
 
   await context.prisma.email.upsert({
     where: {
@@ -190,7 +197,7 @@ emailRouter.delete('/', async function (req, res) {
   } catch (err) {
     logger.warn(`Tried to delete an email that doesn't exist: ${err}`);
     endTimer({ status: 404 });
-    return res.status(404).send({ msg: `Invalid email provided` });
+    return res.status(404).send({ msg: `Invalid email ID provided` });
   }
 
   logger.debug(`Completed request to delete email with id: ${id}`);
