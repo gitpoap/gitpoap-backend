@@ -21,6 +21,7 @@ import { onboardingRouter } from './routes/onboarding';
 import { triggersRouter } from './routes/triggers';
 import { vitalsRouter } from './routes/vitals';
 import { NODE_ENV, SENTRY_DSN } from './environment';
+import { authRouter } from './routes/auth';
 
 const initializeSentry = (app: Express) => {
   if (SENTRY_DSN) {
@@ -58,14 +59,15 @@ export async function setupApp() {
   });
 
   /* Endpoints */
-  app.use('/jwt', jwtRouter);
-  app.use('/subscribe', subscribeRouter);
-  app.use('/suggest', suggestRouter);
+  app.use('/auth', authRouter);
   app.use('/github', githubRouter);
   app.use(
     '/graphql',
     graphqlHTTP({ schema: await createAndEmitSchema(), context, graphiql: true }),
   );
+  app.use('/jwt', jwtRouter);
+  app.use('/subscribe', subscribeRouter);
+  app.use('/suggest', suggestRouter);
 
   /* API endpoints for the frontend */
   app.use('/claims', claimsRouter);
