@@ -519,7 +519,9 @@ claimsRouter.post(
           );
           newClaims = [
             ...newClaims,
-            ...newClaimsForContribution.filter(claimData => !githubIdSet.has(claimData.id)),
+            ...newClaimsForContribution.filter(claimData =>
+              githubIdSet.has(claimData.user.githubId),
+            ),
           ];
         }
       }
@@ -571,7 +573,9 @@ claimsRouter.post(
           );
           newClaims = [
             ...newClaims,
-            ...newClaimsForContribution.filter(claimData => !githubIdSet.has(claimData.id)),
+            ...newClaimsForContribution.filter(claimData =>
+              githubIdSet.has(claimData.user.githubId),
+            ),
           ];
         } else {
           // 'pullRequest' in contribution
