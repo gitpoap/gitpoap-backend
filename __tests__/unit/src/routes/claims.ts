@@ -380,4 +380,54 @@ describe('POST /claims/gitpoap-bot/create', () => {
     expect(mockedRetrieveClaimsCreatedByMention).toHaveBeenCalledTimes(1);
     expect(mockedRetrieveClaimsCreatedByMention).toHaveBeenCalledWith(contributionId);
   });
+
+  it("Filters out non-mentioned user's claims", async () => {
+    mockedGetGithubAuthenticatedApp.mockResolvedValue({ id: GITPOAP_BOT_APP_ID });
+
+    const contributionId = 324;
+
+    mockedCreateClaimsForIssue.mockResolvedValue({ mention: { id: contributionId } } as any);
+
+    const claim: ClaimData = {
+      id: 234,
+      user: { githubHandle: 'batman' },
+      gitPOAP: {
+        id: 234,
+        name: 'Wow you arrrrr great',
+        imageUrl: 'https://example.com/image.png',
+        description: 'You are clearly a rockstar',
+        threshold: 1,
+      },
+    };
+
+    mockedRetrieveClaimsCreatedByMention.mockResolvedValue([claim]);
+
+    const result = await request(await setupApp())
+      .post('/claims/gitpoap-bot/create')
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({
+        issue: {
+          ...issue,
+          contributorGithubIds: [contributorId + 1],
+        },
+      });
+
+    expect(result.statusCode).toEqual(200);
+    expect(JSON.parse(result.text)).toEqual({ newClaims: [] });
+
+    expect(mockedCreateClaimsForPR).toHaveBeenCalledTimes(0);
+
+    expect(mockedCreateClaimsForIssue).toHaveBeenCalledTimes(1);
+    expect(mockedCreateClaimsForIssue).toHaveBeenCalledWith(
+      issue.organization,
+      issue.repo,
+      issue.issueNumber,
+      contributorId + 1,
+    );
+
+    expect(mockedRetrieveClaimsCreatedByPR).toHaveBeenCalledTimes(0);
+
+    expect(mockedRetrieveClaimsCreatedByMention).toHaveBeenCalledTimes(1);
+    expect(mockedRetrieveClaimsCreatedByMention).toHaveBeenCalledWith(contributionId);
+  });
 });
