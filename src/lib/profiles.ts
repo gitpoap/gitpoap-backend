@@ -1,14 +1,9 @@
 import { context } from '../context';
+import { upsertAddress } from './addresses';
 
 export async function upsertProfile(address: string, ensName?: string | null) {
-  const addressLower = address.toLowerCase();
-
   // Get the address record OR create one if it doesn't exist
-  const addressResult = await context.prisma.address.upsert({
-    where: { ethAddress: addressLower },
-    update: { ensName },
-    create: { ethAddress: addressLower, ensName },
-  });
+  const addressResult = await upsertAddress(address, ensName);
 
   // Get the profile OR create one if it doesn't exist
   const profile = await context.prisma.profile.upsert({
