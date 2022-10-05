@@ -7,11 +7,14 @@ import { requestGithubOAuthToken, getGithubCurrentUserInfo } from '../external/g
 import { JWT_SECRET } from '../environment';
 import { createScopedLogger } from '../logging';
 import { httpRequestDurationSeconds } from '../metrics';
-import { generateAuthTokens, generateNewAuthTokens } from '../lib/authTokens';
+import { generateAuthTokens } from '../lib/authTokens';
+import { jwtWithAddress } from '../middleware';
+import { AccessTokenPayload } from '../types/tokens';
+import { upsertUser } from '../lib/users';
 
 export const githubRouter = Router();
 
-githubRouter.post('/', async function (req, res) {
+githubRouter.post('/', jwtWithAddress(), async function (req, res) {
   const logger = createScopedLogger('POST /github');
 
   logger.debug(`Body: ${JSON.stringify(req.body)}`);
@@ -27,9 +30,12 @@ githubRouter.post('/', async function (req, res) {
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
-  logger.info('Received a GitHub login request');
-
+  const { authTokenId, addressId, address, ensName, ensAvatarImageUrl } = <AccessTokenPayload>(
+    req.user
+  );
   let { code } = req.body;
+
+  logger.info(`Received a GitHub login request from address ${address}`);
 
   // Remove state string if it exists
   const andIndex = code.indexOf('&');
@@ -52,19 +58,47 @@ githubRouter.post('/', async function (req, res) {
   const githubUser = await getGithubCurrentUserInfo(githubToken);
   if (githubUser === null) {
     logger.error('Failed to retrieve data about logged in user');
-    endTimer({ status: 400 });
-    return res.status(400).send({
+    endTimer({ status: 500 });
+    return res.status(500).send({
       message: 'A server error has occurred - GitHub current user',
     });
   }
 
-  const authTokens = await generateNewAuthTokens(githubUser.id, githubUser.login, githubToken);
+  // Update User with new OAuth token
+  const user = await upsertUser(githubUser.id, githubUser.login, githubToken);
 
-  logger.debug('Completed a GitHub login request');
+  // Update the generation of the AuthToken (this must exist
+  // since it was looked up within the middleware)
+  const dbAuthToken = await context.prisma.authToken.update({
+    where: {
+      id: authTokenId,
+    },
+    data: {
+      generation: { increment: 1 },
+      user: {
+        connect: {
+          id: user.id,
+        },
+      },
+    },
+  });
+
+  const userAuthTokens = generateAuthTokens(
+    authTokenId,
+    dbAuthToken.generation,
+    addressId,
+    address,
+    ensName,
+    ensAvatarImageUrl,
+    githubUser.id,
+    githubUser.login,
+  );
+
+  logger.debug(`Completed a GitHub login request for address ${address}`);
 
   endTimer({ status: 200 });
 
-  return res.status(200).json(authTokens);
+  return res.status(200).send(userAuthTokens);
 });
 
 githubRouter.post('/refresh', async function (req, res) {
