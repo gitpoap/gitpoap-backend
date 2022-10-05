@@ -480,7 +480,19 @@ claimsRouter.post(
     if ('pullRequest' in req.body) {
       const reqBody: z.infer<typeof CreateGitPOAPBotClaimsForPRSchema> = req.body.pullRequest;
 
-      const mentionInfo = reqBody.wasEarnedByMention ? ' mentions in' : '';
+      let mentionInfo = ' mentions in';
+      if (!reqBody.wasEarnedByMention) {
+        mentionInfo = '';
+
+        // If a PR was just merged, we assume there was only one author
+        if (reqBody.contributorGithubIds.length > 1) {
+          const msg = `Bot called on merged PR with more than one contributor specified`;
+          logger.error(msg);
+          endTimer({ status: 400 });
+          return res.status(400).send({ msg });
+        }
+      }
+
       logger.info(
         `Request to create claim for${mentionInfo} PR #${reqBody.pullRequestNumber} on "${reqBody.organization}/${reqBody.repo}"`,
       );
