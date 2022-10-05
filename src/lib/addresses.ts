@@ -2,19 +2,19 @@ import { context } from '../context';
 
 export const upsertAddress = async (
   address: string,
-  ensName: string | null,
-  ensAvatarImageUrl: string | null,
+  ensName?: string | null,
+  ensAvatarImageUrl?: string | null,
 ) => {
   const addressResult = await context.prisma.address.upsert({
-    where: { ethAddress: address },
+    where: { ethAddress: address.toLowerCase() },
     update: {
-      ensName: ensName,
-      ensAvatarImageUrl: ensAvatarImageUrl,
+      ensName,
+      ensAvatarImageUrl,
     },
     create: {
-      ethAddress: address,
-      ensName: ensName,
-      ensAvatarImageUrl: ensAvatarImageUrl,
+      ethAddress: address.toLowerCase(),
+      ensName,
+      ensAvatarImageUrl,
     },
   });
 

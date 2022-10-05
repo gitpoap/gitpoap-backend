@@ -1,10 +1,7 @@
 import { z } from 'zod';
-import { SignatureSchema } from './signature';
 
 export const ClaimGitPOAPSchema = z.object({
-  address: z.string().nonempty(),
   claimIds: z.array(z.number()).nonempty(),
-  signature: SignatureSchema,
 });
 
 export const CreateGitPOAPClaimsSchema = z.object({
