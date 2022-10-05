@@ -1476,6 +1476,7 @@ type AddressCount {
   memberships: Int!
   issuedClaims: Int!
   mintedClaims: Int!
+  authTokens: Int!
 }
 
 type GitPOAP {
@@ -3934,6 +3935,7 @@ type UserCountAggregate {
   githubHandle: Int!
   createdAt: Int!
   updatedAt: Int!
+  githubOAuthToken: Int!
   _all: Int!
 }
 
@@ -3953,6 +3955,7 @@ type UserMinAggregate {
   githubHandle: String
   createdAt: DateTime
   updatedAt: DateTime
+  githubOAuthToken: String
 }
 
 type UserMaxAggregate {
@@ -3961,6 +3964,7 @@ type UserMaxAggregate {
   githubHandle: String
   createdAt: DateTime
   updatedAt: DateTime
+  githubOAuthToken: String
 }
 
 input UserWhereUniqueInput {
@@ -3974,6 +3978,7 @@ enum UserScalarFieldEnum {
   githubHandle
   createdAt
   updatedAt
+  githubOAuthToken
 }
 
 type UserGroupBy {
@@ -3982,6 +3987,7 @@ type UserGroupBy {
   githubHandle: String!
   createdAt: DateTime!
   updatedAt: DateTime!
+  githubOAuthToken: String
   _count: UserCountAggregate
   _avg: UserAvgAggregate
   _sum: UserSumAggregate

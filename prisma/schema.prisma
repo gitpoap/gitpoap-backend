@@ -28,6 +28,9 @@ model User {
   // Hide user.authTokens from generated resolvers
   /// @TypeGraphQL.omit(output: true, input: true)
   authTokens         AuthToken[]
+  // Hide user.githubOAuthToken from generated resolvers
+  /// @TypeGraphQL.omit(output: true, input: true)
+  githubOAuthToken   String?
   githubPullRequests GithubPullRequest[]
   githubIssues       GithubIssue[]
   githubMentions     GithubMention[]
@@ -65,6 +68,9 @@ model Address {
   profile           Profile?
   issuedClaims      Claim[]                  @relation("issuedClaims")
   mintedClaims      Claim[]                  @relation("mintedClaims")
+  // Hide Address.authTokens from generated resolvers
+  /// @TypeGraphQL.omit(output: true, input: true)
+  authTokens        AuthToken[]
 
   @@index([ethAddress])
 }
@@ -201,11 +207,14 @@ model GitPOAP {
 }
 
 model AuthToken {
-  id               Int    @id @default(autoincrement())
-  generation       Int    @default(0)
-  githubOAuthToken String
-  githubId         Int
-  user             User   @relation(fields: [githubId], references: [githubId])
+  id         Int      @id @default(autoincrement())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  generation Int      @default(0)
+  addressId  Int
+  address    Address  @relation(fields: [addressId], references: [id])
+  githubId   Int?
+  user       User?    @relation(fields: [githubId], references: [githubId])
 }
 
 model FeaturedPOAP {
