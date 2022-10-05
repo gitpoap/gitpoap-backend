@@ -10,7 +10,7 @@ export const ADDRESSES = {
 };
 
 export const GH_HANDLES = {
-  jay: 'jaypb1',
+  jay: 'peebeejay',
   burz: 'burz',
   colfax: 'colfax23',
   vitalik: 'vbuterin',
