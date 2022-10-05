@@ -17,18 +17,46 @@ export function jwtWithAddress() {
         next({ status: 400, msg: 'Invalid or missing Access Token' });
         return;
       }
+
+      const { authTokenId, addressId } = <AccessTokenPayload>req.user;
+
       const tokenInfo = await context.prisma.authToken.findUnique({
         where: {
-          id: (<AccessTokenPayload>req.user).authTokenId,
+          id: authTokenId,
         },
         select: {
           id: true,
+        },
+      });
+      const addressInfo = await context.prisma.address.findUnique({
+        where: {
+          id: addressId,
+        },
+        select: {
+          ensName: true,
+          ensAvatarImageUrl: true,
         },
       });
       if (tokenInfo === null) {
         next({ status: 401, msg: 'Not logged in with address' });
         return;
       }
+      // This shouldn't be able to happen but we should handle this case
+      if (addressInfo === null) {
+        // Delete the AuthToken
+        await context.prisma.authToken.delete({
+          where: {
+            id: authTokenId,
+          },
+        });
+
+        next({ status: 401, msg: 'Need to relogin with address' });
+        return;
+      }
+
+      // Update the ensName and ensAvatarImageUrl if they've updated
+      set(req, 'user.ensName', addressInfo.ensName);
+      set(req, 'user.ensAvatarImageUrl', addressInfo.ensAvatarImageUrl);
 
       next();
     };
@@ -46,6 +74,7 @@ export function jwtWithOAuth() {
         next({ status: 400, msg: 'Invalid or missing Access Token' });
         return;
       }
+
       const tokenInfo = await context.prisma.authToken.findUnique({
         where: {
           id: (<AccessTokenPayload>req.user).authTokenId,
