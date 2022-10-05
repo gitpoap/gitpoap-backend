@@ -26,37 +26,22 @@ export function jwtWithAddress() {
         },
         select: {
           id: true,
-        },
-      });
-      const addressInfo = await context.prisma.address.findUnique({
-        where: {
-          id: addressId,
-        },
-        select: {
-          ensName: true,
-          ensAvatarImageUrl: true,
+          address: {
+            select: {
+              ensName: true,
+              ensAvatarImageUrl: true,
+            },
+          },
         },
       });
       if (tokenInfo === null) {
         next({ status: 401, msg: 'Not logged in with address' });
         return;
       }
-      // This shouldn't be able to happen but we should handle this case
-      if (addressInfo === null) {
-        // Delete the AuthToken
-        await context.prisma.authToken.delete({
-          where: {
-            id: authTokenId,
-          },
-        });
-
-        next({ status: 401, msg: 'Need to relogin with address' });
-        return;
-      }
 
       // Update the ensName and ensAvatarImageUrl if they've updated
-      set(req, 'user.ensName', addressInfo.ensName);
-      set(req, 'user.ensAvatarImageUrl', addressInfo.ensAvatarImageUrl);
+      set(req, 'user.ensName', tokenInfo.address.ensName);
+      set(req, 'user.ensAvatarImageUrl', tokenInfo.address.ensAvatarImageUrl);
 
       next();
     };
