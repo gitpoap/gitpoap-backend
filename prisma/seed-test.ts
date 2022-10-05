@@ -265,7 +265,7 @@ export const seed = async () => {
   /* Create Profiles */
   const profile1 = await ProfileFactory.create(addressColfax.id, 'I like brisket.');
   const profile2 = await ProfileFactory.create(addressRandom1.id, 'I like bbq.');
-  const profileJay = await ProfileFactory.create(addressJay.id, 'I like factorio.', 'Jay PB', '0xpeebeejay', 'jaypb1', 'https://s.jay.gg');
+  const profileJay = await ProfileFactory.create(addressJay.id, 'I like factorio.', 'Jay PB', '0xpeebeejay', 'peebeejay', 'https://s.jay.gg');
   const profile4 = await ProfileFactory.create(addressBurz.id, 'I am addicted to POAPs', 'Anna Burzillo');
   const profile5 = await ProfileFactory.create(addressBurz2.id, 'I am not real');
   const profile6 = await ProfileFactory.create(addressVitalik.id, 'I like unicorns');

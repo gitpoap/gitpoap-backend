@@ -6,7 +6,7 @@ export const SIGNATURE_TTL_MINUTES = 1;
 
 export const ADMIN_GITHUB_IDS = [
   914240, // colfax23
-  8076957, // jaypb1
+  8076957, // peebeejay
   1555326, // burz
   23272494, // kayleen / nixorokish
   109097759, // Kayla

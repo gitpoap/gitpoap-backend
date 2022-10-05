@@ -706,7 +706,7 @@ that returns data like:
         },
         {
           "id": 3,
-          "githubHandle": "jaypb1"
+          "githubHandle": "peebeejay"
         },
         {
           "id": 4,
