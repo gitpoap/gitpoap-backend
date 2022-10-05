@@ -182,13 +182,14 @@ export const onboardingRouter = Router();
 const upload = multer();
 
 const createIntakeFormDocForDynamo = (
+  githubHandle: string,
   formData: IntakeForm,
   timestamp: number,
 ): PutItemCommandInput => ({
   TableName: configProfile.tables.intakeForm,
   Item: {
     'email-githubHandle': {
-      S: `${formData.email}-${formData.githubHandle}`,
+      S: `${formData.email}-${githubHandle}`,
     },
     timestamp: {
       N: timestamp.toString(),
@@ -196,7 +197,7 @@ const createIntakeFormDocForDynamo = (
     name: { S: formData.name ?? '' },
     email: { S: formData.email },
     notes: { S: formData.notes ?? '' },
-    githubHandle: { S: formData.githubHandle },
+    githubHandle: { S: githubHandle },
     shouldGitPOAPDesign: { BOOL: Boolean(formData.shouldGitPOAPDesign) },
     isOneGitPOAPPerRepo: { BOOL: Boolean(formData.isOneGitPOAPPerRepo) },
     repos: {
@@ -222,6 +223,7 @@ const createIntakeFormDocForDynamo = (
 
 const createUpdateItemParamsForImages = (
   key: string,
+  githubHandle: string,
   timestamp: number,
   imageUrls: string[],
 ): UpdateItemCommandInput => {
@@ -256,7 +258,11 @@ const formatRepos = (repos: Repo[]) => {
   return response;
 };
 
-const sendConfirmationEmail = async (formData: IntakeForm, queueNumber: number | undefined) => {
+const sendConfirmationEmail = async (
+  githubHandle: string,
+  formData: IntakeForm,
+  queueNumber: number | undefined,
+) => {
   postmarkClient.sendEmailWithTemplate({
     From: 'team@gitpoap.io',
     To: formData.email,
@@ -267,7 +273,7 @@ const sendConfirmationEmail = async (formData: IntakeForm, queueNumber: number |
       queue_number: queueNumber ?? '',
       name: formData.name,
       email: formData.email,
-      githubHandle: formData.githubHandle,
+      githubHandle,
       shouldGitPOAPDesign: formData.shouldGitPOAPDesign === 'true' ? 'GitPOAP' : 'You',
       isOneGitPOAPPerRepo: formData.isOneGitPOAPPerRepo === 'true' ? 'One Per Repo' : 'One For All',
       notes: formData.notes,
@@ -282,6 +288,7 @@ const sendConfirmationEmail = async (formData: IntakeForm, queueNumber: number |
 };
 
 const sendInternalConfirmationEmail = async (
+  githubHandle: string,
   formData: IntakeForm,
   queueNumber: number | undefined,
   urls: string[],
@@ -289,14 +296,14 @@ const sendInternalConfirmationEmail = async (
   postmarkClient.sendEmail({
     From: 'team@gitpoap.io',
     To: 'team@gitpoap.io',
-    Subject: `New intake form submission from ${formData.githubHandle} / ${formData.email} `,
+    Subject: `New intake form submission from ${githubHandle} / ${formData.email} `,
     TextBody: `
-      New intake form submission from ${formData.githubHandle} / ${formData.email}
+      New intake form submission from ${githubHandle} / ${formData.email}
       Queue number: ${queueNumber ?? ''}
       Name: ${formData.name}
       Email: ${formData.email}
       Notes: ${formData.notes}
-      Github Handle: ${formData.githubHandle}
+      Github Handle: ${githubHandle}
       Should GitPOAP Design: ${formData.shouldGitPOAPDesign}
       Is One GitPOAP Per Repo: ${formData.isOneGitPOAPPerRepo}
       \n
@@ -320,12 +327,11 @@ onboardingRouter.post<'/intake-form', {}, {}, IntakeForm>(
     logger.debug(`Body: ${JSON.stringify(req.body)}`);
 
     const endTimer = httpRequestDurationSeconds.startTimer('GET', '/onboarding/intake-form');
+    const { githubHandle } = <AccessTokenPayloadWithOAuth>req.user;
     const unixTime = DateTime.local().toUnixInteger();
     const intakeFormTable = configProfile.tables.intakeForm;
 
-    logger.info(
-      `Request from GitHub handle ${req.body.githubHandle} to onboard via the intake form`,
-    );
+    logger.info(`Request from GitHub handle ${githubHandle} to onboard via the intake form`);
 
     /* Validate form data */
     const schemaResult = IntakeFormSchema.safeParse(req.body);
@@ -359,10 +365,10 @@ onboardingRouter.post<'/intake-form', {}, {}, IntakeForm>(
 
     /* Push results to Dynamo DB */
     try {
-      const params = createIntakeFormDocForDynamo(req.body, unixTime);
+      const params = createIntakeFormDocForDynamo(githubHandle, req.body, unixTime);
       await dynamoDBClient.send(new PutItemCommand(params));
       logger.info(
-        `Submitted intake form for GitHub user - ${req.body.githubHandle} to DynamoDB table ${intakeFormTable}`,
+        `Submitted intake form for GitHub user - ${githubHandle} to DynamoDB table ${intakeFormTable}`,
       );
     } catch (err) {
       logger.error(
@@ -379,7 +385,7 @@ onboardingRouter.post<'/intake-form', {}, {}, IntakeForm>(
       logger.info(`Found ${images.length} images to upload to S3. Attempting to upload.`);
       for (const [index, image] of images.entries()) {
         try {
-          const key = `${unixTime}-${req.body.githubHandle}-${req.body.email}-${index}`;
+          const key = `${unixTime}-${githubHandle}-${req.body.email}-${index}`;
           await uploadMulterFile(image, s3configProfile.buckets.intakeForm, key);
           /* Get s3 file URL */
           const url = getS3URL(s3configProfile.buckets.intakeForm, key);
@@ -397,14 +403,15 @@ onboardingRouter.post<'/intake-form', {}, {}, IntakeForm>(
 
       /* Update new s3 image urls to the dynamo DB record with the associated private key  */
       const updateParams = createUpdateItemParamsForImages(
-        `${req.body.email}-${req.body.githubHandle}`,
+        `${req.body.email}-${githubHandle}`,
+        githubHandle,
         unixTime,
         urls,
       );
       try {
         await dynamoDBClient.send(new UpdateItemCommand(updateParams));
         logger.info(
-          `Updated DynamoDB table ${intakeFormTable} record with key: ${req.body.githubHandle} with new image URLs`,
+          `Updated DynamoDB table ${intakeFormTable} record with key: ${githubHandle} with new image URLs`,
         );
       } catch (err) {
         logger.error(`Received error when updating DynamoDB table ${intakeFormTable} - ${err} `);
@@ -435,9 +442,9 @@ onboardingRouter.post<'/intake-form', {}, {}, IntakeForm>(
         `Retrieved count of all incomplete records in DynamoDB table ${intakeFormTable} - Count: ${tableCount}`,
       );
 
-      await sendConfirmationEmail(req.body, tableCount);
+      await sendConfirmationEmail(githubHandle, req.body, tableCount);
       logger.info(`Sent confirmation email to ${req.body.email}`);
-      await sendInternalConfirmationEmail(req.body, tableCount, urls);
+      await sendInternalConfirmationEmail(githubHandle, req.body, tableCount, urls);
       logger.info(`Sent internal confirmation email to team@gitpoap.io`);
     } catch (err) {
       /* Log error, but don't return error to user. Sending the email is secondary to storing the form data */
@@ -445,7 +452,7 @@ onboardingRouter.post<'/intake-form', {}, {}, IntakeForm>(
     }
 
     logger.info(
-      `Successfully submitted intake form for GitHub user - ${req.body.githubHandle} and email - ${req.body.email}`,
+      `Successfully submitted intake form for GitHub user - ${githubHandle} and email - ${req.body.email}`,
     );
 
     endTimer({ status: 200 });
@@ -466,8 +473,8 @@ onboardingRouter.get<'/github/repos', {}, APIResponseData<Repo[]>>(
     const logger = createScopedLogger('GET /onboarding/github/repos');
     const endTimer = httpRequestDurationSeconds.startTimer('GET', '/onboarding/github/repos');
 
-    const token = (<AccessTokenPayloadWithOAuth>req.user).githubOAuthToken;
-    const octokit = new Octokit({ auth: token });
+    const { githubOAuthToken } = <AccessTokenPayloadWithOAuth>req.user;
+    const octokit = new Octokit({ auth: githubOAuthToken });
     const user = await octokit.rest.users.getAuthenticated();
 
     logger.info(`Fetching repos lists for GitHub user ${user.data.login}`);

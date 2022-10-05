@@ -42,22 +42,19 @@ organizationsRouter.post('/', jwtWithOAuth(), async function (req, res) {
     return res.status(404).send({ msg });
   }
 
-  const accessToken = <AccessTokenPayloadWithOAuth>req.user;
+  const { githubHandle, githubOAuthToken } = <AccessTokenPayloadWithOAuth>req.user;
 
   // Ensure that the (GitHub) authenticated member is an admin of the organization
-  const members = await getGithubOrganizationAdmins(
-    organization.name,
-    accessToken.githubOAuthToken,
-  );
+  const members = await getGithubOrganizationAdmins(organization.name, githubOAuthToken);
   if (members === null) {
     const msg = `Failed to lookup admins of ${organization.name} via GitHub`;
     logger.warn(msg);
     endTimer({ status: 400 });
     return res.status(400).send({ msg });
   }
-  if (!members.map((m: { login: string }) => m.login).includes(accessToken.githubHandle)) {
+  if (!members.map((m: { login: string }) => m.login).includes(githubHandle)) {
     logger.warn(
-      `Non-member (GitHub handle: ${accessToken.githubHandle} of repo ${organization.name} tried to update its data`,
+      `Non-member (GitHub handle: ${githubHandle} of repo ${organization.name} tried to update its data`,
     );
     endTimer({ status: 401 });
     return res.status(401).send({ msg: `You are not a member of ${organization.name}` });
