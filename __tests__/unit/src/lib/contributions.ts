@@ -52,7 +52,7 @@ describe('countContributionsForClaim', () => {
     expect(contextMock.prisma.githubMention.count).toHaveBeenCalledWith(mentionCountArgObj);
   });
 
-  it('Returns PR count when there are no Issue contributions', async () => {
+  it('Returns PR count when there are no Mention contributions', async () => {
     contextMock.prisma.githubPullRequest.count.mockResolvedValue(4);
     contextMock.prisma.githubMention.count.mockResolvedValue(0);
 
@@ -67,7 +67,7 @@ describe('countContributionsForClaim', () => {
     expect(contextMock.prisma.githubMention.count).toHaveBeenCalledWith(mentionCountArgObj);
   });
 
-  it('Returns Issue count when there are no PR contributions', async () => {
+  it('Returns Mention count when there are no PR contributions', async () => {
     contextMock.prisma.githubPullRequest.count.mockResolvedValue(0);
     contextMock.prisma.githubMention.count.mockResolvedValue(7);
 
