@@ -196,11 +196,53 @@ export async function createNewClaimsForRepoContributionHelper(
 }
 
 export async function retrieveClaimsCreatedByPR(pullRequestId: number): Promise<ClaimData[]> {
-  // Retrieve any new claims created by this PR
-  // No need to filter out DEPRECATED since the claims aren't created for DEPRECATED GitPOAPs
+  const logger = createScopedLogger('retrieveClaimsCreatedByPR');
+
+  const pullRequestData = await context.prisma.githubPullRequest.findUnique({
+    where: {
+      id: pullRequestId,
+    },
+    select: {
+      githubMergedAt: true,
+      repo: {
+        select: {
+          projectId: true,
+        },
+      },
+      userId: true,
+    },
+  });
+
+  if (pullRequestData === null) {
+    logger.error(`Failed to lookup GitHubPullRequest with ID ${pullRequestId}`);
+    return [];
+  }
+  if (pullRequestData.githubMergedAt === null) {
+    logger.error(`GithubPullRequest ID ${pullRequestId} is not merged yet!`);
+    return [];
+  }
+
+  // Retrieve any new claims created by this PR.
+  // Also return any claims that are UNCLAIMED but are in the same Project
+  // as this GithubPullRequest's Repo
+  //
+  // No need to filter out DEPRECATED since the claims aren't created
+  // for DEPRECATED GitPOAPs
   const claims: ClaimData[] = await context.prisma.claim.findMany({
     where: {
-      pullRequestEarnedId: pullRequestId,
+      OR: [
+        {
+          pullRequestEarnedId: pullRequestId,
+        },
+        {
+          gitPOAP: {
+            projectId: pullRequestData.repo.projectId,
+            year: pullRequestData.githubMergedAt.getFullYear(),
+          },
+          userId: pullRequestData.userId,
+          status: ClaimStatus.UNCLAIMED,
+        },
+      ],
       gitPOAP: {
         isEnabled: true,
       },
@@ -228,11 +270,68 @@ export async function retrieveClaimsCreatedByPR(pullRequestId: number): Promise<
 }
 
 export async function retrieveClaimsCreatedByMention(mentionId: number): Promise<ClaimData[]> {
-  // Retrieve any new claims created by this Mention
-  // No need to filter out DEPRECATED since the claims aren't created for DEPRECATED GitPOAPs
+  const logger = createScopedLogger('retrieveClaimsCreatedByMention');
+
+  const mentionData = await context.prisma.githubMention.findUnique({
+    where: {
+      id: mentionId,
+    },
+    select: {
+      userId: true,
+      repo: {
+        select: {
+          projectId: true,
+        },
+      },
+      pullRequest: {
+        select: {
+          githubCreatedAt: true,
+        },
+      },
+      issue: {
+        select: {
+          githubCreatedAt: true,
+        },
+      },
+    },
+  });
+
+  if (mentionData === null) {
+    logger.error(`Failed to lookup GitHubMention with ID ${mentionId}`);
+    return [];
+  }
+
+  let year: number;
+  if (mentionData.pullRequest !== null) {
+    year = mentionData.pullRequest.githubCreatedAt.getFullYear();
+  } else if (mentionData.issue !== null) {
+    year = mentionData.issue.githubCreatedAt.getFullYear();
+  } else {
+    logger.error(`GithubMention ID ${mentionId} does not have a linked PR or Issue`);
+    return [];
+  }
+
+  // Retrieve any new claims created by this Mention.
+  // Also return any claims that are UNCLAIMED but are in
+  // the same project as this mention's Repo.
+  //
+  // No need to filter out DEPRECATED since the claims aren't
+  // created for DEPRECATED GitPOAPs
   const claims: ClaimData[] = await context.prisma.claim.findMany({
     where: {
-      mentionEarnedId: mentionId,
+      OR: [
+        {
+          mentionEarnedId: mentionId,
+        },
+        {
+          gitPOAP: {
+            projectId: mentionData.repo.projectId,
+            year,
+          },
+          userId: mentionData.userId,
+          status: ClaimStatus.UNCLAIMED,
+        },
+      ],
       gitPOAP: {
         isEnabled: true,
       },
