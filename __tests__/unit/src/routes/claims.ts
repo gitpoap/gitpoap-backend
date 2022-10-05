@@ -171,6 +171,19 @@ describe('POST /claims/gitpoap-bot/create', () => {
     }
   });
 
+  it('Fails for a PR contribution with more than one githubId', async () => {
+    mockedGetGithubAuthenticatedApp.mockResolvedValue({ id: GITPOAP_BOT_APP_ID });
+
+    const result = await request(await setupApp())
+      .post('/claims/gitpoap-bot/create')
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({ ...pullRequest, contributorGithubIds: [4, 5] });
+
+    expect(result.statusCode).toEqual(400);
+
+    expect(mockedCreateClaimsForPR).toHaveBeenCalledTimes(0);
+  });
+
   it("Fails for issues that aren't from mentions", async () => {
     mockedGetGithubAuthenticatedApp.mockResolvedValue({ id: GITPOAP_BOT_APP_ID });
 
