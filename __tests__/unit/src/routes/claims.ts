@@ -39,6 +39,20 @@ const issue = {
   contributorGithubIds: [contributorId],
   wasEarnedByMention: true,
 };
+const claim: ClaimData = {
+  id: 234,
+  user: {
+    githubId: contributorId,
+    githubHandle: 'batman',
+  },
+  gitPOAP: {
+    id: 234,
+    name: 'Wow you arrrrr great',
+    imageUrl: 'https://example.com/image.png',
+    description: 'You are clearly a rockstar',
+    threshold: 1,
+  },
+};
 
 describe('POST /claims/gitpoap-bot/create', () => {
   it('Fails with no Access Token provided', async () => {
@@ -323,18 +337,6 @@ describe('POST /claims/gitpoap-bot/create', () => {
     mockedCreateClaimsForPR.mockResolvedValue({ pullRequest: { id: contributionId } } as any);
     mockedCreateClaimsForIssue.mockResolvedValue({ mention: { id: contributionId } } as any);
 
-    const claim: ClaimData = {
-      id: 234,
-      user: { githubHandle: 'batman' },
-      gitPOAP: {
-        id: 234,
-        name: 'Wow you arrrrr great',
-        imageUrl: 'https://example.com/image.png',
-        description: 'You are clearly a rockstar',
-        threshold: 1,
-      },
-    };
-
     mockedRetrieveClaimsCreatedByPR.mockResolvedValue([claim]);
     mockedRetrieveClaimsCreatedByMention.mockResolvedValue([claim]);
 
@@ -387,18 +389,6 @@ describe('POST /claims/gitpoap-bot/create', () => {
     const contributionId = 324;
 
     mockedCreateClaimsForIssue.mockResolvedValue({ mention: { id: contributionId } } as any);
-
-    const claim: ClaimData = {
-      id: 234,
-      user: { githubHandle: 'batman' },
-      gitPOAP: {
-        id: 234,
-        name: 'Wow you arrrrr great',
-        imageUrl: 'https://example.com/image.png',
-        description: 'You are clearly a rockstar',
-        threshold: 1,
-      },
-    };
 
     mockedRetrieveClaimsCreatedByMention.mockResolvedValue([claim]);
 
