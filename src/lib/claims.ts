@@ -1,4 +1,4 @@
-import { ClaimStatus } from '@prisma/client';
+import { ClaimStatus, Prisma } from '@prisma/client';
 import { Claim } from '@generated/type-graphql';
 import { context } from '../context';
 import { createScopedLogger } from '../logging';
@@ -24,6 +24,7 @@ export type RepoData = {
 export type ClaimData = {
   id: number;
   user: {
+    githubId: number;
     githubHandle: string;
   };
   gitPOAP: {
@@ -251,6 +252,7 @@ export async function retrieveClaimsCreatedByPR(pullRequestId: number): Promise<
       id: true,
       user: {
         select: {
+          githubId: true,
           githubHandle: true,
         },
       },
@@ -340,6 +342,7 @@ export async function retrieveClaimsCreatedByMention(mentionId: number): Promise
       id: true,
       user: {
         select: {
+          githubId: true,
           githubHandle: true,
         },
       },
