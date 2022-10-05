@@ -90,6 +90,15 @@ describe('CustomProfileResolver', () => {
       });
 
       expect(endingRecord).not.toEqual(null);
+
+      // Delete the record
+      await context.prisma.profile.delete({
+        where: {
+          address: {
+            ethAddress: address,
+          },
+        },
+      });
     },
     10 * MILLISECONDS_PER_SECOND,
   );
