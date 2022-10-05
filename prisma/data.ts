@@ -370,3 +370,138 @@ export const event37430: POAPEvent = {
   expiry_date: '01-Apr-2023',
   supply: 60,
 };
+
+/* Real - Closest Citibike 2016 */
+export const event71781 = {
+  id: 71781,
+  fancy_id: 'gitpoap-2016-closest-citibike-contributor-2016',
+  name: 'GitPOAP: 2016 Closest Citibike Contributor',
+  event_url: 'https://github.com/peebeejay/ClosestCitibike',
+  image_url:
+    'https://assets.poap.xyz/gitpoap-2016-closest-citibike-contributor-2016-logo-1664835716309.png',
+  country: '',
+  city: '',
+  description:
+    'You made at least one contribution to the Closest Citibike project in 2016. Your contributions are greatly appreciated!',
+  year: 2016,
+  start_date: '01-Jan-2022',
+  end_date: '31-Dec-2022',
+  expiry_date: '01-Apr-2023',
+  from_admin: false,
+  virtual_event: true,
+  event_template_id: 0,
+  event_host_id: 0,
+  private_event: false,
+  supply: 20,
+};
+
+/* Real - Closest Citibike 2017 */
+export const event71783: POAPEvent = {
+  id: 71783,
+  fancy_id: 'gitpoap-2017-closest-citibike-contributor-2017',
+  name: 'GitPOAP: 2017 Closest Citibike Contributor',
+  event_url: 'https://github.com/peebeejay/ClosestCitibike',
+  image_url:
+    'https://assets.poap.xyz/gitpoap-2017-closest-citibike-contributor-2017-logo-1664835836603.png',
+  country: '',
+  city: '',
+  description:
+    'You made at least one contribution to the Closest Citibike project in 2017. Your contributions are greatly appreciated!',
+  year: 2017,
+  start_date: '01-Jan-2022',
+  end_date: '31-Dec-2022',
+  expiry_date: '01-Apr-2023',
+  supply: 20,
+};
+
+/* FAKE EVENT */
+export const event71784: POAPEvent = {
+  id: 71784,
+  fancy_id: 'gitpoap-2022-closest-citibike-contributor-2022',
+  name: 'GitPOAP: 2022 Closest Citibike Contributor',
+  event_url: 'https://github.com/peebeejay/ClosestCitibike',
+  image_url:
+    'https://assets.poap.xyz/gitpoap-2017-closest-citibike-contributor-2017-logo-1664835836603.png',
+  country: '',
+  city: '',
+  description:
+    'You made at least one contribution to the Closest Citibike project in 2022. Your contributions are greatly appreciated!',
+  year: 2022,
+  start_date: '01-Jan-2022',
+  end_date: '31-Dec-2022',
+  expiry_date: '01-Apr-2023',
+  supply: 20,
+};
+
+/* Real - 2021 stake-house/wagyu-installer */
+export const event37602: POAPEvent = {
+  id: 37602,
+  fancy_id: 'gitpoap-2021-wagyu-installer-contributor-2021',
+  name: 'GitPOAP: 2021 Wagyu Installer Contributor',
+  event_url: 'https://github.com/stake-house/wagyu-installer',
+  image_url:
+    'https://assets.poap.xyz/gitpoap-2021-wagyu-installer-contributor-2021-logo-1649266125600.png',
+  country: '',
+  city: '',
+  description:
+    'You made at least one contribution to the Wagyu Installer project in 2021. Your contributions are greatly appreciated!',
+  year: 2021,
+  start_date: '01-Jan-2022',
+  end_date: '31-Dec-2022',
+  expiry_date: '01-Apr-2023',
+  supply: 50,
+};
+
+/* Real - 2020 yearn */
+export const event54112: POAPEvent = {
+  id: 54112,
+  fancy_id: 'gitpoap-2020-yearn-contributor-2020',
+  name: 'GitPOAP: 2020 Yearn Contributor',
+  event_url: 'https://github.com/yearn/yearn-vaults',
+  image_url: 'https://assets.poap.xyz/gitpoap-2020-yearn-contributor-2020-logo-1657312668821.png',
+  country: '',
+  city: '',
+  description:
+    'You made at least one contribution to the Yearn project in 2020. Your contributions are greatly appreciated!',
+  year: 2020,
+  start_date: '01-Jan-2022',
+  end_date: '31-Dec-2022',
+  expiry_date: '01-Apr-2023',
+  supply: 50,
+};
+
+/* Real - 2021 yearn */
+export const event54113: POAPEvent = {
+  id: 54113,
+  fancy_id: 'gitpoap-2021-yearn-contributor-2021',
+  name: 'GitPOAP: 2021 Yearn Contributor',
+  event_url: 'https://github.com/yearn/yearn-vaults',
+  image_url: 'https://assets.poap.xyz/gitpoap-2021-yearn-contributor-2021-logo-1657312670778.png',
+  country: '',
+  city: '',
+  description:
+    'You made at least one contribution to the Yearn project in 2021. Your contributions are greatly appreciated!',
+  year: 2021,
+  start_date: '01-Jan-2022',
+  end_date: '31-Dec-2022',
+  expiry_date: '01-Apr-2023',
+  supply: 50,
+};
+
+/* Real - 2022 yearn */
+export const event54114: POAPEvent = {
+  id: 54114,
+  fancy_id: 'gitpoap-2022-yearn-contributor-2022',
+  name: 'GitPOAP: 2022 Yearn Contributor',
+  event_url: 'https://github.com/yearn/yearn-vaults',
+  image_url: 'https://assets.poap.xyz/gitpoap-2022-yearn-contributor-2022-logo-1657312672192.png',
+  country: '',
+  city: '',
+  description:
+    'You made at least one contribution to the Yearn project in 2022. Your contributions are greatly appreciated!',
+  year: 2022,
+  start_date: '01-Jan-2022',
+  end_date: '31-Dec-2022',
+  expiry_date: '01-Apr-2023',
+  supply: 50,
+};
