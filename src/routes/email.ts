@@ -202,7 +202,7 @@ emailRouter.post('/verify', async function (req, res) {
     return res.status(400).send({ msg: 'USED' });
   }
 
-  if (email.tokenExpiresAt < new Date()) {
+  if (DateTime.fromJSDate(email.tokenExpiresAt) < DateTime.now()) {
     logger.warn(`User attempted to use expired token: ${activeToken}`);
 
     await context.prisma.email.delete({
