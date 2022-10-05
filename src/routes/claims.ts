@@ -9,7 +9,6 @@ import { Router, Request } from 'express';
 import { context } from '../context';
 import { ClaimStatus, GitPOAP, GitPOAPStatus } from '@prisma/client';
 import { resolveENS } from '../lib/ens';
-import { isSignatureValid } from '../signatures';
 import { jwtWithOAuth, jwtWithAdminOAuth, gitpoapBotAuth } from '../middleware';
 import { AccessTokenPayload, AccessTokenPayloadWithOAuth } from '../types/tokens';
 import { redeemPOAP, requestPOAPCodes, retrieveClaimInfo } from '../external/poap';
@@ -164,25 +163,9 @@ claimsRouter.post('/', jwtWithOAuth(), async function (req, res) {
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
-  logger.info(`Request claiming IDs ${req.body.claimIds} for address ${req.body.address}`);
+  const { addressId, address, githubId, githubHandle } = <AccessTokenPayloadWithOAuth>req.user;
 
-  // Resolve ENS if provided
-  const resolvedAddress = await resolveENS(req.body.address);
-  if (resolvedAddress === null) {
-    logger.warn('Request address is invalid');
-    endTimer({ status: 400 });
-    return res.status(400).send({ msg: `${req.body.address} is not a valid address` });
-  }
-
-  if (
-    !isSignatureValid(resolvedAddress, 'POST /claims', req.body.signature, {
-      claimIds: req.body.claimIds,
-    })
-  ) {
-    logger.warn('Request signature is invalid');
-    endTimer({ status: 401 });
-    return res.status(401).send({ msg: 'The signature is not valid for this address and data' });
-  }
+  logger.info(`Request claiming IDs ${req.body.claimIds} for address ${address}`);
 
   const foundClaims: number[] = [];
   const qrHashes: string[] = [];
@@ -207,12 +190,8 @@ claimsRouter.post('/', jwtWithOAuth(), async function (req, res) {
       continue;
     }
 
-    const accessTokenPayload = req.user as AccessTokenPayload;
-
     if (!claim.gitPOAP.isEnabled) {
-      logger.warn(
-        `GitHub user ${accessTokenPayload.githubHandle} attempted to claim a non-enabled GitPOAP`,
-      );
+      logger.warn(`GitHub user ${githubHandle} attempted to claim a non-enabled GitPOAP`);
       invalidClaims.push({
         claimId,
         reason: `GitPOAP ID ${claim.gitPOAP.id} is not enabled`,
@@ -230,7 +209,7 @@ claimsRouter.post('/', jwtWithOAuth(), async function (req, res) {
     }
 
     // Ensure the user is the owner of the claim
-    if (claim.user.githubId !== accessTokenPayload.githubId) {
+    if (claim.user.githubId !== githubId) {
       invalidClaims.push({
         claimId,
         reason: 'User does not own claim',
@@ -259,9 +238,9 @@ claimsRouter.post('/', jwtWithOAuth(), async function (req, res) {
       logger.error(`Tried to delete a RedeemCode that was already deleted: ${err}`);
     }
 
-    await updateClaimStatusById(claimId, ClaimStatus.PENDING, resolvedAddress);
+    await updateClaimStatusById(claimId, ClaimStatus.PENDING, addressId);
 
-    const poapData = await redeemPOAP(req.body.address, redeemCode.code);
+    const poapData = await redeemPOAP(address, redeemCode.code);
     // If minting the POAP failed we need to revert
     if (poapData === null) {
       logger.error(`Failed to mint claim ${claimId} via the POAP API`);
@@ -299,9 +278,6 @@ claimsRouter.post('/', jwtWithOAuth(), async function (req, res) {
       },
     });
 
-    // Ensure that a profile exists for the address
-    await upsertProfile(resolvedAddress);
-
     // Ensure that we have the minimal number of codes if the GitPOAP
     // is marked as ongoing. Note that we don't need to block on this
     // since we don't depend on its result
@@ -320,9 +296,7 @@ claimsRouter.post('/', jwtWithOAuth(), async function (req, res) {
     }
   }
 
-  logger.debug(
-    `Completed request claiming IDs ${req.body.claimIds} for address ${req.body.address}`,
-  );
+  logger.debug(`Completed request claiming IDs ${req.body.claimIds} for address ${address}`);
 
   endTimer({ status: 200 });
 
@@ -349,6 +323,8 @@ claimsRouter.post('/create', jwtWithAdminOAuth(), async function (req, res) {
     endTimer({ status: 400 });
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
+
+  const { githubOAuthToken } = <AccessTokenPayloadWithOAuth>req.user;
 
   logger.info(
     `Request to create ${req.body.recipientGithubIds.length} claims for GitPOAP Id: ${req.body.gitPOAPId}`,
@@ -390,10 +366,7 @@ claimsRouter.post('/create', jwtWithAdminOAuth(), async function (req, res) {
 
   const notFound = [];
   for (const githubId of req.body.recipientGithubIds) {
-    const githubUserInfo = await getGithubUserById(
-      githubId,
-      (<AccessTokenPayloadWithOAuth>req.user).githubOAuthToken,
-    );
+    const githubUserInfo = await getGithubUserById(githubId, githubOAuthToken);
     if (githubUserInfo === null) {
       logger.warn(`GitHub ID ${githubId} not found!`);
       notFound.push(githubId);
@@ -624,29 +597,11 @@ claimsRouter.post('/revalidate', jwtWithOAuth(), async (req, res) => {
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
-  const accessTokenPayload = req.user as AccessTokenPayload;
+  const { address, githubId, githubHandle } = <AccessTokenPayloadWithOAuth>req.user;
 
   logger.info(
-    `Request to revalidate GitPOAP IDs ${req.body.claimIds} by GitHub user ${accessTokenPayload.githubHandle}`,
+    `Request to revalidate GitPOAP IDs ${req.body.claimIds} by GitHub user ${githubHandle}`,
   );
-
-  // Resolve ENS if provided
-  const resolvedAddress = await resolveENS(req.body.address);
-  if (resolvedAddress === null) {
-    logger.warn('Request address is invalid');
-    endTimer({ status: 400 });
-    return res.status(400).send({ msg: `${req.body.address} is not a valid address` });
-  }
-
-  if (
-    !isSignatureValid(resolvedAddress, 'POST /claims/revalidate', req.body.signature, {
-      claimIds: req.body.claimIds,
-    })
-  ) {
-    logger.warn('Request signature is invalid');
-    endTimer({ status: 401 });
-    return res.status(401).send({ msg: 'The signature is not valid for this address and data' });
-  }
 
   const foundClaims: number[] = [];
   const invalidClaims: { claimId: number; reason: string }[] = [];
@@ -678,19 +633,19 @@ claimsRouter.post('/revalidate', jwtWithOAuth(), async (req, res) => {
     // If the claim address is not set to the user sending the request,
     // assume the user is correct and that perhaps we haven't seen the
     // transfer yet in our backend
-    if (claim.mintedAddress?.ethAddress !== resolvedAddress.toLowerCase()) {
+    if (claim.mintedAddress?.ethAddress !== address) {
       const newAddress = await checkIfClaimTransferred(claimId);
 
-      if (newAddress !== resolvedAddress.toLowerCase()) {
+      if (newAddress?.toLowerCase() !== address) {
         invalidClaims.push({
           claimId,
-          reason: "Signer's address is not the current owner",
+          reason: 'Logged-in Address is not the current owner',
         });
         continue;
       }
     }
 
-    if (claim.user.githubId !== accessTokenPayload.githubId) {
+    if (claim.user.githubId !== githubId) {
       invalidClaims.push({
         claimId,
         reason: 'User does not own claim',
@@ -720,7 +675,7 @@ claimsRouter.post('/revalidate', jwtWithOAuth(), async (req, res) => {
   }
 
   logger.debug(
-    `Completed request to revalidate GitPOAP IDs ${req.body.claimIds} by GitHub user ${accessTokenPayload.githubHandle}`,
+    `Completed request to revalidate GitPOAP IDs ${req.body.claimIds} by GitHub user ${githubHandle}`,
   );
 
   endTimer({ status: 200 });

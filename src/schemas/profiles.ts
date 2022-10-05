@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { SignatureSchema } from './signature';
 
 const ProfileData = z.object({
   bio: z.nullable(z.string()),
@@ -10,7 +9,5 @@ const ProfileData = z.object({
 });
 
 export const UpdateProfileSchema = z.object({
-  address: z.string(),
   data: ProfileData.partial(), // Allows the fields to be undefined in request
-  signature: SignatureSchema,
 });

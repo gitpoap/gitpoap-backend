@@ -18,7 +18,6 @@ export const IntakeFormSchema = z.object({
   name: z.string().optional(),
   email: z.string().email(),
   notes: z.string().optional(),
-  githubHandle: z.string(),
   shouldGitPOAPDesign: z.enum(['true', 'false']),
   isOneGitPOAPPerRepo: z.enum(['true', 'false']),
   repos: z.string(),
