@@ -87,20 +87,16 @@ export async function upsertClaim(
 export async function updateClaimStatusById(
   claimId: number,
   status: ClaimStatus,
-  mintedAddress: string | null,
+  mintedAddressId: number | null,
 ): Promise<Claim> {
-  const mintedAddressData = mintedAddress
-    ? {
-        connectOrCreate: {
-          where: {
-            ethAddress: mintedAddress?.toLowerCase(),
-          },
-          create: {
-            ethAddress: mintedAddress?.toLowerCase(),
-          },
-        },
-      }
-    : undefined;
+  let mintedAddress = undefined;
+  if (mintedAddressId !== null) {
+    mintedAddress = {
+      connect: {
+        id: mintedAddressId,
+      },
+    };
+  }
 
   return await context.prisma.claim.update({
     where: {
@@ -108,7 +104,7 @@ export async function updateClaimStatusById(
     },
     data: {
       status,
-      mintedAddress: mintedAddressData,
+      mintedAddress,
     },
   });
 }
