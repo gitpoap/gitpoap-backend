@@ -474,6 +474,8 @@ claimsRouter.post(
       return res.status(400).send({ issues: schemaResult.error.issues });
     }
 
+    let wasEarnedByMention: boolean;
+
     let newClaims: ClaimData[] = [];
     if ('pullRequest' in req.body) {
       const reqBody: z.infer<typeof CreateGitPOAPBotClaimsForPRSchema> = req.body.pullRequest;
@@ -501,6 +503,7 @@ claimsRouter.post(
         }
       }
 
+      const githubIdSet = new Set<number>(reqBody.contributorGithubIds);
       for (let contribution of contributions) {
         if (contribution === null) {
           continue;
@@ -514,7 +517,10 @@ claimsRouter.post(
           const newClaimsForContribution = await retrieveClaimsCreatedByMention(
             contribution.mention.id,
           );
-          newClaims = [...newClaims, ...newClaimsForContribution];
+          newClaims = [
+            ...newClaims,
+            ...newClaimsForContribution.filter(claimData => !githubIdSet.has(claimData.id)),
+          ];
         }
       }
 
@@ -555,6 +561,7 @@ claimsRouter.post(
         }
       }
 
+      const githubIdSet = new Set<number>(reqBody.contributorGithubIds);
       for (const contribution of contributions) {
         if (contribution === null) {
           continue;
@@ -562,7 +569,10 @@ claimsRouter.post(
           const newClaimsForContribution = await retrieveClaimsCreatedByMention(
             contribution.mention.id,
           );
-          newClaims = [...newClaims, ...newClaimsForContribution];
+          newClaims = [
+            ...newClaims,
+            ...newClaimsForContribution.filter(claimData => !githubIdSet.has(claimData.id)),
+          ];
         } else {
           // 'pullRequest' in contribution
           logger.error('Got back a pull request from createClaimsForIssue');
