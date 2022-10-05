@@ -53,6 +53,8 @@ gitpoapsRouter.post(
       return res.status(400).send({ msg });
     }
 
+    const { githubOAuthToken } = <AccessTokenPayloadWithOAuth>req.user;
+
     const projectChoice: z.infer<typeof CreateGitPOAPProjectSchema> = JSON.parse(req.body.project);
     const projectSchemaResult = CreateGitPOAPProjectSchema.safeParse(projectChoice);
     if (!projectSchemaResult.success) {
@@ -92,12 +94,12 @@ gitpoapsRouter.post(
       if (projectChoice.githubRepoIds.length === 1) {
         project = await getOrCreateProjectWithGithubRepoId(
           projectChoice.githubRepoIds[0],
-          (<AccessTokenPayloadWithOAuth>req.user).githubOAuthToken,
+          githubOAuthToken,
         );
       } else {
         project = await createProjectWithGithubRepoIds(
           projectChoice.githubRepoIds,
-          (<AccessTokenPayloadWithOAuth>req.user).githubOAuthToken,
+          githubOAuthToken,
         );
       }
     }
