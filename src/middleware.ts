@@ -1,36 +1,73 @@
 import jwt from 'express-jwt';
 import { context } from './context';
 import set from 'lodash/set';
-import { AccessTokenPayload } from './types/tokens';
+import { AccessTokenPayload, AccessTokenPayloadWithOAuth } from './types/tokens';
 import { ErrorRequestHandler, RequestHandler } from 'express';
 import { JWT_SECRET } from './environment';
 import { createScopedLogger } from './logging';
 import { ADMIN_GITHUB_IDS, GITPOAP_BOT_APP_ID } from './constants';
 import { getGithubAuthenticatedApp } from './external/github';
 
-export function jwtWithOAuth() {
-  const jwtMiddleware = jwt({ secret: JWT_SECRET as string, algorithms: ['HS256'] });
+const jwtMiddleware = jwt({ secret: JWT_SECRET as string, algorithms: ['HS256'] });
 
+export function jwtWithAddress() {
   const middleware: RequestHandler = async (req, res, next) => {
     const callback = async (err?: any) => {
       if (!req.user) {
         next({ status: 400, msg: 'Invalid or missing Access Token' });
         return;
       }
-      const userInfo = await context.prisma.authToken.findUnique({
+      const tokenInfo = await context.prisma.authToken.findUnique({
         where: {
           id: (<AccessTokenPayload>req.user).authTokenId,
         },
         select: {
-          githubOAuthToken: true,
+          id: true,
         },
       });
-      if (userInfo === null) {
-        next({ status: 500, msg: "Couldn't find your login" });
+      if (tokenInfo === null) {
+        next({ status: 401, msg: 'Not logged in with address' });
         return;
       }
 
-      set(req, 'user.githubOAuthToken', userInfo.githubOAuthToken);
+      next();
+    };
+
+    jwtMiddleware(req, res, callback);
+  };
+
+  return middleware;
+}
+
+export function jwtWithOAuth() {
+  const middleware: RequestHandler = async (req, res, next) => {
+    const callback = async (err?: any) => {
+      if (!req.user) {
+        next({ status: 400, msg: 'Invalid or missing Access Token' });
+        return;
+      }
+      const tokenInfo = await context.prisma.authToken.findUnique({
+        where: {
+          id: (<AccessTokenPayload>req.user).authTokenId,
+        },
+        select: {
+          user: {
+            select: {
+              githubOAuthToken: true,
+            },
+          },
+        },
+      });
+      if (tokenInfo === null) {
+        next({ status: 401, msg: 'Not logged in with address' });
+        return;
+      }
+      if (tokenInfo.user === null || tokenInfo.user.githubOAuthToken === null) {
+        next({ status: 401, msg: 'Not logged into GitHub' });
+        return;
+      }
+
+      set(req, 'user.githubOAuthToken', tokenInfo.user.githubOAuthToken);
 
       next();
     };
@@ -54,7 +91,7 @@ export function jwtWithAdminOAuth() {
         return;
       }
 
-      const payload = <AccessTokenPayload>req.user;
+      const payload = <AccessTokenPayloadWithOAuth>req.user;
 
       if (!ADMIN_GITHUB_IDS.includes(payload.githubId)) {
         logger.warn(
