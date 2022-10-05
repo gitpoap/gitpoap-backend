@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { DateTime } from 'luxon';
 
 import { context } from '../context';
-import { postmarkClient } from '../external/postmark';
+import { sendVerificationEmail } from '../external/postmark';
 import { generateUniqueEmailToken } from '../lib/email';
 import { resolveENS } from '../lib/ens';
 import { createScopedLogger } from '../logging';
@@ -11,22 +11,6 @@ import { AddEmailSchema, RemoveEmailSchema, ValidateEmailSchema } from '../schem
 import { isSignatureValid } from '../signatures';
 
 export const emailRouter = Router();
-
-const sendVerificationEmail = async (email: string, activeToken: string) => {
-  postmarkClient.sendEmailWithTemplate({
-    From: 'team@gitpoap.io',
-    To: email,
-    TemplateAlias: 'verify-email',
-    TemplateModel: {
-      product_url: 'gitpoap.io',
-      product_name: 'GitPOAP',
-      token: activeToken,
-      support_email: 'team@gitpoap.io',
-      company_name: 'MetaRep Labs Inc',
-      company_address: 'One Broadway, Cambridge MA 02142',
-    },
-  });
-};
 
 emailRouter.post('/', async function (req, res) {
   const logger = createScopedLogger('POST /email');
@@ -227,8 +211,8 @@ emailRouter.post('/verify', async function (req, res) {
       },
     });
 
-    endTimer({ status: 400 });
-    return res.status(400).send({ msg: 'EXPIRED' });
+    endTimer({ status: 401 });
+    return res.status(401).send({ msg: 'EXPIRED' });
   }
 
   await context.prisma.email.update({
