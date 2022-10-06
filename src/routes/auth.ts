@@ -6,12 +6,45 @@ import { verify } from 'jsonwebtoken';
 import { JWT_SECRET } from '../environment';
 import { context } from '../context';
 import { CreateAccessTokenSchema, RefreshAccessTokenSchema } from '../schemas/auth';
-import { generateAuthTokens, generateNewAuthTokens } from '../lib/authTokens';
+import { UserAuthTokens, generateAuthTokens, generateNewAuthTokens } from '../lib/authTokens';
 import { resolveAddress, resolveENS } from '../lib/ens';
 import { isSignatureValid } from '../lib/signatures';
 import { z } from 'zod';
+import { isGithubTokenValidForUser } from '../external/github';
+import { removeUsersGithubOAuthToken } from '../lib/users';
+import { removeGithubLoginForAddress } from '../lib/addresses';
 
 export const authRouter = Router();
+
+type GithubTokenData = {
+  githubId: number | null;
+  githubHandle: string | null;
+};
+
+async function getTokenDataWithGithubCheck(
+  addressId: number,
+  userId: number,
+  githubId: number,
+  githubHandle: string,
+  githubOAuthToken: string | null,
+): Promise<GithubTokenData> {
+  const logger = createScopedLogger('getTokenDataWithGithubCheck');
+
+  if (await isGithubTokenValidForUser(githubOAuthToken, githubId)) {
+    return { githubId, githubHandle };
+  }
+
+  logger.info(`Removing invalid GitHub OAuth token for User ID ${userId}`);
+
+  await removeUsersGithubOAuthToken(userId);
+
+  await removeGithubLoginForAddress(addressId);
+
+  return {
+    githubId: null,
+    githubHandle: null,
+  };
+}
 
 authRouter.post('/', async function (req, res) {
   const logger = createScopedLogger('POST /auth');
@@ -81,20 +114,33 @@ authRouter.post('/', async function (req, res) {
       ensAvatarImageUrl: true,
       githubUser: {
         select: {
+          id: true,
           githubId: true,
           githubHandle: true,
+          githubOAuthToken: true,
         },
       },
     },
   });
+
+  let githubTokenData: GithubTokenData = { githubId: null, githubHandle: null };
+  if (dbAddress.githubUser !== null) {
+    githubTokenData = await getTokenDataWithGithubCheck(
+      dbAddress.id,
+      dbAddress.githubUser.id,
+      dbAddress.githubUser.githubId,
+      dbAddress.githubUser.githubHandle,
+      dbAddress.githubUser.githubOAuthToken,
+    );
+  }
 
   const userAuthTokens = generateNewAuthTokens(
     dbAddress.id,
     addressLower,
     dbAddress.ensName,
     dbAddress.ensAvatarImageUrl,
-    dbAddress.githubUser?.githubId ?? null,
-    dbAddress.githubUser?.githubHandle ?? null,
+    githubTokenData.githubId,
+    githubTokenData.githubHandle,
   );
 
   logger.debug(`Completed request to create AuthToken for address ${address}`);
@@ -149,8 +195,10 @@ authRouter.post('/refresh', async function (req, res) {
       },
       user: {
         select: {
+          id: true,
           githubId: true,
           githubHandle: true,
+          githubOAuthToken: true,
         },
       },
     },
@@ -193,6 +241,17 @@ authRouter.post('/refresh', async function (req, res) {
     },
   });
 
+  let githubTokenData: GithubTokenData = { githubId: null, githubHandle: null };
+  if (authToken.user !== null) {
+    githubTokenData = await getTokenDataWithGithubCheck(
+      authToken.address.id,
+      authToken.user.id,
+      authToken.user.githubId,
+      authToken.user.githubHandle,
+      authToken.user.githubOAuthToken,
+    );
+  }
+
   const userAuthTokens = generateAuthTokens(
     payload.authTokenId,
     nextGeneration,
@@ -200,8 +259,8 @@ authRouter.post('/refresh', async function (req, res) {
     authToken.address.ethAddress,
     authToken.address.ensName,
     authToken.address.ensAvatarImageUrl,
-    authToken.user?.githubId ?? null,
-    authToken.user?.githubHandle ?? null,
+    githubTokenData.githubId,
+    githubTokenData.githubHandle,
   );
 
   logger.debug('Completed request to refresh AuthToken');
