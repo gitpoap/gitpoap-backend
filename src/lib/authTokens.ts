@@ -37,6 +37,11 @@ function generateRefreshToken(payload: RefreshTokenPayload) {
   return sign(payload, JWT_SECRET);
 }
 
+export type UserAuthTokens = {
+  accessToken: string;
+  refreshToken: string;
+};
+
 export function generateAuthTokens(
   authTokenId: number,
   authTokenGeneration: number,
@@ -46,7 +51,7 @@ export function generateAuthTokens(
   ensAvatarImageUrl: string | null,
   githubId: number | null,
   githubHandle: string | null,
-) {
+): UserAuthTokens {
   const accessTokenPayload: AccessTokenPayload = {
     authTokenId,
     addressId,
@@ -75,7 +80,7 @@ export async function generateNewAuthTokens(
   ensAvatarImageUrl: string | null,
   githubId: number | null,
   githubHandle: string | null,
-) {
+): Promise<UserAuthTokens> {
   const authToken = await createAuthToken(addressId, githubId);
 
   return generateAuthTokens(

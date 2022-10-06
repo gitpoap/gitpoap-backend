@@ -20,3 +20,14 @@ export const upsertAddress = async (
 
   return addressResult;
 };
+
+export async function removeGithubLoginForAddress(addressId: number) {
+  await context.prisma.address.update({
+    where: {
+      id: addressId,
+    },
+    data: {
+      githubUserId: null,
+    },
+  });
+}

@@ -296,3 +296,16 @@ export async function getSingleGithubRepositoryIssueAsAdmin(
 export async function getGithubAuthenticatedApp(jwtToken: string) {
   return await makeGithubJWTAPIRequest('/app', jwtToken);
 }
+
+export async function isGithubTokenValidForUser(
+  githubToken: string | null,
+  githubId: number,
+): Promise<boolean> {
+  if (githubToken === null) {
+    return false;
+  }
+
+  const githubUser = await getGithubCurrentUserInfo(githubToken);
+
+  return githubUser !== null && githubUser.id === githubId;
+}
