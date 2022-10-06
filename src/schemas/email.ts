@@ -8,6 +8,10 @@ export const AddEmailSchema = z.object({
   signature: SignatureSchema,
 });
 
+export const GetEmailSchema = z.object({
+  ethAddress: z.string().nonempty(),
+});
+
 export const RemoveEmailSchema = z.object({
   address: z.string().nonempty(),
   id: z.number(),
