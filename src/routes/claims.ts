@@ -529,12 +529,12 @@ claimsRouter.post(
           const newClaimsForContribution = await retrieveClaimsCreatedByMention(
             contribution.mention.id,
           );
-          newClaims = [
-            ...newClaims,
-            ...newClaimsForContribution.filter(claimData =>
-              githubIdSet.has(claimData.user.githubId),
-            ),
-          ];
+
+          const filteredNewClaims = newClaimsForContribution.filter(claimData =>
+            githubIdSet.has(claimData.user.githubId),
+          );
+
+          newClaims = [...newClaims, ...filteredNewClaims];
         }
       }
 
@@ -583,12 +583,12 @@ claimsRouter.post(
           const newClaimsForContribution = await retrieveClaimsCreatedByMention(
             contribution.mention.id,
           );
-          newClaims = [
-            ...newClaims,
-            ...newClaimsForContribution.filter(claimData =>
-              githubIdSet.has(claimData.user.githubId),
-            ),
-          ];
+
+          const filteredNewClaims = newClaimsForContribution.filter(claimData =>
+            githubIdSet.has(claimData.user.githubId),
+          );
+
+          newClaims = [...newClaims, ...filteredNewClaims];
         } else {
           // 'pullRequest' in contribution
           logger.error('Got back a pull request from createClaimsForIssue');
