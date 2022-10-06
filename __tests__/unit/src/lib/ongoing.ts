@@ -27,6 +27,7 @@ const user: User = {
   id: 32423,
   githubId: 43532,
   githubHandle: 'some-user',
+  githubOAuthToken: null,
   createdAt: new Date('2020-01-01'),
   updatedAt: new Date('2022-05-03'),
 };
