@@ -58,7 +58,7 @@ emailRouter.get('/:ethAddress', async function (req, res) {
 
   endTimer({ status: 200 });
 
-  return res.status(200).send(email);
+  return res.status(200).send({ email });
 });
 
 emailRouter.post('/', async function (req, res) {
