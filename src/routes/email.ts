@@ -7,10 +7,67 @@ import { generateUniqueEmailToken } from '../lib/email';
 import { resolveENS } from '../lib/ens';
 import { createScopedLogger } from '../logging';
 import { httpRequestDurationSeconds } from '../metrics';
-import { AddEmailSchema, RemoveEmailSchema, ValidateEmailSchema } from '../schemas/email';
+import {
+  AddEmailSchema,
+  GetEmailSchema,
+  RemoveEmailSchema,
+  ValidateEmailSchema,
+} from '../schemas/email';
 import { isSignatureValid } from '../signatures';
 
 export const emailRouter = Router();
+
+emailRouter.get('/', async function (req, res) {
+  const logger = createScopedLogger('GET /email');
+
+  logger.debug(`Body: ${JSON.stringify(req.body)}`);
+
+  const endTimer = httpRequestDurationSeconds.startTimer('GET', '/email');
+
+  const schemaResult = GetEmailSchema.safeParse(req.body);
+  if (!schemaResult.success) {
+    logger.warn(
+      `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
+    );
+    endTimer({ status: 400 });
+    return res.status(400).send({ issues: schemaResult.error.issues });
+  }
+
+  /*
+   * TODO: VERY IMPORTANT
+   * We will need to add an authentication check here
+   */
+
+  const { ethAddress } = req.body;
+
+  logger.info(`Request to retrieve the email connected to: ${ethAddress}`);
+
+  const address = await context.prisma.address.findUnique({
+    where: {
+      ethAddress: ethAddress,
+    },
+  });
+
+  if (address === null) {
+    logger.warn('Request address is invalid');
+    endTimer({ status: 400 });
+    return res.status(400).send({
+      msg: `${req.body.ethAddress} is not a valid address`,
+    });
+  }
+
+  const email = await context.prisma.email.findUnique({
+    where: {
+      addressId: address.id,
+    },
+  });
+
+  logger.debug(`Completed request to retrieve the email connected to: ${ethAddress}`);
+
+  endTimer({ status: 200 });
+
+  return res.status(200).send(email);
+});
 
 emailRouter.post('/', async function (req, res) {
   const logger = createScopedLogger('POST /email');
