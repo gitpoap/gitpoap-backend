@@ -26,3 +26,14 @@ export async function upsertUser(
     },
   });
 }
+
+export async function removeUsersGithubOAuthToken(userId: number) {
+  await context.prisma.user.update({
+    where: {
+      id: userId,
+    },
+    data: {
+      githubOAuthToken: null,
+    },
+  });
+}
