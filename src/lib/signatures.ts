@@ -1,7 +1,7 @@
 import { utils } from 'ethers';
 import { DateTime } from 'luxon';
-import { SIGNATURE_TTL_MINUTES } from './constants';
-import { createScopedLogger } from './logging';
+import { SIGNATURE_TTL_MINUTES } from '../constants';
+import { createScopedLogger } from '../logging';
 
 type Signature = {
   data: string;
