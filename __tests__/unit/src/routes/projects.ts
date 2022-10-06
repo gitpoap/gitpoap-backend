@@ -13,11 +13,35 @@ const mockedCreateRepoByGithubId = jest.mocked(createRepoByGithubId, true);
 const mockedBackloadGithubPullRequestData = jest.mocked(backloadGithubPullRequestData, true);
 
 const authTokenId = 4;
+const authTokenGeneration = 0;
+const addressId = 45;
+const address = '0xfoobar';
 const githubId = 232444;
 const githubOAuthToken = 'foobar34543';
 const githubHandle = 'b-burz';
 const projectId = 234;
 const githubRepoIds = [2];
+const ensName = 'wowza.eth';
+const ensAvatarImageUrl = 'https://foobar.com/a.jpg';
+
+function mockJwtWithOAuth() {
+  contextMock.prisma.authToken.findUnique.mockResolvedValue({
+    user: { githubOAuthToken },
+  } as any);
+}
+
+function genAuthTokens(someGithubId: number) {
+  return generateAuthTokens(
+    authTokenId,
+    authTokenGeneration,
+    addressId,
+    address,
+    ensName,
+    ensAvatarImageUrl,
+    someGithubId,
+    githubHandle,
+  );
+}
 
 describe('POST /projects/add-repos', () => {
   it('Fails with no Access Token provided', async () => {
@@ -29,9 +53,9 @@ describe('POST /projects/add-repos', () => {
   });
 
   it('Fails with non-admin Access Token provided', async () => {
-    contextMock.prisma.authToken.findUnique.mockResolvedValue({ githubOAuthToken } as any);
+    mockJwtWithOAuth();
 
-    const authTokens = generateAuthTokens(234, 4, githubId, githubHandle);
+    const authTokens = genAuthTokens(githubId);
 
     const result = await request(await setupApp())
       .post('/projects/add-repos')
@@ -44,10 +68,10 @@ describe('POST /projects/add-repos', () => {
   });
 
   it('Returns error when invalid project provided', async () => {
-    contextMock.prisma.authToken.findUnique.mockResolvedValue({ githubOAuthToken } as any);
+    mockJwtWithOAuth();
     contextMock.prisma.project.findUnique.mockResolvedValue(null);
 
-    const authTokens = generateAuthTokens(234, 4, ADMIN_GITHUB_IDS[0], githubHandle);
+    const authTokens = genAuthTokens(ADMIN_GITHUB_IDS[0]);
 
     const result = await request(await setupApp())
       .post('/projects/add-repos')
@@ -65,11 +89,11 @@ describe('POST /projects/add-repos', () => {
   });
 
   it('Returns error when invalid repos provided', async () => {
-    contextMock.prisma.authToken.findUnique.mockResolvedValue({ githubOAuthToken } as any);
+    mockJwtWithOAuth();
     contextMock.prisma.project.findUnique.mockResolvedValue({ id: projectId } as any);
     mockedCreateRepoByGithubId.mockResolvedValue(null);
 
-    const authTokens = generateAuthTokens(234, 4, ADMIN_GITHUB_IDS[0], githubHandle);
+    const authTokens = genAuthTokens(ADMIN_GITHUB_IDS[0]);
 
     const result = await request(await setupApp())
       .post('/projects/add-repos')
@@ -93,13 +117,12 @@ describe('POST /projects/add-repos', () => {
   });
 
   it('Adds valid repos to valid project with admin JWT', async () => {
-    const repoId = 234232;
-
-    contextMock.prisma.authToken.findUnique.mockResolvedValue({ githubOAuthToken } as any);
+    mockJwtWithOAuth();
     contextMock.prisma.project.findUnique.mockResolvedValue({ id: projectId } as any);
+    const repoId = 234232;
     mockedCreateRepoByGithubId.mockResolvedValue({ id: repoId } as any);
 
-    const authTokens = generateAuthTokens(234, 4, ADMIN_GITHUB_IDS[0], githubHandle);
+    const authTokens = genAuthTokens(ADMIN_GITHUB_IDS[0]);
 
     const result = await request(await setupApp())
       .post('/projects/add-repos')
@@ -135,9 +158,9 @@ describe('PUT /projects/enable/:id', () => {
   });
 
   it('Fails with non-admin Access Token provided', async () => {
-    contextMock.prisma.authToken.findUnique.mockResolvedValue({ githubOAuthToken } as any);
+    mockJwtWithOAuth();
 
-    const authTokens = generateAuthTokens(234, 4, githubId, githubHandle);
+    const authTokens = genAuthTokens(githubId);
 
     const result = await request(await setupApp())
       .put(`/projects/enable/${projectId}`)
@@ -150,10 +173,10 @@ describe('PUT /projects/enable/:id', () => {
   });
 
   it('Returns a 404 when the Project is not found', async () => {
-    contextMock.prisma.authToken.findUnique.mockResolvedValue({ githubOAuthToken } as any);
+    mockJwtWithOAuth();
     contextMock.prisma.project.findUnique.mockResolvedValue(null);
 
-    const authTokens = generateAuthTokens(234, 4, ADMIN_GITHUB_IDS[0], githubHandle);
+    const authTokens = genAuthTokens(ADMIN_GITHUB_IDS[0]);
 
     const result = await request(await setupApp())
       .put(`/projects/enable/${projectId}`)
@@ -171,10 +194,10 @@ describe('PUT /projects/enable/:id', () => {
   });
 
   it('Enables all GitPOAPs when the Project is found', async () => {
-    contextMock.prisma.authToken.findUnique.mockResolvedValue({ githubOAuthToken } as any);
+    mockJwtWithOAuth();
     contextMock.prisma.project.findUnique.mockResolvedValue({ id: projectId } as any);
 
-    const authTokens = generateAuthTokens(234, 4, ADMIN_GITHUB_IDS[0], githubHandle);
+    const authTokens = genAuthTokens(ADMIN_GITHUB_IDS[0]);
 
     const result = await request(await setupApp())
       .put(`/projects/enable/${projectId}`)
