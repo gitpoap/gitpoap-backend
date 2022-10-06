@@ -92,7 +92,7 @@ describe('CustomProfileResolver', () => {
       expect(endingRecord).not.toEqual(null);
 
       // Delete the record
-      await context.prisma.profile.delete({
+      await context.prisma.profile.deleteMany({
         where: {
           address: {
             ethAddress: address,
