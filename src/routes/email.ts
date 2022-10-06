@@ -46,6 +46,12 @@ emailRouter.get('/:ethAddress', async function (req, res) {
     where: {
       addressId: address.id,
     },
+    select: {
+      id: true,
+      emailAddress: true,
+      isValidated: true,
+      tokenExpiresAt: true,
+    },
   });
 
   logger.debug(`Completed request to retrieve the email connected to: ${ethAddress}`);
