@@ -5,10 +5,97 @@ import { RefreshTokenPayload } from '../types/tokens';
 import { verify } from 'jsonwebtoken';
 import { JWT_SECRET } from '../environment';
 import { context } from '../context';
-import { RefreshAccessTokenSchema } from '../schemas/auth';
-import { generateAuthTokens } from '../lib/authTokens';
+import { CreateAccessTokenSchema, RefreshAccessTokenSchema } from '../schemas/auth';
+import { generateAuthTokens, generateNewAuthTokens } from '../lib/authTokens';
+import { resolveAddress, resolveENS } from '../lib/ens';
+import { isSignatureValid } from '../lib/signatures';
+import { z } from 'zod';
 
 export const authRouter = Router();
+
+authRouter.post('/', async function (req, res) {
+  const logger = createScopedLogger('POST /auth');
+
+  logger.debug(`Body: ${JSON.stringify(req.body)}`);
+
+  const endTimer = httpRequestDurationSeconds.startTimer('POST', '/auth/refresh');
+
+  const schemaResult = CreateAccessTokenSchema.safeParse(req.body);
+  if (!schemaResult.success) {
+    logger.warn(
+      `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
+    );
+    endTimer({ status: 400 });
+    return res.status(400).send({ issues: schemaResult.error.issues });
+  }
+
+  const { address, signature } = <z.infer<typeof CreateAccessTokenSchema>>req.body;
+
+  logger.info(`Request to create AuthToken for address ${address}`);
+
+  // Resolve ENS if provided
+  const resolvedAddress = await resolveENS(address);
+  if (resolvedAddress === null) {
+    const msg = `The address "${address}" is invalid`;
+    logger.warn(msg);
+    endTimer({ status: 400 });
+    return res.status(400).send({ msg });
+  }
+
+  // Pre-fetch ENS info if it doesn't already exist
+  await resolveAddress(resolvedAddress);
+
+  // Validate signature
+  if (
+    !isSignatureValid(resolvedAddress, 'POST /auth', signature, {
+      data: address,
+    })
+  ) {
+    logger.warn('Request signature is invalid');
+    endTimer({ status: 401 });
+    return res.status(401).send({ msg: 'The signature is not valid for this address and data' });
+  }
+
+  const addressLower = resolvedAddress.toLowerCase();
+
+  // If the resolveAddress promise found an Address or new ENS name
+  // this will already exist
+  const dbAddress = await context.prisma.address.upsert({
+    where: {
+      ethAddress: addressLower,
+    },
+    update: {},
+    create: {
+      ethAddress: addressLower,
+    },
+    select: {
+      id: true,
+      ensName: true,
+      ensAvatarImageUrl: true,
+      githubUser: {
+        select: {
+          githubId: true,
+          githubHandle: true,
+        },
+      },
+    },
+  });
+
+  const userAuthTokens = generateNewAuthTokens(
+    dbAddress.id,
+    addressLower,
+    dbAddress.ensName,
+    dbAddress.ensAvatarImageUrl,
+    dbAddress.githubUser?.githubId ?? null,
+    dbAddress.githubUser?.githubHandle ?? null,
+  );
+
+  logger.debug(`Completed request to create AuthToken for address ${address}`);
+
+  endTimer({ status: 200 });
+
+  return res.status(200).send(userAuthTokens);
+});
 
 authRouter.post('/refresh', async function (req, res) {
   const logger = createScopedLogger('POST /auth/refresh');
