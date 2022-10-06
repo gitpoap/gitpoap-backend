@@ -1,100 +1,94 @@
 import { contextMock } from '../../../../__mocks__/src/context';
 import request from 'supertest';
 import { setupApp } from '../../../../src/app';
-import { isSignatureValid } from '../../../../src/signatures';
 import { resolveENS } from '../../../../src/lib/ens';
+import { generateAuthTokens } from '../../../../src/lib/authTokens';
 
-jest.mock('../../../../src/signatures');
 jest.mock('../../../../src/lib/ens');
 
-const mockedIsSignatureValid = jest.mocked(isSignatureValid, true);
 const mockedResolveENS = jest.mocked(resolveENS, true);
 
-const goodAddress = '0x206e554084BEeC98e08043397be63C5132Cc01A1';
-const fakeSignature = {
-  data: 'yeet',
-  createdAt: 1647987506199,
-};
+const authTokenId = 9095;
+const authTokenGeneration = 2342;
+const addressId = 3242;
+const address = '0x206e554084BEeC98e08043397be63C5132Cc01A1';
+const ensName = 'annab.eth';
+const ensAvatarImageUrl = null;
 
-const mockAddressRecord = {
-  id: 0,
-  ethAddress: goodAddress,
-  ensName: null,
-  ensAvatarImageUrl: null,
+const addressRecord = {
+  id: addressId,
+  ethAddress: address,
+  ensName,
+  ensAvatarImageUrl,
   createdAt: new Date(),
   updatedAt: new Date(),
   githubUserId: null,
   emailId: null,
 };
 
+function mockJwtWithAddress() {
+  contextMock.prisma.authToken.findUnique.mockResolvedValue({
+    id: authTokenId,
+    address: { ensName, ensAvatarImageUrl },
+  } as any);
+}
+
+function genAuthTokens() {
+  return generateAuthTokens(
+    authTokenId,
+    authTokenGeneration,
+    addressId,
+    address,
+    ensName,
+    ensAvatarImageUrl,
+    null,
+    null,
+  );
+}
+
 describe('POST /profiles', () => {
-  it('Fails on bad fields in request', async () => {
+  it('Fails with no Access Token provided', async () => {
     const result = await request(await setupApp())
       .post('/profiles')
+      .send({ githubHandle: null });
+
+    expect(result.statusCode).toEqual(400);
+  });
+
+  it('Fails on bad fields in request', async () => {
+    mockJwtWithAddress();
+
+    const authTokens = genAuthTokens();
+
+    const result = await request(await setupApp())
+      .post('/profiles')
+      .set('Authorization', `Bearer ${authTokens.accessToken}`)
       .send({ foobar: 'yeet' });
 
     expect(result.statusCode).toEqual(400);
   });
 
-  it('Fails on missing signature', async () => {
-    const result = await request(await setupApp())
-      .post('/profiles')
-      .send({
-        address: goodAddress,
-        data: { githubHandle: null },
-      });
-
-    expect(result.statusCode).toEqual(400);
-  });
-
   it('Fails on bad address', async () => {
+    mockJwtWithAddress();
     mockedResolveENS.mockResolvedValue(null);
 
+    const authTokens = genAuthTokens();
+
     const result = await request(await setupApp())
       .post('/profiles')
-      .send({
-        address: 'foobar',
-        signature: {
-          data: 'yeet',
-          createdAt: 1647987506199,
-        },
-        data: { githubHandle: null },
-      });
+      .set('Authorization', `Bearer ${authTokens.accessToken}`)
+      .send({ githubHandle: null });
 
     expect(result.statusCode).toEqual(400);
-  });
-
-  it('Fails on bad signature', async () => {
-    mockedIsSignatureValid.mockReturnValue(false);
-    mockedResolveENS.mockResolvedValue(goodAddress);
-
-    const data = { githubHandle: null };
-
-    const result = await request(await setupApp())
-      .post('/profiles')
-      .send({
-        address: goodAddress,
-        signature: fakeSignature,
-        data,
-      });
-
-    expect(result.statusCode).toEqual(401);
-    expect(mockedIsSignatureValid).toHaveBeenCalledTimes(1);
-    expect(mockedIsSignatureValid).toHaveBeenCalledWith(
-      goodAddress,
-      'POST /profiles',
-      fakeSignature,
-      { data },
-    );
   });
 
   const validateUpsert = (data: Record<string, any>) => {
     expect(contextMock.prisma.profile.upsert).toHaveBeenCalledWith({
-      where: { addressId: mockAddressRecord.id },
+      where: { addressId: addressRecord.id },
       update: data,
       create: {
         address: {
-          connect: { id: mockAddressRecord.id },
+          connect: { id: addressRecord.id },
         },
         ...data,
       },
@@ -102,19 +96,18 @@ describe('POST /profiles', () => {
   };
 
   it('Allows missing data fields', async () => {
-    mockedIsSignatureValid.mockReturnValue(true);
-    mockedResolveENS.mockResolvedValue(goodAddress);
-    contextMock.prisma.address.upsert.mockResolvedValue(mockAddressRecord);
+    mockJwtWithAddress();
+    mockedResolveENS.mockResolvedValue(address);
+    contextMock.prisma.address.upsert.mockResolvedValue(addressRecord);
+
+    const authTokens = genAuthTokens();
 
     const data = {};
 
     const result = await request(await setupApp())
       .post('/profiles')
-      .send({
-        address: goodAddress,
-        signature: fakeSignature,
-        data,
-      });
+      .set('Authorization', `Bearer ${authTokens.accessToken}`)
+      .send({ data });
 
     expect(result.statusCode).toEqual(200);
 
@@ -124,9 +117,11 @@ describe('POST /profiles', () => {
   });
 
   it('Allows setting of all fields', async () => {
-    mockedIsSignatureValid.mockReturnValue(true);
-    mockedResolveENS.mockResolvedValue(goodAddress);
-    contextMock.prisma.address.upsert.mockResolvedValue(mockAddressRecord);
+    mockJwtWithAddress();
+    mockedResolveENS.mockResolvedValue(address);
+    contextMock.prisma.address.upsert.mockResolvedValue(addressRecord);
+
+    const authTokens = genAuthTokens();
 
     const data = {
       bio: 'foo',
@@ -141,11 +136,8 @@ describe('POST /profiles', () => {
 
     const result = await request(await setupApp())
       .post('/profiles')
-      .send({
-        address: goodAddress,
-        signature: fakeSignature,
-        data,
-      });
+      .set('Authorization', `Bearer ${authTokens.accessToken}`)
+      .send({ data });
 
     expect(result.statusCode).toEqual(200);
 
@@ -155,9 +147,11 @@ describe('POST /profiles', () => {
   });
 
   it('Allows nullification of most fields', async () => {
-    mockedIsSignatureValid.mockReturnValue(true);
-    mockedResolveENS.mockResolvedValue(goodAddress);
-    contextMock.prisma.address.upsert.mockResolvedValue(mockAddressRecord);
+    mockJwtWithAddress();
+    mockedResolveENS.mockResolvedValue(address);
+    contextMock.prisma.address.upsert.mockResolvedValue(addressRecord);
+
+    const authTokens = genAuthTokens();
 
     const data = {
       bio: null,
@@ -171,11 +165,8 @@ describe('POST /profiles', () => {
 
     const result = await request(await setupApp())
       .post('/profiles')
-      .send({
-        address: goodAddress,
-        signature: fakeSignature,
-        data,
-      });
+      .set('Authorization', `Bearer ${authTokens.accessToken}`)
+      .send({ data });
 
     expect(result.statusCode).toEqual(200);
 
@@ -185,9 +176,11 @@ describe('POST /profiles', () => {
   });
 
   it('Allows toggling of leaderboard visibility', async () => {
-    mockedIsSignatureValid.mockReturnValue(true);
-    mockedResolveENS.mockResolvedValue(goodAddress);
-    contextMock.prisma.address.upsert.mockResolvedValue(mockAddressRecord);
+    mockJwtWithAddress();
+    mockedResolveENS.mockResolvedValue(address);
+    contextMock.prisma.address.upsert.mockResolvedValue(addressRecord);
+
+    const authTokens = genAuthTokens();
 
     const data = {
       isVisibleOnLeaderboard: false,
@@ -195,11 +188,8 @@ describe('POST /profiles', () => {
 
     let result = await request(await setupApp())
       .post('/profiles')
-      .send({
-        address: goodAddress,
-        signature: fakeSignature,
-        data,
-      });
+      .set('Authorization', `Bearer ${authTokens.accessToken}`)
+      .send({ data });
 
     expect(result.statusCode).toEqual(200);
 
@@ -211,11 +201,8 @@ describe('POST /profiles', () => {
 
     result = await request(await setupApp())
       .post('/profiles')
-      .send({
-        address: goodAddress,
-        signature: fakeSignature,
-        data,
-      });
+      .set('Authorization', `Bearer ${authTokens.accessToken}`)
+      .send({ data });
 
     expect(result.statusCode).toEqual(200);
 
