@@ -43,7 +43,11 @@ authRouter.post('/', async function (req, res) {
   }
 
   // Pre-fetch ENS info if it doesn't already exist
-  await resolveAddress(resolvedAddress);
+  const ensPromise = resolveAddress(
+    resolvedAddress,
+    false, // Don't force a recheck of the ENS avatar if checked recently
+    true, // Check for an ENS name and ENS avatar synchronously
+  );
 
   // Validate signature
   if (
@@ -57,6 +61,9 @@ authRouter.post('/', async function (req, res) {
   }
 
   const addressLower = resolvedAddress.toLowerCase();
+
+  // Wait for the ENS resolution to finish
+  await ensPromise;
 
   // If the resolveAddress promise found an Address or new ENS name
   // this will already exist
