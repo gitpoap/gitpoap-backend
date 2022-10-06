@@ -7,38 +7,24 @@ import { generateUniqueEmailToken } from '../lib/email';
 import { resolveENS } from '../lib/ens';
 import { createScopedLogger } from '../logging';
 import { httpRequestDurationSeconds } from '../metrics';
-import {
-  AddEmailSchema,
-  GetEmailSchema,
-  RemoveEmailSchema,
-  ValidateEmailSchema,
-} from '../schemas/email';
+import { AddEmailSchema, RemoveEmailSchema, ValidateEmailSchema } from '../schemas/email';
 import { isSignatureValid } from '../signatures';
 
 export const emailRouter = Router();
 
-emailRouter.get('/', async function (req, res) {
-  const logger = createScopedLogger('GET /email');
+emailRouter.get('/:ethAddress', async function (req, res) {
+  const logger = createScopedLogger('GET /email/:ethAddress');
 
-  logger.debug(`Body: ${JSON.stringify(req.body)}`);
+  logger.debug(`Params: ${JSON.stringify(req.params)}`);
 
-  const endTimer = httpRequestDurationSeconds.startTimer('GET', '/email');
-
-  const schemaResult = GetEmailSchema.safeParse(req.body);
-  if (!schemaResult.success) {
-    logger.warn(
-      `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
-    );
-    endTimer({ status: 400 });
-    return res.status(400).send({ issues: schemaResult.error.issues });
-  }
+  const endTimer = httpRequestDurationSeconds.startTimer('GET', '/email/:ethAddress');
 
   /*
    * TODO: VERY IMPORTANT
    * We will need to add an authentication check here
    */
 
-  const { ethAddress } = req.body;
+  const { ethAddress } = req.params;
 
   logger.info(`Request to retrieve the email connected to: ${ethAddress}`);
 
@@ -52,7 +38,7 @@ emailRouter.get('/', async function (req, res) {
     logger.warn('Request address is invalid');
     endTimer({ status: 400 });
     return res.status(400).send({
-      msg: `${req.body.ethAddress} is not a valid address`,
+      msg: `${ethAddress} is not a valid address`,
     });
   }
 
