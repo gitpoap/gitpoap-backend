@@ -1,9 +1,6 @@
 export const PORT = 3001;
 export const PUBLIC_API_PORT = 3122;
 
-export const JWT_EXP_TIME = 60 * 10;
-export const SIGNATURE_TTL_MINUTES = 1;
-
 export const ADMIN_GITHUB_IDS = [
   914240, // colfax23
   8076957, // peebeejay
@@ -38,3 +35,8 @@ export const PUBLIC_API_RATE_LIMIT_WINDOW = 1 * MILLISECONDS_PER_MINUTE;
 export const PUBLIC_API_RATE_LIMIT_MAX_REQUESTS = 1000;
 
 export const MEGABYTES_TO_BYTES = 1000000;
+
+export const JWT_EXP_TIME_SECONDS = 10 * SECONDS_PER_MINUTE;
+export const SIGNATURE_TTL_MINUTES = 1;
+
+export const LOGIN_EXP_TIME_MONTHS = 1;

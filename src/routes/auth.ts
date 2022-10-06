@@ -13,6 +13,8 @@ import { z } from 'zod';
 import { isGithubTokenValidForUser } from '../external/github';
 import { removeUsersGithubOAuthToken } from '../lib/users';
 import { removeGithubLoginForAddress } from '../lib/addresses';
+import { LOGIN_EXP_TIME_MONTHS } from '../constants';
+import { DateTime } from 'luxon';
 
 export const authRouter = Router();
 
@@ -176,7 +178,7 @@ authRouter.post('/refresh', async function (req, res) {
   } catch (err) {
     logger.warn('The refresh token is invalid');
     endTimer({ status: 401 });
-    return res.status(401).send({ message: 'The refresh token is invalid' });
+    return res.status(401).send({ msg: 'The refresh token is invalid' });
   }
 
   const authToken = await context.prisma.authToken.findUnique({
@@ -184,6 +186,7 @@ authRouter.post('/refresh', async function (req, res) {
       id: payload.authTokenId,
     },
     select: {
+      createdAt: true,
       generation: true,
       address: {
         select: {
@@ -207,7 +210,7 @@ authRouter.post('/refresh', async function (req, res) {
   if (authToken === null) {
     logger.warn('The refresh token is invalid');
     endTimer({ status: 401 });
-    return res.status(401).send({ message: 'The refresh token is invalid' });
+    return res.status(401).send({ msg: 'The refresh token is invalid' });
   }
 
   // If someone is trying to use an old generation of the refresh token, we must
@@ -228,7 +231,16 @@ authRouter.post('/refresh', async function (req, res) {
 
     endTimer({ status: 401 });
 
-    return res.status(401).send({ message: 'The refresh token has already been used' });
+    return res.status(401).send({ msg: 'The refresh token has already been used' });
+  }
+
+  const expirationTime = DateTime.fromJSDate(authToken.createdAt).plus({
+    months: LOGIN_EXP_TIME_MONTHS,
+  });
+  if (expirationTime < DateTime.now()) {
+    logger.warn(`The login for address "${authToken.address.ethAddress}" has expired`);
+    endTimer({ status: 401 });
+    return res.status(401).send({ msg: "User's login has expired" });
   }
 
   const nextGeneration = authToken.generation + 1;

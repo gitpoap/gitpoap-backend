@@ -1,6 +1,6 @@
 import { context } from '../context';
 import { upsertUser } from '../lib/users';
-import { JWT_EXP_TIME } from '../constants';
+import { JWT_EXP_TIME_SECONDS } from '../constants';
 import { sign } from 'jsonwebtoken';
 import { JWT_SECRET } from '../environment';
 import { AccessTokenPayload, RefreshTokenPayload } from '../types/tokens';
@@ -29,7 +29,7 @@ async function createAuthToken(addressId: number, githubId: number | null) {
 
 function generateAccessToken(payload: AccessTokenPayload): string {
   return sign(payload, JWT_SECRET, {
-    expiresIn: JWT_EXP_TIME,
+    expiresIn: JWT_EXP_TIME_SECONDS,
   });
 }
 
