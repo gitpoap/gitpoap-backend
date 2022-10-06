@@ -11,6 +11,7 @@ import { subscribeRouter } from './routes/subscribe';
 import { suggestRouter } from './routes/suggest';
 import jwtRouter from './routes/jwt';
 import { claimsRouter } from './routes/claims';
+import { emailRouter } from './routes/email';
 import { featuredRouter } from './routes/featured';
 import { githubRouter } from './routes/github';
 import { gitpoapsRouter } from './routes/gitpoaps';
@@ -71,6 +72,7 @@ export async function setupApp() {
 
   /* API endpoints for the frontend */
   app.use('/claims', claimsRouter);
+  app.use('/email', emailRouter);
   app.use('/featured', featuredRouter);
   app.use('/gitpoaps', gitpoapsRouter);
   app.use('/onboarding', onboardingRouter);
