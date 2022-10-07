@@ -21,7 +21,7 @@ poapRouter.get('/:poapTokenId/is-gitpoap', async function (req, res) {
       gitPOAP: {
         select: {
           id: true,
-          status: true,
+          poapApprovalStatus: true,
         },
       },
     },
@@ -40,7 +40,7 @@ poapRouter.get('/:poapTokenId/is-gitpoap', async function (req, res) {
   return res.status(200).send({
     isGitPOAP: true,
     gitPOAPId: claim.gitPOAP.id,
-    isDeprecated: claim.gitPOAP.status === GitPOAPStatus.DEPRECATED,
+    isDeprecated: claim.gitPOAP.poapApprovalStatus === GitPOAPStatus.DEPRECATED,
   });
 });
 
