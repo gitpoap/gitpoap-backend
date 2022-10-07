@@ -7,8 +7,6 @@ import { generateAuthTokens } from '../../../../src/lib/authTokens';
 import { verify } from 'jsonwebtoken';
 import { JWT_SECRET } from '../../../../src/environment';
 import {
-  AccessTokenPayload,
-  RefreshTokenPayload,
   UserAuthTokens,
   getAccessTokenPayload,
   getRefreshTokenPayload,

@@ -5,12 +5,15 @@ import { sign } from 'jsonwebtoken';
 import { JWT_SECRET } from '../environment';
 import { AccessTokenPayload, RefreshTokenPayload, UserAuthTokens } from '../types/authTokens';
 
-async function createAuthToken(addressId: number, githubId: number | null) {
+async function createAuthToken(
+  addressId: number,
+  githubId: number | null,
+): Promise<{ id: number; generation: number }> {
   let user = undefined;
   if (githubId !== null) {
     user = {
       connect: {
-        id: githubId,
+        githubId,
       },
     };
   }
@@ -23,6 +26,10 @@ async function createAuthToken(addressId: number, githubId: number | null) {
         },
       },
       user,
+    },
+    select: {
+      id: true,
+      generation: true,
     },
   });
 }
