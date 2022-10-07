@@ -123,7 +123,7 @@ authRouter.post('/', async function (req, res) {
     );
   }
 
-  const userAuthTokens = generateNewAuthTokens(
+  const userAuthTokens = await generateNewAuthTokens(
     dbAddress.id,
     addressLower,
     dbAddress.ensName,
