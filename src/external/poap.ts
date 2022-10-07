@@ -85,7 +85,7 @@ async function retrievePOAPToken(): Promise<string | null> {
 async function generatePOAPHeaders(hasBody: boolean) {
   // Remove the https:// from the url for the host header
   const lastIndex = POAP_API_URL.lastIndexOf('/');
-  const host = POAP_API_URL.substr(lastIndex + 1);
+  const host = POAP_API_URL.substring(lastIndex + 1);
 
   const base = {
     Authorization: `Bearer ${await retrievePOAPToken()}`,
