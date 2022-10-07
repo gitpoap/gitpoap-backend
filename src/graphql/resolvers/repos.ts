@@ -303,7 +303,7 @@ export class CustomRepoResolver {
       mintedGitPOAPCount: number; // The claim IDs must be distinct so we can simply count
       userIds: Set<number>;
     };
-    let repoIdToClaimCountsMap: Record<string, RepoIdToClaimCountsMapValue> = {};
+    const repoIdToClaimCountsMap: Record<string, RepoIdToClaimCountsMapValue> = {};
 
     // This helper function is necessary so that we can ensure the same logic is used to
     // count claims regardless if they have pullRequestEarned or mentionEarned non-null
@@ -360,9 +360,9 @@ export class CustomRepoResolver {
         },
       })
     ).forEach(result => {
-      if (result.pullRequestEarned !== null) {
+      if (result.pullRequestEarned !== null && result.userId !== null) {
         handleUserClaim(result.pullRequestEarned.repoId, result.userId);
-      } else if (result.mentionEarned !== null) {
+      } else if (result.mentionEarned !== null && result.userId !== null) {
         handleUserClaim(result.mentionEarned.repoId, result.userId);
       } else {
         // This SHOULD NOT be able to happen, but unfortunately
@@ -390,7 +390,7 @@ export class CustomRepoResolver {
     // Finally we have only count number of records so we can request
     // the additional data necessary to return for the trendingRepos resolver
     // only for the records that we actually need to return
-    let results: RepoReturnData[] = [];
+    const results: RepoReturnData[] = [];
     for (const result of limitedResults) {
       const repoData = await prisma.repo.findUnique({
         where: {

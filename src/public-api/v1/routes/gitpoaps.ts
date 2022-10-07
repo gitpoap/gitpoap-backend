@@ -87,7 +87,7 @@ gitpoapsRouter.get('/events', async (req, res) => {
     },
     select: {
       id: true,
-      status: true,
+      poapApprovalStatus: true,
       poapEventId: true,
       project: {
         select: {

@@ -9,7 +9,7 @@ type Claim = {
   poapTokenId: string | null;
   gitPOAP: {
     id: number;
-    status: GitPOAPStatus;
+    poapApprovalStatus: GitPOAPStatus;
     poapEventId: number;
     project: {
       repos: {
@@ -18,7 +18,7 @@ type Claim = {
           name: string;
         };
       }[];
-    };
+    } | null;
   };
   pullRequestEarned: {
     githubMergedAt: Date | null;
@@ -40,7 +40,7 @@ type Claim = {
 
 type GitPOAP = {
   id: number;
-  status: GitPOAPStatus;
+  poapApprovalStatus: GitPOAPStatus;
   poapEventId: number;
   project: {
     repos: {
@@ -49,7 +49,7 @@ type GitPOAP = {
         name: string;
       };
     }[];
-  };
+  } | null;
   claims: {
     id: number;
   }[];
@@ -73,7 +73,7 @@ export const mapClaimsToGitPOAPResults = async (
       return null;
     }
 
-    const repositories = claim.gitPOAP.project.repos.map(repo => {
+    const repositories = claim.gitPOAP.project?.repos.map(repo => {
       return `${repo.organization.name}/${repo.name}`;
     });
 
@@ -87,11 +87,11 @@ export const mapClaimsToGitPOAPResults = async (
       year: poapEventData.year,
       description: poapEventData.description,
       imageUrl: poapEventData.image_url,
-      repositories,
+      repositories: repositories ?? [],
       earnedAt: DateTime.fromJSDate(getEarnedAt(claim)).toFormat('yyyy-MM-dd'),
       mintedAt: claim.mintedAt ? DateTime.fromJSDate(claim.mintedAt).toFormat('yyyy-MM-dd') : null,
       needsRevalidation: claim.needsRevalidation,
-      isDeprecated: claim.gitPOAP.status === GitPOAPStatus.DEPRECATED,
+      isDeprecated: claim.gitPOAP.poapApprovalStatus === GitPOAPStatus.DEPRECATED,
     });
   }
 
@@ -122,9 +122,9 @@ export async function mapGitPOAPsToGitPOAPResults(
       year: poapEventData.year,
       description: poapEventData.description,
       imageUrl: poapEventData.image_url,
-      repositories: gitPOAP.project.repos.map(r => `${r.organization.name}/${r.name}`),
+      repositories: gitPOAP.project?.repos.map(r => `${r.organization.name}/${r.name}`) ?? [],
       mintedCount: gitPOAP.claims.length,
-      isDeprecated: gitPOAP.status === GitPOAPStatus.DEPRECATED,
+      isDeprecated: gitPOAP.poapApprovalStatus === GitPOAPStatus.DEPRECATED,
     });
   }
 

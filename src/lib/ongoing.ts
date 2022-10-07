@@ -211,7 +211,7 @@ export async function runOngoingIssuanceUpdater() {
                 ongoing: true,
                 isPRBased: true,
                 NOT: {
-                  status: GitPOAPStatus.DEPRECATED,
+                  poapApprovalStatus: GitPOAPStatus.DEPRECATED,
                 },
               },
               select: {
