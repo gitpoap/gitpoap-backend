@@ -1,10 +1,10 @@
-import { contextMock } from '../../../../__mocks__/src/context';
-import { setupApp } from '../../../../src/app';
-import { generateAuthTokens } from '../../../../src/lib/authTokens';
-import { ADMIN_GITHUB_IDS } from '../../../../src/constants';
+import { contextMock } from '../../../../../__mocks__/src/context';
+import { setupApp } from '../../../../../src/app';
+import { generateAuthTokens } from '../../../../../src/lib/authTokens';
+import { ADMIN_GITHUB_IDS } from '../../../../../src/constants';
 import request from 'supertest';
-import { createRepoByGithubId } from '../../../../src/lib/repos';
-import { backloadGithubPullRequestData } from '../../../../src/lib/pullRequests';
+import { createRepoByGithubId } from '../../../../../src/lib/repos';
+import { backloadGithubPullRequestData } from '../../../../../src/lib/pullRequests';
 import { ClaimStatus, GitPOAPStatus } from '@prisma/client';
 
 jest.mock('../../../../src/lib/repos');
