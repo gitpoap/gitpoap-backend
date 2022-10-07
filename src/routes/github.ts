@@ -48,7 +48,7 @@ githubRouter.post('/', jwtWithAddress(), async function (req, res) {
     endTimer({ status: 400 });
     return res.status(400).send({
       message: 'A server error has occurred - GitHub access token exchange',
-      error: JSON.parse(err as string),
+      error: err,
     });
   }
 
@@ -77,6 +77,9 @@ githubRouter.post('/', jwtWithAddress(), async function (req, res) {
           id: user.id,
         },
       },
+    },
+    select: {
+      generation: true,
     },
   });
 

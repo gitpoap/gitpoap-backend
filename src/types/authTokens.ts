@@ -1,9 +1,9 @@
 function isNumberOrNull(field: any): boolean {
-  return typeof field === 'number' || field === 'null';
+  return typeof field === 'number' || field === null;
 }
 
 function isStringOrNull(field: any): boolean {
-  return typeof field === 'string' || field === 'null';
+  return typeof field === 'string' || field === null;
 }
 
 type AccessTokenPayloadBase = {
@@ -104,3 +104,8 @@ export function getRefreshTokenPayload(payload: any): RefreshTokenPayload {
 
   throw Error('Tried to convert payload to RefreshTokenPayload but it is not!');
 }
+
+export type UserAuthTokens = {
+  accessToken: string;
+  refreshToken: string;
+};
