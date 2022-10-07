@@ -15,7 +15,7 @@ import {
 import { configProfile, dynamoDBClient } from '../external/dynamo';
 import { createScopedLogger } from '../logging';
 import { httpRequestDurationSeconds } from '../metrics';
-import { jwtWithOAuth } from '../middleware';
+import { jwtWithGitHubOAuth } from '../middleware';
 import { getAccessTokenPayloadWithOAuth } from '../types/authTokens';
 import { postmarkClient } from '../external/postmark';
 import {
@@ -320,7 +320,7 @@ const sendInternalConfirmationEmail = async (
 
 onboardingRouter.post<'/intake-form', {}, {}, IntakeForm>(
   '/intake-form',
-  jwtWithOAuth(),
+  jwtWithGitHubOAuth(),
   upload.array('images', 5),
   async (req, res) => {
     const logger = createScopedLogger('GET /onboarding/intake-form');
@@ -468,7 +468,7 @@ onboardingRouter.post<'/intake-form', {}, {}, IntakeForm>(
 
 onboardingRouter.get<'/github/repos', {}, APIResponseData<Repo[]>>(
   '/github/repos',
-  jwtWithOAuth(),
+  jwtWithGitHubOAuth(),
   async function (req, res) {
     const logger = createScopedLogger('GET /onboarding/github/repos');
     const endTimer = httpRequestDurationSeconds.startTimer('GET', '/onboarding/github/repos');
