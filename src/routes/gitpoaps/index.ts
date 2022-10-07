@@ -2,26 +2,30 @@ import {
   CreateGitPOAPSchema,
   CreateGitPOAPProjectSchema,
   UploadGitPOAPCodesSchema,
-} from '../schemas/gitpoaps';
+} from '../../schemas/gitpoaps';
 import { Request, Router } from 'express';
 import { z } from 'zod';
-import { context } from '../context';
-import { createPOAPEvent } from '../external/poap';
-import { createScopedLogger } from '../logging';
-import { jwtWithAdminOAuth } from '../middleware';
+import { context } from '../../context';
+import { createPOAPEvent } from '../../external/poap';
+import { createScopedLogger } from '../../logging';
+import { jwtWithAdminOAuth } from '../../middleware';
 import multer from 'multer';
 import { ClaimStatus, GitPOAPStatus } from '@generated/type-graphql';
-import { httpRequestDurationSeconds } from '../metrics';
-import { getAccessTokenPayloadWithOAuth } from '../types/authTokens';
-import { backloadGithubPullRequestData } from '../lib/pullRequests';
+import { httpRequestDurationSeconds } from '../../metrics';
+import { getAccessTokenPayloadWithOAuth } from '../../types/authTokens';
+import { backloadGithubPullRequestData } from '../../lib/pullRequests';
 import {
   createProjectWithGithubRepoIds,
   getOrCreateProjectWithGithubRepoId,
-} from '../lib/projects';
-import { upsertCode } from '../lib/codes';
-import { generatePOAPSecret } from '../lib/secrets';
+} from '../../lib/projects';
+import { upsertCode } from '../../lib/codes';
+import { generatePOAPSecret } from '../../lib/secrets';
+import { customGitpoapsRouter } from './custom';
 
 export const gitpoapsRouter = Router();
+
+/* Add more routes for creating Custom GitPOAPs ~ "/gitpoaps/custom" */
+gitpoapsRouter.use('/custom', customGitpoapsRouter);
 
 const upload = multer();
 
@@ -118,22 +122,22 @@ gitpoapsRouter.post(
     const year = parseInt(req.body.year, 10);
 
     // Call the POAP API to create the event
-    const poapInfo = await createPOAPEvent(
-      req.body.name,
-      req.body.description,
-      req.body.startDate,
-      req.body.endDate,
-      req.body.expiryDate,
-      year,
-      req.body.eventUrl,
-      req.file.originalname,
-      req.file.buffer,
-      secretCode,
-      req.body.email,
-      parseInt(req.body.numRequestedCodes, 10),
-      req.body.city, // optional
-      req.body.country, // optional
-    );
+    const poapInfo = await createPOAPEvent({
+      name: req.body.name,
+      description: req.body.description,
+      start_date: req.body.startDate,
+      end_date: req.body.endDate,
+      expiry_date: req.body.expiryDate,
+      year: year,
+      event_url: req.body.eventUrl,
+      imageName: req.file.originalname,
+      imageBuffer: req.file.buffer,
+      secret_code: secretCode,
+      email: req.body.email,
+      num_requested_codes: parseInt(req.body.numRequestedCodes, 10),
+      city: req.body.city, // optional
+      country: req.body.country, // optional
+    });
     if (poapInfo == null) {
       logger.error('Failed to create event via POAP API');
       endTimer({ status: 500 });
@@ -193,7 +197,7 @@ gitpoapsRouter.get('/poap-token-id/:id', async function (req, res) {
       gitPOAP: {
         select: {
           year: true,
-          status: true,
+          poapApprovalStatus: true,
           project: {
             select: {
               repos: {
@@ -212,7 +216,7 @@ gitpoapsRouter.get('/poap-token-id/:id', async function (req, res) {
       },
     },
   });
-  if (claimData === null || claimData.gitPOAP.status === GitPOAPStatus.DEPRECATED) {
+  if (claimData === null || claimData.gitPOAP.poapApprovalStatus === GitPOAPStatus.DEPRECATED) {
     const msg = `There's no GitPOAP claimed with POAP ID: ${req.params.id}`;
     logger.info(msg);
     endTimer({ status: 404 });
@@ -221,7 +225,7 @@ gitpoapsRouter.get('/poap-token-id/:id', async function (req, res) {
 
   const data = {
     year: claimData.gitPOAP.year,
-    repos: claimData.gitPOAP.project.repos.map(repo => ({
+    repos: claimData.gitPOAP.project?.repos.map(repo => ({
       organization: repo.organization.name,
       name: repo.name,
     })),
@@ -277,7 +281,7 @@ gitpoapsRouter.post(
             logger.error(msg);
             throw Error(msg);
           }
-          return line.substr(index + 1);
+          return line.substring(index + 1);
         });
     } catch (err) {
       const msg = `Failed to read uploaded file for codes: ${err}`;
@@ -296,7 +300,7 @@ gitpoapsRouter.post(
         id: gitPOAPId,
       },
       data: {
-        status: GitPOAPStatus.APPROVED,
+        poapApprovalStatus: GitPOAPStatus.APPROVED,
       },
     });
 
@@ -328,8 +332,11 @@ gitpoapsRouter.post(
       return;
     }
 
-    for (const repo of gitPOAPData.project.repos) {
-      backloadGithubPullRequestData(repo.id);
+    if (gitPOAPData.project !== null) {
+      const repos = gitPOAPData.project.repos;
+      for (const repo of repos) {
+        backloadGithubPullRequestData(repo.id);
+      }
     }
   },
 );
@@ -349,7 +356,7 @@ gitpoapsRouter.put('/enable/:id', jwtWithAdminOAuth(), async (req, res) => {
     },
     select: {
       id: true,
-      status: true,
+      poapApprovalStatus: true,
     },
   });
   if (gitPOAPInfo === null) {
@@ -358,7 +365,7 @@ gitpoapsRouter.put('/enable/:id', jwtWithAdminOAuth(), async (req, res) => {
     endTimer({ status: 404 });
     return res.status(404).send({ msg });
   }
-  if (gitPOAPInfo.status === GitPOAPStatus.DEPRECATED) {
+  if (gitPOAPInfo.poapApprovalStatus === GitPOAPStatus.DEPRECATED) {
     const msg = `GitPOAP with ID ${gitPOAPId} is deprecated`;
     logger.warn(msg);
     endTimer({ status: 400 });
@@ -411,7 +418,7 @@ gitpoapsRouter.put('/deprecate/:id', jwtWithAdminOAuth(), async (req, res) => {
     },
     data: {
       ongoing: false,
-      status: GitPOAPStatus.DEPRECATED,
+      poapApprovalStatus: GitPOAPStatus.DEPRECATED,
     },
   });
 
