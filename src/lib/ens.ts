@@ -1,3 +1,4 @@
+import { utils } from 'ethers';
 import { createScopedLogger } from '../logging';
 import { context } from '../context';
 import {
@@ -5,7 +6,6 @@ import {
   resolveENSAvatarInternal,
   resolveENSInternal,
 } from '../external/ens';
-import { utils } from 'ethers';
 import { getS3URL, s3configProfile, uploadFileFromURL } from '../external/s3';
 import { SECONDS_PER_HOUR } from '../constants';
 import { upsertProfileForAddressId } from './profiles';
