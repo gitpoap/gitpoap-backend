@@ -4,7 +4,7 @@ import { jwtWithOAuth } from '../middleware';
 import { getGithubOrganizationAdmins } from '../external/github';
 import { UpdateOrganizationSchema } from '../schemas/organizations';
 import { context } from '../context';
-import { AccessTokenPayloadWithOAuth } from '../types/tokens';
+import { getAccessTokenPayloadWithOAuth } from '../types/authTokens';
 import { httpRequestDurationSeconds } from '../metrics';
 
 export const organizationsRouter = Router();
@@ -42,7 +42,7 @@ organizationsRouter.post('/', jwtWithOAuth(), async function (req, res) {
     return res.status(404).send({ msg });
   }
 
-  const { githubHandle, githubOAuthToken } = <AccessTokenPayloadWithOAuth>req.user;
+  const { githubHandle, githubOAuthToken } = getAccessTokenPayloadWithOAuth(req.user);
 
   // Ensure that the (GitHub) authenticated member is an admin of the organization
   const members = await getGithubOrganizationAdmins(organization.name, githubOAuthToken);

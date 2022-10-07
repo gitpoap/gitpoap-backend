@@ -1,13 +1,13 @@
 import { Router } from 'express';
 import { createScopedLogger } from '../logging';
 import { httpRequestDurationSeconds } from '../metrics';
-import { RefreshTokenPayload } from '../types/tokens';
+import { RefreshTokenPayload, getRefreshTokenPayload } from '../types/authTokens';
 import { verify } from 'jsonwebtoken';
 import { JWT_SECRET } from '../environment';
 import { context } from '../context';
 import { CreateAccessTokenSchema, RefreshAccessTokenSchema } from '../schemas/auth';
 import { UserAuthTokens, generateAuthTokens, generateNewAuthTokens } from '../lib/authTokens';
-import { resolveAddress, resolveENS } from '../lib/ens';
+import { resolveAddress } from '../lib/ens';
 import { isSignatureValid } from '../lib/signatures';
 import { z } from 'zod';
 import { isGithubTokenValidForUser } from '../external/github';
@@ -68,34 +68,21 @@ authRouter.post('/', async function (req, res) {
 
   logger.info(`Request to create AuthToken for address ${address}`);
 
-  // Resolve ENS if provided
-  const resolvedAddress = await resolveENS(address);
-  if (resolvedAddress === null) {
-    const msg = `The address "${address}" is invalid`;
-    logger.warn(msg);
-    endTimer({ status: 400 });
-    return res.status(400).send({ msg });
-  }
-
   // Pre-fetch ENS info if it doesn't already exist
-  const ensPromise = resolveAddress(
-    resolvedAddress,
-    false, // Don't force a recheck of the ENS avatar if checked recently
-    true, // Check for an ENS name and ENS avatar synchronously
-  );
+  const ensPromise = resolveAddress(address, { synchronous: true });
 
   // Validate signature
   if (
-    !isSignatureValid(resolvedAddress, 'POST /auth', signature, {
+    !isSignatureValid(address, 'POST /auth', signature, {
       data: address,
     })
   ) {
-    logger.warn('Request signature is invalid');
+    logger.warn(`Request signature is invalid for address ${address}`);
     endTimer({ status: 401 });
-    return res.status(401).send({ msg: 'The signature is not valid for this address and data' });
+    return res.status(401).send({ msg: 'The signature is not valid for this address' });
   }
 
-  const addressLower = resolvedAddress.toLowerCase();
+  const addressLower = address.toLowerCase();
 
   // Wait for the ENS resolution to finish
   await ensPromise;
@@ -174,7 +161,7 @@ authRouter.post('/refresh', async function (req, res) {
 
   let payload: RefreshTokenPayload;
   try {
-    payload = <RefreshTokenPayload>verify(token, JWT_SECRET);
+    payload = getRefreshTokenPayload(verify(token, JWT_SECRET));
   } catch (err) {
     logger.warn('The refresh token is invalid');
     endTimer({ status: 401 });
@@ -215,7 +202,7 @@ authRouter.post('/refresh', async function (req, res) {
 
   // If someone is trying to use an old generation of the refresh token, we must
   // consider the lineage to be tainted, and therefore purge it completely
-  // (user will need to log back in via GitHub).
+  // (user will need to resign to log back in).
   if (payload.generation !== authToken.generation) {
     logger.warn(`Address ${authToken.address.ethAddress} had a refresh token reused.`);
 
@@ -243,13 +230,15 @@ authRouter.post('/refresh', async function (req, res) {
     return res.status(401).send({ msg: "User's login has expired" });
   }
 
-  const nextGeneration = authToken.generation + 1;
-  await context.prisma.authToken.update({
+  const newAuthToken = await context.prisma.authToken.update({
     where: {
       id: payload.authTokenId,
     },
     data: {
-      generation: nextGeneration,
+      generation: { increment: 1 },
+    },
+    select: {
+      generation: true,
     },
   });
 
@@ -266,7 +255,7 @@ authRouter.post('/refresh', async function (req, res) {
 
   const userAuthTokens = generateAuthTokens(
     payload.authTokenId,
-    nextGeneration,
+    newAuthToken.generation,
     authToken.address.id,
     authToken.address.ethAddress,
     authToken.address.ensName,

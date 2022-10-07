@@ -77,10 +77,7 @@ export class CustomSearchResolver {
 
     // Save the profile if we've never seen it before
     if (profiles.length === 0 && text.endsWith('.eth')) {
-      const address = await resolveENS(
-        text,
-        true, // Run the background checks synchronously
-      );
+      const address = await resolveENS(text, { synchronous: true });
 
       // If we just found a resolution, return the profile
       if (address !== null) {
