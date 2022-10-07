@@ -342,22 +342,48 @@ export async function clearPOAPTokenInfoCache(poapTokenId: string) {
   await context.redis.deleteKey(POAP_TOKEN_CACHE_PREFIX, poapTokenId);
 }
 
-export async function createPOAPEvent(
-  name: string,
-  description: string,
-  start_date: string,
-  end_date: string,
-  expiry_date: string,
-  year: number,
-  event_url: string,
-  imageName: string,
-  imageBuffer: Buffer,
-  secret_code: string,
-  email: string,
-  num_requested_codes: number,
-  city?: string,
-  country?: string,
-) {
+type CreatePOAPEventArgs = {
+  name: string;
+  description: string;
+  start_date: string;
+  end_date: string;
+  expiry_date: string;
+  /** @deprecated - This field is no longer used */
+  year?: number | null;
+  event_url: string;
+  imageName: string;
+  imageBuffer: Buffer;
+  secret_code: string;
+  email: string;
+  num_requested_codes: number;
+  city?: string;
+  country?: string;
+};
+
+export type CreatePOAPEventReturnType = {
+  id: number;
+  year: number;
+  name: string;
+  image_url: string;
+  description: string;
+};
+
+export async function createPOAPEvent({
+  name,
+  description,
+  start_date,
+  end_date,
+  expiry_date,
+  year,
+  event_url,
+  imageName,
+  imageBuffer,
+  secret_code,
+  email,
+  num_requested_codes,
+  city,
+  country,
+}: CreatePOAPEventArgs): Promise<CreatePOAPEventReturnType> {
   const form = new FormData();
 
   form.append('name', name);
