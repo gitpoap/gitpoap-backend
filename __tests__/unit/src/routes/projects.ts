@@ -26,6 +26,7 @@ const ensAvatarImageUrl = 'https://foobar.com/a.jpg';
 
 function mockJwtWithOAuth() {
   contextMock.prisma.authToken.findUnique.mockResolvedValue({
+    address: { ensName, ensAvatarImageUrl },
     user: { githubOAuthToken },
   } as any);
 }
