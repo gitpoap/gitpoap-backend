@@ -96,3 +96,11 @@ export async function generateNewAuthTokens(
     githubHandle,
   );
 }
+
+export async function deleteAuthToken(authTokenId: number) {
+  await context.prisma.authToken.delete({
+    where: {
+      id: authTokenId,
+    },
+  });
+}
