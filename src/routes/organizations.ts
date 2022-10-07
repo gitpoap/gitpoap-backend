@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { createScopedLogger } from '../logging';
-import { jwtWithOAuth } from '../middleware';
+import { jwtWithGitHubOAuth } from '../middleware';
 import { getGithubOrganizationAdmins } from '../external/github';
 import { UpdateOrganizationSchema } from '../schemas/organizations';
 import { context } from '../context';
@@ -9,7 +9,7 @@ import { httpRequestDurationSeconds } from '../metrics';
 
 export const organizationsRouter = Router();
 
-organizationsRouter.post('/', jwtWithOAuth(), async function (req, res) {
+organizationsRouter.post('/', jwtWithGitHubOAuth(), async function (req, res) {
   const logger = createScopedLogger('POST /organizations');
 
   logger.debug(`Body: ${JSON.stringify(req.body)}`);
