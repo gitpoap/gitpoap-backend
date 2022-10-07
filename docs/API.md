@@ -8,13 +8,8 @@ Data:
 
 ```json
 {
-  "address": "some address or ENS",
   "data": {
     "bio": "something cool, I guess"
-  },
-  "signature": {
-    "data": "John Hancock",
-    "createdAt": 1647987506199
   }
 }
 ```
@@ -23,23 +18,7 @@ Note that the `"data"` object can accept additional (nullable) fields to update.
 that are not specified in `"data"` will not be updated (or made to be `null`).
 `"createdAt"` should be the number returned by `Date.now()`.
 
-Also note that the `"signature"`'s `"data"` field should contain the signature created with the
-`"address"` like the following:
-
-```json
-{
-  "site": "gitpoap.io",
-  "method": "POST /profiles",
-  "createdAt": 1647987506199
-  "data": {
-    "bio": "something cool, I guess"
-  }
-}
-```
-
-where `"data"` and `"createdAt"` are the same as in the request.
-See [the appendix](https://github.com/gitpoap/gitpoap-backend/blob/main/API.md#generating-signatures)
-for further information.
+Note that this endpoint requires an address-based JWT to be provided.
 
 ## Claim GitPOAPs
 
@@ -50,101 +29,25 @@ Data:
 ```json
 {
   "claimIds": [4, 5],
-  "address": "colfax.eth",
-  "signature": {
-    "data": "it is I",
-    "createdAt": 1647987506199
-  }
 }
 ```
 
 `"createdAt"` should be the number returned by `Date.now()`.
 
-Also note that the `"signature"`'s `"data"` field should contain the signature created with the
-`"address"` like the following:
-
-```json
-{
-  "site": "gitpoap.io",
-  "method": "POST /claims",
-  "createdAt": 1647987506199,
-  "claimIds": [4, 5]
-}
-```
-
-where `"claimIds"` and `"createdAt"` are the same as in the request.
-See [the appendix](https://github.com/gitpoap/gitpoap-backend/blob/main/API.md#generating-signatures)
-for further information.
+Note that this endpoint requires an address-based JWT to be provided where the user is logged into GitHub
+(i.e. both `githubId` and `githubHandle` are non-null).
 
 ## Feature a POAP
 
-`PUT /featured`
+`PUT /featured/:poapTokenId`
 
-Data:
-
-```json
-{
-  "address": "0x206e554084BEeC98e08043397be63C5132Cc01A1",
-  "poapTokenId": "123456789",
-  "signature": {
-    "data": "siggy wiggy",
-    "createdAt": 1647987506199
-  }
-}
-```
-
-`"createdAt"` should be the number returned by `Date.now()`.
-
-Also note that the `"signature"`'s `"data"` field should contain the signature created with the
-`"address"` like the following:
-
-```json
-{
-  "site": "gitpoap.io",
-  "method": "PUT /featured",
-  "createdAt": 1647987506199,
-  "poapTokenId": "123456789"
-}
-```
-
-where `"poapTokenId"` and `"createdAt"` are the same as in the request.
-See [the appendix](https://github.com/gitpoap/gitpoap-backend/blob/main/API.md#generating-signatures)
-for further information.
+Note that this endpoint requires an address-based JWT to be provided.
 
 ## Remove a Featured POAP
 
 `DELETE /featured/:id` - where `:id` is the ID of the POAP (A.K.A. its `poapTokenId`)
 
-Data:
-
-```json
-{
-  "address": "0x206e554084BEeC98e08043397be63C5132Cc01A1",
-  "signature": {
-    "data": "siggy wiggy",
-    "createdAt": 1647987506199
-  }
-}
-```
-
-`"createdAt"` should be the number returned by `Date.now()`.
-
-Also note that the `"signature"`'s `"data"` field should contain the signature created with the
-`"address"` like the following:
-
-```json
-{
-  "site": "gitpoap.io",
-  "method": "DELETE /featured/:id",
-  "createdAt": 1647987506199,
-  "poapTokenId": "123456789"
-}
-```
-
-where `"poapTokenId"` is the same as `":id"` in the request URL, and `"createdAt"` is the same
-as in the request body.
-See [the appendix](https://github.com/gitpoap/gitpoap-backend/blob/main/API.md#generating-signatures)
-for further information.
+Note that this endpoint requires an address-based JWT to be provided.
 
 ## Create a GitPOAP
 
@@ -194,7 +97,8 @@ to create a project, or for an existing project:
 Furthermore, there should be a part of the `multipart/form-data` named `"image"` that contains an uploaded
 image.
 
-Note that this endpoint requires that the (GitHub) authenticated user be an admin of GitPOAP,
+Note that this endpoint requires an address-based JWT to be provided where the user is logged into GitHub
+(i.e. both `githubId` and `githubHandle` are non-null) and that the authenticated user be an admin of GitPOAP,
 as defined by [`ADMIN_GITHUB_IDS` at `src/constants.ts`](https://github.com/gitpoap/gitpoap-backend/blob/main/src/constants.ts).
 
 ## Create Claims for a GitPOAP
@@ -209,6 +113,10 @@ Data:
   "recipientGithubIds": [1555326]
 }
 ```
+
+Note that this endpoint requires an address-based JWT to be provided where the user is logged into GitHub
+(i.e. both `githubId` and `githubHandle` are non-null) and that the authenticated user be an admin of GitPOAP,
+as defined by [`ADMIN_GITHUB_IDS` at `src/constants.ts`](https://github.com/gitpoap/gitpoap-backend/blob/main/src/constants.ts).
 
 ## Update Organization
 
@@ -228,8 +136,10 @@ Data:
 
 Note that `"data"` can accept multiple nullable fields to update.
 
-The (GitHub) authenticated user must be an admin (not necessarily public)
-of the organization whose info they are trying to update.
+
+Note that this endpoint requires an address-based JWT to be provided where the user is logged into GitHub
+(i.e. both `githubId` and `githubHandle` are non-null) and that the authenticated user must be an admin
+(not necessarily public) of the organization whose info they are trying to update.
 
 ## Upload GitPOAP Codes
 
@@ -242,7 +152,8 @@ we can upload it to this endpoint via `multipart/form-data` with two input field
 - `id`: the (our DB) ID of the GitPOAP we are uploading codes for
 - `codes`: the `link.txt` file
 
-Note that this endpoint requires that the (GitHub) authenticated user be an admin of GitPOAP,
+Note that this endpoint requires an address-based JWT to be provided where the user is logged into GitHub
+(i.e. both `githubId` and `githubHandle` are non-null) and that the authenticated user be an admin of GitPOAP,
 as defined by [`ADMIN_GITHUB_IDS` at `src/constants.ts`](https://github.com/gitpoap/gitpoap-backend/blob/main/src/constants.ts).
 
 ## Check if a POAP is a GitPOAP
@@ -273,7 +184,9 @@ Data:
 }
 ```
 
-Note that the user submitting the request must have Admin credentials.
+Note that this endpoint requires an address-based JWT to be provided where the user is logged into GitHub
+(i.e. both `githubId` and `githubHandle` are non-null) and that the authenticated user be an admin of GitPOAP,
+as defined by [`ADMIN_GITHUB_IDS` at `src/constants.ts`](https://github.com/gitpoap/gitpoap-backend/blob/main/src/constants.ts).
 
 ## Submit an onboarding request via the onboarding intake form
 
@@ -376,7 +289,9 @@ Data:
 This endpoint enables a GitPOAP. This means that after this action, if the GitPOAP were not already enabled,
 then users will be able to complete claims on the GitPOAP as well as view the GitPOAP on the site.
 
-Note that the caller of this endpoint must have admin privileges.
+Note that this endpoint requires an address-based JWT to be provided where the user is logged into GitHub
+(i.e. both `githubId` and `githubHandle` are non-null) and that the authenticated user be an admin of GitPOAP,
+as defined by [`ADMIN_GITHUB_IDS` at `src/constants.ts`](https://github.com/gitpoap/gitpoap-backend/blob/main/src/constants.ts).
 
 ## Enable all GitPOAPs within a Project
 
@@ -386,7 +301,9 @@ This endpoint enables all GitPOAPs that are associated with an individual Projec
 action, if the GitPOAP were not already enabled, then users will be able to complete claims on the GitPOAPs
 within the Project as well as view those GitPOAPs on the site.
 
-Note that the caller of this endpoint must have admin privileges.
+Note that this endpoint requires an address-based JWT to be provided where the user is logged into GitHub
+(i.e. both `githubId` and `githubHandle` are non-null) and that the authenticated user be an admin of GitPOAP,
+as defined by [`ADMIN_GITHUB_IDS` at `src/constants.ts`](https://github.com/gitpoap/gitpoap-backend/blob/main/src/constants.ts).
 
 ## Revalidate GitPOAPs
 
@@ -419,6 +336,9 @@ Also note that the `"signature"`'s `"data"` field should contain the signature c
 }
 ```
 
+Note that this endpoint requires an address-based JWT to be provided where the user is logged into GitHub
+(i.e. both `githubId` and `githubHandle` are non-null).
+
 ## Deprecate a GitPOAP
 
 `PUT /gitpoaps/deprecate/:id`
@@ -426,7 +346,9 @@ Also note that the `"signature"`'s `"data"` field should contain the signature c
 This endpoint deprecates a GitPOAP. This means that after this action, the GitPOAP will no longer be
 claimable, all existing UNCLAIMED claims will be deleted, and ongoing issuance will skip this GitPOAP.
 
-Note that the caller of this endpoint must have admin privileges.
+Note that this endpoint requires an address-based JWT to be provided where the user is logged into GitHub
+(i.e. both `githubId` and `githubHandle` are non-null) and that the authenticated user be an admin of GitPOAP,
+as defined by [`ADMIN_GITHUB_IDS` at `src/constants.ts`](https://github.com/gitpoap/gitpoap-backend/blob/main/src/constants.ts).
 
 ## [gitpoap-bot] Create a Claim
 
