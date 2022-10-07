@@ -9,7 +9,7 @@ import { Router, Request } from 'express';
 import { context } from '../context';
 import { ClaimStatus, GitPOAP, GitPOAPStatus } from '@prisma/client';
 import { resolveENS } from '../lib/ens';
-import { jwtWithOAuth, jwtWithAdminOAuth, gitpoapBotAuth } from '../middleware';
+import { jwtWithGitHubOAuth, jwtWithAdminOAuth, gitpoapBotAuth } from '../middleware';
 import { getAccessTokenPayload, getAccessTokenPayloadWithOAuth } from '../types/authTokens';
 import { redeemPOAP, requestPOAPCodes, retrieveClaimInfo } from '../external/poap';
 import { getGithubUserById } from '../external/github';
@@ -147,7 +147,7 @@ async function runClaimsPostProcessing(claimIds: number[], qrHashes: string[]) {
   logger.info('Finished claims post processing');
 }
 
-claimsRouter.post('/', jwtWithOAuth(), async function (req, res) {
+claimsRouter.post('/', jwtWithGitHubOAuth(), async function (req, res) {
   const logger = createScopedLogger('POST /claims');
 
   logger.debug(`Body: ${JSON.stringify(req.body)}`);
@@ -580,7 +580,7 @@ claimsRouter.post(
   },
 );
 
-claimsRouter.post('/revalidate', jwtWithOAuth(), async (req, res) => {
+claimsRouter.post('/revalidate', jwtWithGitHubOAuth(), async (req, res) => {
   const logger = createScopedLogger('POST /claims/revalidate');
 
   logger.debug(`Body: ${JSON.stringify(req.body)}`);
