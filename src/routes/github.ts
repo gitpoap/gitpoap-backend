@@ -38,7 +38,7 @@ githubRouter.post('/', jwtWithAddress(), async function (req, res) {
   // Remove state string if it exists
   const andIndex = code.indexOf('&');
   if (andIndex !== -1) {
-    code = code.substr(0, andIndex);
+    code = code.substring(0, andIndex);
   }
 
   let githubToken: string;

@@ -203,11 +203,11 @@ async function validateAuth(req: express.Request) {
     return false;
   }
 
-  if (authorization.substr(0, 7) !== 'Bearer ') {
+  if (authorization.substring(0, 7) !== 'Bearer ') {
     return false;
   }
 
-  const token = authorization.substr(7);
+  const token = authorization.substring(7);
 
   try {
     const authResponse = await fetch(`http://fake-poap-auth:4005/validate/${token}`);
