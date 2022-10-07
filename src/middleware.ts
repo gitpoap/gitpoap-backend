@@ -52,7 +52,7 @@ export function jwtWithAddress() {
   return middleware;
 }
 
-export function jwtWithOAuth() {
+export function jwtWithGitHubOAuth() {
   const middleware: RequestHandler = async (req, res, next) => {
     const callback = async () => {
       if (!req.user) {
@@ -95,7 +95,7 @@ export function jwtWithOAuth() {
 export function jwtWithAdminOAuth() {
   const logger = createScopedLogger('jwtWithAdminOAuth');
 
-  const jwtMiddleware = jwtWithOAuth();
+  const jwtMiddleware = jwtWithGitHubOAuth();
 
   const middleware: RequestHandler = (req, res, next) => {
     const callback = (err?: any) => {
