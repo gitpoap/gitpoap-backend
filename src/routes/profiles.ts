@@ -5,7 +5,7 @@ import { resolveENS } from '../lib/ens';
 import { createScopedLogger } from '../logging';
 import { httpRequestDurationSeconds } from '../metrics';
 import { jwtWithAddress } from '../middleware';
-import { AccessTokenPayload } from '../types/tokens';
+import { getAccessTokenPayload } from '../types/authTokens';
 
 export const profilesRouter = Router();
 
@@ -16,9 +16,7 @@ profilesRouter.post('/', jwtWithAddress(), async function (req, res) {
 
   const endTimer = httpRequestDurationSeconds.startTimer('POST', '/profiles');
 
-  const accessTokenPayload = <AccessTokenPayload>req.user;
-  const addressId = accessTokenPayload.addressId;
-  const address = accessTokenPayload.address;
+  const { addressId, address } = getAccessTokenPayload(req.user);
 
   const schemaResult = UpdateProfileSchema.safeParse(req.body);
   if (!schemaResult.success) {

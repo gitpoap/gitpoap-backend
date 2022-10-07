@@ -10,7 +10,7 @@ import { context } from '../context';
 import { ClaimStatus, GitPOAP, GitPOAPStatus } from '@prisma/client';
 import { resolveENS } from '../lib/ens';
 import { jwtWithOAuth, jwtWithAdminOAuth, gitpoapBotAuth } from '../middleware';
-import { AccessTokenPayload, AccessTokenPayloadWithOAuth } from '../types/tokens';
+import { getAccessTokenPayload, getAccessTokenPayloadWithOAuth } from '../types/authTokens';
 import { redeemPOAP, requestPOAPCodes, retrieveClaimInfo } from '../external/poap';
 import { getGithubUserById } from '../external/github';
 import { createScopedLogger } from '../logging';
@@ -163,7 +163,7 @@ claimsRouter.post('/', jwtWithOAuth(), async function (req, res) {
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
-  const { addressId, address, githubId, githubHandle } = <AccessTokenPayloadWithOAuth>req.user;
+  const { addressId, address, githubId, githubHandle } = getAccessTokenPayloadWithOAuth(req.user);
 
   logger.info(`Request claiming IDs ${req.body.claimIds} for address ${address}`);
 
@@ -324,7 +324,7 @@ claimsRouter.post('/create', jwtWithAdminOAuth(), async function (req, res) {
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
-  const { githubOAuthToken } = <AccessTokenPayloadWithOAuth>req.user;
+  const { githubOAuthToken } = getAccessTokenPayloadWithOAuth(req.user);
 
   logger.info(
     `Request to create ${req.body.recipientGithubIds.length} claims for GitPOAP Id: ${req.body.gitPOAPId}`,
@@ -597,7 +597,7 @@ claimsRouter.post('/revalidate', jwtWithOAuth(), async (req, res) => {
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
-  const { address, githubId, githubHandle } = <AccessTokenPayloadWithOAuth>req.user;
+  const { address, githubId, githubHandle } = getAccessTokenPayloadWithOAuth(req.user);
 
   logger.info(
     `Request to revalidate GitPOAP IDs ${req.body.claimIds} by GitHub user ${githubHandle}`,
