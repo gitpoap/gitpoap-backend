@@ -1,8 +1,11 @@
-import { ClaimStatus, Prisma } from '@prisma/client';
+import { ClaimStatus } from '@prisma/client';
 import { Claim } from '@generated/type-graphql';
+import { utils } from 'ethers';
 import { context } from '../context';
 import { createScopedLogger } from '../logging';
 import { RestrictedContribution, countContributionsForClaim } from './contributions';
+import { getGithubUserAsAdmin } from '../external/github';
+import { resolveENS, upsertENSNameInDB } from './ens';
 
 type GitPOAPs = {
   id: number;
@@ -26,7 +29,7 @@ export type ClaimData = {
   user: {
     githubId: number;
     githubHandle: string;
-  };
+  } | null;
   gitPOAP: {
     id: number;
     name: string;
@@ -192,7 +195,7 @@ export async function createNewClaimsForRepoContributionHelper(
   );
 }
 
-export async function retrieveClaimsCreatedByPR(pullRequestId: number): Promise<ClaimData[]> {
+export async function retrieveClaimsCreatedByPR(pullRequestId: number) {
   const logger = createScopedLogger('retrieveClaimsCreatedByPR');
 
   const pullRequestData = await context.prisma.githubPullRequest.findUnique({
@@ -225,7 +228,7 @@ export async function retrieveClaimsCreatedByPR(pullRequestId: number): Promise<
   //
   // No need to filter out DEPRECATED since the claims aren't created
   // for DEPRECATED GitPOAPs
-  const claims: ClaimData[] = await context.prisma.claim.findMany({
+  const claims = await context.prisma.claim.findMany({
     where: {
       OR: [
         {
@@ -267,7 +270,7 @@ export async function retrieveClaimsCreatedByPR(pullRequestId: number): Promise<
   return claims;
 }
 
-export async function retrieveClaimsCreatedByMention(mentionId: number): Promise<ClaimData[]> {
+export async function retrieveClaimsCreatedByMention(mentionId: number) {
   const logger = createScopedLogger('retrieveClaimsCreatedByMention');
 
   const mentionData = await context.prisma.githubMention.findUnique({
@@ -315,7 +318,7 @@ export async function retrieveClaimsCreatedByMention(mentionId: number): Promise
   //
   // No need to filter out DEPRECATED since the claims aren't
   // created for DEPRECATED GitPOAPs
-  const claims: ClaimData[] = await context.prisma.claim.findMany({
+  const claims = await context.prisma.claim.findMany({
     where: {
       OR: [
         {
@@ -403,3 +406,143 @@ export function getEarnedAt(claim: EarnedAtClaimData): Date {
   // Default to createdAt (e.g. for hackathon GitPOAPs)
   return claim.createdAt;
 }
+
+export const createClaimForGithubHandle = async (githubHandle: string, gitPOAPId: number) => {
+  const logger = createScopedLogger('createClaimForGithubHandle');
+
+  /* Use octokit to get a githubHandles githubId */
+  const githubUser = await getGithubUserAsAdmin(githubHandle);
+
+  if (githubUser === null) {
+    logger.error(`Failed to lookup GitHub user ${githubHandle}`);
+    return null;
+  }
+
+  const user = await context.prisma.user.upsert({
+    where: { githubId: githubUser.id },
+    update: { githubHandle },
+    create: {
+      githubId: githubUser.id,
+      githubHandle,
+    },
+  });
+
+  const gitPOAP = await context.prisma.gitPOAP.findUnique({
+    where: { id: gitPOAPId },
+  });
+
+  if (gitPOAP === null) {
+    logger.error(`Failed to lookup GitPOAP with ID ${gitPOAPId}`);
+    return null;
+  }
+
+  const claim = await context.prisma.claim.create({
+    data: {
+      userId: user.id,
+      gitPOAPId,
+      status: ClaimStatus.UNCLAIMED,
+    },
+  });
+
+  return claim;
+};
+
+export const createClaimForEmail = async (emailAddress: string, gitPOAPId: number) => {
+  const logger = createScopedLogger('createClaimForEmail');
+
+  const email = await context.prisma.email.upsert({
+    where: { emailAddress },
+    update: {},
+    create: { emailAddress },
+  });
+
+  const gitPOAP = await context.prisma.gitPOAP.findUnique({
+    where: { id: gitPOAPId },
+  });
+
+  if (gitPOAP === null) {
+    logger.error(`Failed to lookup GitPOAP with ID ${gitPOAPId}`);
+    return null;
+  }
+
+  const claim = await context.prisma.claim.create({
+    data: {
+      emailId: email.id,
+      gitPOAPId,
+      status: ClaimStatus.UNCLAIMED,
+    },
+  });
+
+  return claim;
+};
+
+export const createClaimForEthAddress = async (ethAddress: string, gitPOAPId: number) => {
+  const logger = createScopedLogger('createClaimForEthAddress');
+
+  if (!utils.isAddress(ethAddress)) {
+    logger.error(`Invalid Ethereum address ${ethAddress}`);
+    return null;
+  }
+
+  const address = await context.prisma.address.upsert({
+    where: { ethAddress },
+    update: {},
+    create: { ethAddress },
+  });
+
+  const gitPOAP = await context.prisma.gitPOAP.findUnique({
+    where: { id: gitPOAPId },
+  });
+
+  if (gitPOAP === null) {
+    logger.error(`Failed to lookup GitPOAP with ID ${gitPOAPId}`);
+    return null;
+  }
+
+  const claim = await context.prisma.claim.create({
+    data: {
+      issuedAddressId: address.id,
+      gitPOAPId,
+      status: ClaimStatus.UNCLAIMED,
+    },
+  });
+
+  return claim;
+};
+
+export const createClaimForEnsName = async (ensName: string, gitPOAPId: number) => {
+  const logger = createScopedLogger('createClaimForEnsName');
+
+  const ethAddress = await resolveENS(ensName);
+
+  if (ethAddress === null) {
+    logger.error(`Failed to resolve ENS name ${ensName}`);
+    return null;
+  }
+
+  const address = await upsertENSNameInDB(ethAddress, ensName);
+
+  if (address === null) {
+    logger.error(`Failed to upsert ENS name ${ensName} in DB`);
+    return null;
+  }
+
+  const gitPOAP = await context.prisma.gitPOAP.findUnique({
+    where: { id: gitPOAPId },
+  });
+
+  if (gitPOAP === null) {
+    logger.error(`Failed to lookup GitPOAP with ID ${gitPOAPId}`);
+    return null;
+  }
+
+  const claim = await context.prisma.claim.create({
+    data: {
+      issuedAddressId: address.id,
+      gitPOAPId,
+      status: ClaimStatus.UNCLAIMED,
+    },
+  });
+
+  return claim;
+};
