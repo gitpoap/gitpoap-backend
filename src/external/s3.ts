@@ -4,6 +4,7 @@ import {
   PutObjectCommand,
   PutObjectCommandInput,
   PutObjectCommandOutput,
+  GetObjectCommand,
 } from '@aws-sdk/client-s3';
 import { fromIni } from '@aws-sdk/credential-provider-ini';
 import { AWS_PROFILE, NODE_ENV } from '../environment';
@@ -21,6 +22,7 @@ const S3_CONFIG_PROFILES: Record<'local' | 'prod', S3ClientConfigProfile> = {
     buckets: {
       intakeForm: 'intake-form-test',
       ensAvatarCache: 'ens-avatar-cache-test',
+      gitpoapRequestImages: 'gitpoap-request-images-test',
     },
   },
   prod: {
@@ -28,6 +30,7 @@ const S3_CONFIG_PROFILES: Record<'local' | 'prod', S3ClientConfigProfile> = {
     buckets: {
       intakeForm: 'intake-form-prod',
       ensAvatarCache: 'ens-avatar-cache-prod',
+      gitpoapRequestImages: 'gitpoap-request-images-prod',
     },
   },
 };
@@ -40,12 +43,14 @@ export const uploadMulterFile = async (
   file: Express.Multer.File,
   bucket: string,
   key: string,
+  isPublic?: boolean,
 ): Promise<PutObjectCommandOutput> => {
   const params: PutObjectCommandInput = {
     Bucket: bucket,
     Key: key,
     Body: file.buffer,
     ContentType: file.mimetype,
+    ACL: isPublic ? 'public-read' : undefined,
   };
 
   return await s3.send(new PutObjectCommand(params));
@@ -101,6 +106,26 @@ export const uploadFileFromURL = async (
 
     return await s3.send(new PutObjectCommand(params));
   }
+};
+
+export const getObjectFromS3 = async (bucket: string, key: string) => {
+  return await s3.send(
+    new GetObjectCommand({
+      Bucket: bucket,
+      Key: key,
+    }),
+  );
+};
+
+export const getImageBufferFromS3 = async (bucket: string, key: string) => {
+  const res = await getObjectFromS3(bucket, key);
+
+  const chunks: Uint8Array[] = [];
+  for await (const chunk of res.Body as any) {
+    chunks.push(chunk);
+  }
+
+  return Buffer.concat(chunks);
 };
 
 export function getS3URL(bucket: string, key: string): string {
