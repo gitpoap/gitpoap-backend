@@ -1,7 +1,7 @@
 import jwt from 'express-jwt';
 import { context } from './context';
 import set from 'lodash/set';
-import { AccessTokenPayload, AccessTokenPayloadWithOAuth } from './types/tokens';
+import { getAccessTokenPayload, getAccessTokenPayloadWithOAuth } from './types/authTokens';
 import { ErrorRequestHandler, RequestHandler } from 'express';
 import { JWT_SECRET } from './environment';
 import { createScopedLogger } from './logging';
@@ -12,13 +12,13 @@ const jwtMiddleware = jwt({ secret: JWT_SECRET as string, algorithms: ['HS256'] 
 
 export function jwtWithAddress() {
   const middleware: RequestHandler = async (req, res, next) => {
-    const callback = async (err?: any) => {
+    const callback = async () => {
       if (!req.user) {
         next({ status: 400, msg: 'Invalid or missing Access Token' });
         return;
       }
 
-      const { authTokenId, addressId } = <AccessTokenPayload>req.user;
+      const { authTokenId, addressId } = getAccessTokenPayload(req.user);
 
       const tokenInfo = await context.prisma.authToken.findUnique({
         where: {
@@ -54,7 +54,7 @@ export function jwtWithAddress() {
 
 export function jwtWithOAuth() {
   const middleware: RequestHandler = async (req, res, next) => {
-    const callback = async (err?: any) => {
+    const callback = async () => {
       if (!req.user) {
         next({ status: 400, msg: 'Invalid or missing Access Token' });
         return;
@@ -62,7 +62,7 @@ export function jwtWithOAuth() {
 
       const tokenInfo = await context.prisma.authToken.findUnique({
         where: {
-          id: (<AccessTokenPayload>req.user).authTokenId,
+          id: getAccessTokenPayload(req.user).authTokenId,
         },
         select: {
           user: {
@@ -105,7 +105,7 @@ export function jwtWithAdminOAuth() {
         return;
       }
 
-      const payload = <AccessTokenPayloadWithOAuth>req.user;
+      const payload = getAccessTokenPayloadWithOAuth(req.user);
 
       if (!ADMIN_GITHUB_IDS.includes(payload.githubId)) {
         logger.warn(

@@ -12,7 +12,7 @@ import { jwtWithAdminOAuth } from '../middleware';
 import multer from 'multer';
 import { ClaimStatus, GitPOAPStatus } from '@generated/type-graphql';
 import { httpRequestDurationSeconds } from '../metrics';
-import { AccessTokenPayloadWithOAuth } from '../types/tokens';
+import { getAccessTokenPayloadWithOAuth } from '../types/authTokens';
 import { backloadGithubPullRequestData } from '../lib/pullRequests';
 import {
   createProjectWithGithubRepoIds,
@@ -53,7 +53,7 @@ gitpoapsRouter.post(
       return res.status(400).send({ msg });
     }
 
-    const { githubOAuthToken } = <AccessTokenPayloadWithOAuth>req.user;
+    const { githubOAuthToken } = getAccessTokenPayloadWithOAuth(req.user);
 
     const projectChoice: z.infer<typeof CreateGitPOAPProjectSchema> = JSON.parse(req.body.project);
     const projectSchemaResult = CreateGitPOAPProjectSchema.safeParse(projectChoice);

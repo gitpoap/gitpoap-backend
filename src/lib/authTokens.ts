@@ -3,7 +3,7 @@ import { upsertUser } from '../lib/users';
 import { JWT_EXP_TIME_SECONDS } from '../constants';
 import { sign } from 'jsonwebtoken';
 import { JWT_SECRET } from '../environment';
-import { AccessTokenPayload, RefreshTokenPayload } from '../types/tokens';
+import { AccessTokenPayload, RefreshTokenPayload } from '../types/authTokens';
 
 async function createAuthToken(addressId: number, githubId: number | null) {
   let user = undefined;
