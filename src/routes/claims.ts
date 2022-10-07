@@ -35,14 +35,15 @@ export const claimsRouter = Router();
 // Ensure that we still have enough codes left for a GitPOAP after a claim
 async function ensureRedeemCodeThreshold(gitPOAP: GitPOAP) {
   // If the distribution is not ongoing then we don't need to do anything
-  if (!gitPOAP.ongoing || gitPOAP.status === GitPOAPStatus.DEPRECATED) {
+  if (!gitPOAP.ongoing || gitPOAP.poapApprovalStatus === GitPOAPStatus.DEPRECATED) {
     return;
   }
 
   const logger = createScopedLogger('ensureRedeemCodeThreshold');
 
-  if (gitPOAP.status === GitPOAPStatus.REDEEM_REQUEST_PENDING) {
+  if (gitPOAP.poapApprovalStatus === GitPOAPStatus.REDEEM_REQUEST_PENDING) {
     logger.info(`Redeem request is already pending for GitPOAP ID: ${gitPOAP.id}`);
+
     return;
   }
 
@@ -60,7 +61,7 @@ async function ensureRedeemCodeThreshold(gitPOAP: GitPOAP) {
         id: gitPOAP.id,
       },
       data: {
-        status: GitPOAPStatus.REDEEM_REQUEST_PENDING,
+        poapApprovalStatus: GitPOAPStatus.REDEEM_REQUEST_PENDING,
       },
     });
 
@@ -85,7 +86,7 @@ async function ensureRedeemCodeThreshold(gitPOAP: GitPOAP) {
           id: gitPOAP.id,
         },
         data: {
-          status: GitPOAPStatus.REDEEM_REQUEST_PENDING,
+          poapApprovalStatus: GitPOAPStatus.REDEEM_REQUEST_PENDING,
         },
       });
 
@@ -208,7 +209,7 @@ claimsRouter.post('/', jwtWithGitHubOAuth(), async function (req, res) {
     }
 
     // Ensure the user is the owner of the claim
-    if (claim.user.githubId !== githubId) {
+    if (claim.user?.githubId !== githubId) {
       invalidClaims.push({
         claimId,
         reason: 'User does not own claim',
@@ -350,13 +351,13 @@ claimsRouter.post('/create', jwtWithAdminOAuth(), async function (req, res) {
     endTimer({ status: 404 });
     return res.status(404).send({ msg: `There is not GitPOAP with ID: ${req.body.gitPOAPId}` });
   }
-  if (gitPOAPData.status === GitPOAPStatus.UNAPPROVED) {
+  if (gitPOAPData.poapApprovalStatus === GitPOAPStatus.UNAPPROVED) {
     const msg = `GitPOAP ID ${req.body.gitPOAPId} has not been approved yet`;
     logger.warn(msg);
     endTimer({ status: 400 });
     return res.status(400).send({ msg });
   }
-  if (gitPOAPData.status === GitPOAPStatus.DEPRECATED) {
+  if (gitPOAPData.poapApprovalStatus === GitPOAPStatus.DEPRECATED) {
     const msg = `GitPOAP ID ${req.body.gitPOAPId} is deprecated`;
     logger.warn(msg);
     endTimer({ status: 400 });
@@ -422,8 +423,11 @@ claimsRouter.post('/create', jwtWithAdminOAuth(), async function (req, res) {
   res.status(200).send('CREATED');
 
   // Run the backloader in the background
-  for (const repo of gitPOAPData.project.repos) {
-    backloadGithubPullRequestData(repo.id);
+  if (gitPOAPData.project !== null) {
+    const repos = gitPOAPData.project.repos;
+    for (const repo of repos) {
+      backloadGithubPullRequestData(repo.id);
+    }
   }
 });
 
@@ -505,8 +509,8 @@ claimsRouter.post(
             contribution.mention.id,
           );
 
-          const filteredNewClaims = newClaimsForContribution.filter(claimData =>
-            githubIdSet.has(claimData.user.githubId),
+          const filteredNewClaims = newClaimsForContribution.filter(
+            claimData => claimData.user && githubIdSet.has(claimData.user.githubId),
           );
 
           newClaims = [...newClaims, ...filteredNewClaims];
@@ -562,8 +566,8 @@ claimsRouter.post(
             contribution.mention.id,
           );
 
-          const filteredNewClaims = newClaimsForContribution.filter(claimData =>
-            githubIdSet.has(claimData.user.githubId),
+          const filteredNewClaims = newClaimsForContribution.filter(
+            claimData => claimData.user && githubIdSet.has(claimData.user.githubId),
           );
 
           newClaims = [...newClaims, ...filteredNewClaims];
@@ -575,7 +579,7 @@ claimsRouter.post(
       }
 
       logger.debug(
-        `Completed equest to create claim for mention in Issue #${issueNumber} on "${organization}/${repo}"`,
+        `Completed request to create claim for mention in Issue #${issueNumber} on "${organization}/${repo}"`,
       );
     }
 
@@ -650,7 +654,7 @@ claimsRouter.post('/revalidate', jwtWithGitHubOAuth(), async (req, res) => {
       }
     }
 
-    if (claim.user.githubId !== githubId) {
+    if (claim.user?.githubId !== githubId) {
       invalidClaims.push({
         claimId,
         reason: 'User does not own claim',
@@ -670,7 +674,7 @@ claimsRouter.post('/revalidate', jwtWithGitHubOAuth(), async (req, res) => {
   if (invalidClaims.length > 0) {
     logger.warn(`Some claim revalidations were invalid: ${JSON.stringify(invalidClaims)}`);
 
-    // Return 400 iff no claim revalidations were completed
+    // Return 400 iff no claim re-validations were completed
     if (foundClaims.length === 0) {
       return res.status(400).send({
         claimed: foundClaims,

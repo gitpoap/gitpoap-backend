@@ -5,12 +5,14 @@ import { createScopedLogger } from '../logging';
 import { POAPEvent, POAPToken } from '../types/poap';
 import { checkIfClaimTransferred, handleGitPOAPTransfer } from './transfers';
 
+type ExtendedClaimProjectType = Project & {
+  repos: Repo[];
+};
+
 type ExtendedClaimType = Claim & {
-  user: User;
+  user: User | null;
   gitPOAP: GitPOAP & {
-    project: Project & {
-      repos: Repo[];
-    };
+    project: ExtendedClaimProjectType | null;
   };
 };
 

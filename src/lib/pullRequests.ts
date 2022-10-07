@@ -39,7 +39,7 @@ async function getRepoInfo(repoId: number): Promise<ExtraRepoData | null> {
             where: {
               isPRBased: true,
               NOT: {
-                status: GitPOAPStatus.DEPRECATED,
+                poapApprovalStatus: GitPOAPStatus.DEPRECATED,
               },
             },
             select: {
