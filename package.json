@@ -114,7 +114,8 @@
   },
   "lint-staged": {
     "{scripts,src,prisma,__tests__,__mocks__}/**/*.{ts,tsx}": [
-      "prettier --write"
+      "prettier --write",
+      "eslint --fix"
     ]
   }
 }
