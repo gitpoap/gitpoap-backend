@@ -6,7 +6,7 @@ import { verify } from 'jsonwebtoken';
 import { JWT_SECRET } from '../environment';
 import { context } from '../context';
 import { CreateAccessTokenSchema, RefreshAccessTokenSchema } from '../schemas/auth';
-import { generateAuthTokens, generateNewAuthTokens } from '../lib/authTokens';
+import { deleteAuthToken, generateAuthTokens, generateNewAuthTokens } from '../lib/authTokens';
 import { resolveAddress } from '../lib/ens';
 import { isSignatureValid } from '../lib/signatures';
 import { z } from 'zod';
@@ -193,7 +193,6 @@ authRouter.post('/refresh', async function (req, res) {
       },
     },
   });
-
   if (authToken === null) {
     logger.warn('The refresh token is invalid');
     endTimer({ status: 401 });
@@ -206,15 +205,7 @@ authRouter.post('/refresh', async function (req, res) {
   if (payload.generation !== authToken.generation) {
     logger.warn(`Address ${authToken.address.ethAddress} had a refresh token reused.`);
 
-    try {
-      await context.prisma.authToken.delete({
-        where: {
-          id: payload.authTokenId,
-        },
-      });
-    } catch (err) {
-      logger.warn(`Tried to delete an AuthToken that was already deleted: ${err}`);
-    }
+    await deleteAuthToken(payload.authTokenId);
 
     endTimer({ status: 401 });
 
@@ -226,6 +217,9 @@ authRouter.post('/refresh', async function (req, res) {
   });
   if (expirationTime < DateTime.now()) {
     logger.warn(`The login for address "${authToken.address.ethAddress}" has expired`);
+
+    await deleteAuthToken(payload.authTokenId);
+
     endTimer({ status: 401 });
     return res.status(401).send({ msg: "User's login has expired" });
   }
