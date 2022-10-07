@@ -8,7 +8,6 @@ import {
 import { Router, Request } from 'express';
 import { context } from '../context';
 import { ClaimStatus, GitPOAP, GitPOAPStatus } from '@prisma/client';
-import { resolveENS } from '../lib/ens';
 import { jwtWithGitHubOAuth, jwtWithAdminOAuth, gitpoapBotAuth } from '../middleware';
 import { getAccessTokenPayloadWithOAuth } from '../types/authTokens';
 import { redeemPOAP, requestPOAPCodes, retrieveClaimInfo } from '../external/poap';
