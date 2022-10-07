@@ -2,8 +2,7 @@
 
 For our REST API we use the OAuth scheme of providing a short lived Access Token
 and a Refresh token to the user when they login via GitHub. This helps us since
-we do not control the authentication server (i.e. GitHub) and we do not want our
-users to have to:
+we don't want our users to have to:
 
 - Repeatedly log into the site
 - Hold never-expiring authentication tokens that could be leaked and used
@@ -22,22 +21,33 @@ Access+Refresh Token.
 The Access Token is a [JWT](https://jwt.io/) token that has a payload with the following
 fields:
 
-```json
-{
-  "authTokenId": 4,
-  "githubId": 324234,
-  "githubHandle": "handel"
-}
+```typescript
+type AccessTokenPayload = {
+  authTokenId: number;
+  addressId: number;
+  address: string;
+  ensName: string | null;
+  ensAvatarImageUrl: string | null;
+  githubId: number | null;
+  githubHandle: string | null;
+};
 ```
 
 Note that:
 
-- The `"authTokenId"` field is the ID of the record in the `AuthToken` table for the
+- The `authTokenId` field is the ID of the record in the `AuthToken` table for the
   Access+Refresh Token pair in the database.
-- The `"githubId"` field is GitHub's ID for the user that will not change even if their
-  login handle changes.
-- The `"githubHandle"` field is GitHub's current login handle for the user. This will not
-  update if they change it unless they log back in.
+- The `addressId` field is the ID of the record in the `Address` table for the
+  Access+Refresh Token pair in the database that is the address that is logged in
+- The `address` field is the (lowercased) full address of the user.
+- The `ensName` field is the ENS name of the logged in user (if they have one)
+- The `ensAvatarImageUrl` field is the URL for the ENS avatar of the logged in user
+    (if they have one). Note that this will always be `null` if `ensName === null`.
+- The `githubId` field is GitHub's ID for the user that will not change even if their
+  login handle changes. Note that if this is `null` then the user is *not* currently
+  logged into GitHub.
+- The `githubHandle` field is GitHub's current login handle for the user. Note that
+  this will always be `null` if `githubId === null`.
 
 The inclusion of these fields allows the REST server to skip having to look up the user
 or to validate that the token is still valid (there are scenarios where we may invalidate
@@ -50,23 +60,23 @@ Access Tokens have short expiration times by design. We are currently using 10 m
 The Refresh Token is a [JWT](https://jwt.io/) token that has a payload with the following
 fields:
 
-```json
-{
-  "authTokenId": 4,
-  "githubId": 324234,
-  "generation": 5
-}
+```typescript
+export type RefreshTokenPayload = {
+  authTokenId: number;
+  addressId: number;
+  generation: number;
+};
 ```
 
 Note that:
 
-- The `"authTokenId"` field is the ID of the record in the `AuthToken` table for the
+- The `authTokenId` field is the ID of the record in the `AuthToken` table for the
   Access+Refresh Token pair in the database.
-- The `"githubId"` field is GitHub's ID for the user that will not change even if their
-  login handle changes.
-- The `"generation"` field is a versioning of the Access+Refresh Tokens for a single login.
-  After a user logs in via GitHub, their new Access+Refresh Tokens have a generation of `0`
-  and each time the user uses the Refresh Token to get a new pair this generation is incremented.
+- The `addressId` field is the ID of the record in the `Address` table for the
+  Access+Refresh Token pair in the database that is the address that is logged in
+- The `generation` field is a versioning of the Access+Refresh Tokens for a single login.
+  After a user logs in , their new Access+Refresh Tokens have a `generation` of `0`
+  and each time the user uses the Refresh Token to get a new pair this `generation` is incremented.
 
 The user (i.e. the frontend) should store this token in either local storage or a cookie until they
 need to use it.
@@ -80,9 +90,8 @@ There are a few scenarios in which a token pair will be invalidated:
 - If someone attempts to use a Refresh Token from a previous generation (e.g. the current generation
   is `4` but someone attempts to refresh with a Refresh Token from generation `2`) then we must assume
   that the tokens have been leaked and we invalidate the Access+Refresh Token pair and the user will
-  have to login via GitHub again.
-- If a user has disconnected the App in their GitHub settings we will invalidate their tokens after
-  [receiving an event on the webhook](https://docs.github.com/en/developers/apps/building-github-apps/identifying-and-authorizing-users-for-github-apps#handling-a-revoked-github-app-authorization).
+  have to log in again.
+- If it has been over 1 month since the user logged in.
 
 To invalidate, we simply delete the record for the token pair in the DB.
 
@@ -100,8 +109,49 @@ in their request.
 
 ### Requesting a New Token Pair
 
-To retrieve a new token pair, the client (i.e. the frontend) should
-[send the user to the GitHub login](https://docs.github.com/en/developers/apps/building-github-apps/identifying-and-authorizing-users-for-github-apps#1-request-a-users-github-identity)
+To request a new Access+Refresh the frontend should (1) ensure that the user is connected to their wallet and
+then ask them to sign data like the following:
+```json
+{
+  "site": "gitpoap.io",
+  "method": "POST /auth",
+  "createdAt": 1647987506199
+  "data": {
+    "address": "0xTheUsersAddress"
+  }
+}
+```
+See [the appendix in the API docs](https://github.com/gitpoap/gitpoap-backend/blob/main/API.md#generating-signatures)
+for more information on how to create signatures.
+
+Then the frontend should call `POST /auth` with the following body:
+```json
+{
+  data: { address: "0xTheUsersAddress" },
+  signature: "John Hancock"
+}
+```
+where `signature` is the string returned by signing the data above.
+
+**Note that this must be the *resolved* address of the user, this endpoint will not accept ENS names.**
+
+If everything checks out, the backend server will return two tokens like:
+
+```json
+{
+  "accessToken": "the access token string",
+  "refreshToken": "the refresh token string"
+}
+```
+
+if the code the client sent was valid.
+
+### Signing into GitHub
+
+First, the user must have been signed in via their address as in the above section
+
+To retrieve a new token pair where the user is logged into GitHub, the client (i.e. the frontend) should
+[send the user to the GitHub login page](https://docs.github.com/en/developers/apps/building-github-apps/identifying-and-authorizing-users-for-github-apps#1-request-a-users-github-identity)
 to retreive a code. GitHub will then redirect the user back to the site
 with their secret code and at that point the client should send a
 `POST /github` request with a payload like:
@@ -112,7 +162,7 @@ with their secret code and at that point the client should send a
 }
 ```
 
-and the backend server will return two tokens like:
+while providing their address-based JWT access token, and the backend server will return two new tokens like:
 
 ```json
 {
@@ -121,7 +171,9 @@ and the backend server will return two tokens like:
 }
 ```
 
-if the code the client sent was valid.
+if the code the client sent was valid. This new `accessToken` will now have both `githubId` and `githubHandle` filled in.
+If, instead, the code was invalid, the backend will return an error status and the client should continue using the
+previous JWT pair.
 
 ### Requesting a Token Pair with a Refresh Token
 
@@ -147,7 +199,7 @@ and the backend server will return two tokens like:
 if the Refresh Token the client sent was valid.
 
 **Note:** If you attempt to use the old Refresh Token again you will invalidate your
-login and you will have to log in via GitHub again.
+login and you will have to log in GitHub again.
 
 ## Some Additional Reading
 
