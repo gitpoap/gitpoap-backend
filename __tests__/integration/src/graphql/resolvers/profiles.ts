@@ -48,7 +48,7 @@ describe('CustomProfileResolver', () => {
   it(
     'profileData - nullable',
     async () => {
-      const address = ADDRESSES.jay.substr(0, 5) + 'c' + ADDRESSES.jay.substring(6);
+      const address = ADDRESSES.jay.substring(0, 5) + 'c' + ADDRESSES.jay.substring(6);
 
       // Ensure the record doesn't already exist
       const startingRecord = await context.prisma.profile.findFirst({
