@@ -7,8 +7,8 @@ import { createRepoByGithubId } from '../../../../../src/lib/repos';
 import { backloadGithubPullRequestData } from '../../../../../src/lib/pullRequests';
 import { ClaimStatus, GitPOAPStatus } from '@prisma/client';
 
-jest.mock('../../../../src/lib/repos');
-jest.mock('../../../../src/lib/pullRequests');
+jest.mock('../../../../../src/lib/repos');
+jest.mock('../../../../../src/lib/pullRequests');
 
 const mockedCreateRepoByGithubId = jest.mocked(createRepoByGithubId, true);
 const mockedBackloadGithubPullRequestData = jest.mocked(backloadGithubPullRequestData, true);
@@ -87,7 +87,7 @@ describe('PUT /gitpoaps/enable/:id', () => {
       where: { id: gitPOAPId },
       select: {
         id: true,
-        status: true,
+        poapApprovalStatus: true,
       },
     });
   });
@@ -111,7 +111,7 @@ describe('PUT /gitpoaps/enable/:id', () => {
       where: { id: gitPOAPId },
       select: {
         id: true,
-        status: true,
+        poapApprovalStatus: true,
       },
     });
 
@@ -193,7 +193,7 @@ describe('PUT /gitpoaps/deprecate/:id', () => {
       where: { id: gitPOAPId },
       data: {
         ongoing: false,
-        status: GitPOAPStatus.DEPRECATED,
+        poapApprovalStatus: GitPOAPStatus.DEPRECATED,
       },
     });
 

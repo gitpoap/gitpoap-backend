@@ -24,7 +24,7 @@ const fakeCodes = [
 
 const gitPOAP: GitPOAPWithSecret = {
   id: 34,
-  status: GitPOAPStatus.UNAPPROVED,
+  poapApprovalStatus: GitPOAPStatus.UNAPPROVED,
   poapEventId: 32423,
   poapSecret: 'foobar',
 };
@@ -134,14 +134,10 @@ describe('checkGitPOAPForNewCodes', () => {
   const mockLookupRepoIds = () => {
     contextMock.prisma.gitPOAP.findUnique.mockResolvedValue({
       project: {
-        repos: [
-          { id: repoIds[0] },
-          { id: repoIds[1] },
-          { id: repoIds[2] },
-        ],
+        repos: [{ id: repoIds[0] }, { id: repoIds[1] }, { id: repoIds[2] }],
       },
     } as any);
-  }
+  };
 
   it('Should update the status of the GitPOAP after receiving more codes', async () => {
     contextMock.prisma.redeemCode.count.mockResolvedValueOnce(5).mockResolvedValueOnce(10);
@@ -172,7 +168,7 @@ describe('checkGitPOAPForNewCodes', () => {
         id: gitPOAP.id,
       },
       data: {
-        status: GitPOAPStatus.APPROVED,
+        poapApprovalStatus: GitPOAPStatus.APPROVED,
       },
     });
   });
@@ -183,7 +179,7 @@ describe('checkGitPOAPForNewCodes', () => {
 
     const returnedRepoIds = await checkGitPOAPForNewCodes({
       ...gitPOAP,
-      status: GitPOAPStatus.REDEEM_REQUEST_PENDING,
+      poapApprovalStatus: GitPOAPStatus.REDEEM_REQUEST_PENDING,
     });
 
     expect(returnedRepoIds).toEqual([]);
@@ -208,7 +204,7 @@ describe('checkGitPOAPForNewCodes', () => {
         id: gitPOAP.id,
       },
       data: {
-        status: GitPOAPStatus.APPROVED,
+        poapApprovalStatus: GitPOAPStatus.APPROVED,
       },
     });
   });
