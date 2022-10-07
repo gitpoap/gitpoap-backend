@@ -16,7 +16,7 @@ import { configProfile, dynamoDBClient } from '../external/dynamo';
 import { createScopedLogger } from '../logging';
 import { httpRequestDurationSeconds } from '../metrics';
 import { jwtWithOAuth } from '../middleware';
-import { AccessTokenPayloadWithOAuth } from '../types/tokens';
+import { getAccessTokenPayloadWithOAuth } from '../types/authTokens';
 import { postmarkClient } from '../external/postmark';
 import {
   IntakeFormImageFilesSchema,
@@ -327,7 +327,7 @@ onboardingRouter.post<'/intake-form', {}, {}, IntakeForm>(
     logger.debug(`Body: ${JSON.stringify(req.body)}`);
 
     const endTimer = httpRequestDurationSeconds.startTimer('GET', '/onboarding/intake-form');
-    const { githubHandle } = <AccessTokenPayloadWithOAuth>req.user;
+    const { githubHandle } = getAccessTokenPayloadWithOAuth(req.user);
     const unixTime = DateTime.local().toUnixInteger();
     const intakeFormTable = configProfile.tables.intakeForm;
 
@@ -473,7 +473,7 @@ onboardingRouter.get<'/github/repos', {}, APIResponseData<Repo[]>>(
     const logger = createScopedLogger('GET /onboarding/github/repos');
     const endTimer = httpRequestDurationSeconds.startTimer('GET', '/onboarding/github/repos');
 
-    const { githubOAuthToken } = <AccessTokenPayloadWithOAuth>req.user;
+    const { githubOAuthToken } = getAccessTokenPayloadWithOAuth(req.user);
     const octokit = new Octokit({ auth: githubOAuthToken });
     const user = await octokit.rest.users.getAuthenticated();
 

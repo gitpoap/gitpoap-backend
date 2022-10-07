@@ -142,6 +142,11 @@ export async function resolveENSAvatar(
   await upsertENSAvatarInDB(addressLower, avatarURL);
 }
 
+type ResolveExtraArgs = {
+  forceAvatarCheck?: boolean;
+  synchronous?: boolean;
+};
+
 /**
  * Resolve an ENS name to an ETH address.
  *
@@ -152,19 +157,18 @@ export async function resolveENSAvatar(
  */
 export async function resolveENS(
   ensName: string,
-  forceAvatarCheck: boolean = false,
-  synchronous: boolean = false,
+  resolveExtraArgs?: ResolveExtraArgs,
 ): Promise<string | null> {
   const result = await resolveENSInternal(ensName);
 
   if (result !== null && ensName.endsWith('.eth')) {
     // Run in the background
-    const avatarPromise = resolveENSAvatar(ensName, result, forceAvatarCheck);
+    const avatarPromise = resolveENSAvatar(ensName, result, resolveExtraArgs?.forceAvatarCheck);
 
     updateENSNameLastChecked(result);
     const namePromise = upsertENSNameInDB(result, ensName);
 
-    if (synchronous) {
+    if (resolveExtraArgs?.synchronous) {
       await Promise.all([avatarPromise, namePromise]);
     }
   }
@@ -182,8 +186,7 @@ export async function resolveENS(
  */
 export async function resolveAddress(
   address: string,
-  forceAvatarCheck: boolean = false,
-  synchronous: boolean = false,
+  resolveExtraArgs?: ResolveExtraArgs,
 ): Promise<string | null> {
   const result = await context.prisma.address.findUnique({
     where: {
@@ -197,14 +200,18 @@ export async function resolveAddress(
   const namePromise = updateENSName(address);
 
   if (result !== null && result.ensName !== null) {
-    const avatarPromise = resolveENSAvatar(result.ensName, address, forceAvatarCheck);
+    const avatarPromise = resolveENSAvatar(
+      result.ensName,
+      address,
+      resolveExtraArgs?.forceAvatarCheck,
+    );
 
-    if (synchronous) {
+    if (resolveExtraArgs?.synchronous) {
       await Promise.all([namePromise, avatarPromise]);
     }
 
     return result.ensName;
-  } else if (synchronous) {
+  } else if (resolveExtraArgs?.synchronous) {
     await namePromise;
   }
 

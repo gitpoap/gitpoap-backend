@@ -62,11 +62,10 @@ async function heatUpENSCache() {
 
     // This will force the ENS avatar cache to get populated if the user
     // has an ENS avatar
-    await resolveAddress(
-      address,
-      true, // Force re-checking of the ENS avatar
-      true, // Run the ENS checks synchronously
-    );
+    await resolveAddress(address, {
+      forceAvatarCheck: true,
+      synchronous: true,
+    });
 
     sleep(HEATER_DELAY_BETWEEN_ADDRESSES_SECONDS);
   }

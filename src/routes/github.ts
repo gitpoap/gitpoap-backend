@@ -6,7 +6,7 @@ import { createScopedLogger } from '../logging';
 import { httpRequestDurationSeconds } from '../metrics';
 import { generateAuthTokens } from '../lib/authTokens';
 import { jwtWithAddress } from '../middleware';
-import { AccessTokenPayload } from '../types/tokens';
+import { getAccessTokenPayload } from '../types/authTokens';
 import { upsertUser } from '../lib/users';
 
 export const githubRouter = Router();
@@ -27,8 +27,8 @@ githubRouter.post('/', jwtWithAddress(), async function (req, res) {
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
-  const { authTokenId, addressId, address, ensName, ensAvatarImageUrl } = <AccessTokenPayload>(
-    req.user
+  const { authTokenId, addressId, address, ensName, ensAvatarImageUrl } = getAccessTokenPayload(
+    req.user,
   );
   let { code } = req.body;
 

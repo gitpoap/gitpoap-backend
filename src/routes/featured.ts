@@ -6,7 +6,7 @@ import { createScopedLogger } from '../logging';
 import { httpRequestDurationSeconds } from '../metrics';
 import { getProfileByAddress, upsertProfile } from '../lib/profiles';
 import { jwtWithAddress } from '../middleware';
-import { AccessTokenPayload } from '../types/tokens';
+import { getAccessTokenPayload } from '../types/authTokens';
 
 export const featuredRouter = Router();
 
@@ -17,8 +17,7 @@ featuredRouter.put('/:poapTokenId', jwtWithAddress(), async function (req, res) 
 
   const endTimer = httpRequestDurationSeconds.startTimer('PUT', '/featured');
 
-  const accessTokenPayload = <AccessTokenPayload>req.user;
-  const address = accessTokenPayload.address;
+  const { address } = getAccessTokenPayload(req.user);
   const poapTokenId = req.params.poapTokenId;
 
   logger.info(`Request from ${address} for POAP ID: ${poapTokenId}`);
@@ -42,7 +41,7 @@ featuredRouter.put('/:poapTokenId', jwtWithAddress(), async function (req, res) 
   // If the POAP is a GitPOAP and it needs revalidation, don't let it be featured
   const claimData = await context.prisma.claim.findUnique({
     where: {
-      poapTokenId: poapTokenId,
+      poapTokenId,
     },
     select: {
       needsRevalidation: true,
@@ -59,13 +58,13 @@ featuredRouter.put('/:poapTokenId', jwtWithAddress(), async function (req, res) 
   await context.prisma.featuredPOAP.upsert({
     where: {
       poapTokenId_profileId: {
-        poapTokenId: poapTokenId,
+        poapTokenId,
         profileId: profile.id,
       },
     },
     update: {},
     create: {
-      poapTokenId: poapTokenId,
+      poapTokenId,
       profileId: profile.id,
     },
   });
@@ -84,8 +83,7 @@ featuredRouter.delete('/:poapTokenId', jwtWithAddress(), async function (req, re
 
   const endTimer = httpRequestDurationSeconds.startTimer('DELETE', '/featured/:poapTokenId');
 
-  const accessTokenPayload = <AccessTokenPayload>req.user;
-  const address = accessTokenPayload.address;
+  const { address } = getAccessTokenPayload(req.user);
   const poapTokenId = req.params.poapTokenId;
 
   logger.info(`Received request from ${address} for POAP ID: ${poapTokenId}`);
@@ -102,7 +100,7 @@ featuredRouter.delete('/:poapTokenId', jwtWithAddress(), async function (req, re
     await context.prisma.featuredPOAP.delete({
       where: {
         poapTokenId_profileId: {
-          poapTokenId: poapTokenId,
+          poapTokenId,
           profileId: profile.id,
         },
       },
