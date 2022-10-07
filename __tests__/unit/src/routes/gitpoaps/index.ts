@@ -10,8 +10,8 @@ import { ClaimStatus, GitPOAPStatus } from '@prisma/client';
 jest.mock('../../../../../src/lib/repos');
 jest.mock('../../../../../src/lib/pullRequests');
 
-const mockedCreateRepoByGithubId = jest.mocked(createRepoByGithubId, true);
-const mockedBackloadGithubPullRequestData = jest.mocked(backloadGithubPullRequestData, true);
+jest.mocked(createRepoByGithubId, true);
+jest.mocked(backloadGithubPullRequestData, true);
 
 const authTokenId = 4;
 const authTokenGeneration = 1;
