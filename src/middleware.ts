@@ -39,7 +39,7 @@ export function jwtWithAddress() {
         return;
       }
 
-      // Update the ensName and ensAvatarImageUrl if they've updated
+      // Update the ensName and ensAvatarImageUrl in case they've updated
       set(req, 'user.ensName', tokenInfo.address.ensName);
       set(req, 'user.ensAvatarImageUrl', tokenInfo.address.ensAvatarImageUrl);
 
@@ -65,6 +65,12 @@ export function jwtWithGitHubOAuth() {
           id: getAccessTokenPayload(req.user).authTokenId,
         },
         select: {
+          address: {
+            select: {
+              ensName: true,
+              ensAvatarImageUrl: true,
+            },
+          },
           user: {
             select: {
               githubOAuthToken: true,
@@ -82,6 +88,10 @@ export function jwtWithGitHubOAuth() {
       }
 
       set(req, 'user.githubOAuthToken', tokenInfo.user.githubOAuthToken);
+
+      // Update the ensName and ensAvatarImageUrl in case they've updated
+      set(req, 'user.ensName', tokenInfo.address.ensName);
+      set(req, 'user.ensAvatarImageUrl', tokenInfo.address.ensAvatarImageUrl);
 
       next();
     };
