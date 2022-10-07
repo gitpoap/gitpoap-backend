@@ -112,6 +112,13 @@ yarn test:quick-integration
 Note that the later command will not work unless all the docker services in the `public-api` profile are up (this is what the first command accomplishes).
 Furthermore, note that you will need to rerun the first command if you need to make changes to some source location other than `__tests__` or `__mocks__`.
 
+### Run all tests
+
+To run all tests you can simply use:
+```sh
+yarn test:all
+```
+
 ## Extra Resources
 
 * [TypeScript in NodeJS Project](https://www.pullrequest.com/blog/intro-to-using-typescript-in-a-nodejs-express-project/)
