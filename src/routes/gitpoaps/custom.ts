@@ -176,13 +176,10 @@ customGitpoapsRouter.post(
 
 customGitpoapsRouter.put('/approve/:id', jwtWithAdminOAuth(), async (req, res) => {
   const logger = createScopedLogger('PUT /gitpoap/custom/approve/:id');
-
   logger.debug(`Body: ${JSON.stringify(req.body)}`);
-
   const endTimer = httpRequestDurationSeconds.startTimer('PUT', '/gitpoap/custom/approve/:id');
 
   const gitPOAPRequestId = parseInt(req.params.id, 10);
-
   logger.info(`Admin request to approve GitPOAP Request with ID:${gitPOAPRequestId}`);
 
   const gitPOAPRequest = await context.prisma.gitPOAPRequest.findUnique({
@@ -198,8 +195,7 @@ customGitpoapsRouter.put('/approve/:id', jwtWithAdminOAuth(), async (req, res) =
   }
 
   const isCustom = gitPOAPRequest.type === GitPOAPType.CUSTOM;
-  const isPending = gitPOAPRequest.adminApprovalStatus === AdminApprovalStatus.PENDING;
-  const isRejected = gitPOAPRequest.adminApprovalStatus === AdminApprovalStatus.REJECTED;
+  const isApproved = gitPOAPRequest.adminApprovalStatus === AdminApprovalStatus.APPROVED;
 
   if (!isCustom) {
     const msg = `GitPOAP Request with ID:${gitPOAPRequestId} is not a custom GitPOAP Request`;
@@ -209,8 +205,8 @@ customGitpoapsRouter.put('/approve/:id', jwtWithAdminOAuth(), async (req, res) =
     return res.status(400).send({ msg });
   }
 
-  if (!isPending || !isRejected) {
-    const msg = `GitPOAP Request with ID:${gitPOAPRequestId} is not pending approval or currently rejected. It is likely already approved.`;
+  if (isApproved) {
+    const msg = `GitPOAP Request with ID:${gitPOAPRequestId} is already approved.`;
     logger.warn(msg);
     endTimer({ status: 400 });
 
@@ -306,6 +302,13 @@ customGitpoapsRouter.put('/reject/:id', jwtWithAdminOAuth(), async (req, res) =>
 
     return res.status(404).send({ msg });
   }
+
+  await context.prisma.gitPOAPRequest.update({
+    where: { id: gitPOAPRequestId },
+    data: {
+      adminApprovalStatus: AdminApprovalStatus.REJECTED,
+    },
+  });
 
   logger.debug(
     `Completed admin request to reject Custom GitPOAP with Request ID:${gitPOAPRequest.id}`,
