@@ -530,7 +530,7 @@ input ClaimWhereInput {
   mintedAddress: AddressRelationFilter
   gitPOAPId: IntFilter
   gitPOAP: GitPOAPRelationFilter
-  userId: IntFilter
+  userId: IntNullableFilter
   user: UserRelationFilter
   emailId: IntNullableFilter
   email: EmailRelationFilter
@@ -857,6 +857,8 @@ input OrganizationWhereInput {
   url: StringNullableFilter
   repos: RepoListRelationFilter
   memberships: OrganizationMembershipListRelationFilter
+  gitPOAPs: GitPOAPListRelationFilter
+  gitPOAPRequests: GitPOAPRequestListRelationFilter
 }
 
 input RepoListRelationFilter {
@@ -905,6 +907,61 @@ input NestedEnumMembershipRoleFilter {
   not: NestedEnumMembershipRoleFilter
 }
 
+input GitPOAPListRelationFilter {
+  every: GitPOAPWhereInput
+  some: GitPOAPWhereInput
+  none: GitPOAPWhereInput
+}
+
+input GitPOAPWhereInput {
+  AND: [GitPOAPWhereInput!]
+  OR: [GitPOAPWhereInput!]
+  NOT: [GitPOAPWhereInput!]
+  id: IntFilter
+  type: EnumGitPOAPTypeFilter
+  name: StringFilter
+  imageUrl: StringFilter
+  description: StringFilter
+  year: IntFilter
+  poapEventId: IntFilter
+  createdAt: DateTimeFilter
+  updatedAt: DateTimeFilter
+  projectId: IntNullableFilter
+  project: ProjectRelationFilter
+  organizationId: IntNullableFilter
+  organization: OrganizationRelationFilter
+  claims: ClaimListRelationFilter
+  poapApprovalStatus: EnumGitPOAPStatusFilter
+  ongoing: BoolFilter
+  redeemCodes: RedeemCodeListRelationFilter
+  eventId: IntNullableFilter
+  event: EventRelationFilter
+  level: IntFilter
+  threshold: IntFilter
+  isPRBased: BoolFilter
+  isEnabled: BoolFilter
+  gitpoapRequest: GitPOAPRequestRelationFilter
+}
+
+input EnumGitPOAPTypeFilter {
+  equals: GitPOAPType
+  in: [GitPOAPType!]
+  notIn: [GitPOAPType!]
+  not: NestedEnumGitPOAPTypeFilter
+}
+
+enum GitPOAPType {
+  ANNUAL
+  CUSTOM
+}
+
+input NestedEnumGitPOAPTypeFilter {
+  equals: GitPOAPType
+  in: [GitPOAPType!]
+  notIn: [GitPOAPType!]
+  not: NestedEnumGitPOAPTypeFilter
+}
+
 input ProjectRelationFilter {
   is: ProjectWhereInput
   isNot: ProjectWhereInput
@@ -919,59 +976,121 @@ input ProjectWhereInput {
   updatedAt: DateTimeFilter
   repos: RepoListRelationFilter
   gitPOAPs: GitPOAPListRelationFilter
+  gitPOAPRequests: GitPOAPRequestListRelationFilter
 }
 
-input GitPOAPListRelationFilter {
-  every: GitPOAPWhereInput
-  some: GitPOAPWhereInput
-  none: GitPOAPWhereInput
+input GitPOAPRequestListRelationFilter {
+  every: GitPOAPRequestWhereInput
+  some: GitPOAPRequestWhereInput
+  none: GitPOAPRequestWhereInput
 }
 
-input GitPOAPWhereInput {
-  AND: [GitPOAPWhereInput!]
-  OR: [GitPOAPWhereInput!]
-  NOT: [GitPOAPWhereInput!]
+input GitPOAPRequestWhereInput {
+  AND: [GitPOAPRequestWhereInput!]
+  OR: [GitPOAPRequestWhereInput!]
+  NOT: [GitPOAPRequestWhereInput!]
   id: IntFilter
-  type: EnumClaimTypeFilter
-  name: StringFilter
-  imageUrl: StringFilter
-  description: StringFilter
-  year: IntFilter
-  poapEventId: IntFilter
   createdAt: DateTimeFilter
   updatedAt: DateTimeFilter
-  projectId: IntFilter
+  type: EnumGitPOAPTypeFilter
+  startDate: DateTimeFilter
+  endDate: DateTimeFilter
+  expiryDate: DateTimeFilter
+  eventUrl: StringFilter
+  email: StringFilter
+  name: StringFilter
+  numRequestedCodes: IntFilter
+  imageKey: StringFilter
+  description: StringFilter
+  year: IntFilter
+  projectId: IntNullableFilter
   project: ProjectRelationFilter
-  claims: ClaimListRelationFilter
-  status: EnumGitPOAPStatusFilter
+  organizationId: IntNullableFilter
+  organization: OrganizationRelationFilter
   ongoing: BoolFilter
-  redeemCodes: RedeemCodeListRelationFilter
   eventId: IntNullableFilter
   event: EventRelationFilter
   level: IntFilter
   threshold: IntFilter
   isPRBased: BoolFilter
   isEnabled: BoolFilter
+  contributors: JsonFilter
+  adminApprovalStatus: EnumAdminApprovalStatusNullableFilter
+  gitPOAPId: IntNullableFilter
+  gitPOAP: GitPOAPRelationFilter
 }
 
-input EnumClaimTypeFilter {
-  equals: ClaimType
-  in: [ClaimType!]
-  notIn: [ClaimType!]
-  not: NestedEnumClaimTypeFilter
+input EventRelationFilter {
+  is: EventWhereInput
+  isNot: EventWhereInput
 }
 
-enum ClaimType {
-  ANNUAL
-  QUARTERLY
-  MANUAL
+input EventWhereInput {
+  AND: [EventWhereInput!]
+  OR: [EventWhereInput!]
+  NOT: [EventWhereInput!]
+  id: IntFilter
+  createdAt: DateTimeFilter
+  updatedAt: DateTimeFilter
+  startDate: DateTimeFilter
+  endDate: DateTimeFilter
+  name: StringFilter
+  organization: StringFilter
+  description: StringNullableFilter
+  location: StringFilter
+  imageUrl: StringNullableFilter
+  githubHandle: StringNullableFilter
+  twitterHandle: StringNullableFilter
+  siteUrl: StringNullableFilter
+  gitPOAPs: GitPOAPListRelationFilter
+  gitPOAPRequests: GitPOAPRequestListRelationFilter
 }
 
-input NestedEnumClaimTypeFilter {
-  equals: ClaimType
-  in: [ClaimType!]
-  notIn: [ClaimType!]
-  not: NestedEnumClaimTypeFilter
+input JsonFilter {
+  equals: JSON
+  path: [String!]
+  string_contains: String
+  string_starts_with: String
+  string_ends_with: String
+  array_contains: JSON
+  array_starts_with: JSON
+  array_ends_with: JSON
+  lt: JSON
+  lte: JSON
+  gt: JSON
+  gte: JSON
+  not: JSON
+}
+
+# The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+scalar JSON
+  @specifiedBy(
+    url: "http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf"
+  )
+
+input EnumAdminApprovalStatusNullableFilter {
+  equals: AdminApprovalStatus
+  in: [AdminApprovalStatus!]
+  notIn: [AdminApprovalStatus!]
+  not: NestedEnumAdminApprovalStatusNullableFilter
+}
+
+enum AdminApprovalStatus {
+  APPROVED
+  PENDING
+  REJECTED
+}
+
+input NestedEnumAdminApprovalStatusNullableFilter {
+  equals: AdminApprovalStatus
+  in: [AdminApprovalStatus!]
+  notIn: [AdminApprovalStatus!]
+  not: NestedEnumAdminApprovalStatusNullableFilter
+}
+
+input GitPOAPRelationFilter {
+  is: GitPOAPWhereInput
+  isNot: GitPOAPWhereInput
 }
 
 input EnumGitPOAPStatusFilter {
@@ -1011,34 +1130,9 @@ input RedeemCodeWhereInput {
   code: StringFilter
 }
 
-input GitPOAPRelationFilter {
-  is: GitPOAPWhereInput
-  isNot: GitPOAPWhereInput
-}
-
-input EventRelationFilter {
-  is: EventWhereInput
-  isNot: EventWhereInput
-}
-
-input EventWhereInput {
-  AND: [EventWhereInput!]
-  OR: [EventWhereInput!]
-  NOT: [EventWhereInput!]
-  id: IntFilter
-  createdAt: DateTimeFilter
-  updatedAt: DateTimeFilter
-  startDate: DateTimeFilter
-  endDate: DateTimeFilter
-  name: StringFilter
-  organization: StringFilter
-  description: StringNullableFilter
-  location: StringFilter
-  imageUrl: StringNullableFilter
-  githubHandle: StringNullableFilter
-  twitterHandle: StringNullableFilter
-  siteUrl: StringNullableFilter
-  gitPOAPs: GitPOAPListRelationFilter
+input GitPOAPRequestRelationFilter {
+  is: GitPOAPRequestWhereInput
+  isNot: GitPOAPRequestWhereInput
 }
 
 input GithubIssueListRelationFilter {
@@ -1278,8 +1372,10 @@ input GitPOAPOrderByWithRelationInput {
   updatedAt: SortOrder
   projectId: SortOrder
   project: ProjectOrderByWithRelationInput
+  organizationId: SortOrder
+  organization: OrganizationOrderByWithRelationInput
   claims: ClaimOrderByRelationAggregateInput
-  status: SortOrder
+  poapApprovalStatus: SortOrder
   ongoing: SortOrder
   redeemCodes: RedeemCodeOrderByRelationAggregateInput
   eventId: SortOrder
@@ -1288,6 +1384,7 @@ input GitPOAPOrderByWithRelationInput {
   threshold: SortOrder
   isPRBased: SortOrder
   isEnabled: SortOrder
+  gitpoapRequest: GitPOAPRequestOrderByWithRelationInput
 }
 
 input ProjectOrderByWithRelationInput {
@@ -1296,6 +1393,7 @@ input ProjectOrderByWithRelationInput {
   updatedAt: SortOrder
   repos: RepoOrderByRelationAggregateInput
   gitPOAPs: GitPOAPOrderByRelationAggregateInput
+  gitPOAPRequests: GitPOAPRequestOrderByRelationAggregateInput
 }
 
 input RepoOrderByRelationAggregateInput {
@@ -1304,6 +1402,25 @@ input RepoOrderByRelationAggregateInput {
 
 input GitPOAPOrderByRelationAggregateInput {
   _count: SortOrder
+}
+
+input GitPOAPRequestOrderByRelationAggregateInput {
+  _count: SortOrder
+}
+
+input OrganizationOrderByWithRelationInput {
+  id: SortOrder
+  githubOrgId: SortOrder
+  name: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  description: SortOrder
+  twitterHandle: SortOrder
+  url: SortOrder
+  repos: RepoOrderByRelationAggregateInput
+  memberships: OrganizationMembershipOrderByRelationAggregateInput
+  gitPOAPs: GitPOAPOrderByRelationAggregateInput
+  gitPOAPRequests: GitPOAPRequestOrderByRelationAggregateInput
 }
 
 input RedeemCodeOrderByRelationAggregateInput {
@@ -1325,6 +1442,39 @@ input EventOrderByWithRelationInput {
   twitterHandle: SortOrder
   siteUrl: SortOrder
   gitPOAPs: GitPOAPOrderByRelationAggregateInput
+  gitPOAPRequests: GitPOAPRequestOrderByRelationAggregateInput
+}
+
+input GitPOAPRequestOrderByWithRelationInput {
+  id: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  type: SortOrder
+  startDate: SortOrder
+  endDate: SortOrder
+  expiryDate: SortOrder
+  eventUrl: SortOrder
+  email: SortOrder
+  name: SortOrder
+  numRequestedCodes: SortOrder
+  imageKey: SortOrder
+  description: SortOrder
+  year: SortOrder
+  projectId: SortOrder
+  project: ProjectOrderByWithRelationInput
+  organizationId: SortOrder
+  organization: OrganizationOrderByWithRelationInput
+  ongoing: SortOrder
+  eventId: SortOrder
+  event: EventOrderByWithRelationInput
+  level: SortOrder
+  threshold: SortOrder
+  isPRBased: SortOrder
+  isEnabled: SortOrder
+  contributors: SortOrder
+  adminApprovalStatus: SortOrder
+  gitPOAPId: SortOrder
+  gitPOAP: GitPOAPOrderByWithRelationInput
 }
 
 input GithubPullRequestOrderByWithRelationInput {
@@ -1358,19 +1508,6 @@ input RepoOrderByWithRelationInput {
   githubPullRequests: GithubPullRequestOrderByRelationAggregateInput
   githubIssues: GithubIssueOrderByRelationAggregateInput
   githubMentions: GithubMentionOrderByRelationAggregateInput
-}
-
-input OrganizationOrderByWithRelationInput {
-  id: SortOrder
-  githubOrgId: SortOrder
-  name: SortOrder
-  createdAt: SortOrder
-  updatedAt: SortOrder
-  description: SortOrder
-  twitterHandle: SortOrder
-  url: SortOrder
-  repos: RepoOrderByRelationAggregateInput
-  memberships: OrganizationMembershipOrderByRelationAggregateInput
 }
 
 input GithubMentionOrderByWithRelationInput {
@@ -1442,7 +1579,7 @@ type Claim {
   poapTokenId: String
   mintedAddressId: Int
   gitPOAPId: Int!
-  userId: Int!
+  userId: Int
   emailId: Int
   issuedAddressId: Int
   pullRequestEarnedId: Int
@@ -1450,7 +1587,7 @@ type Claim {
   needsRevalidation: Boolean!
   mintedAddress: Address
   gitPOAP: GitPOAP!
-  user: User!
+  user: User
   email: Email
   issuedAddress: Address
   pullRequestEarned: GithubPullRequest
@@ -1477,7 +1614,7 @@ type AddressCount {
 
 type GitPOAP {
   id: Int!
-  type: ClaimType!
+  type: GitPOAPType!
   name: String!
   imageUrl: String!
   description: String!
@@ -1485,8 +1622,9 @@ type GitPOAP {
   poapEventId: Int!
   createdAt: DateTime!
   updatedAt: DateTime!
-  projectId: Int!
-  status: GitPOAPStatus!
+  projectId: Int
+  organizationId: Int
+  poapApprovalStatus: GitPOAPStatus!
   ongoing: Boolean!
   eventId: Int
   level: Int!
@@ -1494,7 +1632,8 @@ type GitPOAP {
   isPRBased: Boolean!
   isEnabled: Boolean!
   _count: GitPOAPCount
-  project: Project!
+  project: Project
+  organization: Organization
   claims(
     where: ClaimWhereInput
     orderBy: [ClaimOrderByWithRelationInput!]
@@ -1512,6 +1651,7 @@ type GitPOAP {
     distinct: [RedeemCodeScalarFieldEnum!]
   ): [RedeemCode!]!
   event: Event
+  gitpoapRequest: GitPOAPRequest
 }
 
 type GitPOAPCount {
@@ -1540,11 +1680,20 @@ type Project {
     skip: Int
     distinct: [GitPOAPScalarFieldEnum!]
   ): [GitPOAP!]!
+  gitPOAPRequests(
+    where: GitPOAPRequestWhereInput
+    orderBy: [GitPOAPRequestOrderByWithRelationInput!]
+    cursor: GitPOAPRequestWhereUniqueInput
+    take: Int
+    skip: Int
+    distinct: [GitPOAPRequestScalarFieldEnum!]
+  ): [GitPOAPRequest!]!
 }
 
 type ProjectCount {
   repos: Int!
   gitPOAPs: Int!
+  gitPOAPRequests: Int!
 }
 
 type Repo {
@@ -1617,11 +1766,29 @@ type Organization {
     skip: Int
     distinct: [OrganizationMembershipScalarFieldEnum!]
   ): [OrganizationMembership!]!
+  gitPOAPs(
+    where: GitPOAPWhereInput
+    orderBy: [GitPOAPOrderByWithRelationInput!]
+    cursor: GitPOAPWhereUniqueInput
+    take: Int
+    skip: Int
+    distinct: [GitPOAPScalarFieldEnum!]
+  ): [GitPOAP!]!
+  gitPOAPRequests(
+    where: GitPOAPRequestWhereInput
+    orderBy: [GitPOAPRequestOrderByWithRelationInput!]
+    cursor: GitPOAPRequestWhereUniqueInput
+    take: Int
+    skip: Int
+    distinct: [GitPOAPRequestScalarFieldEnum!]
+  ): [GitPOAPRequest!]!
 }
 
 type OrganizationCount {
   repos: Int!
   memberships: Int!
+  gitPOAPs: Int!
+  gitPOAPRequests: Int!
 }
 
 input RepoWhereUniqueInput {
@@ -1677,6 +1844,94 @@ enum OrganizationMembershipScalarFieldEnum {
   organizationId
   addressId
   role
+}
+
+input GitPOAPWhereUniqueInput {
+  id: Int
+  poapEventId: Int
+}
+
+enum GitPOAPScalarFieldEnum {
+  id
+  type
+  name
+  imageUrl
+  description
+  year
+  poapEventId
+  createdAt
+  updatedAt
+  projectId
+  organizationId
+  poapSecret
+  poapApprovalStatus
+  ongoing
+  eventId
+  level
+  threshold
+  isPRBased
+  isEnabled
+}
+
+type GitPOAPRequest {
+  id: Int!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  type: GitPOAPType!
+  startDate: DateTime!
+  endDate: DateTime!
+  expiryDate: DateTime!
+  eventUrl: String!
+  email: String!
+  name: String!
+  numRequestedCodes: Int!
+  imageKey: String!
+  description: String!
+  year: Int!
+  projectId: Int
+  organizationId: Int
+  ongoing: Boolean!
+  eventId: Int
+  level: Int!
+  threshold: Int!
+  isPRBased: Boolean!
+  isEnabled: Boolean!
+  contributors: JSON!
+  adminApprovalStatus: AdminApprovalStatus
+  gitPOAPId: Int
+}
+
+input GitPOAPRequestWhereUniqueInput {
+  id: Int
+  gitPOAPId: Int
+}
+
+enum GitPOAPRequestScalarFieldEnum {
+  id
+  createdAt
+  updatedAt
+  type
+  startDate
+  endDate
+  expiryDate
+  eventUrl
+  email
+  name
+  numRequestedCodes
+  imageKey
+  description
+  year
+  projectId
+  organizationId
+  ongoing
+  eventId
+  level
+  threshold
+  isPRBased
+  isEnabled
+  contributors
+  adminApprovalStatus
+  gitPOAPId
 }
 
 type GithubPullRequest {
@@ -1914,32 +2169,6 @@ enum AddressScalarFieldEnum {
   ensName
 }
 
-input GitPOAPWhereUniqueInput {
-  id: Int
-  poapEventId: Int
-}
-
-enum GitPOAPScalarFieldEnum {
-  id
-  type
-  name
-  imageUrl
-  description
-  year
-  poapEventId
-  createdAt
-  updatedAt
-  projectId
-  poapSecret
-  status
-  ongoing
-  eventId
-  level
-  threshold
-  isPRBased
-  isEnabled
-}
-
 type RedeemCode {
   id: Int!
   gitPOAPId: Int!
@@ -1988,15 +2217,18 @@ type Event {
 
 type EventCount {
   gitPOAPs: Int!
+  gitPOAPRequests: Int!
 }
 
 type Email {
   id: Int!
-  addressId: Int!
+  emailAddress: String!
+  addressId: Int
   createdAt: DateTime!
   updatedAt: DateTime!
   isValidated: Boolean!
-  tokenExpiresAt: DateTime!
+  activeToken: String
+  tokenExpiresAt: DateTime
   _count: EmailCount
 }
 
@@ -2014,7 +2246,7 @@ type ClaimGroupBy {
   poapTokenId: String
   mintedAddressId: Int
   gitPOAPId: Int!
-  userId: Int!
+  userId: Int
   emailId: Int
   issuedAddressId: Int
   pullRequestEarnedId: Int
@@ -2134,7 +2366,7 @@ input ClaimScalarWhereWithAggregatesInput {
   poapTokenId: StringNullableWithAggregatesFilter
   mintedAddressId: IntNullableWithAggregatesFilter
   gitPOAPId: IntWithAggregatesFilter
-  userId: IntWithAggregatesFilter
+  userId: IntNullableWithAggregatesFilter
   emailId: IntNullableWithAggregatesFilter
   issuedAddressId: IntNullableWithAggregatesFilter
   pullRequestEarnedId: IntNullableWithAggregatesFilter
@@ -2565,8 +2797,9 @@ type GitPOAPCountAggregate {
   createdAt: Int!
   updatedAt: Int!
   projectId: Int!
+  organizationId: Int!
   poapSecret: Int!
-  status: Int!
+  poapApprovalStatus: Int!
   ongoing: Int!
   eventId: Int!
   level: Int!
@@ -2581,6 +2814,7 @@ type GitPOAPAvgAggregate {
   year: Float
   poapEventId: Float
   projectId: Float
+  organizationId: Float
   eventId: Float
   level: Float
   threshold: Float
@@ -2591,6 +2825,7 @@ type GitPOAPSumAggregate {
   year: Int
   poapEventId: Int
   projectId: Int
+  organizationId: Int
   eventId: Int
   level: Int
   threshold: Int
@@ -2598,7 +2833,7 @@ type GitPOAPSumAggregate {
 
 type GitPOAPMinAggregate {
   id: Int
-  type: ClaimType
+  type: GitPOAPType
   name: String
   imageUrl: String
   description: String
@@ -2607,8 +2842,9 @@ type GitPOAPMinAggregate {
   createdAt: DateTime
   updatedAt: DateTime
   projectId: Int
+  organizationId: Int
   poapSecret: String
-  status: GitPOAPStatus
+  poapApprovalStatus: GitPOAPStatus
   ongoing: Boolean
   eventId: Int
   level: Int
@@ -2619,7 +2855,7 @@ type GitPOAPMinAggregate {
 
 type GitPOAPMaxAggregate {
   id: Int
-  type: ClaimType
+  type: GitPOAPType
   name: String
   imageUrl: String
   description: String
@@ -2628,8 +2864,9 @@ type GitPOAPMaxAggregate {
   createdAt: DateTime
   updatedAt: DateTime
   projectId: Int
+  organizationId: Int
   poapSecret: String
-  status: GitPOAPStatus
+  poapApprovalStatus: GitPOAPStatus
   ongoing: Boolean
   eventId: Int
   level: Int
@@ -2640,7 +2877,7 @@ type GitPOAPMaxAggregate {
 
 type GitPOAPGroupBy {
   id: Int!
-  type: ClaimType!
+  type: GitPOAPType!
   name: String!
   imageUrl: String!
   description: String!
@@ -2648,9 +2885,10 @@ type GitPOAPGroupBy {
   poapEventId: Int!
   createdAt: DateTime!
   updatedAt: DateTime!
-  projectId: Int!
+  projectId: Int
+  organizationId: Int
   poapSecret: String!
-  status: GitPOAPStatus!
+  poapApprovalStatus: GitPOAPStatus!
   ongoing: Boolean!
   eventId: Int
   level: Int!
@@ -2675,7 +2913,8 @@ input GitPOAPOrderByWithAggregationInput {
   createdAt: SortOrder
   updatedAt: SortOrder
   projectId: SortOrder
-  status: SortOrder
+  organizationId: SortOrder
+  poapApprovalStatus: SortOrder
   ongoing: SortOrder
   eventId: SortOrder
   level: SortOrder
@@ -2700,7 +2939,8 @@ input GitPOAPCountOrderByAggregateInput {
   createdAt: SortOrder
   updatedAt: SortOrder
   projectId: SortOrder
-  status: SortOrder
+  organizationId: SortOrder
+  poapApprovalStatus: SortOrder
   ongoing: SortOrder
   eventId: SortOrder
   level: SortOrder
@@ -2714,6 +2954,7 @@ input GitPOAPAvgOrderByAggregateInput {
   year: SortOrder
   poapEventId: SortOrder
   projectId: SortOrder
+  organizationId: SortOrder
   eventId: SortOrder
   level: SortOrder
   threshold: SortOrder
@@ -2730,7 +2971,8 @@ input GitPOAPMaxOrderByAggregateInput {
   createdAt: SortOrder
   updatedAt: SortOrder
   projectId: SortOrder
-  status: SortOrder
+  organizationId: SortOrder
+  poapApprovalStatus: SortOrder
   ongoing: SortOrder
   eventId: SortOrder
   level: SortOrder
@@ -2750,7 +2992,8 @@ input GitPOAPMinOrderByAggregateInput {
   createdAt: SortOrder
   updatedAt: SortOrder
   projectId: SortOrder
-  status: SortOrder
+  organizationId: SortOrder
+  poapApprovalStatus: SortOrder
   ongoing: SortOrder
   eventId: SortOrder
   level: SortOrder
@@ -2764,6 +3007,7 @@ input GitPOAPSumOrderByAggregateInput {
   year: SortOrder
   poapEventId: SortOrder
   projectId: SortOrder
+  organizationId: SortOrder
   eventId: SortOrder
   level: SortOrder
   threshold: SortOrder
@@ -2774,7 +3018,7 @@ input GitPOAPScalarWhereWithAggregatesInput {
   OR: [GitPOAPScalarWhereWithAggregatesInput!]
   NOT: [GitPOAPScalarWhereWithAggregatesInput!]
   id: IntWithAggregatesFilter
-  type: EnumClaimTypeWithAggregatesFilter
+  type: EnumGitPOAPTypeWithAggregatesFilter
   name: StringWithAggregatesFilter
   imageUrl: StringWithAggregatesFilter
   description: StringWithAggregatesFilter
@@ -2782,8 +3026,9 @@ input GitPOAPScalarWhereWithAggregatesInput {
   poapEventId: IntWithAggregatesFilter
   createdAt: DateTimeWithAggregatesFilter
   updatedAt: DateTimeWithAggregatesFilter
-  projectId: IntWithAggregatesFilter
-  status: EnumGitPOAPStatusWithAggregatesFilter
+  projectId: IntNullableWithAggregatesFilter
+  organizationId: IntNullableWithAggregatesFilter
+  poapApprovalStatus: EnumGitPOAPStatusWithAggregatesFilter
   ongoing: BoolWithAggregatesFilter
   eventId: IntNullableWithAggregatesFilter
   level: IntWithAggregatesFilter
@@ -2792,24 +3037,24 @@ input GitPOAPScalarWhereWithAggregatesInput {
   isEnabled: BoolWithAggregatesFilter
 }
 
-input EnumClaimTypeWithAggregatesFilter {
-  equals: ClaimType
-  in: [ClaimType!]
-  notIn: [ClaimType!]
-  not: NestedEnumClaimTypeWithAggregatesFilter
+input EnumGitPOAPTypeWithAggregatesFilter {
+  equals: GitPOAPType
+  in: [GitPOAPType!]
+  notIn: [GitPOAPType!]
+  not: NestedEnumGitPOAPTypeWithAggregatesFilter
   _count: NestedIntFilter
-  _min: NestedEnumClaimTypeFilter
-  _max: NestedEnumClaimTypeFilter
+  _min: NestedEnumGitPOAPTypeFilter
+  _max: NestedEnumGitPOAPTypeFilter
 }
 
-input NestedEnumClaimTypeWithAggregatesFilter {
-  equals: ClaimType
-  in: [ClaimType!]
-  notIn: [ClaimType!]
-  not: NestedEnumClaimTypeWithAggregatesFilter
+input NestedEnumGitPOAPTypeWithAggregatesFilter {
+  equals: GitPOAPType
+  in: [GitPOAPType!]
+  notIn: [GitPOAPType!]
+  not: NestedEnumGitPOAPTypeWithAggregatesFilter
   _count: NestedIntFilter
-  _min: NestedEnumClaimTypeFilter
-  _max: NestedEnumClaimTypeFilter
+  _min: NestedEnumGitPOAPTypeFilter
+  _max: NestedEnumGitPOAPTypeFilter
 }
 
 input EnumGitPOAPStatusWithAggregatesFilter {
@@ -4200,6 +4445,22 @@ type OrganizationData {
     skip: Int
     distinct: [OrganizationMembershipScalarFieldEnum!]
   ): [OrganizationMembership!]!
+  gitPOAPs(
+    where: GitPOAPWhereInput
+    orderBy: [GitPOAPOrderByWithRelationInput!]
+    cursor: GitPOAPWhereUniqueInput
+    take: Int
+    skip: Int
+    distinct: [GitPOAPScalarFieldEnum!]
+  ): [GitPOAP!]!
+  gitPOAPRequests(
+    where: GitPOAPRequestWhereInput
+    orderBy: [GitPOAPRequestOrderByWithRelationInput!]
+    cursor: GitPOAPRequestWhereUniqueInput
+    take: Int
+    skip: Int
+    distinct: [GitPOAPRequestScalarFieldEnum!]
+  ): [GitPOAPRequest!]!
   contributorCount: Float!
   gitPOAPCount: Float!
   mintedGitPOAPCount: Float!

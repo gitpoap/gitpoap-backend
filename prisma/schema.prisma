@@ -79,9 +79,9 @@ model Email {
   id             Int      @id @default(autoincrement())
   // Hide email.emailAddress from generated resolvers
   /// @TypeGraphQL.omit(output: true, input: true)
-  emailAddress   String   @db.VarChar(255)
-  addressId      Int      @unique
-  address        Address  @relation(fields: [addressId], references: [id])
+  emailAddress   String   @unique @db.VarChar(255)
+  addressId      Int?     @unique
+  address        Address? @relation(fields: [addressId], references: [id])
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   claims         Claim[]
@@ -106,16 +106,18 @@ model OrganizationMembership {
 }
 
 model Organization {
-  id            Int                      @id @default(autoincrement())
-  githubOrgId   Int                      @unique
-  name          String                   @db.VarChar(50)
-  createdAt     DateTime                 @default(now())
-  updatedAt     DateTime                 @updatedAt
-  description   String?
-  twitterHandle String?                  @db.VarChar(255)
-  url           String?                  @db.VarChar(255)
-  repos         Repo[]
-  memberships   OrganizationMembership[]
+  id              Int                      @id @default(autoincrement())
+  githubOrgId     Int                      @unique
+  name            String                   @db.VarChar(50)
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+  description     String?
+  twitterHandle   String?                  @db.VarChar(255)
+  url             String?                  @db.VarChar(255)
+  repos           Repo[]
+  memberships     OrganizationMembership[]
+  gitPOAPs        GitPOAP[]
+  gitPOAPRequests GitPOAPRequest[]
 }
 
 model Repo {
@@ -137,11 +139,12 @@ model Repo {
 }
 
 model Project {
-  id        Int       @id @default(autoincrement())
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  repos     Repo[]
-  gitPOAPs  GitPOAP[]
+  id              Int              @id @default(autoincrement())
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  repos           Repo[]
+  gitPOAPs        GitPOAP[]
+  gitPOAPRequests GitPOAPRequest[]
 }
 
 model Claim {
@@ -159,8 +162,8 @@ model Claim {
   gitPOAPId           Int
   gitPOAP             GitPOAP            @relation(fields: [gitPOAPId], references: [id])
   // Start: Issuance Fields; Claim can be 'issued' to a Github user, ETH address, or email
-  userId              Int
-  user                User               @relation(fields: [userId], references: [id])
+  userId              Int?
+  user                User?              @relation(fields: [userId], references: [id])
   emailId             Int?
   email               Email?             @relation(fields: [emailId], references: [id])
   issuedAddressId     Int?
@@ -182,32 +185,72 @@ model Claim {
 }
 
 model GitPOAP {
-  id          Int           @id @default(autoincrement())
-  type        ClaimType     @default(ANNUAL)
-  name        String        @db.VarChar(255)
-  imageUrl    String
-  description String
-  year        Int
-  poapEventId Int           @unique
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  projectId   Int
-  project     Project       @relation(fields: [projectId], references: [id])
-  claims      Claim[]
+  id                 Int             @id @default(autoincrement())
+  type               GitPOAPType     @default(ANNUAL)
+  name               String          @db.VarChar(255)
+  imageUrl           String
+  description        String
+  year               Int
+  poapEventId        Int             @unique
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+  projectId          Int?
+  project            Project?        @relation(fields: [projectId], references: [id])
+  organizationId     Int?
+  organization       Organization?   @relation(fields: [organizationId], references: [id])
+  claims             Claim[]
   // Hide poapSecret from generated resolvers
   /// @TypeGraphQL.omit(output: true, input: true)
-  poapSecret  String        @db.VarChar(6)
-  status      GitPOAPStatus @default(UNAPPROVED)
+  poapSecret         String          @db.VarChar(6)
+  // External POAP approval status ~ related to the POAP Curation Team
+  poapApprovalStatus GitPOAPStatus   @default(UNAPPROVED)
   // If a GitPOAP is marked as ongoing then the backend will automatically
   // request additional codes when we reach a minimum number remaining
-  ongoing     Boolean       @default(false)
-  redeemCodes RedeemCode[]
-  eventId     Int?
-  event       Event?        @relation(fields: [eventId], references: [id])
-  level       Int           @default(1)
-  threshold   Int           @default(1)
-  isPRBased   Boolean       @default(true)
-  isEnabled   Boolean       @default(true)
+  ongoing            Boolean         @default(false)
+  redeemCodes        RedeemCode[]
+  eventId            Int?
+  event              Event?          @relation(fields: [eventId], references: [id])
+  level              Int             @default(1)
+  threshold          Int             @default(1)
+  isPRBased          Boolean         @default(true)
+  isEnabled          Boolean         @default(true)
+  gitpoapRequest     GitPOAPRequest?
+}
+
+// Records in this table are used for GitPOAP Creation Requests via the Creation Form
+model GitPOAPRequest {
+  id                  Int                  @id @default(autoincrement())
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  type                GitPOAPType          @default(ANNUAL)
+  startDate           DateTime
+  endDate             DateTime
+  expiryDate          DateTime
+  eventUrl            String               @db.VarChar(255)
+  email               String               @db.VarChar(255)
+  name                String               @db.VarChar(255)
+  numRequestedCodes   Int
+  imageKey            String
+  description         String
+  year                Int
+  projectId           Int?
+  project             Project?             @relation(fields: [projectId], references: [id])
+  organizationId      Int?
+  organization        Organization?        @relation(fields: [organizationId], references: [id])
+  // If a GitPOAP is marked as ongoing then the backend will automatically
+  // request additional codes when we reach a minimum number remaining
+  ongoing             Boolean              @default(false)
+  eventId             Int?
+  event               Event?               @relation(fields: [eventId], references: [id])
+  level               Int                  @default(1)
+  threshold           Int                  @default(1)
+  isPRBased           Boolean              @default(true)
+  isEnabled           Boolean              @default(true)
+  contributors        Json                 @db.Json
+  // Internal approval status for Custom GitPOAPs
+  adminApprovalStatus AdminApprovalStatus?
+  gitPOAPId           Int?                 @unique
+  gitPOAP             GitPOAP?             @relation(fields: [gitPOAPId], references: [id])
 }
 
 model AuthToken {
@@ -315,20 +358,21 @@ model GithubMention {
 }
 
 model Event {
-  id            Int       @id @default(autoincrement())
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  startDate     DateTime
-  endDate       DateTime
-  name          String    @db.VarChar(255)
-  organization  String    @db.VarChar(255)
-  description   String?
-  location      String    @db.VarChar(255)
-  imageUrl      String?   @db.VarChar(255)
-  githubHandle  String?   @db.VarChar(255)
-  twitterHandle String?   @db.VarChar(255)
-  siteUrl       String?   @db.VarChar(255)
-  gitPOAPs      GitPOAP[]
+  id              Int              @id @default(autoincrement())
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  startDate       DateTime
+  endDate         DateTime
+  name            String           @db.VarChar(255)
+  organization    String           @db.VarChar(255)
+  description     String?
+  location        String           @db.VarChar(255)
+  imageUrl        String?          @db.VarChar(255)
+  githubHandle    String?          @db.VarChar(255)
+  twitterHandle   String?          @db.VarChar(255)
+  siteUrl         String?          @db.VarChar(255)
+  gitPOAPs        GitPOAP[]
+  gitPOAPRequests GitPOAPRequest[]
 }
 
 enum GitPOAPStatus {
@@ -345,14 +389,19 @@ enum ClaimStatus {
   CLAIMED
 }
 
-enum ClaimType {
+enum GitPOAPType {
   ANNUAL
-  QUARTERLY
-  MANUAL
+  CUSTOM
 }
 
 enum MembershipRole {
   ADMIN
   OWNER
   MEMBER
+}
+
+enum AdminApprovalStatus {
+  APPROVED
+  PENDING
+  REJECTED
 }
