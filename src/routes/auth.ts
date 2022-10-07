@@ -6,7 +6,7 @@ import { verify } from 'jsonwebtoken';
 import { JWT_SECRET } from '../environment';
 import { context } from '../context';
 import { CreateAccessTokenSchema, RefreshAccessTokenSchema } from '../schemas/auth';
-import { UserAuthTokens, generateAuthTokens, generateNewAuthTokens } from '../lib/authTokens';
+import { generateAuthTokens, generateNewAuthTokens } from '../lib/authTokens';
 import { resolveAddress } from '../lib/ens';
 import { isSignatureValid } from '../lib/signatures';
 import { z } from 'zod';
