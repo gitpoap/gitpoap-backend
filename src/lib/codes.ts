@@ -40,7 +40,7 @@ async function countCodes(gitPOAPId: number): Promise<number> {
 
 export type GitPOAPWithSecret = {
   id: number;
-  status: string;
+  poapApprovalStatus: string;
   poapEventId: number;
   poapSecret: string;
 };
@@ -69,13 +69,20 @@ async function lookupRepoIds(gitPOAPId: number): Promise<number[]> {
     return [];
   }
 
+  if (gitPOAPRepoData.project === null) {
+    logger.info(`GitPOAP with ${gitPOAPId} does not have a project`);
+    return [];
+  }
+
   return gitPOAPRepoData.project.repos.map(r => r.id);
 }
 
 export async function checkGitPOAPForNewCodes(gitPOAP: GitPOAPWithSecret): Promise<number[]> {
   const logger = createScopedLogger('checkGitPOAPForNewCodes');
 
-  logger.info(`Checking GitPOAP ID ${gitPOAP.id} with status ${gitPOAP.status} for new codes`);
+  logger.info(
+    `Checking GitPOAP ID ${gitPOAP.id} with status ${gitPOAP.poapApprovalStatus} for new codes`,
+  );
 
   const startingCount = await countCodes(gitPOAP.id);
 
@@ -107,13 +114,13 @@ export async function checkGitPOAPForNewCodes(gitPOAP: GitPOAPWithSecret): Promi
         id: gitPOAP.id,
       },
       data: {
-        status: GitPOAPStatus.APPROVED,
+        poapApprovalStatus: GitPOAPStatus.APPROVED,
       },
     });
 
     // If we just got the first codes for a GitPOAP, we need to backload
     // its repos so that claims are created
-    if (gitPOAP.status === GitPOAPStatus.UNAPPROVED) {
+    if (gitPOAP.poapApprovalStatus === GitPOAPStatus.UNAPPROVED) {
       return lookupRepoIds(gitPOAP.id);
     }
   }
@@ -127,13 +134,13 @@ export async function checkForNewPOAPCodes() {
   // Only UNAPPROVED and REDEEM_REQUEST_PENDING states could be waiting on codes
   const gitPOAPsAwaitingCodes = await context.prisma.gitPOAP.findMany({
     where: {
-      status: {
+      poapApprovalStatus: {
         in: [GitPOAPStatus.UNAPPROVED, GitPOAPStatus.REDEEM_REQUEST_PENDING],
       },
     },
     select: {
       id: true,
-      status: true,
+      poapApprovalStatus: true,
       poapEventId: true,
       poapSecret: true,
     },

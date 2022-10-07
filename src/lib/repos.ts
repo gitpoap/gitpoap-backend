@@ -115,7 +115,7 @@ export async function getRepoByName(
               ongoing: true,
               isPRBased,
               NOT: {
-                status: GitPOAPStatus.DEPRECATED,
+                poapApprovalStatus: GitPOAPStatus.DEPRECATED,
               },
             },
             select: {

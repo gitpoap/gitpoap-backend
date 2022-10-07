@@ -154,14 +154,16 @@ export async function addPRCountData(
   }
 
   for (const gitPOAPData of userGitPOAPData) {
-    results.push({
-      ...gitPOAPData,
-      contributionCount: await countContributionsForClaim(
-        gitPOAPData.claim.user,
-        gitPOAPData.claim.gitPOAP.project.repos,
-        gitPOAPData.claim.gitPOAP,
-      ),
-    });
+    if (gitPOAPData.claim.user) {
+      results.push({
+        ...gitPOAPData,
+        contributionCount: await countContributionsForClaim(
+          gitPOAPData.claim.user,
+          gitPOAPData.claim.gitPOAP.project?.repos ?? [],
+          gitPOAPData.claim.gitPOAP,
+        ),
+      });
+    }
   }
 
   return results;
@@ -181,7 +183,7 @@ export class CustomGitPOAPResolver {
       where: {
         isEnabled: true,
         NOT: {
-          status: GitPOAPStatus.UNAPPROVED,
+          poapApprovalStatus: GitPOAPStatus.UNAPPROVED,
         },
       },
     });
@@ -209,7 +211,7 @@ export class CustomGitPOAPResolver {
         isEnabled: true,
         createdAt: { gt: getLastMonthStartDatetime() },
         NOT: {
-          status: GitPOAPStatus.UNAPPROVED,
+          poapApprovalStatus: GitPOAPStatus.UNAPPROVED,
         },
       },
     });
@@ -404,7 +406,7 @@ export class CustomGitPOAPResolver {
               where: {
                 isEnabled: true,
                 NOT: {
-                  status: GitPOAPStatus.UNAPPROVED,
+                  poapApprovalStatus: GitPOAPStatus.UNAPPROVED,
                 },
               },
             },
