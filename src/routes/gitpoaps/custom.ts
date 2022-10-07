@@ -7,7 +7,7 @@ import { z } from 'zod';
 import { context } from '../../context';
 import { createPOAPEvent } from '../../external/poap';
 import { createScopedLogger } from '../../logging';
-import { jwtWithOAuth, jwtWithAdminOAuth } from '../../middleware';
+import { jwtWithGitHubOAuth, jwtWithAdminOAuth } from '../../middleware';
 import multer from 'multer';
 import { GitPOAPType, AdminApprovalStatus } from '@generated/type-graphql';
 import { httpRequestDurationSeconds } from '../../metrics';
@@ -32,7 +32,7 @@ type CreateCustomGitPOAPReqBody = z.infer<typeof CreateCustomGitPOAPSchema>;
 
 customGitpoapsRouter.post(
   '/',
-  jwtWithOAuth(),
+  jwtWithGitHubOAuth(),
   upload.single('image'),
   async function (req: Request<any, any, CreateCustomGitPOAPReqBody>, res) {
     const logger = createScopedLogger('POST /gitpoap/custom');
