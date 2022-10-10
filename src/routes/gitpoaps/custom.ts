@@ -26,14 +26,12 @@ import {
 
 export const customGitpoapsRouter = Router();
 
-const upload = multer();
-
 type CreateCustomGitPOAPReqBody = z.infer<typeof CreateCustomGitPOAPSchema>;
 
 customGitpoapsRouter.post(
   '/',
   jwtWithGitHubOAuth(),
-  upload.single('image'),
+  multer().single('image'),
   async function (req: Request<any, any, CreateCustomGitPOAPReqBody>, res) {
     const logger = createScopedLogger('POST /gitpoap/custom');
     logger.debug(`Body: ${JSON.stringify(req.body)}`);
@@ -62,9 +60,8 @@ customGitpoapsRouter.post(
     const contributors: z.infer<typeof CustomGitPOAPContributorsSchema> = JSON.parse(
       req.body.contributors,
     );
-    const contributorsSchemaResult = CustomGitPOAPContributorsSchema.safeParse(
-      req.body.contributors,
-    );
+
+    const contributorsSchemaResult = CustomGitPOAPContributorsSchema.safeParse(contributors);
 
     if (!contributorsSchemaResult.success) {
       logger.warn(
@@ -136,12 +133,13 @@ customGitpoapsRouter.post(
         eventUrl: req.body.eventUrl,
         email: req.body.email,
         numRequestedCodes: req.body.numRequestedCodes,
-        project: { connect: { id: project?.id } },
-        organization: { connect: { id: organization?.id } },
+        project: project ? { connect: { id: project?.id } } : undefined,
+        organization: organization ? { connect: { id: organization?.id } } : undefined,
         ongoing: req.body.ongoing === 'true',
         isEnabled: req.body.isEnabled !== 'false',
         adminApprovalStatus: AdminApprovalStatus.PENDING,
         contributors: contributors as Prisma.JsonObject,
+        isPRBased: false,
       },
     });
 

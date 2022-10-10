@@ -2,9 +2,10 @@ import { AdminApprovalStatus, GitPOAPType } from '@prisma/client';
 import { contextMock } from '../../../../../__mocks__/src/context';
 import { setupApp } from '../../../../../src/app';
 import { generateAuthTokens } from '../../../../../src/lib/authTokens';
-import { ADMIN_GITHUB_IDS } from '../../../../../src/constants';
 import request from 'supertest';
-import { getImageBufferFromS3 } from '../../../../../src/external/s3';
+import { getImageBufferFromS3, uploadMulterFile } from '../../../../../src/external/s3';
+import { DateTime } from 'luxon';
+import { ADMIN_GITHUB_IDS } from '../../../../../src/constants';
 
 const authTokenId = 4;
 const authTokenGeneration = 1;
@@ -18,7 +19,24 @@ const gitPOAPId = 24;
 const ensName = 'furby.eth';
 const ensAvatarImageUrl = null;
 
-jest.mock('../../../../../src/external/s3');
+jest.mock('../../../../../src/external/s3', () => {
+  const originalModule = jest.requireActual('../../../../../src/external/s3');
+  return {
+    __esModule: true,
+    ...originalModule,
+    s3configProfile: {
+      region: 'us-east-2',
+      buckets: {
+        intakeForm: 'intake-form-test',
+        ensAvatarCache: 'ens-avatar-cache-test',
+        gitPOAPRequest: 'gitpoap-request-images-test',
+      },
+    },
+    uploadMulterFile: jest.fn(),
+    getImageBufferFromS3: jest.fn(),
+  };
+});
+
 jest.mock('../../../../../src/lib/secrets', () => ({
   generatePOAPSecret: jest.fn().mockReturnValue('123423123'),
 }));
@@ -29,10 +47,43 @@ jest.mock('../../../../../src/external/poap', () => ({
     .mockResolvedValue({ id: 1, image_url: 'https://poap.xyz', poapEventId: 1 }),
 }));
 
+jest.mock('multer', () => {
+  const multer = () => ({
+    single: () => {
+      return (req: any, res: any, next: any) => {
+        req.file = {
+          originalname: 'foobar.png',
+          mimetype: 'image/png',
+          buffer: Buffer.from('foobar'),
+        };
+
+        return next();
+      };
+    },
+    array: () => {
+      return (req: any, res: any, next: any) => {
+        req.files = [
+          {
+            originalname: 'foobar.png',
+            mimetype: 'image/png',
+            buffer: Buffer.from('foobar'),
+          },
+        ];
+        return next();
+      };
+    },
+  });
+  multer.memoryStorage = () => jest.fn();
+
+  return multer;
+});
+
 const mockedGetImageBufferFromS3 = jest.mocked(getImageBufferFromS3, true);
+const mockedUploadMulterFile = jest.mocked(uploadMulterFile, true);
 
 function mockJwtWithOAuth() {
   contextMock.prisma.authToken.findUnique.mockResolvedValue({
+    address: { ensName, ensAvatarImageUrl },
     user: { githubOAuthToken },
   } as any);
 }
@@ -300,5 +351,211 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
         adminApprovalStatus: AdminApprovalStatus.REJECTED,
       },
     });
+  });
+});
+
+describe('POST /gitpoaps/custom', () => {
+  afterAll(() => {
+    jest.resetAllMocks();
+  });
+
+  const assertGitPOAPRequestCreation = (orgId?: number, projectId?: number) => {
+    expect(contextMock.prisma.gitPOAPRequest.create).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.gitPOAPRequest.create).toHaveBeenCalledWith({
+      data: {
+        name: 'foobar-name',
+        description: 'foobar-description',
+        imageKey: '',
+        type: GitPOAPType.CUSTOM,
+        year: 2021,
+        startDate: DateTime.fromISO('2021-01-01').toJSDate(),
+        endDate: DateTime.fromISO('2021-01-10').toJSDate(),
+        expiryDate: DateTime.fromISO('2023-01-01').toJSDate(),
+        eventUrl: 'https://foobar.com',
+        email: 'jay@gitpoap.io',
+        numRequestedCodes: 50,
+        adminApprovalStatus: AdminApprovalStatus.PENDING,
+        isEnabled: true,
+        isPRBased: false, // They should never be PR-based
+        ongoing: true,
+        contributors: {
+          githubHandles: ['peebeejay'],
+          ensNames: ['burz.eth'],
+        },
+        ...(orgId && { organization: { connect: { id: orgId } } }),
+        ...(projectId && { project: { connect: { id: projectId } } }),
+      },
+    });
+
+    /* Expect that the image was uploaded to S3 */
+    expect(mockedUploadMulterFile).toHaveBeenCalledTimes(1);
+    expect(mockedUploadMulterFile).toHaveBeenCalledWith(
+      {
+        buffer: Buffer.from('foobar'),
+        mimetype: 'image/png',
+        originalname: 'foobar.png',
+      },
+      'gitpoap-request-images-test',
+      `foobar.png-${gitPOAPRequestId}`,
+    );
+
+    /* Expect prisma.gitPOAPRequest.update to be called with the correct data */
+    expect(contextMock.prisma.gitPOAPRequest.update).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.gitPOAPRequest.update).toHaveBeenCalledWith({
+      where: { id: gitPOAPRequestId },
+      data: { imageKey: `foobar.png-${gitPOAPRequestId}` },
+    });
+  };
+
+  it('Fails with no Access Token provided', async () => {
+    const result = await request(await setupApp())
+      .post('/gitpoaps/custom')
+      .send();
+
+    expect(result.statusCode).toEqual(400);
+  });
+
+  it('Fails with invalid body', async () => {
+    mockJwtWithOAuth();
+    const authTokens = genAuthTokens(githubId);
+    const result = await request(await setupApp())
+      .post('/gitpoaps/custom')
+      .set('Authorization', `Bearer ${authTokens.accessToken}`)
+      .send({ bad: 'body' });
+
+    expect(result.statusCode).toEqual(400);
+  });
+
+  it('Fails with invalid body - contributors', async () => {
+    mockJwtWithOAuth();
+    const authTokens = genAuthTokens(githubId);
+    const result = await request(await setupApp())
+      .post('/gitpoaps/custom')
+      .set('Authorization', `Bearer ${authTokens.accessToken}`)
+      .send({
+        name: 'foobar-name',
+        description: 'foobar-description',
+        startDate: '2021-01-01',
+        endDate: '2021-01-10',
+        expiryDate: '2023-01-01',
+        eventUrl: 'https://foobar.com',
+        email: 'jay@gitpoap.io',
+        numRequestedCodes: 50,
+        ongoing: 'true',
+        isEnabled: 'true',
+        year: 2021,
+        image: {
+          data: Buffer.from('foobar'),
+          mimetype: 'image/png',
+          name: 'foobar.png',
+          originalname: 'foobar.png',
+        },
+        contributors: JSON.stringify({
+          blah1: ['peebeejay'],
+          blah2: ['burz.eth'],
+        }),
+      });
+
+    expect(result.statusCode).toEqual(400);
+  });
+
+  it('Successfully creates a new GitPOAP request with NO project or organization', async () => {
+    mockJwtWithOAuth();
+
+    contextMock.prisma.gitPOAPRequest.create.mockResolvedValue({
+      id: gitPOAPRequestId,
+      type: GitPOAPType.CUSTOM,
+      adminApprovalStatus: AdminApprovalStatus.PENDING,
+    } as any);
+
+    mockedUploadMulterFile.mockResolvedValue({
+      filename: 'foobar_imgKey',
+    } as any);
+
+    const authTokens = genAuthTokens(githubId);
+    const result = await request(await setupApp())
+      .post('/gitpoaps/custom')
+      .set('Authorization', `Bearer ${authTokens.accessToken}`)
+      .send({
+        name: 'foobar-name',
+        description: 'foobar-description',
+        startDate: '2021-01-01',
+        endDate: '2021-01-10',
+        expiryDate: '2023-01-01',
+        eventUrl: 'https://foobar.com',
+        email: 'jay@gitpoap.io',
+        numRequestedCodes: 50,
+        ongoing: 'true',
+        isEnabled: 'true',
+        year: 2021,
+        image: {
+          data: Buffer.from('foobar'),
+          mimetype: 'image/png',
+          name: 'foobar.png',
+          originalname: 'foobar.png',
+        },
+        contributors: JSON.stringify({
+          githubHandles: ['peebeejay'],
+          ensNames: ['burz.eth'],
+        }),
+      });
+
+    expect(result.statusCode).toEqual(201);
+    expect(contextMock.prisma.authToken.findUnique).toHaveBeenCalledTimes(1);
+    assertGitPOAPRequestCreation();
+  });
+
+  it('Successfully creates a new GitPOAP request with BOTH a project and an organization', async () => {
+    mockJwtWithOAuth();
+
+    contextMock.prisma.gitPOAPRequest.create.mockResolvedValue({
+      id: gitPOAPRequestId,
+      type: GitPOAPType.CUSTOM,
+      adminApprovalStatus: AdminApprovalStatus.PENDING,
+    } as any);
+
+    mockedUploadMulterFile.mockResolvedValue({
+      filename: 'foobar_imgKey',
+    } as any);
+
+    /* mock prisma.project.findUnique */
+    contextMock.prisma.project.findUnique.mockResolvedValue({ id: 1 } as any);
+
+    /* mock prisma.organization.findUnique */
+    contextMock.prisma.organization.findUnique.mockResolvedValue({ id: 1 } as any);
+
+    const authTokens = genAuthTokens(githubId);
+    const result = await request(await setupApp())
+      .post('/gitpoaps/custom')
+      .set('Authorization', `Bearer ${authTokens.accessToken}`)
+      .send({
+        name: 'foobar-name',
+        description: 'foobar-description',
+        startDate: '2021-01-01',
+        endDate: '2021-01-10',
+        expiryDate: '2023-01-01',
+        eventUrl: 'https://foobar.com',
+        email: 'jay@gitpoap.io',
+        numRequestedCodes: 50,
+        ongoing: 'true',
+        isEnabled: 'true',
+        year: 2021,
+        image: {
+          data: Buffer.from('foobar'),
+          mimetype: 'image/png',
+          name: 'foobar.png',
+          originalname: 'foobar.png',
+        },
+        contributors: JSON.stringify({
+          githubHandles: ['peebeejay'],
+          ensNames: ['burz.eth'],
+        }),
+        organizationId: 1,
+        projectId: 1,
+      });
+
+    expect(result.statusCode).toEqual(201);
+    expect(contextMock.prisma.authToken.findUnique).toHaveBeenCalledTimes(1);
+    assertGitPOAPRequestCreation(1, 1);
   });
 });
