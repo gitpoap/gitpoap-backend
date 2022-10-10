@@ -1,4 +1,4 @@
-import { GitPOAPStatus } from '@prisma/client';
+import { GitPOAPStatus, GitPOAPType } from '@prisma/client';
 import { DateTime } from 'luxon';
 import { retrievePOAPEventInfo } from '../../external/poap';
 import { createScopedLogger } from '../../logging';
@@ -11,6 +11,7 @@ type Claim = {
     id: number;
     poapApprovalStatus: GitPOAPStatus;
     poapEventId: number;
+    type: GitPOAPType;
     project: {
       repos: {
         name: string;
@@ -80,6 +81,7 @@ export const mapClaimsToGitPOAPResults = async (
     results.push({
       gitPoapId: claim.id,
       gitPoapEventId: claim.gitPOAP.id,
+      gitPoapType: claim.gitPOAP.type,
       poapTokenId: <string>claim.poapTokenId,
       poapEventId: claim.gitPOAP.poapEventId,
       poapEventFancyId: poapEventData.fancy_id,

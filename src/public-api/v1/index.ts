@@ -51,6 +51,7 @@ v1Router.get('/address/:address/gitpoaps', async function (req, res) {
           year: true,
           poapEventId: true,
           poapApprovalStatus: true,
+          type: true,
           project: {
             select: {
               repos: {
@@ -161,6 +162,7 @@ v1Router.get('/github/user/:githubHandle/gitpoaps', async function (req, res) {
           id: true,
           poapEventId: true,
           poapApprovalStatus: true,
+          type: true,
           project: {
             select: {
               repos: {
