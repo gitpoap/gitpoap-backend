@@ -1,6 +1,9 @@
+import { GitPOAPType } from '@prisma/client';
+
 export type GitPOAPResultType = {
   gitPoapId: number;
   gitPoapEventId: number;
+  gitPoapType: GitPOAPType;
   poapTokenId: string;
   poapEventId: number;
   poapEventFancyId: string;
