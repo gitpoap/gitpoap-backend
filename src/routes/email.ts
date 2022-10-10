@@ -4,47 +4,26 @@ import { DateTime } from 'luxon';
 import { context } from '../context';
 import { sendVerificationEmail } from '../external/postmark';
 import { generateUniqueEmailToken } from '../lib/email';
-import { resolveENS } from '../lib/ens';
 import { createScopedLogger } from '../logging';
 import { httpRequestDurationSeconds } from '../metrics';
-import { AddEmailSchema, RemoveEmailSchema, ValidateEmailSchema } from '../schemas/email';
-import { isSignatureValid } from '../signatures';
+import { jwtWithAddress } from '../middleware';
+import { AddEmailSchema } from '../schemas/email';
+import { getAccessTokenPayload } from '../types/authTokens';
 
 export const emailRouter = Router();
 
-emailRouter.get('/:ethAddress', async function (req, res) {
-  const logger = createScopedLogger('GET /email/:ethAddress');
+emailRouter.get('/', jwtWithAddress(), async function (req, res) {
+  const logger = createScopedLogger('GET /email');
 
-  logger.debug(`Params: ${JSON.stringify(req.params)}`);
+  const endTimer = httpRequestDurationSeconds.startTimer('GET', '/email');
 
-  const endTimer = httpRequestDurationSeconds.startTimer('GET', '/email/:ethAddress');
-
-  /*
-   * TODO: VERY IMPORTANT
-   * We will need to add an authentication check here
-   */
-
-  const { ethAddress } = req.params;
+  const { address: ethAddress, addressId } = getAccessTokenPayload(req.user);
 
   logger.info(`Request to retrieve the email connected to: ${ethAddress}`);
 
-  const address = await context.prisma.address.findUnique({
-    where: {
-      ethAddress: ethAddress,
-    },
-  });
-
-  if (address === null) {
-    logger.warn('Request address is invalid');
-    endTimer({ status: 400 });
-    return res.status(400).send({
-      msg: `${ethAddress} is not a valid address`,
-    });
-  }
-
   const email = await context.prisma.email.findUnique({
     where: {
-      addressId: address.id,
+      addressId,
     },
     select: {
       id: true,
@@ -61,7 +40,7 @@ emailRouter.get('/:ethAddress', async function (req, res) {
   return res.status(200).send({ email });
 });
 
-emailRouter.post('/', async function (req, res) {
+emailRouter.post('/', jwtWithAddress(), async function (req, res) {
   const logger = createScopedLogger('POST /email');
 
   logger.debug(`Body: ${JSON.stringify(req.body)}`);
@@ -77,38 +56,10 @@ emailRouter.post('/', async function (req, res) {
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
-  /* BEGIN: Will be removed following address updates */
-  // Resolve ENS if provided
-  const resolvedAddress = await resolveENS(req.body.address);
-  if (resolvedAddress === null) {
-    logger.warn('Request address is invalid');
-    endTimer({ status: 400 });
-    return res.status(400).send({ msg: `${req.body.address} is not a valid address` });
-  }
-
-  if (
-    !isSignatureValid(resolvedAddress, 'POST /email', req.body.signature, {
-      emailAddress: req.body.emailAddress,
-    })
-  ) {
-    logger.warn('Request signature is invalid');
-    endTimer({ status: 401 });
-    return res.status(401).send({ msg: 'The signature is not valid for this address and data' });
-  }
-
-  const address = await context.prisma.address.findUnique({
-    where: { ethAddress: req.body.address.toLowerCase() },
-  });
-  if (address === null) {
-    logger.warn('Request address is invalid');
-    endTimer({ status: 400 });
-    return res.status(400).send({ msg: `${req.body.address} is not a valid address` });
-  }
-  /* END: Will be removed following address updates */
-
+  const { address: ethAddress, addressId } = getAccessTokenPayload(req.user);
   const { emailAddress } = req.body;
 
-  logger.info(`Request from ${req.body.address} to connect email: ${emailAddress}`);
+  logger.info(`Request from ${ethAddress} to connect email: ${emailAddress}`);
 
   // Generate a new token
   const activeToken = await generateUniqueEmailToken();
@@ -118,13 +69,13 @@ emailRouter.post('/', async function (req, res) {
 
   await context.prisma.email.upsert({
     where: {
-      addressId: address.id,
+      addressId,
     },
     update: {},
     create: {
       address: {
         connect: {
-          id: address.id,
+          id: addressId,
         },
       },
       emailAddress,
@@ -142,91 +93,52 @@ emailRouter.post('/', async function (req, res) {
     return res.status(500).send({ msg: 'Email failed to send' });
   }
 
-  logger.debug(`Completed request from ${req.body.address} to connect email: ${emailAddress}`);
+  logger.debug(`Completed request from ${ethAddress} to connect email: ${emailAddress}`);
 
   endTimer({ status: 200 });
 
   return res.status(200).send('ADDED');
 });
 
-emailRouter.delete('/', async function (req, res) {
+emailRouter.delete('/', jwtWithAddress(), async function (req, res) {
   const logger = createScopedLogger('DELETE /email');
-
-  logger.debug(`Params: ${JSON.stringify(req.params)} Body: ${JSON.stringify(req.body)}`);
 
   const endTimer = httpRequestDurationSeconds.startTimer('DELETE', '/email');
 
-  const schemaResult = RemoveEmailSchema.safeParse(req.body);
-  if (!schemaResult.success) {
-    logger.warn(
-      `Missing/invalid body fields in request ${JSON.stringify(schemaResult.error.issues)}`,
-    );
-    endTimer({ status: 400 });
-    return res.status(400).send({ issues: schemaResult.error.issues });
-  }
+  const { address: ethAddress, addressId } = getAccessTokenPayload(req.user);
 
-  /* BEGIN: Will be removed following address updates */
-  // Resolve ENS if provided
-  const resolvedAddress = await resolveENS(req.body.address);
-  if (resolvedAddress === null) {
-    logger.warn('Request address is invalid');
-    endTimer({ status: 400 });
-    return res.status(400).send({ msg: `${req.body.address} is not a valid address` });
-  }
-
-  if (
-    !isSignatureValid(resolvedAddress, 'DELETE /email', req.body.signature, {
-      id: req.body.id,
-    })
-  ) {
-    logger.warn('Request signature is invalid');
-    endTimer({ status: 401 });
-    return res.status(401).send({ msg: 'The signature is not valid for this address and data' });
-  }
-  /* END: Will be removed following address updates */
-
-  const { id } = req.body;
-
-  logger.info(`Received request to delete email with id: ${id}`);
+  logger.info(`Received request from ${ethAddress} to remove email connection`);
 
   try {
     await context.prisma.email.delete({
       where: {
-        id,
+        addressId,
       },
     });
   } catch (err) {
-    logger.warn(`Tried to delete an email that doesn't exist: ${err}`);
+    logger.warn(`Tried to remove email connection that doesn't exist: ${err}`);
     endTimer({ status: 404 });
-    return res.status(404).send({ msg: `Invalid email ID provided` });
+    return res.status(404).send({ msg: `No email connection present` });
   }
 
-  logger.debug(`Completed request to delete email with id: ${id}`);
+  logger.debug(`Completed request from ${ethAddress} to remove email connection`);
 
   endTimer({ status: 200 });
 
   return res.status(200).send('DELETED');
 });
 
-emailRouter.post('/verify', async function (req, res) {
-  const logger = createScopedLogger('POST /email/verify');
+emailRouter.post('/verify/:activeToken', jwtWithAddress(), async function (req, res) {
+  const logger = createScopedLogger('POST /email/verify/:activeToken');
 
-  logger.debug(`Body: ${JSON.stringify(req.body)}`);
+  logger.debug(`Params: ${JSON.stringify(req.params)}`);
 
-  const endTimer = httpRequestDurationSeconds.startTimer('POST', '/email/verify');
+  const endTimer = httpRequestDurationSeconds.startTimer('POST', '/email/verify/:activeToken');
 
-  const schemaResult = ValidateEmailSchema.safeParse(req.body);
-  if (!schemaResult.success) {
-    logger.warn(
-      `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
-    );
-    endTimer({ status: 400 });
-    return res.status(400).send({ issues: schemaResult.error.issues });
-  }
+  const { address: ethAddress } = getAccessTokenPayload(req.user);
+  const activeToken = req.params.token;
 
-  const { activeToken } = req.body;
-
-  logger.info(`Request from ${req.body.address} to verify token: ${activeToken}`);
+  logger.info(`Received request from ${ethAddress} to verify token: ${activeToken}`);
 
   const email = await context.prisma.email.findUnique({
     where: {
@@ -239,7 +151,7 @@ emailRouter.post('/verify', async function (req, res) {
     },
   });
   if (email === null) {
-    logger.error(`Failed to retrieve email data for token: ${activeToken}`);
+    logger.error(`Invalid email validation token provided: ${activeToken}`);
     endTimer({ status: 404 });
     return res.status(404).send({ msg: 'INVALID' });
   }
@@ -273,7 +185,7 @@ emailRouter.post('/verify', async function (req, res) {
     },
   });
 
-  logger.debug(`Completed verification request for token: ${activeToken}`);
+  logger.debug(`Completed request from ${ethAddress} to verify token: ${activeToken}`);
 
   endTimer({ status: 200 });
 
