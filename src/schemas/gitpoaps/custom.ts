@@ -19,9 +19,11 @@ export const CreateCustomGitPOAPSchema = z.object({
   isEnabled: z.enum(['true', 'false']).optional(),
 });
 
-export const CustomGitPOAPContributorsSchema = z.object({
-  githubHandles: z.array(z.string()),
-  ethAddresses: z.array(z.string()),
-  ensNames: z.array(z.string()),
-  emails: z.array(z.string().email()),
-});
+export const CustomGitPOAPContributorsSchema = z
+  .object({
+    githubHandles: z.array(z.string()).optional(),
+    ethAddresses: z.array(z.string()).optional(),
+    ensNames: z.array(z.string()).optional(),
+    emails: z.array(z.string().email()).optional(),
+  })
+  .strict();
