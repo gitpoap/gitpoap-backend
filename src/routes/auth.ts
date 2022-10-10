@@ -50,10 +50,8 @@ async function getTokenDataWithGithubCheck(
 
 authRouter.post('/', async function (req, res) {
   const logger = createScopedLogger('POST /auth');
-
   logger.debug(`Body: ${JSON.stringify(req.body)}`);
-
-  const endTimer = httpRequestDurationSeconds.startTimer('POST', '/auth/refresh');
+  const endTimer = httpRequestDurationSeconds.startTimer('POST', '/auth');
 
   const schemaResult = CreateAccessTokenSchema.safeParse(req.body);
   if (!schemaResult.success) {
