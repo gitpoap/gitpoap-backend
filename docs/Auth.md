@@ -115,10 +115,8 @@ then ask them to sign data like the following:
 {
   "site": "gitpoap.io",
   "method": "POST /auth",
-  "createdAt": 1647987506199
-  "data": {
-    "address": "0xTheUsersAddress"
-  }
+  "createdAt": 1647987506199,
+  "data": "0xTheUsersAddress",
 }
 ```
 See [the appendix in the API docs](https://github.com/gitpoap/gitpoap-backend/blob/main/API.md#generating-signatures)
@@ -127,8 +125,8 @@ for more information on how to create signatures.
 Then the frontend should call `POST /auth` with the following body:
 ```json
 {
-  data: { address: "0xTheUsersAddress" },
-  signature: "John Hancock"
+  "address": "0xTheUsersAddress",
+  "signature": "John Hancock",
 }
 ```
 where `signature` is the string returned by signing the data above.
