@@ -1,3 +1,4 @@
+import '../../../../__mocks__/src/logging';
 import { setupApp } from '../../../../src/app';
 import request from 'supertest';
 import { getGithubAuthenticatedApp } from '../../../../src/external/github';
@@ -13,6 +14,7 @@ import {
   retrieveClaimsCreatedByMention,
 } from '../../../../src/lib/claims';
 
+jest.mock('../../../../src/logging');
 jest.mock('../../../../src/external/github');
 jest.mock('../../../../src/lib/bot');
 jest.mock('../../../../src/lib/claims');

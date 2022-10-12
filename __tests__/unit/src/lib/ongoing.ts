@@ -10,8 +10,8 @@ import {
   createYearlyGitPOAPsMap,
 } from '../../../../src/lib/claims';
 
+jest.mock('../../../../src/logging');
 jest.mock('../../../../src/lib/users');
-
 jest.mock('../../../../src/lib/pullRequests', () => ({
   __esModule: true,
   ...(<any>jest.requireActual('../../../../src/lib/pullRequests')),
