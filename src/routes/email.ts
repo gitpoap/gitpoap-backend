@@ -136,7 +136,7 @@ emailRouter.post('/verify/:activeToken', jwtWithAddress(), async function (req, 
   const endTimer = httpRequestDurationSeconds.startTimer('POST', '/email/verify/:activeToken');
 
   const { address: ethAddress } = getAccessTokenPayload(req.user);
-  const activeToken = req.params.token;
+  const activeToken = req.params.activeToken;
 
   logger.info(`Received request from ${ethAddress} to verify token: ${activeToken}`);
 
