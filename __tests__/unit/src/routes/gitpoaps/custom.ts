@@ -1,4 +1,5 @@
 import { AdminApprovalStatus, GitPOAPType } from '@prisma/client';
+import '../../../../../__mocks__/src/logging';
 import { contextMock } from '../../../../../__mocks__/src/context';
 import { setupApp } from '../../../../../src/app';
 import { generateAuthTokens } from '../../../../../src/lib/authTokens';
@@ -19,6 +20,7 @@ const gitPOAPId = 24;
 const ensName = 'furby.eth';
 const ensAvatarImageUrl = null;
 
+jest.mock('../../../../../src/logging');
 jest.mock('../../../../../src/external/s3', () => {
   const originalModule = jest.requireActual('../../../../../src/external/s3');
   return {

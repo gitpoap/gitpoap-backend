@@ -9,5 +9,5 @@ export const mockedLogger = {
 
 jest.mock('../../src/logging', () => ({
   __esModule: true,
-  createScopedLogger: () => mockedLogger,
+  createScopedLogger: jest.fn().mockImplementation(() => mockedLogger),
 }));
