@@ -88,7 +88,7 @@ function mockJwtWithOAuth() {
   } as any);
 }
 
-function genAuthTokens(someGithubId: number) {
+function genAuthTokens(someGithubId?: number, githubHandle?: string) {
   return generateAuthTokens(
     authTokenId,
     authTokenGeneration,
@@ -96,9 +96,16 @@ function genAuthTokens(someGithubId: number) {
     address,
     ensName,
     ensAvatarImageUrl,
-    someGithubId,
-    githubHandle,
+    someGithubId ?? null,
+    githubHandle ?? null,
   );
+}
+
+function mockJwtWithAddress() {
+  contextMock.prisma.authToken.findUnique.mockResolvedValue({
+    id: authTokenId,
+    address: { ensName, ensAvatarImageUrl },
+  } as any);
 }
 
 describe('PUT /gitpoaps/custom/approve/:id', () => {
@@ -112,7 +119,7 @@ describe('PUT /gitpoaps/custom/approve/:id', () => {
 
   it('Fails with non-admin Access Token provided', async () => {
     mockJwtWithOAuth();
-    const authTokens = genAuthTokens(githubId);
+    const authTokens = genAuthTokens(githubId, githubHandle);
     const result = await request(await setupApp())
       .put(`/gitpoaps/custom/approve/${gitPOAPRequestId}`)
       .set('Authorization', `Bearer ${authTokens.accessToken}`)
@@ -125,7 +132,7 @@ describe('PUT /gitpoaps/custom/approve/:id', () => {
   it('Returns a 404 when the GitPOAP Request is not found', async () => {
     mockJwtWithOAuth();
     contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue(null);
-    const authTokens = genAuthTokens(ADMIN_GITHUB_IDS[0]);
+    const authTokens = genAuthTokens(ADMIN_GITHUB_IDS[0], githubHandle);
 
     const result = await request(await setupApp())
       .put(`/gitpoaps/custom/approve/${gitPOAPRequestId}`)
@@ -147,7 +154,7 @@ describe('PUT /gitpoaps/custom/approve/:id', () => {
       type: GitPOAPType.ANNUAL,
       adminApprovalStatus: AdminApprovalStatus.PENDING,
     } as any);
-    const authTokens = genAuthTokens(ADMIN_GITHUB_IDS[0]);
+    const authTokens = genAuthTokens(ADMIN_GITHUB_IDS[0], githubHandle);
 
     const result = await request(await setupApp())
       .put(`/gitpoaps/custom/approve/${gitPOAPRequestId}`)
@@ -169,7 +176,7 @@ describe('PUT /gitpoaps/custom/approve/:id', () => {
       type: GitPOAPType.CUSTOM,
       adminApprovalStatus: AdminApprovalStatus.APPROVED,
     } as any);
-    const authTokens = genAuthTokens(ADMIN_GITHUB_IDS[0]);
+    const authTokens = genAuthTokens(ADMIN_GITHUB_IDS[0], githubHandle);
 
     const result = await request(await setupApp())
       .put(`/gitpoaps/custom/approve/${gitPOAPRequestId}`)
@@ -213,7 +220,7 @@ describe('PUT /gitpoaps/custom/approve/:id', () => {
       adminApprovalStatus: AdminApprovalStatus.APPROVED,
     } as any);
 
-    const authTokens = genAuthTokens(ADMIN_GITHUB_IDS[0]);
+    const authTokens = genAuthTokens(ADMIN_GITHUB_IDS[0], githubHandle);
 
     const result = await request(await setupApp())
       .put(`/gitpoaps/custom/approve/${gitPOAPRequestId}`)
@@ -281,7 +288,7 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
 
   it('Fails with non-admin Access Token provided', async () => {
     mockJwtWithOAuth();
-    const authTokens = genAuthTokens(githubId);
+    const authTokens = genAuthTokens(githubId, githubHandle);
     const result = await request(await setupApp())
       .put(`/gitpoaps/custom/reject/${gitPOAPRequestId}`)
       .set('Authorization', `Bearer ${authTokens.accessToken}`)
@@ -294,7 +301,7 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
   it('Returns a 404 when the GitPOAP Request is not found', async () => {
     mockJwtWithOAuth();
     contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue(null);
-    const authTokens = genAuthTokens(ADMIN_GITHUB_IDS[0]);
+    const authTokens = genAuthTokens(ADMIN_GITHUB_IDS[0], githubHandle);
 
     const result = await request(await setupApp())
       .put(`/gitpoaps/custom/reject/${gitPOAPRequestId}`)
@@ -329,7 +336,7 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
       adminApprovalStatus: AdminApprovalStatus.REJECTED,
     } as any);
 
-    const authTokens = genAuthTokens(ADMIN_GITHUB_IDS[0]);
+    const authTokens = genAuthTokens(ADMIN_GITHUB_IDS[0], githubHandle);
 
     const result = await request(await setupApp())
       .put(`/gitpoaps/custom/reject/${gitPOAPRequestId}`)
@@ -416,8 +423,8 @@ describe('POST /gitpoaps/custom', () => {
   });
 
   it('Fails with invalid body', async () => {
-    mockJwtWithOAuth();
-    const authTokens = genAuthTokens(githubId);
+    mockJwtWithAddress();
+    const authTokens = genAuthTokens();
     const result = await request(await setupApp())
       .post('/gitpoaps/custom')
       .set('Authorization', `Bearer ${authTokens.accessToken}`)
@@ -427,8 +434,8 @@ describe('POST /gitpoaps/custom', () => {
   });
 
   it('Fails with invalid body - contributors', async () => {
-    mockJwtWithOAuth();
-    const authTokens = genAuthTokens(githubId);
+    mockJwtWithAddress();
+    const authTokens = genAuthTokens();
     const result = await request(await setupApp())
       .post('/gitpoaps/custom')
       .set('Authorization', `Bearer ${authTokens.accessToken}`)
@@ -460,7 +467,7 @@ describe('POST /gitpoaps/custom', () => {
   });
 
   it('Successfully creates a new GitPOAP request with NO project or organization', async () => {
-    mockJwtWithOAuth();
+    mockJwtWithAddress();
 
     contextMock.prisma.gitPOAPRequest.create.mockResolvedValue({
       id: gitPOAPRequestId,
@@ -472,7 +479,7 @@ describe('POST /gitpoaps/custom', () => {
       filename: 'foobar_imgKey',
     } as any);
 
-    const authTokens = genAuthTokens(githubId);
+    const authTokens = genAuthTokens();
     const result = await request(await setupApp())
       .post('/gitpoaps/custom')
       .set('Authorization', `Bearer ${authTokens.accessToken}`)
@@ -506,7 +513,7 @@ describe('POST /gitpoaps/custom', () => {
   });
 
   it('Successfully creates a new GitPOAP request with BOTH a project and an organization', async () => {
-    mockJwtWithOAuth();
+    mockJwtWithAddress();
 
     contextMock.prisma.gitPOAPRequest.create.mockResolvedValue({
       id: gitPOAPRequestId,
@@ -524,7 +531,7 @@ describe('POST /gitpoaps/custom', () => {
     /* mock prisma.organization.findUnique */
     contextMock.prisma.organization.findUnique.mockResolvedValue({ id: 1 } as any);
 
-    const authTokens = genAuthTokens(githubId);
+    const authTokens = genAuthTokens();
     const result = await request(await setupApp())
       .post('/gitpoaps/custom')
       .set('Authorization', `Bearer ${authTokens.accessToken}`)
