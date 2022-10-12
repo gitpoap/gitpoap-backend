@@ -6,6 +6,7 @@ import { ADDRESSES } from '../../../../prisma/constants';
 import { checkIfClaimTransferred, handleGitPOAPTransfer } from '../../../../src/lib/transfers';
 import { ClaimStatus } from '@generated/type-graphql';
 
+jest.mock('../../../../src/logging');
 jest.mock('../../../../src/external/poap');
 jest.mock('../../../../src/lib/transfers');
 

@@ -1,9 +1,11 @@
+import '../../../../__mocks__/src/logging';
 import { contextMock } from '../../../../__mocks__/src/context';
 import request from 'supertest';
 import { setupApp } from '../../../../src/app';
 import { resolveENS } from '../../../../src/lib/ens';
 import { generateAuthTokens } from '../../../../src/lib/authTokens';
 
+jest.mock('../../../../src/logging');
 jest.mock('../../../../src/lib/ens');
 
 const mockedResolveENS = jest.mocked(resolveENS, true);

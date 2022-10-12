@@ -1,8 +1,10 @@
+import '../../../../__mocks__/src/logging';
 import { contextMock } from '../../../../__mocks__/src/context';
 import { RepoData, createNewClaimsForRepoContributionHelper } from '../../../../src/lib/claims';
 import { countContributionsForClaim } from '../../../../src/lib/contributions';
 import { Contribution } from '../../../../src/lib/contributions';
 
+jest.mock('../../../../src/logging');
 jest.mock('../../../../src/lib/contributions');
 
 const mockedCountContributionsForClaim = jest.mocked(countContributionsForClaim, true);

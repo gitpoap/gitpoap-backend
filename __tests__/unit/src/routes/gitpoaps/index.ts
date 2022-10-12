@@ -1,3 +1,4 @@
+import '../../../../../__mocks__/src/logging';
 import { contextMock } from '../../../../../__mocks__/src/context';
 import { setupApp } from '../../../../../src/app';
 import { generateAuthTokens } from '../../../../../src/lib/authTokens';
@@ -7,6 +8,7 @@ import { createRepoByGithubId } from '../../../../../src/lib/repos';
 import { backloadGithubPullRequestData } from '../../../../../src/lib/pullRequests';
 import { ClaimStatus, GitPOAPStatus } from '@prisma/client';
 
+jest.mock('../../../../../src/logging');
 jest.mock('../../../../../src/lib/repos');
 jest.mock('../../../../../src/lib/pullRequests');
 
