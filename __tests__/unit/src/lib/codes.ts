@@ -4,6 +4,7 @@ import { retrieveUnusedPOAPCodes } from '../../../../src/external/poap';
 import { checkGitPOAPForNewCodes, GitPOAPWithSecret } from '../../../../src/lib/codes';
 import { GitPOAPStatus } from '@generated/type-graphql';
 
+jest.mock('../../../../src/logging');
 jest.mock('../../../../src/external/poap');
 
 const mockedRetrieveUnusedPOAPCodes = jest.mocked(retrieveUnusedPOAPCodes, true);

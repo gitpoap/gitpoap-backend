@@ -1,3 +1,4 @@
+import '../../../../__mocks__/src/logging';
 import { contextMock } from '../../../../__mocks__/src/context';
 import request from 'supertest';
 import { setupApp } from '../../../../src/app';
@@ -16,6 +17,7 @@ import {
   getRefreshTokenPayload,
 } from '../../../../src/types/authTokens';
 
+jest.mock('../../../../src/logging');
 jest.mock('../../../../src/external/github');
 jest.mock('../../../../src/lib/users');
 jest.mock('../../../../src/lib/addresses');

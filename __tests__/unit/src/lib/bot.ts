@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import '../../../../__mocks__/src/logging';
 import { contextMock } from '../../../../__mocks__/src/context';
 import {
   BotCreateClaimsErrorType,
@@ -17,6 +18,7 @@ import { createNewClaimsForRepoContributionHelper } from '../../../../src/lib/cl
 import { upsertGithubIssue } from '../../../../src/lib/issues';
 import { upsertGithubMention } from '../../../../src/lib/mentions';
 
+jest.mock('../../../../src/logging');
 jest.mock('../../../../src/external/github');
 jest.mock('../../../../src/lib/repos');
 jest.mock('../../../../src/lib/users');

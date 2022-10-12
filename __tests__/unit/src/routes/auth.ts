@@ -1,3 +1,4 @@
+import '../../../../__mocks__/src/logging';
 import { contextMock } from '../../../../__mocks__/src/context';
 import request from 'supertest';
 import { setupApp } from '../../../../src/app';
@@ -17,6 +18,7 @@ import { generateAuthTokens } from '../../../../src/lib/authTokens';
 import { DateTime } from 'luxon';
 import { LOGIN_EXP_TIME_MONTHS } from '../../../../src/constants';
 
+jest.mock('../../../../src/logging');
 jest.mock('../../../../src/lib/signatures');
 jest.mock('../../../../src/lib/ens');
 jest.mock('../../../../src/lib/users');

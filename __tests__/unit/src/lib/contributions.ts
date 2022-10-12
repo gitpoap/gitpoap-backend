@@ -1,5 +1,8 @@
+import '../../../../__mocks__/src/logging';
 import { contextMock } from '../../../../__mocks__/src/context';
 import { countContributionsForClaim } from '../../../../src/lib/contributions';
+
+jest.mock('../../../../src/logging');
 
 const user = { id: 4 };
 
