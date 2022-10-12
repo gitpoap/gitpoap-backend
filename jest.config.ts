@@ -9,4 +9,5 @@ export default {
   // Automatically clear mock calls, instances, contexts and results before every test
   clearMocks: true,
   roots: ['<rootDir>/__tests__'],
+  modulePathIgnorePatterns: ['<rootDir>/dist/', '<rootDir>/aws/', '/node_modules/'],
 };
