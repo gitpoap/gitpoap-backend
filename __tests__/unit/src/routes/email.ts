@@ -1,14 +1,17 @@
 import { contextMock } from '../../../../__mocks__/src/context';
+import '../../../../__mocks__/src/logging';
 import request from 'supertest';
 import { setupApp } from '../../../../src/app';
 import { sendVerificationEmail } from '../../../../src/external/postmark';
 import { generateAuthTokens } from '../../../../src/lib/authTokens';
 import { DateTime } from 'luxon';
+import { Address } from '@prisma/client';
 
 jest.mock('../../../../src/lib/ens');
 jest.mock('../../../../src/lib/email', () => ({
   generateUniqueEmailToken: jest.fn().mockResolvedValue('1q2w3e4r5t6y7u8i9o0p'),
 }));
+jest.mock('../../../../src/logging');
 jest.mock('../../../../src/external/postmark');
 
 const mockedSendVerificationEmail = jest.mocked(sendVerificationEmail, true);
@@ -54,18 +57,6 @@ function genAuthTokens() {
   );
 }
 
-const emailResponse = {
-  id: 1,
-  emailAddress: 'test@gitpoap.io',
-  isValidated: true,
-  tokenExpiresAt: new Date(),
-  addressId: 123,
-  address: addressRecord,
-  createdAt: new Date(),
-  updatedAt: new Date(),
-  activeToken: testActiveToken,
-};
-
 describe('GET /email', () => {
   it('Fails with no Access Token provided', async () => {
     const result = await request(await setupApp())
@@ -90,7 +81,12 @@ describe('GET /email', () => {
 
   it('Returns valid email response', async () => {
     mockJwtWithAddress();
-    contextMock.prisma.email.findUnique.mockResolvedValue(emailResponse);
+    contextMock.prisma.email.findUnique.mockResolvedValue({
+      id: 1,
+      emailAddress: 'test@gitpoap.io',
+      isValidated: true,
+      tokenExpiresAt: new Date(),
+    } as any);
 
     const authTokens = genAuthTokens();
 
@@ -198,9 +194,7 @@ describe('POST /email', () => {
     mockJwtWithAddress();
 
     contextMock.prisma.email.upsert.mockResolvedValue({} as any);
-    mockedSendVerificationEmail.mockImplementation(() => {
-      return Promise.resolve();
-    });
+    mockedSendVerificationEmail.mockResolvedValue(Promise.resolve());
 
     const authTokens = genAuthTokens();
 
