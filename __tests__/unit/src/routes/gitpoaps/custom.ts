@@ -1,6 +1,8 @@
-import { AdminApprovalStatus, GitPOAPType } from '@prisma/client';
+import { mockDeep } from 'jest-mock-extended';
+import { Multer } from 'multer';
 import '../../../../../__mocks__/src/logging';
 import { contextMock } from '../../../../../__mocks__/src/context';
+import { AdminApprovalStatus, GitPOAPType } from '@prisma/client';
 import { setupApp } from '../../../../../src/app';
 import { generateAuthTokens } from '../../../../../src/lib/authTokens';
 import request from 'supertest';
@@ -49,10 +51,10 @@ jest.mock('../../../../../src/external/poap', () => ({
     .mockResolvedValue({ id: 1, image_url: 'https://poap.xyz', poapEventId: 1 }),
 }));
 
-jest.mock('multer', () => {
-  const multer = () => ({
-    single: () => {
-      return (req: any, res: any, next: any) => {
+jest.mock('multer', () =>
+  jest.fn().mockReturnValue(
+    mockDeep<Multer>({
+      single: jest.fn().mockReturnValue((req: any, res: any, next: any) => {
         req.file = {
           originalname: 'foobar.png',
           mimetype: 'image/png',
@@ -60,25 +62,22 @@ jest.mock('multer', () => {
         };
 
         return next();
-      };
-    },
-    array: () => {
-      return (req: any, res: any, next: any) => {
-        req.files = [
-          {
-            originalname: 'foobar.png',
-            mimetype: 'image/png',
-            buffer: Buffer.from('foobar'),
-          },
-        ];
-        return next();
-      };
-    },
-  });
-  multer.memoryStorage = () => jest.fn();
-
-  return multer;
-});
+      }),
+      array: () => {
+        return (req: any, res: any, next: any) => {
+          req.files = [
+            {
+              originalname: 'foobar.png',
+              mimetype: 'image/png',
+              buffer: Buffer.from('foobar'),
+            },
+          ];
+          return next();
+        };
+      },
+    }),
+  ),
+);
 
 const mockedGetImageBufferFromS3 = jest.mocked(getImageBufferFromS3, true);
 const mockedUploadMulterFile = jest.mocked(uploadMulterFile, true);
@@ -527,10 +526,7 @@ describe('POST /gitpoaps/custom', () => {
       filename: 'foobar_imgKey',
     } as any);
 
-    /* mock prisma.project.findUnique */
     contextMock.prisma.project.findUnique.mockResolvedValue({ id: 1 } as any);
-
-    /* mock prisma.organization.findUnique */
     contextMock.prisma.organization.findUnique.mockResolvedValue({ id: 1 } as any);
 
     const authTokens = genAuthTokens();
