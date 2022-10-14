@@ -66,7 +66,7 @@ describe('GET /email', () => {
     expect(result.statusCode).toEqual(400);
   });
 
-  it('Fails on bad address', async () => {
+  it('Fails on bad address - no associated token found', async () => {
     contextMock.prisma.authToken.findUnique.mockResolvedValue(null);
 
     const authTokens = genAuthTokens();
@@ -114,7 +114,7 @@ describe('POST /email', () => {
     expect(result.statusCode).toEqual(400);
   });
 
-  it('Fails on bad address', async () => {
+  it('Fails on bad address - no associated token found', async () => {
     contextMock.prisma.authToken.findUnique.mockResolvedValue(null);
 
     const authTokens = genAuthTokens();
@@ -194,7 +194,7 @@ describe('POST /email', () => {
     mockJwtWithAddress();
 
     contextMock.prisma.email.upsert.mockResolvedValue({} as any);
-    mockedSendVerificationEmail.mockResolvedValue(Promise.resolve());
+    mockedSendVerificationEmail.mockResolvedValue();
 
     const authTokens = genAuthTokens();
 
@@ -235,7 +235,7 @@ describe('DELETE /email', () => {
     expect(result.statusCode).toEqual(400);
   });
 
-  it('Fails on bad address', async () => {
+  it('Fails on bad address - no associated token found', async () => {
     contextMock.prisma.authToken.findUnique.mockResolvedValue(null);
 
     const authTokens = genAuthTokens();
@@ -278,7 +278,7 @@ describe('POST /email/verify/:activeToken', () => {
     expect(result.statusCode).toEqual(400);
   });
 
-  it('Fails on bad address', async () => {
+  it('Fails on bad address - no associated token found', async () => {
     contextMock.prisma.authToken.findUnique.mockResolvedValue(null);
 
     const authTokens = genAuthTokens();
