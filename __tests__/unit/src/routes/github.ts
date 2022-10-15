@@ -2,6 +2,10 @@ import { contextMock } from '../../../../__mocks__/src/context';
 import request from 'supertest';
 import { setupApp } from '../../../../src/app';
 import { requestGithubOAuthToken, getGithubCurrentUserInfo } from '../../../../src/external/github';
+import {
+  addGithubLoginForAddress,
+  removeGithubLoginForAddress,
+} from '../../../../src/lib/addresses';
 import { upsertUser } from '../../../../src/lib/users';
 import { generateAuthTokens } from '../../../../src/lib/authTokens';
 import { verify } from 'jsonwebtoken';
@@ -14,10 +18,13 @@ import {
 
 jest.mock('../../../../src/external/github');
 jest.mock('../../../../src/lib/users');
+jest.mock('../../../../src/lib/addresses');
 
 const mockedRequestGithubOAuthToken = jest.mocked(requestGithubOAuthToken, true);
 const mockedGetGithubCurrentUserInfo = jest.mocked(getGithubCurrentUserInfo, true);
 const mockedUpsertUser = jest.mocked(upsertUser, true);
+const mockedAddGithubLoginForAddress = jest.mocked(addGithubLoginForAddress, true);
+const mockedRemoveGithubLoginForAddress = jest.mocked(removeGithubLoginForAddress, true);
 
 const authTokenId = 995;
 const authTokenGeneration = 42;
@@ -38,7 +45,7 @@ function mockJwtWithAddress() {
   } as any);
 }
 
-function genAuthTokens() {
+function genAuthTokens(hasGithub: boolean = false) {
   return generateAuthTokens(
     authTokenId,
     authTokenGeneration,
@@ -46,8 +53,8 @@ function genAuthTokens() {
     address,
     ensName,
     ensAvatarImageUrl,
-    null,
-    null,
+    hasGithub ? githubId : null,
+    hasGithub ? githubHandle : null,
   );
 }
 
@@ -122,6 +129,7 @@ describe('POST /github', () => {
     contextMock.prisma.authToken.update.mockResolvedValue({
       generation: authTokenGeneration,
     } as any);
+    mockedAddGithubLoginForAddress.mockResolvedValue(undefined);
 
     const authTokens = genAuthTokens();
 
@@ -163,6 +171,9 @@ describe('POST /github', () => {
     expect(mockedUpsertUser).toHaveBeenCalledTimes(1);
     expect(mockedUpsertUser).toHaveBeenCalledWith(githubId, githubHandle, githubToken);
 
+    expect(mockedAddGithubLoginForAddress).toHaveBeenCalledTimes(1);
+    expect(mockedAddGithubLoginForAddress).toHaveBeenCalledWith(addressId, userId);
+
     expect(contextMock.prisma.authToken.update).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.authToken.update).toHaveBeenCalledWith({
       where: { id: authTokenId },
@@ -172,5 +183,79 @@ describe('POST /github', () => {
       },
       select: { generation: true },
     });
+  });
+});
+
+describe('DELETE /github', () => {
+  it('Fails with no access token provided', async () => {
+    const result = await request(await setupApp()).delete('/github');
+
+    expect(result.statusCode).toEqual(400);
+  });
+
+  it('Fails with invalid access token', async () => {
+    const result = await request(await setupApp())
+      .delete('/github')
+      .set('Authorization', `Bearer foo`);
+
+    expect(result.statusCode).toEqual(400);
+  });
+
+  it('Fails if no GitHub user is connected to the address', async () => {
+    contextMock.prisma.authToken.findUnique.mockResolvedValue({
+      id: authTokenId,
+      address: { ensName, ensAvatarImageUrl },
+      user: null,
+    } as any);
+
+    const authTokens = genAuthTokens(false);
+
+    const result = await request(await setupApp())
+      .delete('/github')
+      .set('Authorization', `Bearer ${authTokens.accessToken}`);
+
+    expect(result.statusCode).toEqual(400);
+
+    expect(contextMock.prisma.authToken.findUnique).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.authToken.findUnique).toHaveBeenCalledWith({
+      where: { id: authTokenId },
+      select: {
+        id: true,
+        address: {
+          select: { ensName: true, ensAvatarImageUrl: true },
+        },
+      },
+    });
+  });
+
+  it('Succeeds if GitHub user is connected to the address', async () => {
+    contextMock.prisma.authToken.findUnique.mockResolvedValue({
+      id: authTokenId,
+      address: { ensName, ensAvatarImageUrl },
+      user: { id: userId },
+    } as any);
+    mockedRemoveGithubLoginForAddress.mockResolvedValue(undefined);
+
+    const authTokens = genAuthTokens(true);
+
+    const result = await request(await setupApp())
+      .delete('/github')
+      .set('Authorization', `Bearer ${authTokens.accessToken}`);
+
+    expect(result.statusCode).toEqual(200);
+
+    expect(contextMock.prisma.authToken.findUnique).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.authToken.findUnique).toHaveBeenCalledWith({
+      where: { id: authTokenId },
+      select: {
+        id: true,
+        address: {
+          select: { ensName: true, ensAvatarImageUrl: true },
+        },
+      },
+    });
+
+    expect(mockedRemoveGithubLoginForAddress).toHaveBeenCalledTimes(1);
+    expect(mockedRemoveGithubLoginForAddress).toHaveBeenCalledWith(addressId);
   });
 });
