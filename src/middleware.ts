@@ -18,7 +18,7 @@ export function jwtWithAddress() {
         return;
       }
 
-      const { authTokenId, addressId } = getAccessTokenPayload(req.user);
+      const { authTokenId } = getAccessTokenPayload(req.user);
 
       const tokenInfo = await context.prisma.authToken.findUnique({
         where: {
