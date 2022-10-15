@@ -1,5 +1,4 @@
 import { context } from '../context';
-import { upsertUser } from '../lib/users';
 import { JWT_EXP_TIME_SECONDS } from '../constants';
 import { sign } from 'jsonwebtoken';
 import { JWT_SECRET } from '../environment';
