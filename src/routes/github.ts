@@ -8,6 +8,7 @@ import { generateAuthTokens } from '../lib/authTokens';
 import { jwtWithAddress } from '../middleware';
 import { getAccessTokenPayload } from '../types/authTokens';
 import { upsertUser } from '../lib/users';
+import { addGithubLoginForAddress, removeGithubLoginForAddress } from '../lib/addresses';
 
 export const githubRouter = Router();
 
@@ -95,6 +96,60 @@ githubRouter.post('/', jwtWithAddress(), async function (req, res) {
   );
 
   logger.debug(`Completed a GitHub login request for address ${address}`);
+
+  endTimer({ status: 200 });
+
+  return res.status(200).send(userAuthTokens);
+});
+
+/* Route to remove a github connection from an address */
+githubRouter.delete('/', jwtWithAddress(), async function (req, res) {
+  const logger = createScopedLogger('DELETE /github');
+
+  const endTimer = httpRequestDurationSeconds.startTimer('DELETE', '/github');
+
+  const { authTokenId, addressId, address, ensName, ensAvatarImageUrl, githubHandle, githubId } =
+    getAccessTokenPayload(req.user);
+
+  logger.info(`Received a GitHub disconnect request from address ${address}`);
+
+  if (githubHandle === null || githubId === null) {
+    logger.warn('No GitHub login found for address');
+    endTimer({ status: 400 });
+    return res.status(400).send({
+      message: 'No GitHub login found for address',
+    });
+  }
+
+  /* Remove the GitHub login from the address record */
+  await removeGithubLoginForAddress(addressId);
+
+  // Update the generation of the AuthToken (this must exist
+  // since it was looked up within the middleware)
+  const dbAuthToken = await context.prisma.authToken.update({
+    where: {
+      id: authTokenId,
+    },
+    data: {
+      generation: { increment: 1 },
+    },
+    select: {
+      generation: true,
+    },
+  });
+
+  const userAuthTokens = generateAuthTokens(
+    authTokenId,
+    dbAuthToken.generation,
+    addressId,
+    address,
+    ensName,
+    ensAvatarImageUrl,
+    null,
+    null,
+  );
+
+  logger.debug(`Completed Github disconnect request for address ${address}`);
 
   endTimer({ status: 200 });
 

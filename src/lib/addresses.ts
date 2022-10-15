@@ -31,3 +31,18 @@ export async function removeGithubLoginForAddress(addressId: number) {
     },
   });
 }
+
+export const addGithubLoginForAddress = async (addressId: number, githubUserId: number) => {
+  await context.prisma.address.update({
+    where: {
+      id: addressId,
+    },
+    data: {
+      githubUser: {
+        connect: {
+          id: githubUserId,
+        },
+      },
+    },
+  });
+};
