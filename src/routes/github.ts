@@ -65,6 +65,9 @@ githubRouter.post('/', jwtWithAddress(), async function (req, res) {
   // Update User with new OAuth token
   const user = await upsertUser(githubUser.id, githubUser.login, githubToken);
 
+  /* Add the GitHub login to the address record */
+  await addGithubLoginForAddress(addressId, user.id);
+
   // Update the generation of the AuthToken (this must exist
   // since it was looked up within the middleware)
   const dbAuthToken = await context.prisma.authToken.update({
