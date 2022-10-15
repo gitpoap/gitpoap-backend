@@ -255,6 +255,17 @@ describe('DELETE /github', () => {
       },
     });
 
+    /* Expect that the token is updated to remove the user */
+    expect(contextMock.prisma.authToken.update).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.authToken.update).toHaveBeenCalledWith({
+      where: { id: authTokenId },
+      data: {
+        generation: { increment: 1 },
+        user: { disconnect: true },
+      },
+      select: { generation: true },
+    });
+
     expect(mockedRemoveGithubLoginForAddress).toHaveBeenCalledTimes(1);
     expect(mockedRemoveGithubLoginForAddress).toHaveBeenCalledWith(addressId);
   });
