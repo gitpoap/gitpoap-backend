@@ -130,15 +130,12 @@ githubRouter.delete('/', jwtWithAddress(), async function (req, res) {
   // Update the generation of the AuthToken (this must exist
   // since it was looked up within the middleware)
   const dbAuthToken = await context.prisma.authToken.update({
-    where: {
-      id: authTokenId,
-    },
+    where: { id: authTokenId },
     data: {
       generation: { increment: 1 },
+      user: { disconnect: true },
     },
-    select: {
-      generation: true,
-    },
+    select: { generation: true },
   });
 
   const userAuthTokens = generateAuthTokens(
