@@ -6,7 +6,11 @@ import { AdminApprovalStatus, GitPOAPType } from '@prisma/client';
 import { setupApp } from '../../../../../src/app';
 import { generateAuthTokens } from '../../../../../src/lib/authTokens';
 import request from 'supertest';
-import { getImageBufferFromS3, uploadMulterFile } from '../../../../../src/external/s3';
+import {
+  getImageBufferFromS3,
+  S3ClientConfigProfile,
+  uploadMulterFile,
+} from '../../../../../src/external/s3';
 import { DateTime } from 'luxon';
 import { ADMIN_GITHUB_IDS } from '../../../../../src/constants';
 
@@ -22,18 +26,41 @@ const gitPOAPId = 24;
 const ensName = 'furby.eth';
 const ensAvatarImageUrl = null;
 
+const baseGitPOAP = {
+  name: 'foobar-name',
+  description: 'foobar-description',
+  startDate: '2021-01-01',
+  endDate: '2021-01-10',
+  expiryDate: '2023-01-01',
+  eventUrl: 'https://foobar.com',
+  email: 'jay@gitpoap.io',
+  numRequestedCodes: '50',
+  ongoing: 'true',
+  isEnabled: 'true',
+  image: {
+    data: Buffer.from('foobar'),
+    mimetype: 'image/png',
+    name: 'foobar.png',
+    originalname: 'foobar.png',
+  },
+  contributors: JSON.stringify({
+    githubHandles: ['peebeejay'],
+    ensNames: ['burz.eth'],
+  }),
+};
+
 jest.mock('../../../../../src/logging');
 jest.mock('../../../../../src/external/s3', () => {
   const originalModule = jest.requireActual('../../../../../src/external/s3');
   return {
     __esModule: true,
     ...originalModule,
-    s3configProfile: {
+    s3configProfile: <S3ClientConfigProfile>{
       region: 'us-east-2',
       buckets: {
         intakeForm: 'intake-form-test',
         ensAvatarCache: 'ens-avatar-cache-test',
-        gitPOAPRequest: 'gitpoap-request-images-test',
+        gitPOAPRequestImages: 'gitpoap-request-images-test',
       },
     },
     uploadMulterFile: jest.fn(),
@@ -271,6 +298,11 @@ describe('PUT /gitpoaps/custom/approve/:id', () => {
         adminApprovalStatus: AdminApprovalStatus.APPROVED,
       },
     });
+
+    expect(contextMock.prisma.gitPOAPRequest.delete).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.gitPOAPRequest.delete).toHaveBeenCalledWith({
+      where: { id: gitPOAPRequestId },
+    });
   });
 });
 
@@ -295,7 +327,7 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
     expect(contextMock.prisma.authToken.findUnique).toHaveBeenCalledTimes(1);
   });
 
-  it('Returns a 404 when the GitPOAP Request is not found', async () => {
+  it('Fails and returns a 404 when the GitPOAP Request is not found', async () => {
     mockJwtWithOAuth();
     contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue(null);
     const authTokens = genAuthTokens(ADMIN_GITHUB_IDS[0], githubHandle);
@@ -313,7 +345,67 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
     });
   });
 
-  it('updates the GitPOAP Request status in the DB to be REJECTED', async () => {
+  it('Fails and returns 400 when the GitPOAP Request is already approved', async () => {
+    mockJwtWithOAuth();
+    contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue({
+      id: gitPOAPRequestId,
+      type: GitPOAPType.CUSTOM,
+      adminApprovalStatus: AdminApprovalStatus.APPROVED,
+      description: 'foobar',
+      imageKey: 'foobar_imgKey-123456789',
+      isEnabled: true,
+      isPRBased: false,
+      name: 'foobar',
+      ongoing: true,
+      year: 2021,
+    } as any);
+    const authTokens = genAuthTokens(ADMIN_GITHUB_IDS[0], githubHandle);
+
+    const result = await request(await setupApp())
+      .put(`/gitpoaps/custom/reject/${gitPOAPRequestId}`)
+      .set('Authorization', `Bearer ${authTokens.accessToken}`)
+      .send();
+
+    expect(result.statusCode).toEqual(400);
+    expect(contextMock.prisma.authToken.findUnique).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.gitPOAPRequest.findUnique).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.gitPOAPRequest.findUnique).toHaveBeenCalledWith({
+      where: { id: gitPOAPRequestId },
+    });
+  });
+
+  it('Fails and returns 400 when the GitPOAP Request is already rejected', async () => {
+    mockJwtWithOAuth();
+    contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue({
+      id: gitPOAPRequestId,
+      type: GitPOAPType.CUSTOM,
+      adminApprovalStatus: AdminApprovalStatus.REJECTED,
+      description: 'foobar',
+      imageKey: 'foobar_imgKey-123456789',
+      isEnabled: true,
+      isPRBased: false,
+
+      name: 'foobar',
+      ongoing: true,
+      year: 2021,
+    } as any);
+
+    const authTokens = genAuthTokens(ADMIN_GITHUB_IDS[0], githubHandle);
+
+    const result = await request(await setupApp())
+      .put(`/gitpoaps/custom/reject/${gitPOAPRequestId}`)
+      .set('Authorization', `Bearer ${authTokens.accessToken}`)
+      .send();
+
+    expect(result.statusCode).toEqual(200);
+    expect(contextMock.prisma.authToken.findUnique).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.gitPOAPRequest.findUnique).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.gitPOAPRequest.findUnique).toHaveBeenCalledWith({
+      where: { id: gitPOAPRequestId },
+    });
+  });
+
+  it('Updates the GitPOAP Request status in the DB to be REJECTED', async () => {
     mockJwtWithOAuth();
     contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue({
       id: gitPOAPRequestId,
@@ -423,30 +515,28 @@ describe('POST /gitpoaps/custom', () => {
     expect(result.statusCode).toEqual(400);
   });
 
-  it('Fails with invalid body - contributors', async () => {
+  it('Fails with invalid body - contributors is not a valid object', async () => {
     mockJwtWithAddress();
     const authTokens = genAuthTokens();
     const result = await request(await setupApp())
       .post('/gitpoaps/custom')
       .set('Authorization', `Bearer ${authTokens.accessToken}`)
       .send({
-        name: 'foobar-name',
-        description: 'foobar-description',
-        startDate: '2021-01-01',
-        endDate: '2021-01-10',
-        expiryDate: '2023-01-01',
-        eventUrl: 'https://foobar.com',
-        email: 'jay@gitpoap.io',
-        numRequestedCodes: 50,
-        ongoing: 'true',
-        isEnabled: 'true',
-        year: 2021,
-        image: {
-          data: Buffer.from('foobar'),
-          mimetype: 'image/png',
-          name: 'foobar.png',
-          originalname: 'foobar.png',
-        },
+        ...baseGitPOAP,
+        contributors: JSON.stringify('blah'),
+      });
+
+    expect(result.statusCode).toEqual(400);
+  });
+
+  it('Fails with invalid body - contributors is wrong structure', async () => {
+    mockJwtWithAddress();
+    const authTokens = genAuthTokens();
+    const result = await request(await setupApp())
+      .post('/gitpoaps/custom')
+      .set('Authorization', `Bearer ${authTokens.accessToken}`)
+      .send({
+        ...baseGitPOAP,
         contributors: JSON.stringify({
           blah1: ['peebeejay'],
           blah2: ['burz.eth'],
@@ -454,6 +544,25 @@ describe('POST /gitpoaps/custom', () => {
       });
 
     expect(result.statusCode).toEqual(400);
+  });
+
+  it('Fails when the s3 image upload fails', async () => {
+    mockJwtWithAddress();
+    const authTokens = genAuthTokens();
+    mockedUploadMulterFile.mockRejectedValueOnce(new Error('Failed to upload image to S3'));
+
+    const result = await request(await setupApp())
+      .post('/gitpoaps/custom')
+      .set('Authorization', `Bearer ${authTokens.accessToken}`)
+      .send({
+        ...baseGitPOAP,
+        image: 'foobar',
+      });
+
+    expect(result.statusCode).toEqual(500);
+    expect(result.body).toEqual({
+      msg: 'Failed to upload image to S3',
+    });
   });
 
   it('Successfully creates a new GitPOAP request with NO project or organization', async () => {
@@ -473,29 +582,7 @@ describe('POST /gitpoaps/custom', () => {
     const result = await request(await setupApp())
       .post('/gitpoaps/custom')
       .set('Authorization', `Bearer ${authTokens.accessToken}`)
-      .send({
-        name: 'foobar-name',
-        description: 'foobar-description',
-        startDate: '2021-01-01',
-        endDate: '2021-01-10',
-        expiryDate: '2023-01-01',
-        eventUrl: 'https://foobar.com',
-        email: 'jay@gitpoap.io',
-        numRequestedCodes: 50,
-        ongoing: 'true',
-        isEnabled: 'true',
-        year: 2021,
-        image: {
-          data: Buffer.from('foobar'),
-          mimetype: 'image/png',
-          name: 'foobar.png',
-          originalname: 'foobar.png',
-        },
-        contributors: JSON.stringify({
-          githubHandles: ['peebeejay'],
-          ensNames: ['burz.eth'],
-        }),
-      });
+      .send({ ...baseGitPOAP });
 
     expect(result.statusCode).toEqual(201);
     expect(contextMock.prisma.authToken.findUnique).toHaveBeenCalledTimes(1);
@@ -523,29 +610,9 @@ describe('POST /gitpoaps/custom', () => {
       .post('/gitpoaps/custom')
       .set('Authorization', `Bearer ${authTokens.accessToken}`)
       .send({
-        name: 'foobar-name',
-        description: 'foobar-description',
-        startDate: '2021-01-01',
-        endDate: '2021-01-10',
-        expiryDate: '2023-01-01',
-        eventUrl: 'https://foobar.com',
-        email: 'jay@gitpoap.io',
-        numRequestedCodes: 50,
-        ongoing: 'true',
-        isEnabled: 'true',
-        year: 2021,
-        image: {
-          data: Buffer.from('foobar'),
-          mimetype: 'image/png',
-          name: 'foobar.png',
-          originalname: 'foobar.png',
-        },
-        contributors: JSON.stringify({
-          githubHandles: ['peebeejay'],
-          ensNames: ['burz.eth'],
-        }),
-        organizationId: 1,
-        projectId: 1,
+        ...baseGitPOAP,
+        organizationId: '1',
+        projectId: '1',
       });
 
     expect(result.statusCode).toEqual(201);
