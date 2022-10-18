@@ -47,8 +47,8 @@ projectsRouter.post('/add-repos', jwtWithAdminOAuth(), async (req, res) => {
     return res.status(404).send({ msg });
   }
 
-  let addedIds: number[] = [];
-  let failures: number[] = [];
+  const addedIds: number[] = [];
+  const failures: number[] = [];
   for (const githubRepoId of req.body.githubRepoIds) {
     const repo = await createRepoByGithubId(githubRepoId, project.id, githubOAuthToken);
     if (repo === null) {
