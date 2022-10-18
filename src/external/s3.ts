@@ -11,9 +11,9 @@ import { AWS_PROFILE, NODE_ENV } from '../environment';
 import fetch from 'cross-fetch';
 import { createScopedLogger } from '../logging';
 
-type Buckets = 'intakeForm' | 'ensAvatarCache' | 'gitPOAPRequestImages';
+export type Buckets = 'intakeForm' | 'ensAvatarCache' | 'gitPOAPRequestImages';
 
-type S3ClientConfigProfile = S3ClientConfig & {
+export type S3ClientConfigProfile = S3ClientConfig & {
   buckets: Record<Buckets, string>;
 };
 

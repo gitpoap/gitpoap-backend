@@ -159,7 +159,7 @@ customGitpoapsRouter.post(
     } catch (err) {
       logger.error(`Received error when uploading image to S3 - ${err}`);
       endTimer({ status: 500 });
-      return res.status(500).send({ msg: 'Failed to upload assets to S3' });
+      return res.status(500).send({ msg: 'Failed to upload image to S3' });
     }
 
     const gitPOAPRequest = await context.prisma.gitPOAPRequest.create({
