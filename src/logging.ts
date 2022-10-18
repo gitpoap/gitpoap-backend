@@ -33,7 +33,7 @@ const format = winston.format.combine(
 
 const logger = winston.createLogger({
   level: 'info',
-  format: format,
+  format,
   transports: [new winston.transports.Console()],
   exceptionHandlers: [new winston.transports.Console()],
   rejectionHandlers: [new winston.transports.Console()],
@@ -42,9 +42,9 @@ const logger = winston.createLogger({
 let nextScopeId = 1;
 
 export function createScopedLogger(scope: string) {
-  let scopeId = nextScopeId++;
+  const scopeId = nextScopeId++;
 
-  let format = (msg: string) => `(${scopeId.toString().padStart(7)}) ${scope}: ${msg}`;
+  const format = (msg: string) => `(${scopeId.toString().padStart(7)}) ${scope}: ${msg}`;
 
   return {
     debug: (msg: string) => logger.debug(format(msg)),
@@ -67,7 +67,7 @@ export function updateLogLevel(level: string) {
     case undefined:
       break;
     default:
-      lg.warn(`Unkown log level "${level}". Defaulting to "info"`);
+      lg.warn(`Unknown log level "${level}". Defaulting to "info"`);
       break;
   }
 }

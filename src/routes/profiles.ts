@@ -1,7 +1,6 @@
 import { UpdateProfileSchema } from '../schemas/profiles';
 import { Router } from 'express';
 import { context } from '../context';
-import { resolveENS } from '../lib/ens';
 import { createScopedLogger } from '../logging';
 import { httpRequestDurationSeconds } from '../metrics';
 import { jwtWithAddress } from '../middleware';

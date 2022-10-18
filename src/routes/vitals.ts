@@ -2,7 +2,6 @@ import { Router } from 'express';
 import { jwtWithAdminOAuth } from '../middleware';
 import { httpRequestDurationSeconds } from '../metrics';
 import { createScopedLogger } from '../logging';
-import { context } from '../context';
 import { lookupLastOngoingIssuanceRun } from '../lib/ongoing';
 import { lookupLastCheckForNewPOAPCodesRun } from '../lib/codes';
 
