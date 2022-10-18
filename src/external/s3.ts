@@ -11,8 +11,10 @@ import { AWS_PROFILE, NODE_ENV } from '../environment';
 import fetch from 'cross-fetch';
 import { createScopedLogger } from '../logging';
 
+type Buckets = 'intakeForm' | 'ensAvatarCache' | 'gitPOAPRequestImages';
+
 type S3ClientConfigProfile = S3ClientConfig & {
-  buckets: Record<string, string>;
+  buckets: Record<Buckets, string>;
 };
 
 const S3_CONFIG_PROFILES: Record<'local' | 'prod', S3ClientConfigProfile> = {
@@ -22,7 +24,7 @@ const S3_CONFIG_PROFILES: Record<'local' | 'prod', S3ClientConfigProfile> = {
     buckets: {
       intakeForm: 'intake-form-test',
       ensAvatarCache: 'ens-avatar-cache-test',
-      gitpoapRequestImages: 'gitpoap-request-images-test',
+      gitPOAPRequestImages: 'gitpoap-request-images-test',
     },
   },
   prod: {
@@ -30,7 +32,7 @@ const S3_CONFIG_PROFILES: Record<'local' | 'prod', S3ClientConfigProfile> = {
     buckets: {
       intakeForm: 'intake-form-prod',
       ensAvatarCache: 'ens-avatar-cache-prod',
-      gitpoapRequestImages: 'gitpoap-request-images-prod',
+      gitPOAPRequestImages: 'gitpoap-request-images-prod',
     },
   },
 };
