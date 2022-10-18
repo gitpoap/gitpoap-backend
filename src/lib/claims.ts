@@ -506,7 +506,12 @@ export const createClaimForEthAddress = async (ethAddress: string, gitPOAPId: nu
 export const createClaimForEnsName = async (ensName: string, gitPOAPId: number) => {
   const logger = createScopedLogger('createClaimForEnsName');
 
-  const ethAddress = await resolveENS(ensName);
+  if (!ensName.endsWith('.eth')) {
+    logger.error(`Invalid ENS name ${ensName}`);
+    return null;
+  }
+
+  const ethAddress = await resolveENS(ensName, { synchronous: true });
 
   if (ethAddress === null) {
     logger.error(`Failed to resolve ENS name ${ensName}`);

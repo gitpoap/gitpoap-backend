@@ -174,8 +174,10 @@ type ResolveExtraArgs = {
  * Resolve an ENS name to an ETH address.
  *
  * @param ensName - the ENS name to resolve
- * @param forceAvatarCheck - should the ENS avatar check be forced to run? (default: false)
- * @param synchronous - should the function wait to return until ENS name & avatar checks are done? (default: false)
+ *
+ * @param resolveExtraArgs - extra arguments to control the resolution process
+ * @param resolveExtraArgs.forceAvatarCheck - should the ENS avatar check be forced to run? (default: false)
+ * @param resolveExtraArgs.synchronous - should the function wait to return until ENS name & avatar checks are done? (default: false)
  * @returns the resolved ETH address associated with the ENS name or null
  */
 export async function resolveENS(
