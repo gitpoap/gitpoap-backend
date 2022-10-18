@@ -181,7 +181,7 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
     logger.warn(`Returning error status ${err.status} to user: ${err.msg}`);
     res.status(err.status).send(err.msg);
   } else {
-    logger.error(`Caught unkown error: ${err}`);
+    logger.error(`Caught unknown error: ${err}`);
     res.status(500).send(err.message);
   }
 };
