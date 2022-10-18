@@ -58,9 +58,15 @@ customGitpoapsRouter.post(
     }
 
     /* Validate the contributors object */
-    const contributors: z.infer<typeof CustomGitPOAPContributorsSchema> = JSON.parse(
-      req.body.contributors,
-    );
+    let contributors: z.infer<typeof CustomGitPOAPContributorsSchema> = {};
+    try {
+      contributors = JSON.parse(req.body.contributors);
+    } catch (err) {
+      logger.warn(`JSON parse error for contributors: ${(err as Error).message ?? ''}`);
+      endTimer({ status: 400 });
+
+      return res.status(400).send({ issues: err });
+    }
 
     const contributorsSchemaResult = CustomGitPOAPContributorsSchema.safeParse(contributors);
 
@@ -75,6 +81,23 @@ customGitpoapsRouter.post(
       return res.status(400).send({ issues: contributorsSchemaResult.error.issues });
     }
 
+    /* Validate the date fields */
+    const year = DateTime.fromISO(req.body.startDate).year;
+    const startDate = DateTime.fromISO(req.body.startDate).toJSDate();
+    const endDate = DateTime.fromISO(req.body.endDate).toJSDate();
+    const expiryDate = DateTime.fromISO(req.body.expiryDate).toJSDate();
+
+    if (
+      !year ||
+      startDate.toString() === 'Invalid Date' ||
+      endDate.toString() === 'Invalid Date' ||
+      expiryDate.toString() === 'Invalid Date'
+    ) {
+      logger.error(`Invalid date in the Request`);
+      endTimer({ status: 400 });
+      return res.status(400).send({ msg: 'Invalid date in the Request' });
+    }
+
     let project: { id: number } | null = null;
     let organization: { id: number } | null = null;
 
@@ -86,7 +109,7 @@ customGitpoapsRouter.post(
       );
 
       project = await context.prisma.project.findUnique({
-        where: { id: projectId },
+        where: { id: +projectId },
         select: { id: true },
       });
 
@@ -106,7 +129,7 @@ customGitpoapsRouter.post(
         `Request to create a new Custom GitPOAP "${req.body.name}" for organization ${organizationId}`,
       );
       organization = await context.prisma.organization.findUnique({
-        where: { id: organizationId },
+        where: { id: +organizationId },
         select: { id: true },
       });
 
@@ -136,8 +159,6 @@ customGitpoapsRouter.post(
       return res.status(500).send({ msg: 'Failed to upload assets to S3' });
     }
 
-    const year = DateTime.fromISO(req.body.startDate).year;
-
     const gitPOAPRequest = await context.prisma.gitPOAPRequest.create({
       data: {
         name: req.body.name,
@@ -145,12 +166,12 @@ customGitpoapsRouter.post(
         imageKey,
         description: req.body.description,
         year,
-        startDate: DateTime.fromISO(req.body.startDate).toJSDate(),
-        endDate: DateTime.fromISO(req.body.endDate).toJSDate(),
-        expiryDate: DateTime.fromISO(req.body.expiryDate).toJSDate(),
+        startDate,
+        endDate,
+        expiryDate,
         eventUrl: req.body.eventUrl,
         email: req.body.email,
-        numRequestedCodes: req.body.numRequestedCodes,
+        numRequestedCodes: +req.body.numRequestedCodes,
         project: project ? { connect: { id: project?.id } } : undefined,
         organization: organization ? { connect: { id: organization?.id } } : undefined,
         ongoing: req.body.ongoing === 'true',
