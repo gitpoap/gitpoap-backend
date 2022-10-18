@@ -4,16 +4,11 @@ import { setupApp } from '../../../../../src/app';
 import { generateAuthTokens } from '../../../../../src/lib/authTokens';
 import { ADMIN_GITHUB_IDS } from '../../../../../src/constants';
 import request from 'supertest';
-import { createRepoByGithubId } from '../../../../../src/lib/repos';
-import { backloadGithubPullRequestData } from '../../../../../src/lib/pullRequests';
 import { ClaimStatus, GitPOAPStatus } from '@prisma/client';
 
 jest.mock('../../../../../src/logging');
 jest.mock('../../../../../src/lib/repos');
 jest.mock('../../../../../src/lib/pullRequests');
-
-jest.mocked(createRepoByGithubId, true);
-jest.mocked(backloadGithubPullRequestData, true);
 
 const authTokenId = 4;
 const authTokenGeneration = 1;
