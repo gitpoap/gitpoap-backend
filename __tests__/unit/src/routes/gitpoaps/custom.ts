@@ -79,6 +79,7 @@ jest.mock('multer', () =>
   ),
 );
 
+jest.spyOn(DateTime, 'now').mockReturnValue(DateTime.fromSeconds(123456789));
 const mockedGetImageBufferFromS3 = jest.mocked(getImageBufferFromS3, true);
 const mockedUploadMulterFile = jest.mocked(uploadMulterFile, true);
 
@@ -170,7 +171,7 @@ describe('PUT /gitpoaps/custom/approve/:id', () => {
     });
   });
 
-  it('Returns 400 if the GitPOAP Request is already approved', async () => {
+  it('Returns 200 if the GitPOAP Request is already approved', async () => {
     mockJwtWithOAuth();
     contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue({
       id: gitPOAPRequestId,
@@ -184,7 +185,7 @@ describe('PUT /gitpoaps/custom/approve/:id', () => {
       .set('Authorization', `Bearer ${authTokens.accessToken}`)
       .send();
 
-    expect(result.statusCode).toEqual(400);
+    expect(result.statusCode).toEqual(200);
     expect(contextMock.prisma.authToken.findUnique).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.gitPOAPRequest.findUnique).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.gitPOAPRequest.findUnique).toHaveBeenCalledWith({
@@ -201,7 +202,7 @@ describe('PUT /gitpoaps/custom/approve/:id', () => {
       type: GitPOAPType.CUSTOM,
       adminApprovalStatus: AdminApprovalStatus.PENDING,
       description: 'foobar',
-      imageKey: 'foobar_imgKey',
+      imageKey: 'foobar_imgKey-123456789',
       isEnabled: true,
       isPRBased: false,
       name: 'foobar',
@@ -268,11 +269,6 @@ describe('PUT /gitpoaps/custom/approve/:id', () => {
       where: { id: gitPOAPRequestId },
       data: {
         adminApprovalStatus: AdminApprovalStatus.APPROVED,
-        gitPOAP: {
-          connect: {
-            id: gitPOAPId,
-          },
-        },
       },
     });
   });
@@ -324,7 +320,7 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
       type: GitPOAPType.CUSTOM,
       adminApprovalStatus: AdminApprovalStatus.PENDING,
       description: 'foobar',
-      imageKey: 'foobar_imgKey',
+      imageKey: 'foobar_imgKey-123456789',
       isEnabled: true,
       isPRBased: false,
       name: 'foobar',
@@ -373,7 +369,7 @@ describe('POST /gitpoaps/custom', () => {
       data: {
         name: 'foobar-name',
         description: 'foobar-description',
-        imageKey: '',
+        imageKey: 'foobar.png-123456789',
         type: GitPOAPType.CUSTOM,
         year: 2021,
         startDate: DateTime.fromISO('2021-01-01').toJSDate(),
@@ -404,15 +400,8 @@ describe('POST /gitpoaps/custom', () => {
         originalname: 'foobar.png',
       },
       'gitpoap-request-images-test',
-      `foobar.png-${gitPOAPRequestId}`,
+      'foobar.png-123456789',
     );
-
-    /* Expect prisma.gitPOAPRequest.update to be called with the correct data */
-    expect(contextMock.prisma.gitPOAPRequest.update).toHaveBeenCalledTimes(1);
-    expect(contextMock.prisma.gitPOAPRequest.update).toHaveBeenCalledWith({
-      where: { id: gitPOAPRequestId },
-      data: { imageKey: `foobar.png-${gitPOAPRequestId}` },
-    });
   };
 
   it('Fails with no Access Token provided', async () => {
