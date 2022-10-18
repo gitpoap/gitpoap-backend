@@ -24,6 +24,7 @@ import {
   createClaimForGithubHandle,
 } from '../../lib/claims';
 import { deleteGitPOAPRequest } from '../../lib/gitpoapRequest';
+import { parseJSON } from '../../lib/json';
 
 export const customGitpoapsRouter = Router();
 
@@ -58,14 +59,16 @@ customGitpoapsRouter.post(
     }
 
     /* Validate the contributors object */
-    let contributors: z.infer<typeof CustomGitPOAPContributorsSchema> = {};
-    try {
-      contributors = JSON.parse(req.body.contributors);
-    } catch (err) {
-      logger.warn(`JSON parse error for contributors: ${(err as Error).message ?? ''}`);
+    const contributors = parseJSON<z.infer<typeof CustomGitPOAPContributorsSchema>>(
+      req.body.contributors,
+    );
+
+    if (contributors === null) {
+      const msg = 'Invalid "contributors" JSON in request';
+      logger.warn(msg);
       endTimer({ status: 400 });
 
-      return res.status(400).send({ issues: err });
+      return res.status(400).send({ msg });
     }
 
     const contributorsSchemaResult = CustomGitPOAPContributorsSchema.safeParse(contributors);
@@ -149,9 +152,9 @@ customGitpoapsRouter.post(
 
     try {
       imageKey = `${image.originalname}-${timestamp}`;
-      await uploadMulterFile(image, s3configProfile.buckets.gitPOAPRequest, imageKey);
+      await uploadMulterFile(image, s3configProfile.buckets.gitPOAPRequestImages, imageKey);
       logger.info(
-        `Uploaded image with imageKey: ${imageKey} to S3 bucket ${s3configProfile.buckets.gitPOAPRequest}`,
+        `Uploaded image with imageKey: ${imageKey} to S3 bucket ${s3configProfile.buckets.gitPOAPRequestImages}`,
       );
     } catch (err) {
       logger.error(`Received error when uploading image to S3 - ${err}`);
@@ -241,7 +244,7 @@ customGitpoapsRouter.put('/approve/:id', jwtWithAdminOAuth(), async (req, res) =
   logger.info(`Marking GitPOAP Request with ID:${gitPOAPRequestId} as APPROVED.`);
 
   const imageBuffer = await getImageBufferFromS3(
-    s3configProfile.buckets.gitPOAPRequest,
+    s3configProfile.buckets.gitPOAPRequestImages,
     gitPOAPRequest.imageKey,
   );
 
