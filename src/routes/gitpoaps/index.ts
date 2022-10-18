@@ -128,7 +128,6 @@ gitpoapsRouter.post(
       start_date: req.body.startDate,
       end_date: req.body.endDate,
       expiry_date: req.body.expiryDate,
-      year: year,
       event_url: req.body.eventUrl,
       imageName: req.file.originalname,
       imageBuffer: req.file.buffer,

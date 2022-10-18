@@ -6,6 +6,8 @@ import { createScopedLogger } from '../logging';
 import { RestrictedContribution, countContributionsForClaim } from './contributions';
 import { getGithubUserAsAdmin } from '../external/github';
 import { resolveENS, upsertENSNameInDB } from './ens';
+import { upsertUser } from './users';
+import { upsertAddress } from './addresses';
 
 type GitPOAPs = {
   id: number;
@@ -418,17 +420,11 @@ export const createClaimForGithubHandle = async (githubHandle: string, gitPOAPId
     return null;
   }
 
-  const user = await context.prisma.user.upsert({
-    where: { githubId: githubUser.id },
-    update: { githubHandle },
-    create: {
-      githubId: githubUser.id,
-      githubHandle,
-    },
-  });
+  const user = await upsertUser(githubUser.id, githubHandle);
 
   const gitPOAP = await context.prisma.gitPOAP.findUnique({
     where: { id: gitPOAPId },
+    select: { id: true },
   });
 
   if (gitPOAP === null) {
@@ -458,6 +454,7 @@ export const createClaimForEmail = async (emailAddress: string, gitPOAPId: numbe
 
   const gitPOAP = await context.prisma.gitPOAP.findUnique({
     where: { id: gitPOAPId },
+    select: { id: true },
   });
 
   if (gitPOAP === null) {
@@ -484,11 +481,7 @@ export const createClaimForEthAddress = async (ethAddress: string, gitPOAPId: nu
     return null;
   }
 
-  const address = await context.prisma.address.upsert({
-    where: { ethAddress },
-    update: {},
-    create: { ethAddress },
-  });
+  const address = await upsertAddress(ethAddress);
 
   const gitPOAP = await context.prisma.gitPOAP.findUnique({
     where: { id: gitPOAPId },

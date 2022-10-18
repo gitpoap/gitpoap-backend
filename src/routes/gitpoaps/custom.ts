@@ -16,13 +16,14 @@ import { DateTime } from 'luxon';
 import { Prisma } from '@prisma/client';
 import { getImageBufferFromS3, s3configProfile, uploadMulterFile } from '../../external/s3';
 import { convertGitPOAPRequestToGitPOAP } from '../../lib/gitpoap';
-import { GitPOAPRequestContributors } from '../../types/gitpoap-request';
+import { GitPOAPRequestContributors } from '../../types/gitpoapRequest';
 import {
   createClaimForEmail,
   createClaimForEnsName,
   createClaimForEthAddress,
   createClaimForGithubHandle,
 } from '../../lib/claims';
+import { deleteGitPOAPRequest } from '../../lib/gitpoapRequest';
 
 export const customGitpoapsRouter = Router();
 
@@ -118,15 +119,32 @@ customGitpoapsRouter.post(
       }
     }
 
+    logger.info(`Uploading image to S3`);
+    const image = req.file;
+    let imageKey: string | null = null;
+    const timestamp = DateTime.now().toSeconds();
+
+    try {
+      imageKey = `${image.originalname}-${timestamp}`;
+      await uploadMulterFile(image, s3configProfile.buckets.gitPOAPRequest, imageKey);
+      logger.info(
+        `Uploaded image with imageKey: ${imageKey} to S3 bucket ${s3configProfile.buckets.gitPOAPRequest}`,
+      );
+    } catch (err) {
+      logger.error(`Received error when uploading image to S3 - ${err}`);
+      endTimer({ status: 500 });
+      return res.status(500).send({ msg: 'Failed to upload assets to S3' });
+    }
+
     const year = DateTime.fromISO(req.body.startDate).year;
 
     const gitPOAPRequest = await context.prisma.gitPOAPRequest.create({
       data: {
         name: req.body.name,
         type: GitPOAPType.CUSTOM,
-        imageKey: '', // will be set immediately after this request
+        imageKey,
         description: req.body.description,
-        year: year,
+        year,
         startDate: DateTime.fromISO(req.body.startDate).toJSDate(),
         endDate: DateTime.fromISO(req.body.endDate).toJSDate(),
         expiryDate: DateTime.fromISO(req.body.expiryDate).toJSDate(),
@@ -143,27 +161,7 @@ customGitpoapsRouter.post(
       },
     });
 
-    logger.info(`Uploading image to S3`);
-    const image = req.file;
-    try {
-      const key = `${image.originalname}-${gitPOAPRequest.id}`;
-      await uploadMulterFile(image, s3configProfile.buckets.gitPOAPRequest, key);
-      logger.info(
-        `Uploaded image with key: ${key} to S3 bucket ${s3configProfile.buckets.gitPOAPRequest}`,
-      );
-
-      /* Update the gitPOAPRequest with the s3 asset key */
-      await context.prisma.gitPOAPRequest.update({
-        where: { id: gitPOAPRequest.id },
-        data: { imageKey: key },
-      });
-    } catch (err) {
-      logger.error(`Received error when uploading image to S3 - ${err}`);
-      endTimer({ status: 500 });
-      return res.status(500).send({ msg: 'Failed to upload assets to S3' });
-    }
-
-    logger.debug(
+    logger.info(
       `Completed request to create a new GitPOAP Request with ID: ${gitPOAPRequest.id} "${req.body.name}" for project ${project?.id} and organization ${organization?.id}`,
     );
     endTimer({ status: 201 });
@@ -206,10 +204,20 @@ customGitpoapsRouter.put('/approve/:id', jwtWithAdminOAuth(), async (req, res) =
   if (isApproved) {
     const msg = `GitPOAP Request with ID:${gitPOAPRequestId} is already approved.`;
     logger.warn(msg);
-    endTimer({ status: 400 });
+    endTimer({ status: 200 });
 
-    return res.status(400).send({ msg });
+    return res.status(200).send({ msg });
   }
+
+  /* Update the GitPOAPRequest to APPROVED */
+  const updatedGitPOAPRequest = await context.prisma.gitPOAPRequest.update({
+    where: { id: gitPOAPRequestId },
+    data: {
+      adminApprovalStatus: AdminApprovalStatus.APPROVED,
+    },
+  });
+
+  logger.info(`Marking GitPOAP Request with ID:${gitPOAPRequestId} as APPROVED.`);
 
   const imageBuffer = await getImageBufferFromS3(
     s3configProfile.buckets.gitPOAPRequest,
@@ -225,11 +233,12 @@ customGitpoapsRouter.put('/approve/:id', jwtWithAdminOAuth(), async (req, res) =
     expiry_date: DateTime.fromJSDate(gitPOAPRequest.expiryDate).toFormat('yyyy-MM-dd'),
     event_url: gitPOAPRequest.eventUrl,
     imageName: gitPOAPRequest.imageKey,
-    imageBuffer: imageBuffer,
+    imageBuffer,
     secret_code: secretCode,
     email: gitPOAPRequest.email,
     num_requested_codes: parseInt(req.body.numRequestedCodes, 10),
   });
+
   if (poapInfo == null) {
     logger.error('Failed to create event via POAP API');
     endTimer({ status: 500 });
@@ -237,24 +246,14 @@ customGitpoapsRouter.put('/approve/:id', jwtWithAdminOAuth(), async (req, res) =
     return res.status(500).send({ msg: 'Failed to create POAP via API' });
   }
 
-  logger.debug(`Created Custom GitPOAP in POAP system: ${JSON.stringify(poapInfo)}`);
+  logger.info(`Created Custom GitPOAP in POAP system: ${JSON.stringify(poapInfo)}`);
 
-  /* Create the GitPOAP */
+  /* Create the GitPOAP from the GitPOAPRequest */
   const gitPOAP = await convertGitPOAPRequestToGitPOAP(gitPOAPRequest, poapInfo, secretCode);
 
-  /* Update the GitPOAPRequest */
-  const updatedGitPOAPRequest = await context.prisma.gitPOAPRequest.update({
-    where: { id: gitPOAPRequestId },
-    data: {
-      adminApprovalStatus: AdminApprovalStatus.APPROVED,
-      gitPOAP: {
-        connect: { id: gitPOAP.id },
-      },
-    },
-  });
+  logger.info(`Created Custom GitPOAP Request with ID: ${gitPOAPRequest.id}`);
 
-  logger.debug(`Created Custom GitPOAP Request with ID: ${gitPOAPRequest.id}`);
-
+  /* Create the associated Claims */
   if (updatedGitPOAPRequest.contributors) {
     const contributors = updatedGitPOAPRequest.contributors as GitPOAPRequestContributors;
 
@@ -275,7 +274,12 @@ customGitpoapsRouter.put('/approve/:id', jwtWithAdminOAuth(), async (req, res) =
     }
   }
 
-  logger.debug(`Completed admin request to approve Custom GitPOAP with ID:${gitPOAP.id}`);
+  logger.info(`Created Claims for GitPOAP Request with ID: ${gitPOAPRequest.id}`);
+
+  /* Delete the GitPOAPRequest */
+  await deleteGitPOAPRequest(gitPOAPRequest.id);
+
+  logger.info(`Completed admin request to create Custom GitPOAP with ID:${gitPOAP.id}`);
   endTimer({ status: 200 });
 
   return res.status(200).send(`${req.body.status}`);
@@ -301,6 +305,22 @@ customGitpoapsRouter.put('/reject/:id', jwtWithAdminOAuth(), async (req, res) =>
     return res.status(404).send({ msg });
   }
 
+  if (gitPOAPRequest.adminApprovalStatus === AdminApprovalStatus.APPROVED) {
+    const msg = `GitPOAP Request with ID:${gitPOAPRequestId} is already approved.`;
+    logger.warn(msg);
+    endTimer({ status: 400 });
+
+    return res.status(400).send({ msg });
+  }
+
+  if (gitPOAPRequest.adminApprovalStatus === AdminApprovalStatus.REJECTED) {
+    const msg = `GitPOAP Request with ID:${gitPOAPRequestId} is already rejected.`;
+    logger.warn(msg);
+    endTimer({ status: 200 });
+
+    return res.status(200).send({ msg });
+  }
+
   await context.prisma.gitPOAPRequest.update({
     where: { id: gitPOAPRequestId },
     data: {
@@ -308,7 +328,7 @@ customGitpoapsRouter.put('/reject/:id', jwtWithAdminOAuth(), async (req, res) =>
     },
   });
 
-  logger.debug(
+  logger.info(
     `Completed admin request to reject Custom GitPOAP with Request ID:${gitPOAPRequest.id}`,
   );
   endTimer({ status: 200 });
