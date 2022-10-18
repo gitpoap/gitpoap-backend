@@ -3,7 +3,6 @@ import { contextMock } from '../../../../__mocks__/src/context';
 import request from 'supertest';
 import { setupApp } from '../../../../src/app';
 import { isAuthSignatureDataValid } from '../../../../src/lib/signatures';
-import { resolveAddress } from '../../../../src/lib/ens';
 import { isGithubTokenValidForUser } from '../../../../src/external/github';
 import { sign, verify } from 'jsonwebtoken';
 import { JWT_SECRET } from '../../../../src/environment';
@@ -216,7 +215,7 @@ describe('POST /auth', () => {
         },
         user: {
           connect: {
-            githubId: githubId,
+            githubId,
           },
         },
       },
