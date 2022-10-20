@@ -31,6 +31,14 @@ export async function upsertProfile(address: string, ensName?: string | null) {
   return profile;
 }
 
+export const upsertProfileForAddressId = async (addressId: number) => {
+  return await context.prisma.profile.upsert({
+    where: { addressId },
+    update: {},
+    create: { addressId },
+  });
+};
+
 export const getProfileByAddress = async (addressToFind: string) =>
   await context.prisma.profile.findFirst({
     where: {
