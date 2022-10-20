@@ -80,6 +80,12 @@ import {
   FindManyGithubMentionResolver,
   GroupByGithubMentionResolver,
   AggregateGithubMentionResolver,
+  /* Auto-generated GitPOAPRequest Resolvers */
+  FindUniqueGitPOAPRequestResolver,
+  FindFirstGitPOAPRequestResolver,
+  FindManyGitPOAPRequestResolver,
+  GroupByGitPOAPRequestResolver,
+  AggregateGitPOAPRequestResolver,
 } from '@generated/type-graphql';
 import { CustomClaimResolver } from './resolvers/claims';
 import { CustomGitPOAPResolver } from './resolvers/gitpoaps';
@@ -165,6 +171,12 @@ const allResolvers: NonEmptyArray<Function> = [
   FindManyGithubMentionResolver,
   GroupByGithubMentionResolver,
   AggregateGithubMentionResolver,
+  /* Auto-generated GitPOAPRequest Resolvers */
+  FindUniqueGitPOAPRequestResolver,
+  FindFirstGitPOAPRequestResolver,
+  FindManyGitPOAPRequestResolver,
+  GroupByGitPOAPRequestResolver,
+  AggregateGitPOAPRequestResolver,
   /* ~~ Custom resolvers ~~ */
   CustomClaimResolver,
   CustomGitPOAPResolver,
