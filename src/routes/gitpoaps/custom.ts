@@ -35,9 +35,9 @@ customGitpoapsRouter.post(
   jwtWithAddress(),
   multer().single('image'),
   async function (req: Request<any, any, CreateCustomGitPOAPReqBody>, res) {
-    const logger = createScopedLogger('POST /gitpoap/custom');
+    const logger = createScopedLogger('POST /gitpoaps/custom');
     logger.debug(`Body: ${JSON.stringify(req.body)}`);
-    const endTimer = httpRequestDurationSeconds.startTimer('POST', '/gitpoap/custom');
+    const endTimer = httpRequestDurationSeconds.startTimer('POST', '/gitpoaps/custom');
 
     const schemaResult = CreateCustomGitPOAPSchema.safeParse(req.body);
 
@@ -195,9 +195,9 @@ customGitpoapsRouter.post(
 );
 
 customGitpoapsRouter.put('/approve/:id', jwtWithAdminOAuth(), async (req, res) => {
-  const logger = createScopedLogger('PUT /gitpoap/custom/approve/:id');
+  const logger = createScopedLogger('PUT /gitpoaps/custom/approve/:id');
   logger.debug(`Body: ${JSON.stringify(req.body)}`);
-  const endTimer = httpRequestDurationSeconds.startTimer('PUT', '/gitpoap/custom/approve/:id');
+  const endTimer = httpRequestDurationSeconds.startTimer('PUT', '/gitpoaps/custom/approve/:id');
 
   const gitPOAPRequestId = parseInt(req.params.id, 10);
   logger.info(`Admin request to approve GitPOAP Request with ID:${gitPOAPRequestId}`);
@@ -310,9 +310,9 @@ customGitpoapsRouter.put('/approve/:id', jwtWithAdminOAuth(), async (req, res) =
 });
 
 customGitpoapsRouter.put('/reject/:id', jwtWithAdminOAuth(), async (req, res) => {
-  const logger = createScopedLogger('PUT /gitpoap/custom/reject/:id');
+  const logger = createScopedLogger('PUT /gitpoaps/custom/reject/:id');
   logger.debug(`Body: ${JSON.stringify(req.body)}`);
-  const endTimer = httpRequestDurationSeconds.startTimer('PUT', '/gitpoap/custom/reject/:id');
+  const endTimer = httpRequestDurationSeconds.startTimer('PUT', '/gitpoaps/custom/reject/:id');
 
   const gitPOAPRequestId = parseInt(req.params.id, 10);
   logger.info(`Admin request to reject GitPOAP Request with ID:${gitPOAPRequestId}`);
