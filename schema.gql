@@ -95,6 +95,21 @@ type Query {
     take: Int
     skip: Int
   ): [GitPOAPGroupBy!]!
+  aggregateGitPOAPRequest(
+    where: GitPOAPRequestWhereInput
+    orderBy: [GitPOAPRequestOrderByWithRelationInput!]
+    cursor: GitPOAPRequestWhereUniqueInput
+    take: Int
+    skip: Int
+  ): AggregateGitPOAPRequest!
+  findFirstGitPOAPRequest(
+    where: GitPOAPRequestWhereInput
+    orderBy: [GitPOAPRequestOrderByWithRelationInput!]
+    cursor: GitPOAPRequestWhereUniqueInput
+    take: Int
+    skip: Int
+    distinct: [GitPOAPRequestScalarFieldEnum!]
+  ): GitPOAPRequest
   gitPOAPRequests(
     where: GitPOAPRequestWhereInput
     orderBy: [GitPOAPRequestOrderByWithRelationInput!]
@@ -103,6 +118,15 @@ type Query {
     skip: Int
     distinct: [GitPOAPRequestScalarFieldEnum!]
   ): [GitPOAPRequest!]!
+  gitPOAPRequest(where: GitPOAPRequestWhereUniqueInput!): GitPOAPRequest
+  groupByGitPOAPRequest(
+    where: GitPOAPRequestWhereInput
+    orderBy: [GitPOAPRequestOrderByWithAggregationInput!]
+    by: [GitPOAPRequestScalarFieldEnum!]!
+    having: GitPOAPRequestScalarWhereWithAggregatesInput
+    take: Int
+    skip: Int
+  ): [GitPOAPRequestGroupBy!]!
   aggregateGithubIssue(
     where: GithubIssueWhereInput
     orderBy: [GithubIssueOrderByWithRelationInput!]
@@ -3083,6 +3107,379 @@ input NestedEnumGitPOAPStatusWithAggregatesFilter {
   _count: NestedIntFilter
   _min: NestedEnumGitPOAPStatusFilter
   _max: NestedEnumGitPOAPStatusFilter
+}
+
+type AggregateGitPOAPRequest {
+  _count: GitPOAPRequestCountAggregate
+  _avg: GitPOAPRequestAvgAggregate
+  _sum: GitPOAPRequestSumAggregate
+  _min: GitPOAPRequestMinAggregate
+  _max: GitPOAPRequestMaxAggregate
+}
+
+type GitPOAPRequestCountAggregate {
+  id: Int!
+  createdAt: Int!
+  updatedAt: Int!
+  type: Int!
+  startDate: Int!
+  endDate: Int!
+  expiryDate: Int!
+  eventUrl: Int!
+  email: Int!
+  name: Int!
+  numRequestedCodes: Int!
+  imageKey: Int!
+  description: Int!
+  year: Int!
+  projectId: Int!
+  organizationId: Int!
+  ongoing: Int!
+  eventId: Int!
+  level: Int!
+  threshold: Int!
+  isPRBased: Int!
+  isEnabled: Int!
+  contributors: Int!
+  adminApprovalStatus: Int!
+  gitPOAPId: Int!
+  _all: Int!
+}
+
+type GitPOAPRequestAvgAggregate {
+  id: Float
+  numRequestedCodes: Float
+  year: Float
+  projectId: Float
+  organizationId: Float
+  eventId: Float
+  level: Float
+  threshold: Float
+  gitPOAPId: Float
+}
+
+type GitPOAPRequestSumAggregate {
+  id: Int
+  numRequestedCodes: Int
+  year: Int
+  projectId: Int
+  organizationId: Int
+  eventId: Int
+  level: Int
+  threshold: Int
+  gitPOAPId: Int
+}
+
+type GitPOAPRequestMinAggregate {
+  id: Int
+  createdAt: DateTime
+  updatedAt: DateTime
+  type: GitPOAPType
+  startDate: DateTime
+  endDate: DateTime
+  expiryDate: DateTime
+  eventUrl: String
+  email: String
+  name: String
+  numRequestedCodes: Int
+  imageKey: String
+  description: String
+  year: Int
+  projectId: Int
+  organizationId: Int
+  ongoing: Boolean
+  eventId: Int
+  level: Int
+  threshold: Int
+  isPRBased: Boolean
+  isEnabled: Boolean
+  adminApprovalStatus: AdminApprovalStatus
+  gitPOAPId: Int
+}
+
+type GitPOAPRequestMaxAggregate {
+  id: Int
+  createdAt: DateTime
+  updatedAt: DateTime
+  type: GitPOAPType
+  startDate: DateTime
+  endDate: DateTime
+  expiryDate: DateTime
+  eventUrl: String
+  email: String
+  name: String
+  numRequestedCodes: Int
+  imageKey: String
+  description: String
+  year: Int
+  projectId: Int
+  organizationId: Int
+  ongoing: Boolean
+  eventId: Int
+  level: Int
+  threshold: Int
+  isPRBased: Boolean
+  isEnabled: Boolean
+  adminApprovalStatus: AdminApprovalStatus
+  gitPOAPId: Int
+}
+
+type GitPOAPRequestGroupBy {
+  id: Int!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  type: GitPOAPType!
+  startDate: DateTime!
+  endDate: DateTime!
+  expiryDate: DateTime!
+  eventUrl: String!
+  email: String!
+  name: String!
+  numRequestedCodes: Int!
+  imageKey: String!
+  description: String!
+  year: Int!
+  projectId: Int
+  organizationId: Int
+  ongoing: Boolean!
+  eventId: Int
+  level: Int!
+  threshold: Int!
+  isPRBased: Boolean!
+  isEnabled: Boolean!
+  contributors: JSON!
+  adminApprovalStatus: AdminApprovalStatus
+  gitPOAPId: Int
+  _count: GitPOAPRequestCountAggregate
+  _avg: GitPOAPRequestAvgAggregate
+  _sum: GitPOAPRequestSumAggregate
+  _min: GitPOAPRequestMinAggregate
+  _max: GitPOAPRequestMaxAggregate
+}
+
+input GitPOAPRequestOrderByWithAggregationInput {
+  id: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  type: SortOrder
+  startDate: SortOrder
+  endDate: SortOrder
+  expiryDate: SortOrder
+  eventUrl: SortOrder
+  email: SortOrder
+  name: SortOrder
+  numRequestedCodes: SortOrder
+  imageKey: SortOrder
+  description: SortOrder
+  year: SortOrder
+  projectId: SortOrder
+  organizationId: SortOrder
+  ongoing: SortOrder
+  eventId: SortOrder
+  level: SortOrder
+  threshold: SortOrder
+  isPRBased: SortOrder
+  isEnabled: SortOrder
+  contributors: SortOrder
+  adminApprovalStatus: SortOrder
+  gitPOAPId: SortOrder
+  _count: GitPOAPRequestCountOrderByAggregateInput
+  _avg: GitPOAPRequestAvgOrderByAggregateInput
+  _max: GitPOAPRequestMaxOrderByAggregateInput
+  _min: GitPOAPRequestMinOrderByAggregateInput
+  _sum: GitPOAPRequestSumOrderByAggregateInput
+}
+
+input GitPOAPRequestCountOrderByAggregateInput {
+  id: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  type: SortOrder
+  startDate: SortOrder
+  endDate: SortOrder
+  expiryDate: SortOrder
+  eventUrl: SortOrder
+  email: SortOrder
+  name: SortOrder
+  numRequestedCodes: SortOrder
+  imageKey: SortOrder
+  description: SortOrder
+  year: SortOrder
+  projectId: SortOrder
+  organizationId: SortOrder
+  ongoing: SortOrder
+  eventId: SortOrder
+  level: SortOrder
+  threshold: SortOrder
+  isPRBased: SortOrder
+  isEnabled: SortOrder
+  contributors: SortOrder
+  adminApprovalStatus: SortOrder
+  gitPOAPId: SortOrder
+}
+
+input GitPOAPRequestAvgOrderByAggregateInput {
+  id: SortOrder
+  numRequestedCodes: SortOrder
+  year: SortOrder
+  projectId: SortOrder
+  organizationId: SortOrder
+  eventId: SortOrder
+  level: SortOrder
+  threshold: SortOrder
+  gitPOAPId: SortOrder
+}
+
+input GitPOAPRequestMaxOrderByAggregateInput {
+  id: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  type: SortOrder
+  startDate: SortOrder
+  endDate: SortOrder
+  expiryDate: SortOrder
+  eventUrl: SortOrder
+  email: SortOrder
+  name: SortOrder
+  numRequestedCodes: SortOrder
+  imageKey: SortOrder
+  description: SortOrder
+  year: SortOrder
+  projectId: SortOrder
+  organizationId: SortOrder
+  ongoing: SortOrder
+  eventId: SortOrder
+  level: SortOrder
+  threshold: SortOrder
+  isPRBased: SortOrder
+  isEnabled: SortOrder
+  adminApprovalStatus: SortOrder
+  gitPOAPId: SortOrder
+}
+
+input GitPOAPRequestMinOrderByAggregateInput {
+  id: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  type: SortOrder
+  startDate: SortOrder
+  endDate: SortOrder
+  expiryDate: SortOrder
+  eventUrl: SortOrder
+  email: SortOrder
+  name: SortOrder
+  numRequestedCodes: SortOrder
+  imageKey: SortOrder
+  description: SortOrder
+  year: SortOrder
+  projectId: SortOrder
+  organizationId: SortOrder
+  ongoing: SortOrder
+  eventId: SortOrder
+  level: SortOrder
+  threshold: SortOrder
+  isPRBased: SortOrder
+  isEnabled: SortOrder
+  adminApprovalStatus: SortOrder
+  gitPOAPId: SortOrder
+}
+
+input GitPOAPRequestSumOrderByAggregateInput {
+  id: SortOrder
+  numRequestedCodes: SortOrder
+  year: SortOrder
+  projectId: SortOrder
+  organizationId: SortOrder
+  eventId: SortOrder
+  level: SortOrder
+  threshold: SortOrder
+  gitPOAPId: SortOrder
+}
+
+input GitPOAPRequestScalarWhereWithAggregatesInput {
+  AND: [GitPOAPRequestScalarWhereWithAggregatesInput!]
+  OR: [GitPOAPRequestScalarWhereWithAggregatesInput!]
+  NOT: [GitPOAPRequestScalarWhereWithAggregatesInput!]
+  id: IntWithAggregatesFilter
+  createdAt: DateTimeWithAggregatesFilter
+  updatedAt: DateTimeWithAggregatesFilter
+  type: EnumGitPOAPTypeWithAggregatesFilter
+  startDate: DateTimeWithAggregatesFilter
+  endDate: DateTimeWithAggregatesFilter
+  expiryDate: DateTimeWithAggregatesFilter
+  eventUrl: StringWithAggregatesFilter
+  email: StringWithAggregatesFilter
+  name: StringWithAggregatesFilter
+  numRequestedCodes: IntWithAggregatesFilter
+  imageKey: StringWithAggregatesFilter
+  description: StringWithAggregatesFilter
+  year: IntWithAggregatesFilter
+  projectId: IntNullableWithAggregatesFilter
+  organizationId: IntNullableWithAggregatesFilter
+  ongoing: BoolWithAggregatesFilter
+  eventId: IntNullableWithAggregatesFilter
+  level: IntWithAggregatesFilter
+  threshold: IntWithAggregatesFilter
+  isPRBased: BoolWithAggregatesFilter
+  isEnabled: BoolWithAggregatesFilter
+  contributors: JsonWithAggregatesFilter
+  adminApprovalStatus: EnumAdminApprovalStatusNullableWithAggregatesFilter
+  gitPOAPId: IntNullableWithAggregatesFilter
+}
+
+input JsonWithAggregatesFilter {
+  equals: JSON
+  path: [String!]
+  string_contains: String
+  string_starts_with: String
+  string_ends_with: String
+  array_contains: JSON
+  array_starts_with: JSON
+  array_ends_with: JSON
+  lt: JSON
+  lte: JSON
+  gt: JSON
+  gte: JSON
+  not: JSON
+  _count: NestedIntFilter
+  _min: NestedJsonFilter
+  _max: NestedJsonFilter
+}
+
+input NestedJsonFilter {
+  equals: JSON
+  path: [String!]
+  string_contains: String
+  string_starts_with: String
+  string_ends_with: String
+  array_contains: JSON
+  array_starts_with: JSON
+  array_ends_with: JSON
+  lt: JSON
+  lte: JSON
+  gt: JSON
+  gte: JSON
+  not: JSON
+}
+
+input EnumAdminApprovalStatusNullableWithAggregatesFilter {
+  equals: AdminApprovalStatus
+  in: [AdminApprovalStatus!]
+  notIn: [AdminApprovalStatus!]
+  not: NestedEnumAdminApprovalStatusNullableWithAggregatesFilter
+  _count: NestedIntNullableFilter
+  _min: NestedEnumAdminApprovalStatusNullableFilter
+  _max: NestedEnumAdminApprovalStatusNullableFilter
+}
+
+input NestedEnumAdminApprovalStatusNullableWithAggregatesFilter {
+  equals: AdminApprovalStatus
+  in: [AdminApprovalStatus!]
+  notIn: [AdminApprovalStatus!]
+  not: NestedEnumAdminApprovalStatusNullableWithAggregatesFilter
+  _count: NestedIntNullableFilter
+  _min: NestedEnumAdminApprovalStatusNullableFilter
+  _max: NestedEnumAdminApprovalStatusNullableFilter
 }
 
 type AggregateGithubIssue {
