@@ -31,9 +31,7 @@ export async function upsertENSNameInDB(ethAddress: string, ensName: string | nu
       where: { ethAddress: ethAddressLower },
     });
 
-    /*
-     * If an existing address is found, then update the ENS name.
-     */
+    /* If an existing address is found, then update the ENS name. */
     if (existingAddress) {
       const updatedAddress = await context.prisma.address.update({
         where: { ethAddress: ethAddressLower },
@@ -45,9 +43,7 @@ export async function upsertENSNameInDB(ethAddress: string, ensName: string | nu
       return updatedAddress;
     }
 
-    /**
-     * If no existing address is found, then create a new address with the ENS name.
-     */
+    /* If no existing address is found, then create a new address with the ENS name. */
     const address = await context.prisma.address.upsert({
       where: { ethAddress: ethAddressLower },
       update: { ensName },
