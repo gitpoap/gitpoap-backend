@@ -1,7 +1,6 @@
 import fetch from 'cross-fetch';
 import { context } from '../context';
 import { DateTime } from 'luxon';
-import * as Sentry from '@sentry/node';
 import {
   POAP_AUTH_URL,
   POAP_API_URL,
@@ -13,6 +12,7 @@ import { createScopedLogger } from '../logging';
 import FormData from 'form-data';
 import { poapRequestDurationSeconds } from '../metrics';
 import { URL } from 'url';
+import { captureException } from '../lib/sentry';
 
 // DB keys
 const POAP_DB_KEY_NAME = 'poap';
@@ -133,17 +133,7 @@ async function makeGenericPOAPRequest(
         poapResponse.status
       }) for ${method} ${path} from POAP API: ${await poapResponse.text()}`;
       logger.error(msg);
-      Sentry.captureException(new Error(msg), {
-        level: 'error',
-        extra: {
-          body,
-        },
-        tags: {
-          service: 'poap-api',
-          method,
-          path,
-        },
-      });
+      captureException(new Error(msg), { service: 'poap-api', method, path }, { body });
       endTimer({ success: 0 });
       return null;
     }
@@ -153,17 +143,7 @@ async function makeGenericPOAPRequest(
     return await poapResponse.json();
   } catch (err) {
     logger.error(`Error while calling POAP API: ${err}`);
-    Sentry.captureException(err, {
-      level: 'error',
-      extra: {
-        body,
-      },
-      tags: {
-        service: 'poap-api',
-        method,
-        path,
-      },
-    });
+    captureException(err, { service: 'poap-api', method, path }, { body });
     endTimer({ success: 0 });
     return null;
   }
