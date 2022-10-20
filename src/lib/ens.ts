@@ -9,6 +9,7 @@ import { utils } from 'ethers';
 import { getS3URL, s3configProfile, uploadFileFromURL } from '../external/s3';
 import { SECONDS_PER_HOUR } from '../constants';
 import { upsertProfileForAddressId } from './profiles';
+import { captureException } from './sentry';
 
 const ENS_NAME_LAST_RUN_CACHE_PREFIX = 'ens#name-last-run';
 const ENS_AVATAR_LAST_RUN_CACHE_PREFIX = 'ens#avatar-last-run';
@@ -55,7 +56,7 @@ export async function upsertENSNameInDB(ethAddress: string, ensName: string | nu
     return address;
   } catch (e) {
     logger.error(`Error upserting ENS name ${ensName} for ${ethAddress}: ${e}`);
-
+    captureException(e, { ethAddress, ensName });
     return null;
   }
 }
