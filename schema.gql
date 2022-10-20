@@ -95,6 +95,14 @@ type Query {
     take: Int
     skip: Int
   ): [GitPOAPGroupBy!]!
+  gitPOAPRequests(
+    where: GitPOAPRequestWhereInput
+    orderBy: [GitPOAPRequestOrderByWithRelationInput!]
+    cursor: GitPOAPRequestWhereUniqueInput
+    take: Int
+    skip: Int
+    distinct: [GitPOAPRequestScalarFieldEnum!]
+  ): [GitPOAPRequest!]!
   aggregateGithubIssue(
     where: GithubIssueWhereInput
     orderBy: [GithubIssueOrderByWithRelationInput!]
