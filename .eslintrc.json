@@ -2,6 +2,15 @@
   "parser": "@typescript-eslint/parser",
   "plugins": ["@typescript-eslint/eslint-plugin"],
   "extends": ["plugin:prettier/recommended"],
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx"], // Your TypeScript files extension
+
+      "parserOptions": {
+        "project": ["./tsconfig.json"] // Specify it only for TypeScript files
+      }
+    }
+  ],
   "env": {
     "node": true,
     "jest": true
@@ -11,6 +20,7 @@
     "@typescript-eslint/explicit-function-return-type": 0,
     "@typescript-eslint/explicit-module-boundary-types": 0,
     "@typescript-eslint/no-explicit-any": 0,
+    "@typescript-eslint/no-floating-promises": [1, { "ignoreVoid": true }],
     "prettier/prettier": 1,
     "prefer-const": 1,
     "no-console": [1, { "allow": ["warn", "error"] }]
