@@ -41,7 +41,7 @@ export async function createClaimsForPR(
 
   // We need to skip any GitPOAPs that are not PR-based if
   // the bot called this endpoint because a PR was newly merged
-  let mustBePRBased: boolean | undefined = wasEarnedByMention ? undefined : true;
+  const mustBePRBased: boolean | undefined = wasEarnedByMention ? undefined : true;
 
   const repoData = await getRepoByName(organization, repo, mustBePRBased);
   if (repoData === null) {
