@@ -1931,6 +1931,32 @@ type GitPOAPRequest {
   contributors: JSON!
   adminApprovalStatus: AdminApprovalStatus
   gitPOAPId: Int
+  project: Project
+  organization: Organization
+  event: Event
+  gitPOAP: GitPOAP
+}
+
+type Event {
+  id: Int!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  startDate: DateTime!
+  endDate: DateTime!
+  name: String!
+  organization: String!
+  description: String
+  location: String!
+  imageUrl: String
+  githubHandle: String
+  twitterHandle: String
+  siteUrl: String
+  _count: EventCount
+}
+
+type EventCount {
+  gitPOAPs: Int!
+  gitPOAPRequests: Int!
 }
 
 input GitPOAPRequestWhereUniqueInput {
@@ -2228,28 +2254,6 @@ enum RedeemCodeScalarFieldEnum {
   id
   gitPOAPId
   code
-}
-
-type Event {
-  id: Int!
-  createdAt: DateTime!
-  updatedAt: DateTime!
-  startDate: DateTime!
-  endDate: DateTime!
-  name: String!
-  organization: String!
-  description: String
-  location: String!
-  imageUrl: String
-  githubHandle: String
-  twitterHandle: String
-  siteUrl: String
-  _count: EventCount
-}
-
-type EventCount {
-  gitPOAPs: Int!
-  gitPOAPRequests: Int!
 }
 
 type Email {
