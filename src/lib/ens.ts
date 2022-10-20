@@ -38,7 +38,7 @@ export async function upsertENSNameInDB(ethAddress: string, ensName: string | nu
         data: { ensName },
       });
 
-      upsertProfileForAddressId(updatedAddress.id);
+      await upsertProfileForAddressId(updatedAddress.id);
 
       return updatedAddress;
     }
@@ -50,7 +50,7 @@ export async function upsertENSNameInDB(ethAddress: string, ensName: string | nu
       create: { ethAddress: ethAddressLower, ensName },
     });
 
-    upsertProfileForAddressId(address.id);
+    await upsertProfileForAddressId(address.id);
 
     return address;
   } catch (e) {

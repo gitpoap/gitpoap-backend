@@ -400,7 +400,7 @@ export function getEarnedAt(claim: EarnedAtClaimData): Date {
       `Claim ID ${claim.id} was earned by mention but bot pullRequest and issue on the mention are null`,
     );
 
-    // Default to metionedAt
+    // Default to mentionedAt
     return claim.mentionEarned.githubMentionedAt;
   }
 
