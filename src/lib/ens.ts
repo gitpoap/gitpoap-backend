@@ -5,37 +5,63 @@ import {
   resolveENSAvatarInternal,
   resolveENSInternal,
 } from '../external/ens';
+import { utils } from 'ethers';
 import { getS3URL, s3configProfile, uploadFileFromURL } from '../external/s3';
 import { SECONDS_PER_HOUR } from '../constants';
+import { upsertProfileForAddressId } from './profiles';
 
 const ENS_NAME_LAST_RUN_CACHE_PREFIX = 'ens#name-last-run';
 const ENS_AVATAR_LAST_RUN_CACHE_PREFIX = 'ens#avatar-last-run';
 
 // Assume that these change infrequently
 const ENS_NAME_MAX_CHECK_FREQUENCY_HOURS = 12;
-const ENS_ADDRESS_MAX_CHECK_FREQUENCY_HOURS = 12;
 const ENS_AVATAR_MAX_CHECK_FREQUENCY_HOURS = 6;
 
-const DEFAULT_SVG_IMAGE_SIZE = 500;
+export async function upsertENSNameInDB(ethAddress: string, ensName: string | null) {
+  const logger = createScopedLogger('upsertENSNameInDB');
+  const ethAddressLower = ethAddress.toLowerCase();
 
-async function upsertENSNameInDB(address: string, ensName: string | null) {
-  const addressLower = address.toLowerCase();
+  if (!utils.isAddress(ethAddress)) {
+    logger.error(`Invalid Ethereum address ${ethAddress}`);
+    return null;
+  }
 
-  const addressRecord = await context.prisma.address.upsert({
-    where: { ethAddress: addressLower },
-    update: { ensName },
-    create: { ethAddress: addressLower, ensName },
-  });
+  try {
+    const existingAddress = await context.prisma.address.findUnique({
+      where: { ethAddress: ethAddressLower },
+    });
 
-  await context.prisma.profile.upsert({
-    where: {
-      addressId: addressRecord.id,
-    },
-    update: {},
-    create: {
-      addressId: addressRecord.id,
-    },
-  });
+    /*
+     * If an existing address is found, then update the ENS name.
+     */
+    if (existingAddress) {
+      const updatedAddress = await context.prisma.address.update({
+        where: { ethAddress: ethAddressLower },
+        data: { ensName },
+      });
+
+      upsertProfileForAddressId(updatedAddress.id);
+
+      return updatedAddress;
+    }
+
+    /**
+     * If no existing address is found, then create a new address with the ENS name.
+     */
+    const address = await context.prisma.address.upsert({
+      where: { ethAddress: ethAddressLower },
+      update: { ensName },
+      create: { ethAddress: ethAddressLower, ensName },
+    });
+
+    upsertProfileForAddressId(address.id);
+
+    return address;
+  } catch (e) {
+    logger.error(`Error upserting ENS name ${ensName} for ${ethAddress}: ${e}`);
+
+    return null;
+  }
 }
 
 async function upsertENSAvatarInDB(address: string, avatarURL: string | null) {
