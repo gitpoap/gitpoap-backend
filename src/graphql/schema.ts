@@ -14,6 +14,7 @@ import {
   FeaturedPOAPRelationsResolver,
   GithubPullRequestRelationsResolver,
   ProjectRelationsResolver,
+  GitPOAPRequestRelationsResolver,
   /* Auto-generated GitPOAP Resolvers */
   FindUniqueGitPOAPResolver,
   FindFirstGitPOAPResolver,
@@ -105,6 +106,7 @@ const allResolvers: NonEmptyArray<Function> = [
   FeaturedPOAPRelationsResolver,
   GithubPullRequestRelationsResolver,
   ProjectRelationsResolver,
+  GitPOAPRequestRelationsResolver,
   /* Auto-generated GitPOAP READ Resolvers */
   FindUniqueGitPOAPResolver,
   FindFirstGitPOAPResolver,
