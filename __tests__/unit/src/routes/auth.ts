@@ -2,7 +2,6 @@ import { contextMock } from '../../../../__mocks__/src/context';
 import request from 'supertest';
 import { setupApp } from '../../../../src/app';
 import { isSignatureValid } from '../../../../src/lib/signatures';
-import { resolveAddress } from '../../../../src/lib/ens';
 import { isGithubTokenValidForUser } from '../../../../src/external/github';
 import { sign, verify } from 'jsonwebtoken';
 import { JWT_SECRET } from '../../../../src/environment';
@@ -37,6 +36,7 @@ const ensName = null;
 const ensAvatarImageUrl = null;
 const signature = {
   data: 'John Hancock',
+  message: 'I am the very model of a modern major general',
   createdAt: 3423423425,
 };
 const userId = 3233;

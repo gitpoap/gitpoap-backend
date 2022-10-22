@@ -5,14 +5,19 @@ import { createScopedLogger } from '../logging';
 
 type Signature = {
   data: string;
+  message: string;
   createdAt: number;
 };
 
-export function isSignatureValid<T = Record<string, any>>(
+type Methods = 'GET' | 'POST' | 'PUT' | 'DELETE';
+
+type SignatureMethod = `${Methods} ${string}`;
+
+export function isSignatureValid<Data = Record<string, any>>(
   address: string,
-  method: string,
+  method: SignatureMethod,
   signature: Signature,
-  data: T,
+  data: Data,
 ) {
   const logger = createScopedLogger('isSignatureValid');
 
@@ -28,7 +33,8 @@ export function isSignatureValid<T = Record<string, any>>(
       site: 'gitpoap.io',
       method,
       createdAt: signature.createdAt,
-      ...data,
+      message: signature.message,
+      data,
     }),
     signature.data,
   );
