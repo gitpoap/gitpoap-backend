@@ -1,4 +1,4 @@
-import { generateSignatureMessage, isSignatureValid } from '../../../../src/lib/signatures';
+import { isSignatureValid } from '../../../../src/lib/signatures';
 import { utils } from 'ethers';
 import { DateTime } from 'luxon';
 import { ADDRESSES } from '../../../../prisma/constants';
@@ -16,7 +16,7 @@ const mockedVerifyMessage = jest.mocked(utils.verifyMessage, true);
 
 describe('isSignatureValid', () => {
   const genSigData = (createdAt: number) => ({
-    message: generateSignatureMessage(address, createdAt),
+    message: 'The pen is mightier than the sword.',
     createdAt,
   });
 
