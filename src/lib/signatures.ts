@@ -30,11 +30,13 @@ export function isSignatureValid<Data = Record<string, any>>(
 
   const recoveredAddress = utils.verifyMessage(
     JSON.stringify({
-      site: 'gitpoap.io',
-      method,
-      createdAt: signature.createdAt,
       message: signature.message,
-      ...data,
+      payload: {
+        site: 'gitpoap.io',
+        method,
+        createdAt: signature.createdAt,
+        ...data,
+      },
     }),
     signature.data,
   );
