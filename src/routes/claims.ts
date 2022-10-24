@@ -10,7 +10,7 @@ import { context } from '../context';
 import { ClaimStatus, GitPOAP, GitPOAPStatus } from '@prisma/client';
 import { resolveENS } from '../lib/ens';
 import { jwtWithGitHubOAuth, jwtWithAdminOAuth, gitpoapBotAuth } from '../middleware';
-import { getAccessTokenPayload, getAccessTokenPayloadWithOAuth } from '../types/authTokens';
+import { getAccessTokenPayloadWithOAuth } from '../types/authTokens';
 import { redeemPOAP, requestPOAPCodes, retrieveClaimInfo } from '../external/poap';
 import { getGithubUserById } from '../external/github';
 import { createScopedLogger } from '../logging';
@@ -26,7 +26,6 @@ import {
   updateClaimStatusById,
 } from '../lib/claims';
 import { checkIfClaimTransferred } from '../lib/transfers';
-import { upsertProfile } from '../lib/profiles';
 import { z } from 'zod';
 import { BotCreateClaimsErrorType, createClaimsForPR, createClaimsForIssue } from '../lib/bot';
 import { RestrictedContribution } from '../lib/contributions';
@@ -450,15 +449,16 @@ claimsRouter.post(
     let wasEarnedByMention: boolean;
 
     let newClaims: ClaimData[] = [];
-    if ('pullRequest' in req.body) {
-      const reqBody: z.infer<typeof CreateGitPOAPBotClaimsForPRSchema> = req.body.pullRequest;
+    if ('pullRequest' in schemaResult.data) {
+      const { organization, repo, pullRequestNumber, contributorGithubIds, wasEarnedByMention } =
+        schemaResult.data.pullRequest;
 
       let mentionInfo = ' mentions in';
-      if (!reqBody.wasEarnedByMention) {
+      if (!wasEarnedByMention) {
         mentionInfo = '';
 
         // If a PR was just merged, we assume there was only one author
-        if (reqBody.contributorGithubIds.length > 1) {
+        if (contributorGithubIds.length > 1) {
           const msg = `Bot called on merged PR with more than one contributor specified`;
           logger.error(msg);
           endTimer({ status: 400 });
@@ -467,20 +467,22 @@ claimsRouter.post(
       }
 
       logger.info(
-        `Request to create claim for${mentionInfo} PR #${reqBody.pullRequestNumber} on "${reqBody.organization}/${reqBody.repo}"`,
+        `Request to create claim for${mentionInfo} PR #${pullRequestNumber} on "${organization}/${repo}"`,
       );
 
       const contributions: RestrictedContribution[] = [];
-      for (const githubId of reqBody.contributorGithubIds) {
+      for (const githubId of contributorGithubIds) {
         const newContribution = await createClaimsForPR(
-          reqBody.organization,
-          reqBody.repo,
-          reqBody.pullRequestNumber,
+          organization,
+          repo,
+          pullRequestNumber,
           githubId,
-          reqBody.wasEarnedByMention,
+          wasEarnedByMention,
         );
         if (newContribution === BotCreateClaimsErrorType.RepoNotFound) {
-          return res.status(404).send({ msg: `Failed to find repo with name ${reqBody.repo}` });
+          return res
+            .status(404)
+            .send({ msg: `Failed to find repo with name "${organization}/${repo}"` });
         } else if (newContribution === BotCreateClaimsErrorType.GithubRecordNotFound) {
           return res.status(404).send({ msg: 'Failed to find repo on GitHub' });
         } else if (newContribution !== BotCreateClaimsErrorType.BotUser) {
@@ -488,7 +490,7 @@ claimsRouter.post(
         }
       }
 
-      const githubIdSet = new Set<number>(reqBody.contributorGithubIds);
+      const githubIdSet = new Set<number>(contributorGithubIds);
       for (let contribution of contributions) {
         if (contribution === null) {
           continue;
@@ -512,15 +514,16 @@ claimsRouter.post(
       }
 
       logger.debug(
-        `Completed request to create claim for${mentionInfo} PR #${reqBody.pullRequestNumber} on "${reqBody.organization}/${reqBody.repo}`,
+        `Completed request to create claim for${mentionInfo} PR #${pullRequestNumber} on "${organization}/${repo}`,
       );
     } else {
       // 'issue' in req.body
-      const reqBody: z.infer<typeof CreateGitPOAPBotClaimsForIssueSchema> = req.body.issue;
+      const { organization, repo, issueNumber, contributorGithubIds, wasEarnedByMention } =
+        schemaResult.data.issue;
 
-      if (reqBody.wasEarnedByMention === false) {
+      if (wasEarnedByMention === false) {
         logger.error(
-          `gitpoap-bot tried to create a claim for issue #${reqBody.issueNumber} without a mention in "${reqBody.organization}/${reqBody.repo}"`,
+          `gitpoap-bot tried to create a claim for issue #${issueNumber} without a mention in "${organization}/${repo}"`,
         );
         return res
           .status(400)
@@ -528,19 +531,21 @@ claimsRouter.post(
       }
 
       logger.info(
-        `Request to create claim for mention in Issue #${reqBody.issueNumber} on "${reqBody.organization}/${reqBody.repo}"`,
+        `Request to create claim for mention in Issue #${issueNumber} on "${organization}/${repo}"`,
       );
 
       const contributions: RestrictedContribution[] = [];
-      for (const githubId of reqBody.contributorGithubIds) {
+      for (const githubId of contributorGithubIds) {
         const newContribution = await createClaimsForIssue(
-          reqBody.organization,
-          reqBody.repo,
-          reqBody.issueNumber,
+          organization,
+          repo,
+          issueNumber,
           githubId,
         );
         if (newContribution === BotCreateClaimsErrorType.RepoNotFound) {
-          return res.status(404).send({ msg: `Failed to find repo with name ${reqBody.repo}` });
+          return res
+            .status(404)
+            .send({ msg: `Failed to find repo with name "${organization}/${repo}"` });
         } else if (newContribution === BotCreateClaimsErrorType.GithubRecordNotFound) {
           return res.status(404).send({ msg: 'Failed to find repo on GitHub' });
         } else if (newContribution !== BotCreateClaimsErrorType.BotUser) {
@@ -548,7 +553,7 @@ claimsRouter.post(
         }
       }
 
-      const githubIdSet = new Set<number>(reqBody.contributorGithubIds);
+      const githubIdSet = new Set<number>(contributorGithubIds);
       for (const contribution of contributions) {
         if (contribution === null) {
           continue;
@@ -570,7 +575,7 @@ claimsRouter.post(
       }
 
       logger.debug(
-        `Completed equest to create claim for mention in Issue #${reqBody.issueNumber} on "${reqBody.organization}/${reqBody.repo}"`,
+        `Completed equest to create claim for mention in Issue #${issueNumber} on "${organization}/${repo}"`,
       );
     }
 

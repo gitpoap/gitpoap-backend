@@ -62,7 +62,7 @@ authRouter.post('/', async function (req, res) {
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
-  const { address, signatureData } = <z.infer<typeof CreateAccessTokenSchema>>req.body;
+  const { address, signatureData } = schemaResult.data;
 
   logger.info(`Request to create AuthToken for address ${address}`);
 
