@@ -9,7 +9,6 @@ import { CreateAccessTokenSchema, RefreshAccessTokenSchema } from '../schemas/au
 import { deleteAuthToken, generateAuthTokens, generateNewAuthTokens } from '../lib/authTokens';
 import { resolveAddress } from '../lib/ens';
 import { isAuthSignatureDataValid } from '../lib/signatures';
-import { z } from 'zod';
 import { isGithubTokenValidForUser } from '../external/github';
 import { removeUsersGithubOAuthToken } from '../lib/users';
 import { removeGithubLoginForAddress } from '../lib/addresses';
