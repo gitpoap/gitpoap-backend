@@ -8,9 +8,8 @@ import {
 import { Router, Request } from 'express';
 import { context } from '../context';
 import { ClaimStatus, GitPOAP, GitPOAPStatus } from '@prisma/client';
-import { resolveENS } from '../lib/ens';
 import { jwtWithGitHubOAuth, jwtWithAdminOAuth, gitpoapBotAuth } from '../middleware';
-import { getAccessTokenPayload, getAccessTokenPayloadWithOAuth } from '../types/authTokens';
+import { getAccessTokenPayloadWithOAuth } from '../types/authTokens';
 import { redeemPOAP, requestPOAPCodes, retrieveClaimInfo } from '../external/poap';
 import { getGithubUserById } from '../external/github';
 import { createScopedLogger } from '../logging';
@@ -26,7 +25,6 @@ import {
   updateClaimStatusById,
 } from '../lib/claims';
 import { checkIfClaimTransferred } from '../lib/transfers';
-import { upsertProfile } from '../lib/profiles';
 import { z } from 'zod';
 import { BotCreateClaimsErrorType, createClaimsForPR, createClaimsForIssue } from '../lib/bot';
 import { RestrictedContribution } from '../lib/contributions';
