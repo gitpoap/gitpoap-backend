@@ -34,7 +34,7 @@ export function isSignatureValid<Data = Record<string, any>>(
       method,
       createdAt: signature.createdAt,
       message: signature.message,
-      data,
+      ...data,
     }),
     signature.data,
   );
