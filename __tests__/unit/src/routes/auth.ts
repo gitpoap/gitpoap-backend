@@ -1,7 +1,7 @@
 import { contextMock } from '../../../../__mocks__/src/context';
 import request from 'supertest';
 import { setupApp } from '../../../../src/app';
-import { isSignatureValid } from '../../../../src/lib/signatures';
+import { isAuthSignatureDataValid } from '../../../../src/lib/signatures';
 import { resolveAddress } from '../../../../src/lib/ens';
 import { isGithubTokenValidForUser } from '../../../../src/external/github';
 import { sign, verify } from 'jsonwebtoken';
@@ -23,7 +23,7 @@ jest.mock('../../../../src/lib/users');
 jest.mock('../../../../src/lib/addresses');
 jest.mock('../../../../src/external/github');
 
-const mockedIsSignatureValid = jest.mocked(isSignatureValid, true);
+const mockedIsAuthSignatureDataValid = jest.mocked(isAuthSignatureDataValid, true);
 const mockedIsGithubTokenValidForUser = jest.mocked(isGithubTokenValidForUser, true);
 const mockedRemoveUsersGithubOAuthToken = jest.mocked(removeUsersGithubOAuthToken, true);
 const mockedRemoveGithubLoginForAddress = jest.mocked(removeGithubLoginForAddress, true);
@@ -35,8 +35,8 @@ const address = '0xburzyBurz';
 const addressLower = address.toLowerCase();
 const ensName = null;
 const ensAvatarImageUrl = null;
-const signature = {
-  data: 'John Hancock',
+const signatureData = {
+  signature: 'John Hancock',
   createdAt: 3423423425,
 };
 const userId = 3233;
@@ -83,18 +83,16 @@ describe('POST /auth', () => {
   });
 
   it('Fails with invalid signature', async () => {
-    mockedIsSignatureValid.mockReturnValue(false);
+    mockedIsAuthSignatureDataValid.mockReturnValue(false);
 
     const result = await request(await setupApp())
       .post('/auth')
-      .send({ address, signature });
+      .send({ address, signatureData });
 
     expect(result.statusCode).toEqual(401);
 
-    expect(mockedIsSignatureValid).toHaveBeenCalledTimes(1);
-    expect(mockedIsSignatureValid).toHaveBeenCalledWith(address, 'POST /auth', signature, {
-      data: address,
-    });
+    expect(mockedIsAuthSignatureDataValid).toHaveBeenCalledTimes(1);
+    expect(mockedIsAuthSignatureDataValid).toHaveBeenCalledWith(address, signatureData);
   });
 
   const expectAddressUpsert = () => {
@@ -124,7 +122,7 @@ describe('POST /auth', () => {
   };
 
   it("Doesn't check GitHub login info when Address isn't associated with a User", async () => {
-    mockedIsSignatureValid.mockReturnValue(true);
+    mockedIsAuthSignatureDataValid.mockReturnValue(true);
     contextMock.prisma.address.upsert.mockResolvedValue({
       id: addressId,
       ensName,
@@ -138,16 +136,14 @@ describe('POST /auth', () => {
 
     const result = await request(await setupApp())
       .post('/auth')
-      .send({ address, signature });
+      .send({ address, signatureData });
 
     expect(result.statusCode).toEqual(200);
 
     validatePayloads(result.text, null, null, authTokenGeneration);
 
-    expect(mockedIsSignatureValid).toHaveBeenCalledTimes(1);
-    expect(mockedIsSignatureValid).toHaveBeenCalledWith(address, 'POST /auth', signature, {
-      data: address,
-    });
+    expect(mockedIsAuthSignatureDataValid).toHaveBeenCalledTimes(1);
+    expect(mockedIsAuthSignatureDataValid).toHaveBeenCalledWith(address, signatureData);
 
     expectAddressUpsert();
 
@@ -171,7 +167,7 @@ describe('POST /auth', () => {
   });
 
   it("Returns GitHub login info when user's login is still valid", async () => {
-    mockedIsSignatureValid.mockReturnValue(true);
+    mockedIsAuthSignatureDataValid.mockReturnValue(true);
     contextMock.prisma.address.upsert.mockResolvedValue({
       id: addressId,
       ensName,
@@ -191,16 +187,14 @@ describe('POST /auth', () => {
 
     const result = await request(await setupApp())
       .post('/auth')
-      .send({ address, signature });
+      .send({ address, signatureData });
 
     expect(result.statusCode).toEqual(200);
 
     validatePayloads(result.text, githubId, githubHandle, authTokenGeneration);
 
-    expect(mockedIsSignatureValid).toHaveBeenCalledTimes(1);
-    expect(mockedIsSignatureValid).toHaveBeenCalledWith(address, 'POST /auth', signature, {
-      data: address,
-    });
+    expect(mockedIsAuthSignatureDataValid).toHaveBeenCalledTimes(1);
+    expect(mockedIsAuthSignatureDataValid).toHaveBeenCalledWith(address, signatureData);
 
     expectAddressUpsert();
 
@@ -231,7 +225,7 @@ describe('POST /auth', () => {
   });
 
   it("Removes GitHub login info when user's login is invalid", async () => {
-    mockedIsSignatureValid.mockReturnValue(true);
+    mockedIsAuthSignatureDataValid.mockReturnValue(true);
     contextMock.prisma.address.upsert.mockResolvedValue({
       id: addressId,
       ensName,
@@ -251,16 +245,14 @@ describe('POST /auth', () => {
 
     const result = await request(await setupApp())
       .post('/auth')
-      .send({ address, signature });
+      .send({ address, signatureData });
 
     expect(result.statusCode).toEqual(200);
 
     validatePayloads(result.text, null, null, authTokenGeneration);
 
-    expect(mockedIsSignatureValid).toHaveBeenCalledTimes(1);
-    expect(mockedIsSignatureValid).toHaveBeenCalledWith(address, 'POST /auth', signature, {
-      data: address,
-    });
+    expect(mockedIsAuthSignatureDataValid).toHaveBeenCalledTimes(1);
+    expect(mockedIsAuthSignatureDataValid).toHaveBeenCalledWith(address, signatureData);
 
     expectAddressUpsert();
 
