@@ -8,7 +8,7 @@ import { context } from '../context';
 import { CreateAccessTokenSchema, RefreshAccessTokenSchema } from '../schemas/auth';
 import { deleteAuthToken, generateAuthTokens, generateNewAuthTokens } from '../lib/authTokens';
 import { resolveAddress } from '../lib/ens';
-import { isSignatureValid } from '../lib/signatures';
+import { isAuthSignatureDataValid } from '../lib/signatures';
 import { z } from 'zod';
 import { isGithubTokenValidForUser } from '../external/github';
 import { removeUsersGithubOAuthToken } from '../lib/users';
@@ -62,7 +62,7 @@ authRouter.post('/', async function (req, res) {
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
-  const { address, signature } = <z.infer<typeof CreateAccessTokenSchema>>req.body;
+  const { address, signatureData } = <z.infer<typeof CreateAccessTokenSchema>>req.body;
 
   logger.info(`Request to create AuthToken for address ${address}`);
 
@@ -70,11 +70,7 @@ authRouter.post('/', async function (req, res) {
   const ensPromise = resolveAddress(address, { synchronous: true });
 
   // Validate signature
-  if (
-    !isSignatureValid(address, 'POST /auth', signature, {
-      data: address,
-    })
-  ) {
+  if (!isAuthSignatureDataValid(address, signatureData)) {
     logger.warn(`Request signature is invalid for address ${address}`);
     endTimer({ status: 401 });
     return res.status(401).send({ msg: 'The signature is not valid for this address' });
