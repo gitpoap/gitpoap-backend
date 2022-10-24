@@ -4,3 +4,4 @@ dist/
 .env
 notes
 prisma/dbml
+*.csv
