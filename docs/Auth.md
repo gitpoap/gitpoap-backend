@@ -126,6 +126,7 @@ Then the frontend should call `POST /auth` with the following body:
   "address": "0xae95f7e7fb2fcf86148ef832faed2752ae5a358a",
   "signatureData": {
     "signature": "John Hancock",
+    "message": "The message that was signed",
     "createdAt": 1666638270342
   }
 }
