@@ -37,6 +37,7 @@ const ensName = null;
 const ensAvatarImageUrl = null;
 const signatureData = {
   signature: 'John Hancock',
+  message: 'The pen is mightier than the sword',
   createdAt: 3423423425,
 };
 const userId = 3233;
