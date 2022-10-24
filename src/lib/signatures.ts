@@ -42,7 +42,7 @@ export function isSignatureValid(
 
   const recoveredAddress = utils.verifyMessage(signatureData.message, signature);
 
-  return recoveredAddress === address;
+  return recoveredAddress.toLowerCase() === address.toLowerCase();
 }
 
 export function isAuthSignatureDataValid(
