@@ -1,9 +1,9 @@
 import { z } from 'zod';
-import { SignatureSchema } from './signature';
+import { SignatureDataSchema } from './signatures';
 
 export const CreateAccessTokenSchema = z.object({
   address: z.string().nonempty(),
-  signature: SignatureSchema,
+  signatureData: SignatureDataSchema,
 });
 
 export const RefreshAccessTokenSchema = z.object({
