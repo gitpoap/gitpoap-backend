@@ -10,22 +10,6 @@ type SignatureData = {
   createdAt: number;
 };
 
-export function generateSignatureMessage(address: string, createdAt: number): string {
-  return `This signature attests that I am ${address.toLowerCase()}, for the purpose of signing into GitPOAP.
-
-Signing this message requires no ETH and will not create or send a transaction.
-
-Created at: ${createdAt}.`;
-}
-
-export function generateSignatureData(address: string): SignatureData {
-  const createdAt = Date.now();
-
-  const message = generateSignatureMessage(address, createdAt);
-
-  return { message, createdAt };
-}
-
 export function isSignatureValid(
   address: string,
   signatureData: SignatureData,
@@ -45,15 +29,7 @@ export function isSignatureValid(
   return recoveredAddress.toLowerCase() === address.toLowerCase();
 }
 
-export function isAuthSignatureDataValid(
+export const isAuthSignatureDataValid = (
   address: string,
-  authSignatureData: z.infer<typeof SignatureDataSchema>,
-): boolean {
-  const message = generateSignatureMessage(address, authSignatureData.createdAt);
-
-  return isSignatureValid(
-    address,
-    { message, createdAt: authSignatureData.createdAt },
-    authSignatureData.signature,
-  );
-}
+  { createdAt, message, signature }: z.infer<typeof SignatureDataSchema>,
+): boolean => isSignatureValid(address, { message, createdAt }, signature);
