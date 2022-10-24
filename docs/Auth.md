@@ -110,23 +110,24 @@ in their request.
 ### Requesting a New Token Pair
 
 To request a new Access+Refresh the frontend should (1) ensure that the user is connected to their wallet and
-then ask them to sign data like the following:
-```json
-{
-  "site": "gitpoap.io",
-  "method": "POST /auth",
-  "createdAt": 1647987506199,
-  "data": "0xTheUsersAddress",
-}
+then ask them to sign a message like the following:
 ```
-See [the appendix in the API docs](https://github.com/gitpoap/gitpoap-backend/blob/main/API.md#generating-signatures)
-for more information on how to create signatures.
+This signature attests that I am 0xae95f7e7fb2fcf86148ef832faed2752ae5a358a, for the purpose of signing into GitPOAP.
+
+Signing this message requires no ETH and will not create or send a transaction.
+
+Created at: 1666638270342.
+```
+See [the appendix](#generating-signatures) for more information on how to create signatures.
 
 Then the frontend should call `POST /auth` with the following body:
 ```json
 {
-  "address": "0xTheUsersAddress",
-  "signature": "John Hancock",
+  "address": "0xae95f7e7fb2fcf86148ef832faed2752ae5a358a",
+  "signatureData": {
+    "signature": "John Hancock",
+    "createdAt": 1666638270342
+  }
 }
 ```
 where `signature` is the string returned by signing the data above.
@@ -198,6 +199,22 @@ if the Refresh Token the client sent was valid.
 
 **Note:** If you attempt to use the old Refresh Token again you will invalidate your
 login and you will have to log in GitHub again.
+
+## Appendix
+
+### Generating Signatures
+
+To generate signatures for arbitrary data in the request, just use
+[`signMessage`](https://docs.ethers.io/v5/api/signer/#Signer-signMessage) from `ethers`
+and pass in the data as a JSON string. For example, given an (`ethers`) `web3Provider`
+in the frontend, we could generate a signature for a request like:
+
+```javascript
+const signature = await web3Provider.getSigner().signMessage('Some message');
+```
+
+_Note that the signatures for the requests in this document should have the order of
+their keys in the same order as they appear here._
 
 ## Some Additional Reading
 

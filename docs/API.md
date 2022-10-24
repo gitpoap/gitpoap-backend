@@ -386,23 +386,3 @@ Note: The returned `ClaimData` of this will only include Claims that have
 (presumably) two separate comments:
 1. For any users that were mentined as being contributors to the PR/Issue
 2. For the user that was the creator of the merged/closed PR/issue
-
-## Appendix
-
-### Generating Signatures
-
-To generate signatures for arbitrary data in the request, just use
-[`signMessage`](https://docs.ethers.io/v5/api/signer/#Signer-signMessage) from `ethers`
-and pass in the data as a JSON string. For example, given an (`ethers`) `web3Provider`
-in the frontend, we could generate a signature for a request like:
-
-```javascript
-const signature = await web3Provider.getSigner().signMessage(
-  JSON.stringify({
-    bio: 'something cool, I guess',
-  }),
-);
-```
-
-_Note that the signatures for the requests in this document should have the order of
-their keys in the same order as they appear here._
