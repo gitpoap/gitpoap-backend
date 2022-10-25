@@ -780,7 +780,7 @@ input EmailWhereInput {
   updatedAt: DateTimeFilter
   claims: ClaimListRelationFilter
   isValidated: BoolFilter
-  tokenExpiresAt: DateTimeFilter
+  tokenExpiresAt: DateTimeNullableFilter
 }
 
 input ClaimListRelationFilter {
@@ -2262,7 +2262,7 @@ type Email {
   createdAt: DateTime!
   updatedAt: DateTime!
   isValidated: Boolean!
-  tokenExpiresAt: DateTime!
+  tokenExpiresAt: DateTime
   _count: EmailCount
 }
 
