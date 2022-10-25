@@ -141,9 +141,7 @@ emailRouter.post('/verify/:activeToken', jwtWithAddress(), async function (req, 
   logger.info(`Received request from ${ethAddress} to verify token: ${activeToken}`);
 
   const email = await context.prisma.email.findUnique({
-    where: {
-      activeToken,
-    },
+    where: { activeToken },
     select: {
       id: true,
       isValidated: true,
@@ -156,9 +154,14 @@ emailRouter.post('/verify/:activeToken', jwtWithAddress(), async function (req, 
     return res.status(404).send({ msg: 'INVALID' });
   }
 
-  if (email.isValidated) {
-    logger.warn(`User attempted to validate emailAddress that has already been validated`);
+  if (!email.tokenExpiresAt) {
+    logger.error(`Email validation token has no expiration date: ${activeToken}`);
+    endTimer({ status: 400 });
+    return res.status(400).send({ msg: 'INVALID' });
+  }
 
+  if (email.isValidated) {
+    logger.warn('User attempted to validate emailAddress that has already been validated');
     endTimer({ status: 400 });
     return res.status(400).send({ msg: 'USED' });
   }

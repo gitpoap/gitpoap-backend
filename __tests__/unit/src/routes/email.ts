@@ -5,7 +5,6 @@ import { setupApp } from '../../../../src/app';
 import { sendVerificationEmail } from '../../../../src/external/postmark';
 import { generateAuthTokens } from '../../../../src/lib/authTokens';
 import { DateTime } from 'luxon';
-import { Address } from '@prisma/client';
 
 jest.mock('../../../../src/lib/ens');
 jest.mock('../../../../src/lib/email', () => ({
@@ -289,6 +288,31 @@ describe('POST /email/verify/:activeToken', () => {
       .send();
 
     expect(result.statusCode).toEqual(401);
+  });
+
+  it('Fails when tokenExpiresAt is null', async () => {
+    mockJwtWithAddress();
+
+    contextMock.prisma.email.findUnique.mockResolvedValue({
+      id: 1,
+      isValidated: false,
+      tokenExpiresAt: null,
+    } as any);
+
+    const authTokens = genAuthTokens();
+
+    const result = await request(await setupApp())
+      .post(`/email/verify/${testActiveToken}`)
+      .set('Authorization', `Bearer ${authTokens.accessToken}`)
+      .send();
+
+    expect(result.statusCode).toEqual(400);
+
+    expect(contextMock.prisma.email.findUnique).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.email.findUnique).toHaveBeenCalledWith({
+      where: { activeToken: testActiveToken },
+      select: { id: true, isValidated: true, tokenExpiresAt: true },
+    });
   });
 
   it('Fails on invalid activeToken', async () => {
