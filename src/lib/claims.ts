@@ -1,5 +1,4 @@
-import { ClaimStatus } from '@prisma/client';
-import { Claim } from '@generated/type-graphql';
+import { Claim, ClaimStatus } from '@prisma/client';
 import { utils } from 'ethers';
 import { context } from '../context';
 import { createScopedLogger } from '../logging';
@@ -473,7 +472,10 @@ export const createClaimForEmail = async (emailAddress: string, gitPOAPId: numbe
   return claim;
 };
 
-export const createClaimForEthAddress = async (ethAddress: string, gitPOAPId: number) => {
+export async function createClaimForEthAddress(
+  ethAddress: string,
+  gitPOAPId: number,
+): Promise<Claim | null> {
   const logger = createScopedLogger('createClaimForEthAddress');
 
   if (!utils.isAddress(ethAddress)) {
@@ -482,6 +484,11 @@ export const createClaimForEthAddress = async (ethAddress: string, gitPOAPId: nu
   }
 
   const address = await upsertAddress(ethAddress);
+
+  if (address === null) {
+    logger.error(`Failed to upsert address: ${ethAddress}`);
+    return null;
+  }
 
   const gitPOAP = await context.prisma.gitPOAP.findUnique({
     where: { id: gitPOAPId },
@@ -501,7 +508,7 @@ export const createClaimForEthAddress = async (ethAddress: string, gitPOAPId: nu
   });
 
   return claim;
-};
+}
 
 export const createClaimForEnsName = async (ensName: string, gitPOAPId: number) => {
   const logger = createScopedLogger('createClaimForEnsName');
