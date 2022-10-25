@@ -139,8 +139,14 @@ export class CustomProfileResolver {
       include: {
         featuredPOAPs: true,
         address: {
-          include: {
-            githubUser: true,
+          select: {
+            ensName: true,
+            ensAvatarImageUrl: true,
+            githubUser: {
+              select: {
+                githubHandle: true,
+              },
+            },
           },
         },
       },
@@ -154,6 +160,34 @@ export class CustomProfileResolver {
         : await resolveAddressInternal(resolvedAddress);
 
       const newProfile = await upsertProfile(resolvedAddress, ensName);
+
+      if (newProfile === null) {
+        logger.error(`Failed to upsert Profile for address ${resolvedAddress}`);
+
+        const resultWithEns: NullableProfile = {
+          id: null,
+          address: resolvedAddress,
+          ensName,
+          createdAt: null,
+          updatedAt: null,
+          bio: null,
+          bannerImageUrl: null,
+          name: null,
+          profileImageUrl: null,
+          twitterHandle: null,
+          githubHandle: null,
+          personalSiteUrl: null,
+          isVisibleOnLeaderboard: true,
+          ensAvatarImageUrl: null,
+          featuredPOAPs: [],
+        };
+
+        logger.debug(`Completed request for profile data for address: ${addressOrEns}`);
+        endTimer({ success: 1 });
+
+        return resultWithEns;
+      }
+
       result = {
         ...newProfile,
         featuredPOAPs: [],
@@ -167,7 +201,7 @@ export class CustomProfileResolver {
 
     const resultWithEns: NullableProfile = {
       ...result,
-      address: result.address.ethAddress,
+      address: resolvedAddress,
       ensName: result.address.ensName,
       ensAvatarImageUrl: result.address.ensAvatarImageUrl,
       githubHandle: result.address.githubUser?.githubHandle ?? result.githubHandle,

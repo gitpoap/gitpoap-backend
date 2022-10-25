@@ -4,7 +4,7 @@ import { resolveENS } from '../lib/ens';
 import { retrievePOAPTokenInfo } from '../external/poap';
 import { createScopedLogger } from '../logging';
 import { httpRequestDurationSeconds } from '../metrics';
-import { getProfileByAddress, upsertProfile } from '../lib/profiles';
+import { getProfileByAddress, upsertProfileForAddressId } from '../lib/profiles';
 import { jwtWithAddress } from '../middleware';
 import { getAccessTokenPayload } from '../types/authTokens';
 
@@ -17,12 +17,18 @@ featuredRouter.put('/:poapTokenId', jwtWithAddress(), async function (req, res) 
 
   const endTimer = httpRequestDurationSeconds.startTimer('PUT', '/featured');
 
-  const { address } = getAccessTokenPayload(req.user);
+  const { address, addressId } = getAccessTokenPayload(req.user);
   const poapTokenId = req.params.poapTokenId;
 
   logger.info(`Request from ${address} for POAP ID: ${poapTokenId}`);
 
-  const profile = await upsertProfile(address);
+  const profile = await upsertProfileForAddressId(addressId);
+
+  if (profile === null) {
+    logger.error(`Failed to upsert profile for address: ${address}`);
+    endTimer({ status: 500 });
+    return res.status(500).send({ msg: 'Failed to create profile for address' });
+  }
 
   const poapData = await retrievePOAPTokenInfo(poapTokenId);
   if (poapData === null) {
