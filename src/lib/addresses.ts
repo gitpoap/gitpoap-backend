@@ -1,25 +1,38 @@
 import { context } from '../context';
+import { createScopedLogger } from '../logging';
+import { Address } from '@prisma/client';
 
-export const upsertAddress = async (
+export async function upsertAddress(
   address: string,
   ensName?: string | null,
   ensAvatarImageUrl?: string | null,
-) => {
-  const addressResult = await context.prisma.address.upsert({
-    where: { ethAddress: address.toLowerCase() },
-    update: {
-      ensName,
-      ensAvatarImageUrl,
-    },
-    create: {
-      ethAddress: address.toLowerCase(),
-      ensName,
-      ensAvatarImageUrl,
-    },
-  });
+): Promise<Address | null> {
+  const logger = createScopedLogger('upsertAddress');
 
-  return addressResult;
-};
+  const addressLower = address.toLowerCase();
+
+  try {
+    return await context.prisma.address.upsert({
+      where: { ethAddress: addressLower },
+      update: {
+        ensName,
+        ensAvatarImageUrl,
+      },
+      create: {
+        ethAddress: addressLower,
+        ensName,
+        ensAvatarImageUrl,
+      },
+    });
+  } catch (err) {
+    logger.warn(`Caught error while trying to upsert address ${address}: ${err}`);
+
+    // Return the record (which we assume to exist) if the upsert fails
+    return await context.prisma.address.findUnique({
+      where: { ethAddress: addressLower },
+    });
+  }
+}
 
 export async function removeGithubLoginForAddress(addressId: number) {
   await context.prisma.address.update({
