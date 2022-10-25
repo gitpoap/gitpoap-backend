@@ -138,7 +138,11 @@ export class CustomProfileResolver {
       },
       include: {
         featuredPOAPs: true,
-        address: true,
+        address: {
+          include: {
+            githubUser: true,
+          },
+        },
       },
     });
 
@@ -157,29 +161,16 @@ export class CustomProfileResolver {
 
       if (ensName !== null) {
         // Resolve avatar in background
-        resolveENSAvatar(ensName, resolvedAddress);
+        void resolveENSAvatar(ensName, resolvedAddress);
       }
     }
-
-    const addressResult = await prisma.address.findFirst({
-      where: {
-        ethAddress: resolvedAddress.toLowerCase(),
-      },
-      select: {
-        githubUser: {
-          select: {
-            githubHandle: true,
-          },
-        },
-      },
-    });
 
     const resultWithEns: NullableProfile = {
       ...result,
       address: result.address.ethAddress,
       ensName: result.address.ensName,
       ensAvatarImageUrl: result.address.ensAvatarImageUrl,
-      githubHandle: addressResult?.githubUser?.githubHandle ?? result.githubHandle,
+      githubHandle: result.address.githubUser?.githubHandle ?? result.githubHandle,
     };
 
     logger.debug(`Completed request for profile data for address: ${addressOrEns}`);
