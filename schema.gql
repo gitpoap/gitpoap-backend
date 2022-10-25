@@ -774,7 +774,7 @@ input EmailWhereInput {
   OR: [EmailWhereInput!]
   NOT: [EmailWhereInput!]
   id: IntFilter
-  addressId: IntFilter
+  addressId: IntNullableFilter
   address: AddressRelationFilter
   createdAt: DateTimeFilter
   updatedAt: DateTimeFilter
@@ -2258,13 +2258,11 @@ enum RedeemCodeScalarFieldEnum {
 
 type Email {
   id: Int!
-  emailAddress: String!
   addressId: Int
   createdAt: DateTime!
   updatedAt: DateTime!
   isValidated: Boolean!
-  activeToken: String
-  tokenExpiresAt: DateTime
+  tokenExpiresAt: DateTime!
   _count: EmailCount
 }
 
