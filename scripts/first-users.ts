@@ -32,10 +32,10 @@ async function findFirstUsers(requestedCount: number) {
   logger.info(`Found ${claims.length} Claims`);
 
   let resultContent = 'githubHandle,githubId,mintedAt\n';
-  let foundGithubIds = new Set<number>();
+  const foundGithubIds = new Set<number>();
 
   for (const claim of claims) {
-    if (!foundGithubIds.has(claim.user.githubId)) {
+    if (claim.user && !foundGithubIds.has(claim.user.githubId)) {
       if (claim.mintedAt === null) {
         logger.error(`Claim ID ${claim.id} has status CLAIMED but mintedAt is null`);
         continue;
@@ -74,7 +74,6 @@ const main = async () => {
   if (!('_' in argv) || argv['_'].length !== 1) {
     logger.error('A single number of users must be supplied as a command line argument');
     process.exit(1);
-    return;
   }
 
   const count = parseInt(argv['_'][0], 10);
