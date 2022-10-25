@@ -156,7 +156,6 @@ export class CustomProfileResolver {
       const newProfile = await upsertProfile(resolvedAddress, ensName);
       result = {
         ...newProfile,
-        address: { ...newProfile.address, githubUser: null },
         featuredPOAPs: [],
       };
 
