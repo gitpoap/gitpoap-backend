@@ -19,11 +19,7 @@ export async function upsertProfile(address: string, ensName?: string | null) {
       },
     },
     include: {
-      address: {
-        include: {
-          githubUser: true,
-        },
-      },
+      address: true,
     },
   });
 
