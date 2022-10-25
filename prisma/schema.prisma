@@ -76,20 +76,20 @@ model Address {
 }
 
 model Email {
-  id             Int      @id @default(autoincrement())
+  id             Int       @id @default(autoincrement())
   // Hide email.emailAddress from generated resolvers
   /// @TypeGraphQL.omit(output: true, input: true)
-  emailAddress   String   @unique @db.VarChar(255)
-  addressId      Int?     @unique
-  address        Address? @relation(fields: [addressId], references: [id])
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  emailAddress   String    @unique @db.VarChar(255)
+  addressId      Int?      @unique
+  address        Address?  @relation(fields: [addressId], references: [id])
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
   claims         Claim[]
-  isValidated    Boolean  @default(false)
+  isValidated    Boolean   @default(false)
   // Hide email.activeToken from generated resolvers
   /// @TypeGraphQL.omit(output: true, input: true)
-  activeToken    String   @unique
-  tokenExpiresAt DateTime
+  activeToken    String?   @unique
+  tokenExpiresAt DateTime?
 }
 
 model OrganizationMembership {
