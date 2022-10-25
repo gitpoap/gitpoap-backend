@@ -103,6 +103,44 @@ describe('CustomProfileResolver', () => {
     10 * MILLISECONDS_PER_SECOND,
   );
 
+  it(
+    'profileData - new GitHub Connection',
+    async () => {
+      const data = await client.request(gql`
+      {
+        profileData(address: "${ADDRESSES.aldo}") {
+          ethAddress
+          githubHandle
+        }
+      }
+    `);
+
+      expect(data.profileData).not.toEqual(null);
+      expect(data.profileData.ethAddress).toEqual(ADDRESSES.aldo);
+      expect(data.profileData.githubHandle).toEqual('aldolamb');
+    },
+    10 * MILLISECONDS_PER_SECOND,
+  );
+
+  it(
+    'profileData - old GitHub Connection',
+    async () => {
+      const data = await client.request(gql`
+      {
+        profileData(address: "${ADDRESSES.random}") {
+          ethAddress
+          githubHandle
+        }
+      }
+    `);
+
+      expect(data.profileData).not.toEqual(null);
+      expect(data.profileData.ethAddress).toEqual(ADDRESSES.random);
+      expect(data.profileData.githubHandle).toEqual('randomHandle');
+    },
+    10 * MILLISECONDS_PER_SECOND,
+  );
+
   it('mostHonoredContributors', async () => {
     const data = await client.request(gql`
       {

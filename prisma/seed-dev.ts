@@ -36,15 +36,15 @@ export const seed = async () => {
   const kayleen = await UserFactory.create(GH_IDS.kayleen, GH_HANDLES.kayleen);
 
   /* Create Address */
-  const addressJay = await AddressFactory.create(ADDRESSES.jay);
-  const addressBurz = await AddressFactory.create(ADDRESSES.burz);
-  const addressBurz2 = await AddressFactory.create(ADDRESSES.burz2);
-  const addressColfax = await AddressFactory.create(ADDRESSES.colfax);
-  const addressVitalik = await AddressFactory.create(ADDRESSES.vitalik);
-  const addressAldo = await AddressFactory.create(ADDRESSES.aldo);
-  const addressTyler = await AddressFactory.create(ADDRESSES.tyler);
-  const addressKayleen = await AddressFactory.create(ADDRESSES.kayleen);
-  const addressRandom1 = await AddressFactory.create('0x89dab21047e6de0e77deee5f4f286d72be50b942');
+  const addressJay = await AddressFactory.create(ADDRESSES.jay, jay.id);
+  const addressBurz = await AddressFactory.create(ADDRESSES.burz, burz.id);
+  const addressBurz2 = await AddressFactory.create(ADDRESSES.burz2, burz2.id);
+  const addressColfax = await AddressFactory.create(ADDRESSES.colfax, colfax.id);
+  const addressVitalik = await AddressFactory.create(ADDRESSES.vitalik, vitalik.id);
+  const addressAldo = await AddressFactory.create(ADDRESSES.aldo, aldo.id);
+  const addressTyler = await AddressFactory.create(ADDRESSES.tyler, tyler.id);
+  const addressKayleen = await AddressFactory.create(ADDRESSES.kayleen, kayleen.id);
+  const addressRandom1 = await AddressFactory.create(ADDRESSES.random);
 
   /* Create Projects */
   const frontendProject = await ProjectFactory.create();
@@ -200,12 +200,12 @@ export const seed = async () => {
 
   /* Create Profiles */
   const profile1 = await ProfileFactory.create(addressColfax.id, 'I like brisket.');
-  const profile2 = await ProfileFactory.create(addressRandom1.id, 'I like bbq.');
+  const profile2 = await ProfileFactory.create(addressRandom1.id, 'I like bbq.', 'Random User', 'randomHandle');
   const profileJay = await ProfileFactory.create(addressJay.id, 'I like factorio.', 'Jay PB', '0xpeebeejay', 'peebeejay', 'https://s.jay.gg');
   const profile4 = await ProfileFactory.create(addressBurz.id, 'I am addicted to POAPs', 'Anna Burzillo');
   const profile5 = await ProfileFactory.create(addressBurz2.id, 'I am not real');
   const profile6 = await ProfileFactory.create(addressVitalik.id, 'I like unicorns');
-  const profile7 = await ProfileFactory.create(addressAldo.id, 'I like surfing', 'Aldo Lamberti');
+  const profile7 = await ProfileFactory.create(addressAldo.id, 'I like surfing', 'Aldo Lamberti', 'aldolamberti');
 
   /* Create Featured POAPs */
   const featured1 = await FeaturedPOAPFactory.create(claim14.poapTokenId!, profileJay.id); // Featured GitPOAP
