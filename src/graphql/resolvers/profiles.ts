@@ -161,11 +161,25 @@ export class CustomProfileResolver {
       }
     }
 
+    const addressResult = await prisma.address.findFirst({
+      where: {
+        ethAddress: resolvedAddress.toLowerCase(),
+      },
+      select: {
+        githubUser: {
+          select: {
+            githubHandle: true,
+          },
+        },
+      },
+    });
+
     const resultWithEns: NullableProfile = {
       ...result,
       address: result.address.ethAddress,
       ensName: result.address.ensName,
       ensAvatarImageUrl: result.address.ensAvatarImageUrl,
+      githubHandle: addressResult?.githubUser?.githubHandle ?? result.githubHandle,
     };
 
     logger.debug(`Completed request for profile data for address: ${addressOrEns}`);
