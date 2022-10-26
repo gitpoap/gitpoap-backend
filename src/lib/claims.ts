@@ -472,10 +472,7 @@ export const createClaimForEmail = async (emailAddress: string, gitPOAPId: numbe
   return claim;
 };
 
-export async function createClaimForEthAddress(
-  ethAddress: string,
-  gitPOAPId: number,
-): Promise<Claim | null> {
+export async function createClaimForEthAddress(ethAddress: string, gitPOAPId: number) {
   const logger = createScopedLogger('createClaimForEthAddress');
 
   if (!utils.isAddress(ethAddress)) {

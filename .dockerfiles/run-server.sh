@@ -3,7 +3,7 @@
 set -ex
 
 # Wait for db to finish starting up
-sleep 3
+./wait-for-it.sh db:5432
 
 # Setup the db
 npx prisma migrate dev

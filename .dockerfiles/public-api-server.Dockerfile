@@ -1,8 +1,11 @@
-FROM node:18.11.0
+FROM node:16.15.1
 
 WORKDIR /usr/src/server
 
 RUN apt update && apt install -y postgresql-client-common postgresql-client
+
+ADD https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh ./wait-for-it.sh
+RUN chmod +x ./wait-for-it.sh
 
 COPY package.json yarn.lock ./
 
