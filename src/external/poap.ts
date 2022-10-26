@@ -116,12 +116,12 @@ async function makeGenericPOAPRequest(
     requestOptions = {
       method,
       body: body as any,
-      headers: headers,
+      headers,
     };
   } else {
     requestOptions = {
       method,
-      headers: headers,
+      headers,
     };
   }
 
@@ -263,7 +263,7 @@ export async function retrievePOAPEventInfo(
 
   if (poapResponse !== null) {
     // Set no TTL since we assume events don't change
-    context.redis.setValue(
+    void context.redis.setValue(
       POAP_EVENT_CACHE_PREFIX,
       eventId.toString(),
       JSON.stringify(poapResponse),
@@ -294,7 +294,7 @@ export async function retrieveUsersPOAPs(address: string) {
 
   if (poapResponse !== null) {
     // Cache for 1 minute
-    context.redis.setValue(
+    void context.redis.setValue(
       POAP_USER_TOKENS_CACHE_PREFIX,
       address,
       JSON.stringify(poapResponse),
@@ -332,7 +332,7 @@ export async function retrievePOAPTokenInfo(
 
   if (poapResponse !== null) {
     // Set no TTL since we assume tokens don't change (e.g. they won't be transferred)
-    context.redis.setValue(POAP_TOKEN_CACHE_PREFIX, poapTokenId, JSON.stringify(poapResponse));
+    void context.redis.setValue(POAP_TOKEN_CACHE_PREFIX, poapTokenId, JSON.stringify(poapResponse));
   }
 
   return poapResponse;
@@ -348,8 +348,6 @@ type CreatePOAPEventArgs = {
   start_date: string;
   end_date: string;
   expiry_date: string;
-  /** @deprecated - This field is no longer used */
-  year?: number | null;
   event_url: string;
   imageName: string;
   imageBuffer: Buffer;
@@ -374,7 +372,6 @@ export async function createPOAPEvent({
   start_date,
   end_date,
   expiry_date,
-  year,
   event_url,
   imageName,
   imageBuffer,
@@ -393,7 +390,6 @@ export async function createPOAPEvent({
   form.append('start_date', start_date);
   form.append('end_date', end_date);
   form.append('expiry_date', expiry_date);
-  form.append('year', year);
   form.append('event_url', event_url);
   form.append('virtual_event', 'true');
   form.append('image', imageBuffer, { filename: imageName });
