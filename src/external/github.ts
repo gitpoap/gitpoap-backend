@@ -34,9 +34,7 @@ async function responseHandler<T>(responsePromise: Promise<any>): Promise<T | nu
   const logger = createScopedLogger('responseHandler');
 
   try {
-    const data = (await responsePromise).data;
-
-    return data;
+    return (await responsePromise).data;
   } catch (err) {
     logger.error(`Received bad response from octokit: ${err}`);
 
