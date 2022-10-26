@@ -334,7 +334,7 @@ gitpoapsRouter.post(
     if (gitPOAPData.project !== null) {
       const repos = gitPOAPData.project.repos;
       for (const repo of repos) {
-        backloadGithubPullRequestData(repo.id);
+        void backloadGithubPullRequestData(repo.id);
       }
     }
   },
