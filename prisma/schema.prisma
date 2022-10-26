@@ -71,7 +71,7 @@ model Address {
   // Hide Address.authTokens from generated resolvers
   /// @TypeGraphQL.omit(output: true, input: true)
   authTokens        AuthToken[]
-  GitPOAPRequest    GitPOAPRequest[]
+  gitPOAPRequests   GitPOAPRequest[]
 
   @@index([ethAddress])
 }
