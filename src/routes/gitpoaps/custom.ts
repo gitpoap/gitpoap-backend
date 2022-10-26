@@ -25,6 +25,7 @@ import {
 } from '../../lib/claims';
 import { deleteGitPOAPRequest } from '../../lib/gitpoapRequest';
 import { parseJSON } from '../../lib/json';
+import { getAccessTokenPayload } from '../../types/authTokens';
 
 export const customGitpoapsRouter = Router();
 
@@ -162,6 +163,7 @@ customGitpoapsRouter.post(
       return res.status(500).send({ msg: 'Failed to upload image to S3' });
     }
 
+    const { addressId } = getAccessTokenPayload(req.user);
     const gitPOAPRequest = await context.prisma.gitPOAPRequest.create({
       data: {
         name: req.body.name,
@@ -182,6 +184,11 @@ customGitpoapsRouter.post(
         adminApprovalStatus: AdminApprovalStatus.PENDING,
         contributors: contributors as Prisma.JsonObject,
         isPRBased: false,
+        address: {
+          connect: {
+            id: addressId,
+          },
+        },
       },
     });
 
