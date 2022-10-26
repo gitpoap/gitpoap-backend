@@ -3,6 +3,7 @@ import { ADDRESSES, GH_HANDLES } from '../../../../../prisma/constants';
 import cheerio from 'cheerio';
 import { event2, event3, event29009, event36571, event36576 } from '../../../../../prisma/data';
 import { MILLISECONDS_PER_SECOND } from '../../../../../src/constants';
+import { GitPOAPType } from '@prisma/client';
 
 const PUBLIC_API_URL = 'http://public-api-server:3122';
 
@@ -118,20 +119,23 @@ describe('public-api/v1/github/user/:githubHandle/gitpoaps', () => {
       todayStart.setHours(0, 0, 0, 0);
 
       expect(data).toHaveLength(4);
-      expect(data[0].gitPoapId).toEqual(8);
-      expect(data[0].gitPoapEventId).toEqual(3);
-      expect(data[0].poapTokenId).toEqual('pizza-pie');
-      expect(data[0].poapEventId).toEqual(event3.id);
-      expect(data[0].poapEventFancyId).toEqual(event3.fancy_id);
-      expect(data[0].name).toEqual(event3.name);
-      expect(data[0].year).toEqual(event3.year);
-      expect(data[0].description).toEqual(event3.description);
-      expect(data[0].imageUrl).toEqual(event3.image_url);
-      expect(data[0].repositories).toHaveLength(1);
-      expect(data[0].repositories[0]).toEqual('some-other-org/repo568');
-      expect(new Date(data[0].earnedAt)).toEqual(todayStart);
-      expect(data[0].mintedAt).toEqual('2022-04-05');
-      expect(data[0].needsRevalidation).toEqual(false);
+      expect(data).toContainEqual({
+        gitPoapId: 8,
+        gitPoapEventId: 3,
+        gitPoapType: GitPOAPType.ANNUAL,
+        poapTokenId: 'pizza-pie',
+        poapEventId: event3.id,
+        poapEventFancyId: event3.fancy_id,
+        name: event3.name,
+        year: event3.year,
+        description: event3.description,
+        imageUrl: event3.image_url,
+        repositories: ['some-other-org/repo568'],
+        earnedAt: todayStart.toISOString().split('T')[0],
+        mintedAt: '2022-04-05',
+        isDeprecated: false,
+        needsRevalidation: false,
+      });
     });
 
     it("Returns all minted gitpoaps when status equals 'unclaimed'", async () => {
@@ -145,12 +149,16 @@ describe('public-api/v1/github/user/:githubHandle/gitpoaps', () => {
       todayStart.setHours(0, 0, 0, 0);
 
       expect(data).toHaveLength(6);
-      expect(data[0].gitPoapId).toEqual(6);
-      expect(data[0].gitPoapEventId).toEqual(2);
-      expect(data[0].poapTokenId).toEqual(null);
-      expect(data[0].poapEventId).toEqual(event2.id);
-      expect(data[0].poapEventFancyId).toEqual(event2.fancy_id);
-      expect(data[0].mintedAt).toBeNull();
+      expect(data).toContainEqual(
+        expect.objectContaining({
+          gitPoapId: 6,
+          gitPoapEventId: 2,
+          poapTokenId: null,
+          poapEventId: event2.id,
+          poapEventFancyId: event2.fancy_id,
+          mintedAt: null,
+        }),
+      );
     });
 
     it("Returns all minted gitpoaps when status equals 'pending'", async () => {
@@ -185,19 +193,22 @@ describe('public-api/v1/github/user/:githubHandle/gitpoaps', () => {
     todayStart.setHours(0, 0, 0, 0);
 
     expect(data).toHaveLength(10);
-    expect(data[0].gitPoapId).toEqual(35);
-    expect(data[0].gitPoapEventId).toEqual(10);
-    expect(data[0].poapTokenId).toBeNull();
-    expect(data[0].poapEventId).toEqual(event36571.id);
-    expect(data[0].poapEventFancyId).toEqual(event36571.fancy_id);
-    expect(data[0].name).toEqual(event36571.name);
-    expect(data[0].year).toEqual(event36571.year);
-    expect(data[0].description).toEqual(event36571.description);
-    expect(data[0].imageUrl).toEqual(event36571.image_url);
-    expect(data[0].repositories).toHaveLength(1);
-    expect(data[0].repositories[0]).toEqual('gitpoap/gitpoap-backend');
-    expect(new Date(data[0].earnedAt)).toEqual(todayStart);
-    expect(data[0].mintedAt).toBeNull();
+    expect(data).toContainEqual(
+      expect.objectContaining({
+        gitPoapId: 35,
+        gitPoapEventId: 10,
+        poapTokenId: null,
+        poapEventId: event36571.id,
+        poapEventFancyId: event36571.fancy_id,
+        name: event36571.name,
+        year: event36571.year,
+        description: event36571.description,
+        imageUrl: event36571.image_url,
+        repositories: ['gitpoap/gitpoap-backend'],
+        earnedAt: todayStart.toISOString().split('T')[0],
+        mintedAt: null,
+      }),
+    );
   });
 
   it('Returns DEPRECATED GitPOAPs', async () => {
