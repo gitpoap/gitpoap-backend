@@ -101,7 +101,7 @@ describe('POST /claims/gitpoap-bot/create', () => {
   it("Fails when app isn't gitpoap-bot", async () => {
     const appId = 23423423;
 
-    mockedGetGithubAuthenticatedApp.mockResolvedValue(appId);
+    mockedGetGithubAuthenticatedApp.mockResolvedValue({ id: appId } as any);
 
     const result = await request(await setupApp())
       .post('/claims/gitpoap-bot/create')
@@ -115,7 +115,7 @@ describe('POST /claims/gitpoap-bot/create', () => {
   });
 
   it('Fails on invalid request bodies', async () => {
-    mockedGetGithubAuthenticatedApp.mockResolvedValue({ id: GITPOAP_BOT_APP_ID });
+    mockedGetGithubAuthenticatedApp.mockResolvedValue({ id: GITPOAP_BOT_APP_ID } as any);
 
     {
       const result = await request(await setupApp())
@@ -174,7 +174,7 @@ describe('POST /claims/gitpoap-bot/create', () => {
   });
 
   it('Fails for a PR contribution with more than one githubId', async () => {
-    mockedGetGithubAuthenticatedApp.mockResolvedValue({ id: GITPOAP_BOT_APP_ID });
+    mockedGetGithubAuthenticatedApp.mockResolvedValue({ id: GITPOAP_BOT_APP_ID } as any);
 
     const result = await request(await setupApp())
       .post('/claims/gitpoap-bot/create')
@@ -187,7 +187,7 @@ describe('POST /claims/gitpoap-bot/create', () => {
   });
 
   it("Fails for issues that aren't from mentions", async () => {
-    mockedGetGithubAuthenticatedApp.mockResolvedValue({ id: GITPOAP_BOT_APP_ID });
+    mockedGetGithubAuthenticatedApp.mockResolvedValue({ id: GITPOAP_BOT_APP_ID } as any);
 
     const result = await request(await setupApp())
       .post('/claims/gitpoap-bot/create')
@@ -200,7 +200,7 @@ describe('POST /claims/gitpoap-bot/create', () => {
   });
 
   it('Fails when repository is not in DB', async () => {
-    mockedGetGithubAuthenticatedApp.mockResolvedValue({ id: GITPOAP_BOT_APP_ID });
+    mockedGetGithubAuthenticatedApp.mockResolvedValue({ id: GITPOAP_BOT_APP_ID } as any);
     mockedCreateClaimsForPR.mockResolvedValue(BotCreateClaimsErrorType.RepoNotFound);
     mockedCreateClaimsForIssue.mockResolvedValue(BotCreateClaimsErrorType.GithubRecordNotFound);
 
@@ -240,7 +240,7 @@ describe('POST /claims/gitpoap-bot/create', () => {
   });
 
   it('Fails when repository is not found on GitHub', async () => {
-    mockedGetGithubAuthenticatedApp.mockResolvedValue({ id: GITPOAP_BOT_APP_ID });
+    mockedGetGithubAuthenticatedApp.mockResolvedValue({ id: GITPOAP_BOT_APP_ID } as any);
     mockedCreateClaimsForPR.mockResolvedValue(BotCreateClaimsErrorType.GithubRecordNotFound);
     mockedCreateClaimsForIssue.mockResolvedValue(BotCreateClaimsErrorType.GithubRecordNotFound);
 
@@ -280,7 +280,7 @@ describe('POST /claims/gitpoap-bot/create', () => {
   });
 
   it('Fails if createClaimsForIssue returns a pullRequest', async () => {
-    mockedGetGithubAuthenticatedApp.mockResolvedValue({ id: GITPOAP_BOT_APP_ID });
+    mockedGetGithubAuthenticatedApp.mockResolvedValue({ id: GITPOAP_BOT_APP_ID } as any);
     mockedCreateClaimsForIssue.mockResolvedValue({ pullRequest: { id: 3 } });
 
     const result = await request(await setupApp())
@@ -300,7 +300,7 @@ describe('POST /claims/gitpoap-bot/create', () => {
   });
 
   it('Skips bot users', async () => {
-    mockedGetGithubAuthenticatedApp.mockResolvedValue({ id: GITPOAP_BOT_APP_ID });
+    mockedGetGithubAuthenticatedApp.mockResolvedValue({ id: GITPOAP_BOT_APP_ID } as any);
     mockedCreateClaimsForPR.mockResolvedValue(BotCreateClaimsErrorType.BotUser);
     mockedCreateClaimsForIssue.mockResolvedValue(BotCreateClaimsErrorType.BotUser);
 
@@ -345,7 +345,7 @@ describe('POST /claims/gitpoap-bot/create', () => {
   });
 
   it('Creates and returns new claims', async () => {
-    mockedGetGithubAuthenticatedApp.mockResolvedValue({ id: GITPOAP_BOT_APP_ID });
+    mockedGetGithubAuthenticatedApp.mockResolvedValue({ id: GITPOAP_BOT_APP_ID } as any);
 
     const contributionId = 324;
 
@@ -399,7 +399,7 @@ describe('POST /claims/gitpoap-bot/create', () => {
   });
 
   it("Filters out non-mentioned user's claims", async () => {
-    mockedGetGithubAuthenticatedApp.mockResolvedValue({ id: GITPOAP_BOT_APP_ID });
+    mockedGetGithubAuthenticatedApp.mockResolvedValue({ id: GITPOAP_BOT_APP_ID } as any);
 
     const contributionId = 324;
 
