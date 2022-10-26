@@ -1,7 +1,5 @@
 import { mockedLogger } from '../../../../__mocks__/src/logging';
-import { contextMock } from '../../../../__mocks__/src/context';
 import { handleNewPull, RepoReturnType } from '../../../../src/lib/ongoing';
-import { GithubPullRequestData } from '../../../../src/external/github';
 import { upsertUser } from '../../../../src/lib/users';
 import { upsertGithubPullRequest } from '../../../../src/lib/pullRequests';
 import { GithubPullRequest, User } from '@prisma/client';
@@ -9,6 +7,8 @@ import {
   createNewClaimsForRepoContribution,
   createYearlyGitPOAPsMap,
 } from '../../../../src/lib/claims';
+import { OctokitResponseData, PullsAPI } from '../../../../src/external/github';
+import { DeepPartial } from '../../../../src/types/utility';
 
 jest.mock('../../../../src/logging');
 jest.mock('../../../../src/lib/users');
@@ -22,6 +22,15 @@ jest.mock('../../../../src/lib/claims');
 
 const mockedUpsertUser = jest.mocked(upsertUser, true);
 const mockedUpsertGithubPullRequest = jest.mocked(upsertGithubPullRequest, true);
+
+type GithubPullRequestData = DeepPartial<OctokitResponseData<PullsAPI['get']>> & {
+  number: number;
+  title: string;
+  user: {};
+  created_at: string;
+  updated_at: string;
+  merge_commit_sha: string;
+};
 
 const user: User = {
   id: 32423,
@@ -54,7 +63,7 @@ const repo: RepoReturnType = {
 
 describe('handleNewPull', () => {
   const handleNewPullWrapper = async (repo: RepoReturnType, pull: GithubPullRequestData) => {
-    return await handleNewPull(repo, createYearlyGitPOAPsMap(repo.project.gitPOAPs), pull);
+    return await handleNewPull(repo, createYearlyGitPOAPsMap(repo.project.gitPOAPs), pull as any);
   };
 
   it('Skips unmerged PRs', async () => {
@@ -234,7 +243,7 @@ describe('handleNewPull', () => {
 
     const yearlyGitPOAPsMap = createYearlyGitPOAPsMap(repo.project.gitPOAPs);
 
-    const result = await handleNewPull(repo, yearlyGitPOAPsMap, pull);
+    const result = await handleNewPull(repo, yearlyGitPOAPsMap, pull as any);
 
     expect(result.finished).toEqual(false);
     expect(result.updatedAt).toEqual(new Date(pull.updated_at));
