@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "main": "server.ts",
   "license": "MIT",
+  "engines": {
+    "node": ">=16.15.1 <17"
+  },
   "scripts": {
     "copy-files": "cp src/redis/deletePrefix.lua dist/src/redis/deletePrefix.lua",
     "build": "tsc --project ./ && yarn copy-files",
