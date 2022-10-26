@@ -733,7 +733,7 @@ input AddressWhereInput {
   profile: ProfileRelationFilter
   issuedClaims: ClaimListRelationFilter
   mintedClaims: ClaimListRelationFilter
-  GitPOAPRequest: GitPOAPRequestListRelationFilter
+  gitPOAPRequests: GitPOAPRequestListRelationFilter
 }
 
 input StringFilter {
@@ -1324,7 +1324,7 @@ input AddressOrderByWithRelationInput {
   profile: ProfileOrderByWithRelationInput
   issuedClaims: ClaimOrderByRelationAggregateInput
   mintedClaims: ClaimOrderByRelationAggregateInput
-  GitPOAPRequest: GitPOAPRequestOrderByRelationAggregateInput
+  gitPOAPRequests: GitPOAPRequestOrderByRelationAggregateInput
 }
 
 input EmailOrderByWithRelationInput {
@@ -1648,7 +1648,7 @@ type AddressCount {
   issuedClaims: Int!
   mintedClaims: Int!
   authTokens: Int!
-  GitPOAPRequest: Int!
+  gitPOAPRequests: Int!
 }
 
 type GitPOAP {
