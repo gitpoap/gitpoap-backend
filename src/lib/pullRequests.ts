@@ -1,24 +1,20 @@
 import { createScopedLogger } from '../logging';
 import { context } from '../context';
-import { GithubPullRequestData, getGithubRepositoryPullsAsAdmin } from '../external/github';
+import {
+  getGithubRepositoryPullsAsAdmin,
+  OctokitPullListItem,
+  OctokitPullItem,
+} from '../external/github';
 import { pullRequestBackloadDurationSeconds } from '../metrics';
 import { upsertUser } from './users';
 import {
-  RepoData,
   YearlyGitPOAPsMap,
   createNewClaimsForRepoContribution,
   createYearlyGitPOAPsMap,
 } from './claims';
-import { GitPOAPStatus, GithubPullRequest } from '@prisma/client';
+import { GitPOAPStatus } from '@prisma/client';
 
-type ExtraRepoData = RepoData & {
-  name: string;
-  organization: {
-    name: string;
-  };
-};
-
-async function getRepoInfo(repoId: number): Promise<ExtraRepoData | null> {
+async function getRepoInfo(repoId: number) {
   const logger = createScopedLogger('getRepoInfo');
 
   const result = await context.prisma.repo.findMany({
@@ -69,7 +65,7 @@ async function getRepoInfo(repoId: number): Promise<ExtraRepoData | null> {
 
 // Helper function to either return the commit where this was merged
 // or the last commit of the PR in case merge_commit_sha is null
-export function extractMergeCommitSha(pr: GithubPullRequestData): string {
+export function extractMergeCommitSha(pr: OctokitPullListItem | OctokitPullItem) {
   if (pr.merge_commit_sha === null) {
     return pr.head.sha;
   }
@@ -85,7 +81,7 @@ export async function upsertGithubPullRequest(
   githubMergedAt: Date | null,
   githubMergeCommitSha: string | null,
   userId: number,
-): Promise<GithubPullRequest> {
+) {
   const logger = createScopedLogger('upsertGithubPullRequest');
 
   logger.info(`Upserting PR #${githubPullNumber}`);
@@ -93,7 +89,7 @@ export async function upsertGithubPullRequest(
   return await context.prisma.githubPullRequest.upsert({
     where: {
       repoId_githubPullNumber: {
-        repoId: repoId,
+        repoId,
         githubPullNumber,
       },
     },
@@ -129,12 +125,17 @@ async function backloadGithubPullRequest(
     project: { repos: { id: number }[] };
   },
   yearlyGitPOAPsMap: YearlyGitPOAPsMap,
-  pr: GithubPullRequestData,
+  pr: OctokitPullListItem,
 ) {
   const logger = createScopedLogger('backloadGithubPullRequest');
 
   if (pr.merged_at === null) {
     logger.debug(`Skipping unmerged PR #${pr.number}`);
+    return;
+  }
+
+  if (pr.user === null) {
+    logger.debug(`Skipping PR #${pr.number} with no user`);
     return;
   }
 
@@ -224,7 +225,7 @@ export async function backloadGithubPullRequestData(repoId: number) {
   while (isProcessing) {
     logger.debug(`Handling page #${page}`);
 
-    const prData: GithubPullRequestData[] = await getGithubRepositoryPullsAsAdmin(
+    const prData = await getGithubRepositoryPullsAsAdmin(
       repoInfo.organization.name,
       repoInfo.name,
       BACKFILL_PRS_PER_REQUEST,
