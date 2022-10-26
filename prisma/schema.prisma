@@ -71,7 +71,7 @@ model Address {
   // Hide Address.authTokens from generated resolvers
   /// @TypeGraphQL.omit(output: true, input: true)
   authTokens        AuthToken[]
-  GitPOAPRequest    GitPOAPRequest?
+  GitPOAPRequest    GitPOAPRequest[]
 
   @@index([ethAddress])
 }
@@ -254,7 +254,7 @@ model GitPOAPRequest {
   adminApprovalStatus AdminApprovalStatus?
   gitPOAPId           Int?                 @unique
   gitPOAP             GitPOAP?             @relation(fields: [gitPOAPId], references: [id])
-  addressId           Int                  @unique
+  addressId           Int
   address             Address              @relation(fields: [addressId], references: [id])
 }
 
