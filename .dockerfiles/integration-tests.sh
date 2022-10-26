@@ -2,7 +2,7 @@
 
 set -ex
 
-./.dockerfiles/wait-for.sh server:3001
-./.dockerfiles/wait-for.sh public-api-server:3122
+./wait-for-it.sh -t 0 server:3001
+./wait-for-it.sh -t 0 public-api-server:3122
 
 npx jest --verbose --setupFiles dotenv/config --testPathPattern '/integration/' --runInBand

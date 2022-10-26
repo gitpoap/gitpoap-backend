@@ -2,7 +2,7 @@
 
 set -ex
 
-./.dockerfiles/wait-for.sh server:3001
+./wait-for-it.sh -t 0 server:3001
 
 ./.dockerfiles/public-api-db-user-setup.sh
 
