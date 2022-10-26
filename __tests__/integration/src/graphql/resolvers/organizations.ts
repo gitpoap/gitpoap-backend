@@ -61,9 +61,9 @@ describe('CustomOrganizationResolver', () => {
       }
     `);
 
-    expect(data.allOrganizations.length).toEqual(1);
+    expect(data.allOrganizations).toHaveLength(1);
     expect(data.allOrganizations[0].name).toEqual('burz');
-    expect(data.allOrganizations[0].repos.length).toEqual(1);
+    expect(data.allOrganizations[0].repos).toHaveLength(1);
     expect(data.allOrganizations[0].repos[0].name).toEqual('dopex');
   });
 
@@ -79,14 +79,14 @@ describe('CustomOrganizationResolver', () => {
       }
     `);
 
-    expect(data.allOrganizations.length).toEqual(1);
+    expect(data.allOrganizations).toHaveLength(1);
     expect(data.allOrganizations[0].name).toEqual('stake-house');
-    expect(data.allOrganizations[0].repos.length).toEqual(1);
+    expect(data.allOrganizations[0].repos).toHaveLength(1);
     expect(data.allOrganizations[0].repos[0].name).toEqual('wagyu-installer');
   });
 
   const expectGitPOAPBackendProject = (data: Record<string, any>) => {
-    expect(data.organizationRepos.length).toEqual(1);
+    expect(data.organizationRepos).toHaveLength(1);
     expect(data.organizationRepos[0].name).toEqual('gitpoap-backend');
     expect(data.organizationRepos[0].mintedGitPOAPCount).toEqual(7);
     expect(data.organizationRepos[0].contributorCount).toEqual(4);
@@ -117,8 +117,8 @@ describe('CustomOrganizationResolver', () => {
       }
     `);
 
-    expect(data.organizationRepos.length).toEqual(1);
-    expect(data.organizationRepos[0].name).toEqual('gitpoap-bot-test-repo');
+    expect(data.organizationRepos).toHaveLength(1);
+    expect(data.organizationRepos[0].name).toEqual('gitpoap-bot-test-repo2');
     expect(data.organizationRepos[0].mintedGitPOAPCount).toEqual(2);
     expect(data.organizationRepos[0].contributorCount).toEqual(2);
   });

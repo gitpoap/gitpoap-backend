@@ -103,7 +103,7 @@ For a quicker loop when developing tests (the builds can take a while) you can u
 
 ```sh
 # Leave this running in one terminal tab:
-yarn docker:public-api
+yarn test:background
 
 # Repeat this as needed in another terminal tab:
 yarn test:quick-integration

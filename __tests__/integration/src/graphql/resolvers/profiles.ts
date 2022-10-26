@@ -40,7 +40,7 @@ describe('CustomProfileResolver', () => {
 
       expect(data.profileData).not.toEqual(null);
       expect(data.profileData.ensName).toEqual('burz.eth');
-      expect(data.profileData.githubHandle).toEqual(null);
+      expect(data.profileData.githubHandle).toEqual('burz');
     },
     10 * MILLISECONDS_PER_SECOND,
   );
@@ -109,14 +109,14 @@ describe('CustomProfileResolver', () => {
       const data = await client.request(gql`
       {
         profileData(address: "${ADDRESSES.aldo}") {
-          ethAddress
+          address
           githubHandle
         }
       }
     `);
 
       expect(data.profileData).not.toEqual(null);
-      expect(data.profileData.ethAddress).toEqual(ADDRESSES.aldo);
+      expect(data.profileData.address).toEqual(ADDRESSES.aldo);
       expect(data.profileData.githubHandle).toEqual('aldolamb');
     },
     10 * MILLISECONDS_PER_SECOND,
@@ -128,14 +128,14 @@ describe('CustomProfileResolver', () => {
       const data = await client.request(gql`
       {
         profileData(address: "${ADDRESSES.random}") {
-          ethAddress
+          address
           githubHandle
         }
       }
     `);
 
       expect(data.profileData).not.toEqual(null);
-      expect(data.profileData.ethAddress).toEqual(ADDRESSES.random);
+      expect(data.profileData.address).toEqual(ADDRESSES.random);
       expect(data.profileData.githubHandle).toEqual('randomHandle');
     },
     10 * MILLISECONDS_PER_SECOND,
@@ -155,7 +155,7 @@ describe('CustomProfileResolver', () => {
       }
     `);
 
-    expect(data.mostHonoredContributors.length).toEqual(2);
+    expect(data.mostHonoredContributors).toHaveLength(2);
 
     expect(data.mostHonoredContributors[0].profile.address.ethAddress).toEqual(ADDRESSES.burz);
     expect(data.mostHonoredContributors[0].claimsCount).toEqual(6);
@@ -201,7 +201,7 @@ describe('CustomProfileResolver', () => {
 
     await setAddressVisibility(ADDRESSES.burz, true);
 
-    expect(data.mostHonoredContributors.length).toEqual(1);
+    expect(data.mostHonoredContributors).toHaveLength(1);
 
     expect(data.mostHonoredContributors[0].profile.address.ethAddress).toEqual(ADDRESSES.jay);
     expect(data.mostHonoredContributors[0].claimsCount).toEqual(4);
@@ -221,7 +221,7 @@ describe('CustomProfileResolver', () => {
       }
     `);
 
-    expect(data.repoMostHonoredContributors.length).toEqual(1);
+    expect(data.repoMostHonoredContributors).toHaveLength(1);
 
     expect(data.repoMostHonoredContributors[0].profile.address.ethAddress).toEqual(ADDRESSES.jay);
     expect(data.repoMostHonoredContributors[0].claimsCount).toEqual(1);
@@ -245,6 +245,6 @@ describe('CustomProfileResolver', () => {
 
     await setAddressVisibility(ADDRESSES.jay, true);
 
-    expect(data.repoMostHonoredContributors.length).toEqual(0);
+    expect(data.repoMostHonoredContributors).toHaveLength(0);
   });
 });

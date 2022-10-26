@@ -60,8 +60,8 @@ describe('CustomRepoResolver', () => {
       }
     `);
 
-    expect(data.recentlyAddedRepos.length).toEqual(1);
-    expect(data.recentlyAddedRepos[0].name).toEqual('gitpoap-bot-test-repo');
+    expect(data.recentlyAddedRepos).toHaveLength(1);
+    expect(data.recentlyAddedRepos[0].name).toEqual('gitpoap-bot-test-repo2');
   });
 
   it('allRepos - alphabetical', async () => {
@@ -73,7 +73,7 @@ describe('CustomRepoResolver', () => {
       }
     `);
 
-    expect(data.allRepos.length).toEqual(1);
+    expect(data.allRepos).toHaveLength(1);
     expect(data.allRepos[0].name).toEqual('dopex');
   });
 
@@ -86,8 +86,8 @@ describe('CustomRepoResolver', () => {
       }
     `);
 
-    expect(data.allRepos.length).toEqual(1);
-    expect(data.allRepos[0].name).toEqual('gitpoap-bot-test-repo');
+    expect(data.allRepos).toHaveLength(1);
+    expect(data.allRepos[0].name).toEqual('gitpoap-bot-test-repo2');
   });
 
   it('allRepos - gitpoap-count', async () => {
@@ -99,7 +99,7 @@ describe('CustomRepoResolver', () => {
       }
     `);
 
-    expect(data.allRepos.length).toEqual(1);
+    expect(data.allRepos).toHaveLength(1);
     expect(data.allRepos[0].name).toEqual('gitpoap-backend');
   });
 
@@ -113,7 +113,7 @@ describe('CustomRepoResolver', () => {
       }
     `);
 
-    expect(data.trendingRepos.length).toEqual(1);
+    expect(data.trendingRepos).toHaveLength(1);
     expect(data.trendingRepos[0].name).toEqual('gitpoap-backend');
     expect(data.trendingRepos[0].mintedGitPOAPCount).toEqual(3);
   });
@@ -130,7 +130,7 @@ describe('CustomRepoResolver', () => {
       }
     `);
 
-    expect(data.trendingRepos.length).toEqual(2);
+    expect(data.trendingRepos).toHaveLength(2);
     expect(data.trendingRepos[0].name).toEqual('gitpoap-backend');
     expect(data.trendingRepos[0].mintedGitPOAPCount).toEqual(3);
     expect(data.trendingRepos[0].contributorCount).toEqual(2);
