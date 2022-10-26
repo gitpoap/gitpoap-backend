@@ -3,20 +3,7 @@ import { upsertAddress } from './addresses';
 import { Address, User, Profile } from '@prisma/client';
 import { createScopedLogger } from '../logging';
 
-export type ExtendedProfile = Profile & {
-  address: {
-    ensName: string | null;
-    ensAvatarImageUrl: string | null;
-    githubUser: {
-      githubHandle: string;
-    } | null;
-  };
-};
-
-export async function upsertProfile(
-  address: string,
-  ensName?: string | null,
-): Promise<ExtendedProfile | null> {
+export async function upsertProfile(address: string, ensName?: string | null) {
   const logger = createScopedLogger('upsertProfile');
 
   // Get the address record OR create one if it doesn't exist

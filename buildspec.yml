@@ -1,6 +1,8 @@
 version: 0.2
 phases:
   install:
+    runtime-versions:
+      nodejs: 16
     commands:
       - 'yarn install'
   build:
@@ -8,4 +10,4 @@ phases:
       - 'yarn build'
   post_build:
     commands:
-      - 'yarn test:unit'
+      - 'yarn test:unit --runInBand'

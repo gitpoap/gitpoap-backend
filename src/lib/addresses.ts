@@ -1,12 +1,11 @@
 import { context } from '../context';
 import { createScopedLogger } from '../logging';
-import { Address } from '@prisma/client';
 
 export async function upsertAddress(
   address: string,
   ensName?: string | null,
   ensAvatarImageUrl?: string | null,
-): Promise<Address | null> {
+) {
   const logger = createScopedLogger('upsertAddress');
 
   const addressLower = address.toLowerCase();
