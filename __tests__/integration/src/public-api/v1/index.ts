@@ -28,7 +28,7 @@ describe('public-api/v1/address/:address/gitpoaps', () => {
 
       const data = await response.json();
 
-      expect(data.length).toEqual(0);
+      expect(data).toHaveLength(0);
     },
     10 * MILLISECONDS_PER_SECOND,
   );
@@ -40,7 +40,7 @@ describe('public-api/v1/address/:address/gitpoaps', () => {
 
     const data = await response.json();
 
-    expect(data.length).toEqual(1);
+    expect(data).toHaveLength(1);
 
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
@@ -54,7 +54,7 @@ describe('public-api/v1/address/:address/gitpoaps', () => {
     expect(data[0].year).toEqual(event29009.year);
     expect(data[0].description).toEqual(event29009.description);
     expect(data[0].imageUrl).toEqual(event29009.image_url);
-    expect(data[0].repositories.length).toEqual(1);
+    expect(data[0].repositories).toHaveLength(1);
     expect(data[0].repositories[0]).toEqual('gitpoap/gitpoap-backend');
     expect(new Date(data[0].earnedAt)).toEqual(todayStart);
     expect(data[0].mintedAt).toEqual('2020-01-09');
@@ -68,7 +68,7 @@ describe('public-api/v1/address/:address/gitpoaps', () => {
 
     const data = await response.json();
 
-    expect(data.length).toEqual(1);
+    expect(data).toHaveLength(1);
 
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
@@ -82,8 +82,8 @@ describe('public-api/v1/address/:address/gitpoaps', () => {
     expect(data[0].year).toEqual(event36576.year);
     expect(data[0].description).toEqual(event36576.description);
     expect(data[0].imageUrl).toEqual(event36576.image_url);
-    expect(data[0].repositories.length).toEqual(1);
-    expect(data[0].repositories[0]).toEqual('gitpoap/gitpoap-bot-test-repo');
+    expect(data[0].repositories).toHaveLength(1);
+    expect(data[0].repositories[0]).toEqual('gitpoap/gitpoap-bot-test-repo2');
     expect(new Date(data[0].earnedAt)).toEqual(todayStart);
     expect(data[0].mintedAt).toEqual('2019-12-11');
     expect(data[0].needsRevalidation).toEqual(false);
@@ -103,7 +103,7 @@ describe('public-api/v1/github/user/:githubHandle/gitpoaps', () => {
     const response = await fetch(`${PUBLIC_API_URL}/v1/github/user/peebeejay1/gitpoaps`);
     expect(response.status).toBeLessThan(400);
     const data = await response.json();
-    expect(data.length).toEqual(0);
+    expect(data).toHaveLength(0);
   });
 
   describe('when a status query string parameter is provided', () => {
@@ -117,7 +117,7 @@ describe('public-api/v1/github/user/:githubHandle/gitpoaps', () => {
       const todayStart = new Date();
       todayStart.setHours(0, 0, 0, 0);
 
-      expect(data.length).toEqual(4);
+      expect(data).toHaveLength(4);
       expect(data[0].gitPoapId).toEqual(8);
       expect(data[0].gitPoapEventId).toEqual(3);
       expect(data[0].poapTokenId).toEqual('pizza-pie');
@@ -127,7 +127,7 @@ describe('public-api/v1/github/user/:githubHandle/gitpoaps', () => {
       expect(data[0].year).toEqual(event3.year);
       expect(data[0].description).toEqual(event3.description);
       expect(data[0].imageUrl).toEqual(event3.image_url);
-      expect(data[0].repositories.length).toEqual(1);
+      expect(data[0].repositories).toHaveLength(1);
       expect(data[0].repositories[0]).toEqual('some-other-org/repo568');
       expect(new Date(data[0].earnedAt)).toEqual(todayStart);
       expect(data[0].mintedAt).toEqual('2022-04-05');
@@ -144,7 +144,7 @@ describe('public-api/v1/github/user/:githubHandle/gitpoaps', () => {
       const todayStart = new Date();
       todayStart.setHours(0, 0, 0, 0);
 
-      expect(data.length).toEqual(6);
+      expect(data).toHaveLength(6);
       expect(data[0].gitPoapId).toEqual(6);
       expect(data[0].gitPoapEventId).toEqual(2);
       expect(data[0].poapTokenId).toEqual(null);
@@ -161,7 +161,7 @@ describe('public-api/v1/github/user/:githubHandle/gitpoaps', () => {
       const data = await response.json();
       const todayStart = new Date();
       todayStart.setHours(0, 0, 0, 0);
-      expect(data.length).toEqual(0);
+      expect(data).toHaveLength(0);
     });
 
     it("Returns all minted gitpoaps when status equals 'minting'", async () => {
@@ -172,7 +172,7 @@ describe('public-api/v1/github/user/:githubHandle/gitpoaps', () => {
       const data = await response.json();
       const todayStart = new Date();
       todayStart.setHours(0, 0, 0, 0);
-      expect(data.length).toEqual(0);
+      expect(data).toHaveLength(0);
     });
   });
 
@@ -184,7 +184,7 @@ describe('public-api/v1/github/user/:githubHandle/gitpoaps', () => {
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
 
-    expect(data.length).toEqual(10);
+    expect(data).toHaveLength(10);
     expect(data[0].gitPoapId).toEqual(35);
     expect(data[0].gitPoapEventId).toEqual(10);
     expect(data[0].poapTokenId).toBeNull();
@@ -194,7 +194,7 @@ describe('public-api/v1/github/user/:githubHandle/gitpoaps', () => {
     expect(data[0].year).toEqual(event36571.year);
     expect(data[0].description).toEqual(event36571.description);
     expect(data[0].imageUrl).toEqual(event36571.image_url);
-    expect(data[0].repositories.length).toEqual(1);
+    expect(data[0].repositories).toHaveLength(1);
     expect(data[0].repositories[0]).toEqual('gitpoap/gitpoap-backend');
     expect(new Date(data[0].earnedAt)).toEqual(todayStart);
     expect(data[0].mintedAt).toBeNull();
@@ -208,7 +208,7 @@ describe('public-api/v1/github/user/:githubHandle/gitpoaps', () => {
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
 
-    expect(data.length).toEqual(1);
+    expect(data).toHaveLength(1);
     expect(data[0].gitPoapId).toEqual(43);
     expect(data[0].gitPoapEventId).toEqual(18);
     expect(data[0].poapTokenId).toEqual('77778');
@@ -218,8 +218,8 @@ describe('public-api/v1/github/user/:githubHandle/gitpoaps', () => {
     expect(data[0].year).toEqual(event36576.year);
     expect(data[0].description).toEqual(event36576.description);
     expect(data[0].imageUrl).toEqual(event36576.image_url);
-    expect(data[0].repositories.length).toEqual(1);
-    expect(data[0].repositories[0]).toEqual('gitpoap/gitpoap-bot-test-repo');
+    expect(data[0].repositories).toHaveLength(1);
+    expect(data[0].repositories[0]).toEqual('gitpoap/gitpoap-bot-test-repo2');
     expect(new Date(data[0].earnedAt)).toEqual(todayStart);
     expect(data[0].mintedAt).toEqual('2019-12-11');
     expect(data[0].needsRevalidation).toEqual(false);

@@ -98,7 +98,7 @@ export const seed = async () => {
   const repo568 = await RepoFactory.create('repo568', 568, org3.id, repo568Project.id);
   const repoDopex = await RepoFactory.create('dopex', 127534193, org5.id, dopexProject.id);
   const repoWagyuInstaller = await RepoFactory.create('wagyu-installer', 336862756, org6.id, wagyuInstallerProject.id);
-  const gitpoapBotTestRepo = await RepoFactory.create('gitpoap-bot-test-repo', 502133931, org4.id, botTestProject.id); // real id
+  const gitpoapBotTestRepo = await RepoFactory.create('gitpoap-bot-test-repo2', 502133931, org4.id, botTestProject.id); // real id, fake name
 
   /* Create GitPOAPs */
   const gitpoap1 = await GitPOAPFactory.createFromEvent(repo34Project.id, event1, GitPOAPStatus.APPROVED);
