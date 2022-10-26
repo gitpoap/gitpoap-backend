@@ -1,6 +1,6 @@
 import { context } from '../context';
 import { createScopedLogger } from '../logging';
-import { GithubPullRequestData, getGithubRepositoryPullsAsAdmin } from '../external/github';
+import { getGithubRepositoryPullsAsAdmin, OctokitPullListItem } from '../external/github';
 import { DateTime } from 'luxon';
 import { sleep } from './sleep';
 import {
@@ -50,11 +50,6 @@ export type RepoReturnType = {
   };
 };
 
-type HandleNewPullReturnType = {
-  finished: boolean;
-  updatedAt: Date;
-};
-
 /**
  * Handle a newly updated (and closed) pull request to a repository
  *
@@ -66,25 +61,30 @@ type HandleNewPullReturnType = {
 export async function handleNewPull(
   repo: RepoReturnType,
   yearlyGitPOAPsMap: YearlyGitPOAPsMap,
-  pull: GithubPullRequestData,
-): Promise<HandleNewPullReturnType> {
+  pull: OctokitPullListItem,
+) {
   const logger = createScopedLogger('handleNewPull');
 
   const updatedAt = new Date(pull.updated_at);
 
   // If the PR hasn't been merged yet, skip it
   if (pull.merged_at === null) {
-    return { finished: false, updatedAt: updatedAt };
+    return { finished: false, updatedAt };
   }
 
   // Stop if we've already handled this PR
   if (updatedAt < repo.lastPRUpdatedAt) {
-    return { finished: true, updatedAt: updatedAt };
+    return { finished: true, updatedAt };
+  }
+
+  if (!pull.user) {
+    logger.warn(`Pull request ${pull.id} has no user`);
+    return { finished: false, updatedAt };
   }
 
   if (pull.user.type === 'Bot') {
     logger.info(`Skipping creating claims for bot ${pull.user.login}`);
-    return { finished: false, updatedAt: updatedAt };
+    return { finished: false, updatedAt };
   }
 
   logger.info(`Creating a claims for ${pull.user.login} if they don't exist`);
@@ -114,10 +114,10 @@ export async function handleNewPull(
     // Log an error if we haven't figured out what to do in the new years
     if (mergedAt.year > year) {
       logger.error(`Found a merged PR for repo ID ${repo.id} for a new year`);
-      return { finished: false, updatedAt: updatedAt };
+      return { finished: false, updatedAt };
       // Don't handle previous years (note we still handle an updated title)
     } else if (mergedAt.year < year) {
-      return { finished: false, updatedAt: updatedAt };
+      return { finished: false, updatedAt };
     }
 
     await createNewClaimsForRepoContribution(user, repo.project.repos, yearlyGitPOAPsMap, {
@@ -125,7 +125,7 @@ export async function handleNewPull(
     });
   }
 
-  return { finished: false, updatedAt: updatedAt };
+  return { finished: false, updatedAt };
 }
 
 export async function checkForNewContributions(repo: RepoReturnType) {

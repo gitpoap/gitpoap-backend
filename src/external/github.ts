@@ -20,6 +20,12 @@ export type IssuesAPI = OctokitRest['issues'];
 export type ReposAPI = OctokitRest['repos'];
 export type OrgsAPI = OctokitRest['orgs'];
 
+type OctokitPullList = OctokitResponseData<PullsAPI['list']>;
+export type OctokitPullListItem = OctokitPullList[number];
+export type OctokitPullItem = OctokitResponseData<PullsAPI['get']>;
+
+export type OctokitRepoItem = OctokitResponseData<ReposAPI['get']>;
+
 export type OctokitResponseData<T> = T extends (...arg0: any) => Promise<any>
   ? Awaited<ReturnType<T>>['data']
   : T;
@@ -132,7 +138,7 @@ export async function getGithubUserByIdAsAdmin(githubId: number) {
 }
 
 export async function getGithubRepository(organization: string, name: string, githubToken: string) {
-  return await responseHandler<OctokitResponseData<ReposAPI['get']>>(
+  return await responseHandler<OctokitRepoItem>(
     getOAuthOctokit(githubToken).rest.repos.get({
       owner: organization,
       repo: name,
@@ -141,7 +147,7 @@ export async function getGithubRepository(organization: string, name: string, gi
 }
 
 export async function getGithubRepositoryById(repoId: number, githubToken: string) {
-  return await responseHandler<OctokitResponseData<ReposAPI['get']>>(
+  return await responseHandler<OctokitRepoItem>(
     getOAuthOctokit(githubToken).request('GET /repositories/{repoId}', {
       repoId,
     }),
@@ -149,7 +155,7 @@ export async function getGithubRepositoryById(repoId: number, githubToken: strin
 }
 
 async function getGithubRepositoryByIdAsAdmin(repoId: number) {
-  return await responseHandler<OctokitResponseData<ReposAPI['get']>>(
+  return await responseHandler<OctokitRepoItem>(
     getAppAuthOctokit().request('GET /repositories/{repoId}', {
       repoId,
     }),
@@ -237,7 +243,7 @@ export async function getGithubRepositoryPullsAsAdmin(
   direction: 'asc' | 'desc',
 ) {
   return (
-    (await responseHandler<OctokitResponseData<PullsAPI['list']>>(
+    (await responseHandler<OctokitPullList>(
       getAppAuthOctokit().rest.pulls.list({
         owner: org,
         repo,
@@ -257,7 +263,7 @@ export async function getSingleGithubRepositoryPullAsAdmin(
   repo: string,
   pullRequestNumber: number,
 ) {
-  return await responseHandler<OctokitResponseData<PullsAPI['get']>>(
+  return await responseHandler<OctokitPullItem>(
     getAppAuthOctokit().rest.pulls.get({
       owner: org,
       repo,

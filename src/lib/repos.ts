@@ -2,14 +2,10 @@ import { createScopedLogger } from '../logging';
 import { context } from '../context';
 import { RepoData } from './claims';
 import { GitPOAPStatus, Repo } from '@generated/type-graphql';
-import {
-  GithubRepoResponse,
-  getGithubRepository,
-  getGithubRepositoryById,
-} from '../external/github';
+import { getGithubRepository, getGithubRepositoryById, OctokitRepoItem } from '../external/github';
 
 async function createRepoHelper(
-  repoInfo: GithubRepoResponse,
+  repoInfo: OctokitRepoItem,
   projectId: number,
 ): Promise<Repo | null> {
   const logger = createScopedLogger('createRepoHelper');
