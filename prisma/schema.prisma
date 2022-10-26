@@ -78,7 +78,7 @@ model Address {
 model Email {
   id             Int       @id @default(autoincrement())
   // Hide email.emailAddress from generated resolvers
-  /// @TypeGraphQL.omit(output: true, input: true)
+  /// @TypeGraphQL.omit(output: true, input: false)
   emailAddress   String    @unique @db.VarChar(255)
   addressId      Int?      @unique
   address        Address?  @relation(fields: [addressId], references: [id])
@@ -89,6 +89,8 @@ model Email {
   // Hide email.activeToken from generated resolvers
   /// @TypeGraphQL.omit(output: true, input: true)
   activeToken    String?   @unique
+  // Hide email.activeToken from generated resolvers
+  /// @TypeGraphQL.omit(output: true, input: true)
   tokenExpiresAt DateTime?
 }
 
