@@ -12,25 +12,25 @@ at-least-node@^1.0.0:
   resolved "https://registry.yarnpkg.com/at-least-node/-/at-least-node-1.0.0.tgz#602cd4b46e844ad4effc92a8011a3c46e0238dc2"
   integrity sha512-+q/t7Ekv1EDY2l6Gda6LLiX14rU9TV20Wa3ofeQmwPFZbOMo9DXrLbOjFaaclkXKWidIaopwAObQDqwWtGUjqg==
 
-aws-cdk-lib@^2.24.1:
-  version "2.24.1"
-  resolved "https://registry.yarnpkg.com/aws-cdk-lib/-/aws-cdk-lib-2.24.1.tgz#197d10216b384850c01205acc8e4818838964302"
-  integrity sha512-xGeEX+9wPGppSiIUdf/JTLMmqMikGhlSi7bjijl3lwncZtySkdjX0j+W2A1fuKp0S8Yd2axkwVkltIMxzNH/gw==
+aws-cdk-lib@^2.47.0:
+  version "2.47.0"
+  resolved "https://registry.yarnpkg.com/aws-cdk-lib/-/aws-cdk-lib-2.47.0.tgz#0f4f6adf2439caffd26686393a6e58ced3995833"
+  integrity sha512-XnxA7FMhJljsj6OtMMDbUi5lPPYcrehAxqpui5b2Nv2cBWhiG7Wb5baOuQy7niyPhZEX03A4k0vYFas/nnB91g==
   dependencies:
     "@balena/dockerignore" "^1.0.2"
     case "1.6.3"
     fs-extra "^9.1.0"
     ignore "^5.2.0"
-    jsonschema "^1.4.0"
+    jsonschema "^1.4.1"
     minimatch "^3.1.2"
     punycode "^2.1.1"
-    semver "^7.3.7"
+    semver "^7.3.8"
     yaml "1.10.2"
 
-aws-cdk@^2.24.1:
-  version "2.24.1"
-  resolved "https://registry.yarnpkg.com/aws-cdk/-/aws-cdk-2.24.1.tgz#88c3ece3c01674fbed4e131f3391aa199b5e3871"
-  integrity sha512-fDcJW7tLbqsCvWB3eZY6glRrjRE45VqLT+JuKz3C2jIe6qXkwV8dBwYXElwY/tTCh/hDlpWtCNMRdhmrdE25GQ==
+aws-cdk@^2.47.0:
+  version "2.47.0"
+  resolved "https://registry.yarnpkg.com/aws-cdk/-/aws-cdk-2.47.0.tgz#8bf6b46856cea1c67bca0a0bb4a069d48bc090c0"
+  integrity sha512-v0S98ddAQ6bbe3uc7UvoxcQGebeIxZBv9tqvfj1f6IpauWpodApgX7s0yJtGbRWIX120Z8eaO8m/M+BeGrpRDQ==
   optionalDependencies:
     fsevents "2.3.2"
 
@@ -96,7 +96,7 @@ jsonfile@^6.0.1:
   optionalDependencies:
     graceful-fs "^4.1.6"
 
-jsonschema@^1.4.0:
+jsonschema@^1.4.1:
   version "1.4.1"
   resolved "https://registry.yarnpkg.com/jsonschema/-/jsonschema-1.4.1.tgz#cc4c3f0077fb4542982973d8a083b6b34f482dab"
   integrity sha512-S6cATIPVv1z0IlxdN+zUk5EPjkGCdnhN4wVSBlvoUO1tOLJootbo9CquNJmbIh4yikWHiUedhRYrNPn1arpEmQ==
@@ -120,10 +120,10 @@ punycode@^2.1.1:
   resolved "https://registry.yarnpkg.com/punycode/-/punycode-2.1.1.tgz#b58b010ac40c22c5657616c8d2c2c02c7bf479ec"
   integrity sha512-XRsRjdf+j5ml+y/6GKHPZbrF/8p2Yga0JPtdqTIY2Xe5ohJPD9saDJJLPvp9+NSBprVvevdXZybnj2cv8OEd0A==
 
-semver@^7.3.7:
-  version "7.3.7"
-  resolved "https://registry.yarnpkg.com/semver/-/semver-7.3.7.tgz#12c5b649afdbf9049707796e22a4028814ce523f"
-  integrity sha512-QlYTucUYOews+WeEujDoEGziz4K6c47V/Bd+LjSSYcA94p+DmINdf7ncaUinThfvZyu13lN9OY1XDxt8C0Tw0g==
+semver@^7.3.8:
+  version "7.3.8"
+  resolved "https://registry.yarnpkg.com/semver/-/semver-7.3.8.tgz#07a78feafb3f7b32347d725e33de7e2a2df67798"
+  integrity sha512-NB1ctGL5rlHrPJtFDVIVzTyQylMLu9N9VICA6HSFJo8MCGVTMW6gfpicwKmmK/dAjTOrqu5l63JJOpDSrAis3A==
   dependencies:
     lru-cache "^6.0.0"
 

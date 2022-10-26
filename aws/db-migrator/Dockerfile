@@ -19,12 +19,12 @@ RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2
   ./aws/install && \
   rm -r awscliv2.zip aws
 
-# Install latest version of node and npm
+# Install node and npm
 RUN curl -L https://raw.githubusercontent.com/tj/n/master/bin/n -o n && \
-  bash n lts && \
+  bash n install 16.15.1 && \
   rm n
 
-RUN npm install --location=global npm@8.10.0 yarn
+RUN npm install --location=global npm@8.19.2 yarn
 
 COPY cdk-lambda-bash/bootstrap /var/runtime/bootstrap
 COPY cdk-lambda-bash/function.sh /var/task/function.sh
