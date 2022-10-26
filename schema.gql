@@ -774,13 +774,13 @@ input EmailWhereInput {
   OR: [EmailWhereInput!]
   NOT: [EmailWhereInput!]
   id: IntFilter
+  emailAddress: StringFilter
   addressId: IntNullableFilter
   address: AddressRelationFilter
   createdAt: DateTimeFilter
   updatedAt: DateTimeFilter
   claims: ClaimListRelationFilter
   isValidated: BoolFilter
-  tokenExpiresAt: DateTimeNullableFilter
 }
 
 input ClaimListRelationFilter {
@@ -1325,13 +1325,13 @@ input AddressOrderByWithRelationInput {
 
 input EmailOrderByWithRelationInput {
   id: SortOrder
+  emailAddress: SortOrder
   addressId: SortOrder
   address: AddressOrderByWithRelationInput
   createdAt: SortOrder
   updatedAt: SortOrder
   claims: ClaimOrderByRelationAggregateInput
   isValidated: SortOrder
-  tokenExpiresAt: SortOrder
 }
 
 input ClaimOrderByRelationAggregateInput {
@@ -2262,7 +2262,6 @@ type Email {
   createdAt: DateTime!
   updatedAt: DateTime!
   isValidated: Boolean!
-  tokenExpiresAt: DateTime
   _count: EmailCount
 }
 
