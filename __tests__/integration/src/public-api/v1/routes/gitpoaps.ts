@@ -39,7 +39,7 @@ describe('public-api/v1/gitpoaps/:gitpoapId/addresses', () => {
     const data = await response.json();
 
     expect(data.addresses).not.toEqual(null);
-    expect(data.addresses.length).toEqual(2);
+    expect(data.addresses).toHaveLength(2);
     expect(data.addresses).toContain(ADDRESSES.burz);
     expect(data.addresses).toContain(ADDRESSES.jay);
   });
@@ -54,7 +54,7 @@ describe('public-api/v1/gitpoaps/addresses', () => {
     const data = await response.json();
 
     expect(data.addresses).not.toEqual(null);
-    expect(data.addresses.length).toEqual(6);
+    expect(data.addresses).toHaveLength(6);
     expect(data.addresses).toContain(ADDRESSES.burz);
     expect(data.addresses).toContain(ADDRESSES.jay);
     expect(data.addresses).toContain(ADDRESSES.colfax);
@@ -92,7 +92,7 @@ describe('public-api/v1/gitpoaps/events', () => {
     const data = await response.json();
 
     expect(data.gitPoapEvents).not.toEqual(null);
-    expect(data.gitPoapEvents.length).toEqual(17);
+    expect(data.gitPoapEvents).toHaveLength(17);
     expect(data.gitPoapEvents).toContainEqual(
       genExpectedDataFromEvent(1, event1, ['org43/repo34'], 2),
     );
@@ -136,13 +136,13 @@ describe('public-api/v1/gitpoaps/events', () => {
       genExpectedDataFromEvent(14, event37430, ['stake-house/wagyu-installer'], 0),
     );
     expect(data.gitPoapEvents).toContainEqual(
-      genExpectedDataFromEvent(15, event36573, ['gitpoap/gitpoap-bot-test-repo'], 0),
+      genExpectedDataFromEvent(15, event36573, ['gitpoap/gitpoap-bot-test-repo2'], 0),
     );
     expect(data.gitPoapEvents).toContainEqual(
-      genExpectedDataFromEvent(16, event36574, ['gitpoap/gitpoap-bot-test-repo'], 0),
+      genExpectedDataFromEvent(16, event36574, ['gitpoap/gitpoap-bot-test-repo2'], 0),
     );
     expect(data.gitPoapEvents).toContainEqual(
-      genExpectedDataFromEvent(18, event36576, ['gitpoap/gitpoap-bot-test-repo'], 2, true),
+      genExpectedDataFromEvent(18, event36576, ['gitpoap/gitpoap-bot-test-repo2'], 2, true),
     );
   });
 });
