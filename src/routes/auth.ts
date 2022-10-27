@@ -47,6 +47,59 @@ async function getTokenDataWithGithubCheck(
   };
 }
 
+async function upsertAddressAndSelectGithubUser(address: string) {
+  const logger = createScopedLogger('upsertAddressAndSelectGithubUser');
+
+  const addressLower = address.toLowerCase();
+
+  try {
+    return await context.prisma.address.upsert({
+      where: {
+        ethAddress: addressLower,
+      },
+      update: {},
+      create: {
+        ethAddress: addressLower,
+      },
+      select: {
+        id: true,
+        ensName: true,
+        ensAvatarImageUrl: true,
+        githubUser: {
+          select: {
+            id: true,
+            githubId: true,
+            githubHandle: true,
+            githubOAuthToken: true,
+          },
+        },
+      },
+    });
+  } catch (err) {
+    logger.warn(`Caught error while trying to upsert address ${address}: ${err}`);
+
+    // Return the record (which we assume to exist) if the upsert fails
+    return await context.prisma.address.findUnique({
+      where: {
+        ethAddress: addressLower,
+      },
+      select: {
+        id: true,
+        ensName: true,
+        ensAvatarImageUrl: true,
+        githubUser: {
+          select: {
+            id: true,
+            githubId: true,
+            githubHandle: true,
+            githubOAuthToken: true,
+          },
+        },
+      },
+    });
+  }
+}
+
 authRouter.post('/', async function (req, res) {
   const logger = createScopedLogger('POST /auth');
   logger.debug(`Body: ${JSON.stringify(req.body)}`);
@@ -75,35 +128,18 @@ authRouter.post('/', async function (req, res) {
     return res.status(401).send({ msg: 'The signature is not valid for this address' });
   }
 
-  const addressLower = address.toLowerCase();
-
   // Wait for the ENS resolution to finish
   await ensPromise;
 
   // If the resolveAddress promise found an Address or new ENS name
   // this will already exist
-  const dbAddress = await context.prisma.address.upsert({
-    where: {
-      ethAddress: addressLower,
-    },
-    update: {},
-    create: {
-      ethAddress: addressLower,
-    },
-    select: {
-      id: true,
-      ensName: true,
-      ensAvatarImageUrl: true,
-      githubUser: {
-        select: {
-          id: true,
-          githubId: true,
-          githubHandle: true,
-          githubOAuthToken: true,
-        },
-      },
-    },
-  });
+  const dbAddress = await upsertAddressAndSelectGithubUser(address);
+
+  if (dbAddress === null) {
+    logger.error(`Failed to upsert address ${address} during login`);
+    endTimer({ status: 500 });
+    return res.status(500).send({ msg: 'Login failed, please retry' });
+  }
 
   let githubTokenData: GithubTokenData = { githubId: null, githubHandle: null };
   if (dbAddress.githubUser !== null) {
@@ -118,7 +154,7 @@ authRouter.post('/', async function (req, res) {
 
   const userAuthTokens = await generateNewAuthTokens(
     dbAddress.id,
-    addressLower,
+    address.toLowerCase(),
     dbAddress.ensName,
     dbAddress.ensAvatarImageUrl,
     githubTokenData.githubId,
