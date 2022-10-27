@@ -24,7 +24,7 @@ const PULL_STEP_SIZE = 100;
 const ONGOING_ISSUANCE_BATCH_TIMING_KEY = 'ongoing-issuance';
 
 // The amount of hours to wait before checking for new contributions
-const ONGOING_ISSUANCE_DELAY_HOURS = 12;
+const ONGOING_ISSUANCE_DELAY_HOURS = 6;
 
 // The amount of minutes to wait in between the checks for separate projects.
 // Currently we don't expect to be rate limited by GitHub for this background
