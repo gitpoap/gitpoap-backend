@@ -288,19 +288,19 @@ customGitpoapsRouter.put('/approve/:id', jwtWithAdminOAuth(), async (req, res) =
     const contributors = updatedGitPOAPRequest.contributors as GitPOAPRequestContributors;
 
     for (const githubHandle of contributors['githubHandles']) {
-      createClaimForGithubHandle(githubHandle, gitPOAP.id);
+      void createClaimForGithubHandle(githubHandle, gitPOAP.id);
     }
 
     for (const email of contributors['emails']) {
-      createClaimForEmail(email, gitPOAP.id);
+      void createClaimForEmail(email, gitPOAP.id);
     }
 
     for (const ethAddress of contributors['ethAddresses']) {
-      createClaimForEthAddress(ethAddress, gitPOAP.id);
+      void createClaimForEthAddress(ethAddress, gitPOAP.id);
     }
 
     for (const ensName of contributors['ensNames']) {
-      createClaimForEnsName(ensName, gitPOAP.id);
+      void createClaimForEnsName(ensName, gitPOAP.id);
     }
   }
 
