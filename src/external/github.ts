@@ -9,6 +9,7 @@ import { createScopedLogger } from '../logging';
 import { context } from '../context';
 import { SECONDS_PER_HOUR } from '../constants';
 import { App, Octokit } from 'octokit';
+import { captureException } from '../lib/sentry';
 
 /** -- Octokit Types */
 type OctokitRest = App['octokit']['rest'];
@@ -285,9 +286,31 @@ export async function getSingleGithubRepositoryIssueAsAdmin(
 }
 
 export async function getGithubAuthenticatedApp(jwtToken: string) {
-  return await responseHandler<OctokitResponseData<AppsAPI['getAuthenticated']>>(
-    getJWTAuthOctokit(jwtToken).rest.apps.getAuthenticated(),
-  );
+  const logger = createScopedLogger('getGithubAuthenticatedApp');
+
+  if (jwtToken === '') {
+    logger.warn('No JWT token provided');
+    return null;
+  }
+
+  if (typeof jwtToken !== 'string') {
+    logger.warn('JWT token is not a string');
+    return null;
+  }
+
+  try {
+    return await responseHandler<OctokitResponseData<AppsAPI['getAuthenticated']>>(
+      getJWTAuthOctokit(jwtToken).rest.apps.getAuthenticated(),
+    );
+  } catch (e) {
+    logger.error(`Error thrown when attempting to get authenticated Apps: ${e}`);
+    captureException(
+      e,
+      { service: 'octokit', function: 'getGithubAuthenticatedApp' },
+      { token: jwtToken },
+    );
+    return null;
+  }
 }
 
 /* -- Token Utils -- */
