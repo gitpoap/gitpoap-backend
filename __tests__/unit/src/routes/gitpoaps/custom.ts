@@ -478,6 +478,7 @@ describe('POST /gitpoaps/custom', () => {
           githubHandles: ['peebeejay'],
           ensNames: ['burz.eth'],
         },
+        address: { connect: { id: addressId } },
         ...(orgId && { organization: { connect: { id: orgId } } }),
         ...(projectId && { project: { connect: { id: projectId } } }),
       },
