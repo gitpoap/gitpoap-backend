@@ -48,8 +48,7 @@ githubRouter.post('/', jwtWithAddress(), async function (req, res) {
     logger.warn(`Failed to request OAuth token with code: ${err}`);
     endTimer({ status: 400 });
     return res.status(400).send({
-      message: 'A server error has occurred - GitHub access token exchange',
-      error: err,
+      msg: 'A server error has occurred - GitHub access token exchange',
     });
   }
 
@@ -58,7 +57,7 @@ githubRouter.post('/', jwtWithAddress(), async function (req, res) {
     logger.error('Failed to retrieve data about logged in user');
     endTimer({ status: 500 });
     return res.status(500).send({
-      message: 'A server error has occurred - GitHub current user',
+      msg: 'A server error has occurred - GitHub current user',
     });
   }
 
@@ -68,28 +67,37 @@ githubRouter.post('/', jwtWithAddress(), async function (req, res) {
   /* Add the GitHub login to the address record */
   await addGithubLoginForAddress(addressId, user.id);
 
-  // Update the generation of the AuthToken (this must exist
+  // Update the generation of the AuthToken (this should exist
   // since it was looked up within the middleware)
-  const dbAuthToken = await context.prisma.authToken.update({
-    where: {
-      id: authTokenId,
-    },
-    data: {
-      generation: { increment: 1 },
-      user: {
-        connect: {
-          id: user.id,
+  let newGeneration: number;
+  try {
+    newGeneration = (
+      await context.prisma.authToken.update({
+        where: {
+          id: authTokenId,
         },
-      },
-    },
-    select: {
-      generation: true,
-    },
-  });
+        data: {
+          generation: { increment: 1 },
+          user: {
+            connect: {
+              id: user.id,
+            },
+          },
+        },
+        select: {
+          generation: true,
+        },
+      })
+    ).generation;
+  } catch (err) {
+    logger.warn(`User ID ${user.id}'s AuthToken was invalidated during GitHub login process`);
+    endTimer({ status: 401 });
+    return res.status(401).send({ msg: 'Not logged in with address' });
+  }
 
   const userAuthTokens = generateAuthTokens(
     authTokenId,
-    dbAuthToken.generation,
+    newGeneration,
     addressId,
     address,
     ensName,
@@ -120,7 +128,7 @@ githubRouter.delete('/', jwtWithAddress(), async function (req, res) {
     logger.warn('No GitHub login found for address');
     endTimer({ status: 400 });
     return res.status(400).send({
-      message: 'No GitHub login found for address',
+      msg: 'No GitHub login found for address',
     });
   }
 
