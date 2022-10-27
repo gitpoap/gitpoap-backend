@@ -7,6 +7,7 @@ import { JWT_SECRET } from './environment';
 import { createScopedLogger } from './logging';
 import { ADMIN_GITHUB_IDS, GITPOAP_BOT_APP_ID } from './constants';
 import { getGithubAuthenticatedApp } from './external/github';
+import { captureException } from './lib/sentry';
 
 const jwtMiddleware = jwt({ secret: JWT_SECRET as string, algorithms: ['HS256'] });
 
@@ -154,6 +155,14 @@ export function gitpoapBotAuth() {
     }
 
     const token = authParts[1];
+
+    if (typeof token !== 'string') {
+      const msg = `gitpoap-bot endpoint hit with invalid credentials. The token is not a string: ${token}`;
+      logger.warn(msg);
+      captureException(new Error(msg), { service: 'middleware', function: 'gitpoapBotAuth' });
+      next({ status: 400, msg: `Invalid credentials, token: ${token}` });
+      return;
+    }
 
     const githubApp = await getGithubAuthenticatedApp(token);
     if (githubApp === null) {
