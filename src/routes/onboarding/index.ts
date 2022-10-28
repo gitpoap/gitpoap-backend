@@ -1,16 +1,13 @@
 import { Router } from 'express';
 import { Octokit } from 'octokit';
-import { z } from 'zod';
 import multer from 'multer';
 import { DateTime } from 'luxon';
 import { uploadMulterFile, s3configProfile, getS3URL } from '../../external/s3';
 import {
   PutItemCommand,
-  PutItemCommandInput,
   ScanCommand,
   ScanCommandInput,
   UpdateItemCommand,
-  UpdateItemCommandInput,
 } from '@aws-sdk/client-dynamodb';
 import { configProfile, dynamoDBClient } from '../../external/dynamo';
 import { createScopedLogger } from '../../logging';
@@ -155,11 +152,9 @@ onboardingRouter.post<'/intake-form', {}, {}, IntakeForm>(
       logger.info(
         `Retrieved count of all incomplete records in DynamoDB table ${intakeFormTable} - Count: ${tableCount}`,
       );
-
-      await sendConfirmationEmail(githubHandle, req.body, tableCount);
-      logger.info(`Sent confirmation email to ${req.body.email}`);
-      await sendInternalConfirmationEmail(githubHandle, req.body, tableCount, urls);
-      logger.info(`Sent internal confirmation email to team@gitpoap.io`);
+      logger.info('Sending internal and external confirmation emails');
+      void sendConfirmationEmail(githubHandle, req.body, tableCount);
+      void sendInternalConfirmationEmail(githubHandle, req.body, tableCount, urls);
     } catch (err) {
       /* Log error, but don't return error to user. Sending the email is secondary to storing the form data */
       logger.error(`Received error when sending confirmation email to ${req.body.email} - ${err} `);
