@@ -193,7 +193,7 @@ describe('POST /email', () => {
     mockJwtWithAddress();
 
     contextMock.prisma.email.upsert.mockResolvedValue({} as any);
-    mockedSendVerificationEmail.mockResolvedValue();
+    mockedSendVerificationEmail.mockResolvedValue({} as any);
 
     const authTokens = genAuthTokens();
 
