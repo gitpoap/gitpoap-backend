@@ -1,8 +1,6 @@
 import {
   ClaimGitPOAPSchema,
   CreateGitPOAPClaimsSchema,
-  CreateGitPOAPBotClaimsForPRSchema,
-  CreateGitPOAPBotClaimsForIssueSchema,
   CreateGitPOAPBotClaimsSchema,
 } from '../schemas/claims';
 import { Router, Request } from 'express';
@@ -28,6 +26,7 @@ import { checkIfClaimTransferred } from '../lib/transfers';
 import { z } from 'zod';
 import { BotCreateClaimsErrorType, createClaimsForPR, createClaimsForIssue } from '../lib/bot';
 import { RestrictedContribution } from '../lib/contributions';
+import { sendInternalClaimMessage } from '../external/slack';
 
 export const claimsRouter = Router();
 
@@ -280,7 +279,7 @@ claimsRouter.post('/', jwtWithGitHubOAuth(), async function (req, res) {
     // Ensure that we have the minimal number of codes if the GitPOAP
     // is marked as ongoing. Note that we don't need to block on this
     // since we don't depend on its result
-    ensureRedeemCodeThreshold(claim.gitPOAP);
+    void ensureRedeemCodeThreshold(claim.gitPOAP);
   }
 
   if (invalidClaims.length > 0) {
@@ -294,6 +293,8 @@ claimsRouter.post('/', jwtWithGitHubOAuth(), async function (req, res) {
       });
     }
   }
+
+  void sendInternalClaimMessage(foundClaims, githubHandle, address);
 
   logger.debug(`Completed request claiming IDs ${req.body.claimIds} for address ${address}`);
 
@@ -425,7 +426,7 @@ claimsRouter.post('/create', jwtWithAdminOAuth(), async function (req, res) {
   if (gitPOAPData.project !== null) {
     const repos = gitPOAPData.project.repos;
     for (const repo of repos) {
-      backloadGithubPullRequestData(repo.id);
+      void backloadGithubPullRequestData(repo.id);
     }
   }
 });
@@ -494,7 +495,7 @@ claimsRouter.post(
       }
 
       const githubIdSet = new Set<number>(contributorGithubIds);
-      for (let contribution of contributions) {
+      for (const contribution of contributions) {
         if (contribution === null) {
           continue;
         } else if ('pullRequest' in contribution) {
@@ -671,7 +672,7 @@ claimsRouter.post('/revalidate', jwtWithGitHubOAuth(), async (req, res) => {
   }
 
   if (invalidClaims.length > 0) {
-    logger.warn(`Some claim revalidations were invalid: ${JSON.stringify(invalidClaims)}`);
+    logger.warn(`Some claim re-validations were invalid: ${JSON.stringify(invalidClaims)}`);
 
     // Return 400 iff no claim re-validations were completed
     if (foundClaims.length === 0) {
