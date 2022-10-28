@@ -2,6 +2,7 @@ import {
   CreateCustomGitPOAPSchema,
   CreateCustomGitPOAPClaimsSchema,
   CustomGitPOAPContributorsSchema,
+  DeleteGitPOAPRequestClaimSchema,
 } from '../../schemas/gitpoaps/custom';
 import { Request, Router } from 'express';
 import { z } from 'zod';
@@ -13,7 +14,7 @@ import multer from 'multer';
 import { httpRequestDurationSeconds } from '../../metrics';
 import { generatePOAPSecret } from '../../lib/secrets';
 import { DateTime } from 'luxon';
-import { AdminApprovalStatus, GitPOAPType, Prisma } from '@prisma/client';
+import { AdminApprovalStatus, ClaimStatus, GitPOAPType, Prisma } from '@prisma/client';
 import { getImageBufferFromS3, s3configProfile, uploadMulterFile } from '../../external/s3';
 import { convertGitPOAPRequestToGitPOAP } from '../../lib/gitpoaps';
 import { parseJSON } from '../../lib/json';
@@ -23,6 +24,7 @@ import {
   addGitPOAPRequestContributors,
   convertContributorsFromSchema,
   createClaimsForContributors,
+  removeContributorFromGitPOAPRequest,
 } from '../../lib/gitpoapRequests';
 
 export const customGitPOAPsRouter = Router();
@@ -35,8 +37,9 @@ customGitPOAPsRouter.post(
   multer().single('image'),
   async function (req: Request<any, any, CreateCustomGitPOAPReqBody>, res) {
     const logger = createScopedLogger('POST /gitpoaps/custom');
-    logger.debug(`Body: ${JSON.stringify(req.body)}`);
     const endTimer = httpRequestDurationSeconds.startTimer('POST', '/gitpoaps/custom');
+
+    logger.debug(`Body: ${JSON.stringify(req.body)}`);
 
     const schemaResult = CreateCustomGitPOAPSchema.safeParse(req.body);
 
@@ -439,6 +442,91 @@ customGitPOAPsRouter.put('/claims', jwtWithAddress(), async (req, res) => {
   return res.status(200).send('CREATED');
 });
 
+customGitPOAPsRouter.delete('/:gitPOAPRequestId/claim', async (req, res) => {
+  const logger = createScopedLogger('DELETE /gitpoaps/custom/:gitPOAPRequestId/claim');
+  const endTimer = httpRequestDurationSeconds.startTimer(
+    'DELETE',
+    '/gitpoaps/custom/:gitPOAPRequestId/claim',
+  );
+
+  logger.debug(`Body: ${JSON.stringify(req.body)}`);
+
+  const gitPOAPRequestId = parseInt(req.params.gitPOAPRequestId, 10);
+
+  const schemaResult = DeleteGitPOAPRequestClaimSchema.safeParse(req.body);
+
+  if (!schemaResult.success) {
+    logger.warn(
+      `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
+    );
+    endTimer({ status: 400 });
+
+    return res.status(400).send({ issues: schemaResult.error.issues });
+  }
+
+  const { claimType, claimData } = schemaResult.data;
+
+  logger.info(
+    `Request to remove ${claimType} "${claimData}" from GitPOAPRequest ID ${gitPOAPRequestId}`,
+  );
+
+  const gitPOAPRequest = await context.prisma.gitPOAPRequest.findUnique({
+    where: { id: gitPOAPRequestId },
+    select: {
+      addressId: true,
+      adminApprovalStatus: true,
+      contributors: true,
+    },
+  });
+
+  if (gitPOAPRequest === null) {
+    const msg = `GitPOAPRequest with ID ${gitPOAPRequestId} doesn't exist`;
+    logger.warn(msg);
+    endTimer({ status: 404 });
+    return res.status(404).send({ msg });
+  }
+
+  const { addressId } = getAccessTokenPayload(req.user);
+
+  if (gitPOAPRequest.addressId !== addressId) {
+    logger.warn(
+      `User attempted to delete a Claim for a GitPOAPRequest (ID: ${gitPOAPRequestId} that they do not own`,
+    );
+    endTimer({ status: 401 });
+    return res.status(401).send({ msg: 'Not GitPOAPRequest creator' });
+  }
+
+  if (gitPOAPRequest.adminApprovalStatus === AdminApprovalStatus.APPROVED) {
+    const msg = `GitPOAPRequest with ID ${gitPOAPRequestId} is already APPROVED`;
+    logger.warn(msg);
+    endTimer({ status: 400 });
+    return res.status(400).send({ msg });
+  }
+
+  const existingContributors = convertContributorsFromSchema(
+    gitPOAPRequest.contributors ? (gitPOAPRequest.contributors as Prisma.JsonObject) : {},
+  );
+
+  const newContributors = removeContributorFromGitPOAPRequest(
+    existingContributors,
+    claimType,
+    claimData,
+  );
+
+  await context.prisma.gitPOAPRequest.update({
+    where: { id: gitPOAPRequestId },
+    data: { contributors: newContributors },
+  });
+
+  logger.debug(
+    `Completed request to remove ${claimType} "${claimData}" from GitPOAPRequest ID ${gitPOAPRequestId}`,
+  );
+
+  endTimer({ status: 200 });
+
+  return res.status(200).send('DELETED');
+});
+
 customGitPOAPsRouter.delete('/claim/:id', jwtWithAddress(), async (req, res) => {
   const logger = createScopedLogger('DELETE /gitpoaps/custom/claim/:id');
   const endTimer = httpRequestDurationSeconds.startTimer('DELETE', '/gitpoaps/custom/claim/:id');
@@ -481,8 +569,6 @@ customGitPOAPsRouter.delete('/claim/:id', jwtWithAddress(), async (req, res) => 
     return res.status(400).send({ msg: 'Claim is not associated with a custom GitPOAP' });
   }
 
-  const { addressId } = getAccessTokenPayload(req.user);
-
   if (claim.gitPOAP.gitPOAPRequest === null) {
     logger.error(
       `Custom GitPOAP ID ${claim.gitPOAP.id} does not have an associated GitPOAPRequest`,
@@ -491,10 +577,20 @@ customGitPOAPsRouter.delete('/claim/:id', jwtWithAddress(), async (req, res) => 
     return res.status(401).send({ msg: "Can't authenticated GitPOAP ownership" });
   }
 
+  const { addressId } = getAccessTokenPayload(req.user);
+
   if (claim.gitPOAP.gitPOAPRequest.addressId !== addressId) {
-    logger.warn(`User attempted to delete a Claim for a custom GitPOAP that they do not own`);
+    logger.warn(
+      `User attempted to delete a Claim for a custom GitPOAP (ID: ${claim.gitPOAP.id} that they do not own`,
+    );
     endTimer({ status: 401 });
     return res.status(401).send({ msg: 'Not Custom GitPOAP creator' });
+  }
+
+  if (claim.status !== ClaimStatus.UNCLAIMED) {
+    logger.warn(`User attempted to delete a Claim (ID: ${claimId}) that has already been claimed`);
+    endTimer({ status: 400 });
+    return res.status(400).send({ msg: 'Already claimed' });
   }
 
   // Use deleteMany so we don't fail if another request deletes the record during this request

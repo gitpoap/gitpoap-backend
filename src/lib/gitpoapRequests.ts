@@ -6,7 +6,10 @@ import {
 } from './claims';
 import { GitPOAPRequestContributors } from '../types/gitpoapRequest';
 import { z } from 'zod';
-import { CustomGitPOAPContributorsSchema } from '../schemas/gitpoaps/custom';
+import {
+  CustomGitPOAPContributorsSchema,
+  DeleteGitPOAPRequestClaimSchema,
+} from '../schemas/gitpoaps/custom';
 
 export function convertContributorsFromSchema(
   contributors: z.infer<typeof CustomGitPOAPContributorsSchema>,
@@ -69,4 +72,49 @@ export function addGitPOAPRequestContributors(
     ethAddresses: Array.from(ethAddressSet),
     ensNames: Array.from(ensNameSet),
   };
+}
+
+export function removeContributorFromGitPOAPRequest(
+  existingContributors: GitPOAPRequestContributors,
+  claimType: z.infer<typeof DeleteGitPOAPRequestClaimSchema>['claimType'],
+  claimData: string,
+): GitPOAPRequestContributors {
+  if (claimType === 'githubHandle') {
+    const githubHandleSet = new Set<string>(existingContributors.githubHandles);
+
+    githubHandleSet.delete(claimData);
+
+    return {
+      ...existingContributors,
+      githubHandles: Array.from(githubHandleSet),
+    };
+  } else if (claimType === 'email') {
+    const emailSet = new Set<string>(existingContributors.emails);
+
+    emailSet.delete(claimData);
+
+    return {
+      ...existingContributors,
+      emails: Array.from(emailSet),
+    };
+  } else if (claimType === 'ethAddress') {
+    const ethAddressSet = new Set<string>(existingContributors.ethAddresses);
+
+    ethAddressSet.delete(claimData);
+
+    return {
+      ...existingContributors,
+      ethAddresses: Array.from(ethAddressSet),
+    };
+  } else {
+    // claimType === 'ensName'
+    const ensNameSet = new Set<string>(existingContributors.ensNames);
+
+    ensNameSet.delete(claimData);
+
+    return {
+      ...existingContributors,
+      ensNames: Array.from(ensNameSet),
+    };
+  }
 }
