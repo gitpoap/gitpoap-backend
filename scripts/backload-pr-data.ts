@@ -7,9 +7,9 @@ import minimist from 'minimist';
 import { context } from '../src/context';
 import { sleep } from '../src/lib/sleep';
 
-const BACKLOADER_DELAY_BETWEEN_PROJECTS_SECONDS = 10;
+const BACKLOADER_DELAY_BETWEEN_PROJECTS_SECONDS = 2;
 
-async function backloadRepos(repos: { id: number; }[]) {
+async function backloadRepos(repos: { id: number }[]) {
   const logger = createScopedLogger('backloadRepos');
 
   for (let i = 0; i < repos.length; ++i) {
@@ -34,14 +34,39 @@ const main = async () => {
 
   updateLogLevel(argv['level']);
 
-  if (argv['only']) {
-    const repoIds = [argv['only']].concat(argv['_']);
+  if ('only' in argv) {
+    const repoIds = [argv['only']].concat(argv['_']).map((id: string) => parseInt(id, 10));
 
-    await backloadRepos(repoIds.map((repoId) => ({ id: repoId })));
+    logger.info(`Running only on Repo IDs ${repoIds}`);
+
+    await backloadRepos(repoIds.map(repoId => ({ id: repoId })));
   } else {
-    const where = argv['from']
-      ? { id: { gte: parseInt(argv['from'], 10) } }
-      : undefined;
+    let where;
+    if ('from-repo-id' in argv) {
+      logger.info(`Running on Repo IDs >= ${argv['from-repo-id']}`);
+
+      where = {
+        id: {
+          gte: parseInt(argv['from-repo-id'], 10),
+        },
+      };
+    } else if ('from-gitpoap-id' in argv) {
+      logger.info(`Running on Repo with GitPOAP IDs >= ${argv['from-gitpoap-id']}`);
+
+      where = {
+        project: {
+          gitPOAPs: {
+            some: {
+              id: {
+                gte: parseInt(argv['from-gitpoap-id'], 10),
+              },
+            },
+          },
+        },
+      };
+    } else {
+      logger.info('Running on all Repo IDs');
+    }
 
     const repos = await context.prisma.repo.findMany({
       where,
