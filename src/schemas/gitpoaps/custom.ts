@@ -31,3 +31,8 @@ export const CreateCustomGitPOAPClaimsSchema = z.object({
   gitPOAPRequestId: z.number(),
   contributors: CustomGitPOAPContributorsSchema,
 });
+
+export const DeleteGitPOAPRequestClaimSchema = z.object({
+  claimType: z.enum(['githubHandle', 'email', 'ethAddress', 'ensName']),
+  claimData: z.string().nonempty(),
+});
