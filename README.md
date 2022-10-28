@@ -38,6 +38,7 @@ REDIS_URL="redis://gitpoap-redis:ICanHazASecurePassword@localhost:6379"
 MAILCHIMP_API_KEY="fake-key-us14"
 SENTRY_DSN="https://test.ingest.sentry.io/12345"
 POSTMARK_SERVER_TOKEN="fake-token"
+SLACK_TOKEN="fake-slack-token"
 ```
 
 ### Entire Backend
