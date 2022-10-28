@@ -29,3 +29,4 @@ export const REDIS_URL = env.get('REDIS_URL').required().asString();
 export const MAILCHIMP_API_KEY = env.get('MAILCHIMP_API_KEY').required().asString();
 export const SENTRY_DSN = env.get('SENTRY_DSN').asString();
 export const POSTMARK_SERVER_TOKEN = env.get('POSTMARK_SERVER_TOKEN').required().asString();
+export const SLACK_TOKEN = env.get('SLACK_TOKEN').required().asString();
