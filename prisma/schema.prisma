@@ -217,7 +217,7 @@ model GitPOAP {
   threshold          Int             @default(1)
   isPRBased          Boolean         @default(true)
   isEnabled          Boolean         @default(true)
-  gitpoapRequest     GitPOAPRequest?
+  gitPOAPRequest     GitPOAPRequest?
 }
 
 // Records in this table are used for GitPOAP Creation Requests via the Creation Form

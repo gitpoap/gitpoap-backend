@@ -973,7 +973,7 @@ input GitPOAPWhereInput {
   threshold: IntFilter
   isPRBased: BoolFilter
   isEnabled: BoolFilter
-  gitpoapRequest: GitPOAPRequestRelationFilter
+  gitPOAPRequest: GitPOAPRequestRelationFilter
 }
 
 input EnumGitPOAPTypeFilter {
@@ -1424,7 +1424,7 @@ input GitPOAPOrderByWithRelationInput {
   threshold: SortOrder
   isPRBased: SortOrder
   isEnabled: SortOrder
-  gitpoapRequest: GitPOAPRequestOrderByWithRelationInput
+  gitPOAPRequest: GitPOAPRequestOrderByWithRelationInput
 }
 
 input ProjectOrderByWithRelationInput {
@@ -1690,7 +1690,7 @@ type GitPOAP {
     distinct: [RedeemCodeScalarFieldEnum!]
   ): [RedeemCode!]!
   event: Event
-  gitpoapRequest: GitPOAPRequest
+  gitPOAPRequest: GitPOAPRequest
 }
 
 type GitPOAPCount {
