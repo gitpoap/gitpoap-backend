@@ -13,7 +13,6 @@ export const CreateCustomGitPOAPSchema = z.object({
   eventUrl: z.string().nonempty(),
   email: z.string().email().nonempty(),
   numRequestedCodes: z.string(),
-  ongoing: z.enum(['true', 'false']),
   city: z.string().optional(),
   country: z.string().optional(),
   isEnabled: z.enum(['true', 'false']).optional(),
@@ -27,3 +26,8 @@ export const CustomGitPOAPContributorsSchema = z
     emails: z.array(z.string().email()).optional(),
   })
   .strict();
+
+export const CreateCustomGitPOAPClaimsSchema = z.object({
+  gitPOAPRequestId: z.number(),
+  contributors: CustomGitPOAPContributorsSchema,
+});
