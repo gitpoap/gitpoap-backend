@@ -3,7 +3,7 @@ import { Octokit } from 'octokit';
 import { z } from 'zod';
 import multer from 'multer';
 import { DateTime } from 'luxon';
-import { uploadMulterFile, s3configProfile, s3, getS3URL } from '../external/s3';
+import { uploadMulterFile, s3configProfile, getS3URL } from '../../external/s3';
 import {
   PutItemCommand,
   PutItemCommandInput,
@@ -12,311 +12,25 @@ import {
   UpdateItemCommand,
   UpdateItemCommandInput,
 } from '@aws-sdk/client-dynamodb';
-import { configProfile, dynamoDBClient } from '../external/dynamo';
-import { createScopedLogger } from '../logging';
-import { httpRequestDurationSeconds } from '../metrics';
-import { jwtWithGitHubOAuth } from '../middleware';
-import { getAccessTokenPayloadWithOAuth } from '../types/authTokens';
-import { postmarkClient } from '../external/postmark';
+import { configProfile, dynamoDBClient } from '../../external/dynamo';
+import { createScopedLogger } from '../../logging';
+import { httpRequestDurationSeconds } from '../../metrics';
+import { jwtWithGitHubOAuth } from '../../middleware';
+import { getAccessTokenPayloadWithOAuth } from '../../types/authTokens';
+import { sendConfirmationEmail, sendInternalConfirmationEmail } from '../../external/postmark';
 import {
   IntakeFormImageFilesSchema,
   IntakeFormReposSchema,
   IntakeFormSchema,
-} from '../schemas/onboarding';
-
-type Repo = {
-  name: string;
-  full_name: string;
-  githubRepoId: number;
-  description: string | null;
-  url: string;
-  owner: {
-    id: number | string;
-    type: string;
-    name: string;
-    avatar_url: string;
-    url: string;
-  };
-  permissions?: {
-    admin?: boolean;
-    maintain?: boolean;
-    push?: boolean;
-    triage?: boolean;
-    pull?: boolean;
-  };
-};
-
-type PullRequestsRes = {
-  search: {
-    issueCount: number;
-    edges: {
-      node: {
-        number: number;
-        title: string;
-        repository: {
-          name: string;
-          nameWithOwner: string;
-          viewerPermission: string;
-          databaseId: number;
-          description: string;
-          url: string;
-          isFork: boolean;
-          stargazerCount: number;
-          owner: {
-            id: string;
-            __typename: string;
-            avatarUrl: string;
-            login: string;
-            resourcePath: string;
-          };
-        };
-      };
-    }[];
-  };
-};
-
-type ErrorMessage = {
-  message: string;
-};
-
-type APIResponseData<T> = T | ErrorMessage;
-
-const publicPRsQuery = (userName: string) => `
-{
-  search(
-    query: "author:${userName} is:pr is:public is:merged"
-    type: ISSUE
-    first: 100
-  ) {
-    issueCount
-    edges {
-      node {
-        ... on PullRequest {
-          title
-          repository {
-            databaseId
-            name
-            nameWithOwner
-            viewerPermission
-            description
-            url
-            isFork
-            stargazerCount
-            owner {
-              id
-              __typename
-              avatarUrl
-              login
-              resourcePath
-            }
-          }
-        }
-      }
-    }
-  }
-}
-`;
-
-const getMappedOrgRepo = (
-  repo: Awaited<ReturnType<Octokit['rest']['repos']['listForOrg']>>['data'][number],
-): Repo => ({
-  name: repo.name,
-  full_name: repo.full_name,
-  githubRepoId: repo.id,
-  description: repo.description,
-  url: repo.html_url,
-  owner: {
-    id: repo.owner.id,
-    type: repo.owner.type,
-    name: repo.owner.login,
-    avatar_url: repo.owner.avatar_url,
-    url: repo.owner.html_url,
-  },
-  permissions: repo.permissions,
-});
-
-const getMappedRepo = (
-  repo: Awaited<ReturnType<Octokit['rest']['repos']['listForAuthenticatedUser']>>['data'][number],
-): Repo => ({
-  name: repo.name,
-  full_name: repo.full_name,
-  githubRepoId: repo.id,
-  description: repo.description,
-  url: repo.html_url,
-  owner: {
-    id: repo.owner.id,
-    type: repo.owner.type,
-    name: repo.owner.login,
-    avatar_url: repo.owner.avatar_url,
-    url: repo.owner.html_url,
-  },
-  permissions: repo.permissions,
-});
-
-const getMappedPrRepo = (pr: PullRequestsRes['search']['edges'][number]): Repo => ({
-  name: pr.node.repository.name,
-  full_name: pr.node.repository.nameWithOwner,
-  githubRepoId: pr.node.repository.databaseId,
-  description: pr.node.repository.description,
-  url: pr.node.repository.url,
-  owner: {
-    id: pr.node.repository.owner.id,
-    name: pr.node.repository.owner.login,
-    type: pr.node.repository.owner.__typename,
-    avatar_url: pr.node.repository.owner.avatarUrl,
-    url: pr.node.repository.owner.resourcePath,
-  },
-  permissions: {
-    admin: ['ADMIN'].includes(pr.node.repository.viewerPermission),
-    maintain: ['MAINTAIN', 'ADMIN'].includes(pr.node.repository.viewerPermission),
-    push: ['WRITE', 'MAINTAIN', 'ADMIN'].includes(pr.node.repository.viewerPermission),
-    triage: ['TRIAGE', 'WRITE', 'MAINTAIN', 'ADMIN'].includes(pr.node.repository.viewerPermission),
-    pull: ['READ', 'WRITE', 'MAINTAIN', 'ADMIN'].includes(pr.node.repository.viewerPermission),
-  },
-});
-
-type IntakeForm = z.infer<typeof IntakeFormSchema>;
+} from '../../schemas/onboarding';
+import { APIResponseData, IntakeForm, PullRequestsRes, Repo } from './types';
+import { getMappedOrgRepo, getMappedPrRepo, getMappedRepo } from './utils';
+import { publicPRsQuery } from './queries';
+import { createIntakeFormDocForDynamo, createUpdateItemParamsForImages } from './dynamo';
 
 export const onboardingRouter = Router();
 
 const upload = multer();
-
-const createIntakeFormDocForDynamo = (
-  githubHandle: string,
-  formData: IntakeForm,
-  timestamp: number,
-): PutItemCommandInput => ({
-  TableName: configProfile.tables.intakeForm,
-  Item: {
-    'email-githubHandle': {
-      S: `${formData.email}-${githubHandle}`,
-    },
-    timestamp: {
-      N: timestamp.toString(),
-    },
-    name: { S: formData.name ?? '' },
-    email: { S: formData.email },
-    notes: { S: formData.notes ?? '' },
-    githubHandle: { S: githubHandle },
-    shouldGitPOAPDesign: { BOOL: Boolean(formData.shouldGitPOAPDesign) },
-    isOneGitPOAPPerRepo: { BOOL: Boolean(formData.isOneGitPOAPPerRepo) },
-    repos: {
-      L: JSON.parse(formData.repos).map((repo: z.infer<typeof IntakeFormReposSchema>[number]) => ({
-        M: {
-          full_name: { S: repo.full_name },
-          githubRepoId: { S: repo.githubRepoId },
-          permissions: {
-            M: {
-              admin: { BOOL: repo.permissions.admin },
-              maintain: { BOOL: repo.permissions.maintain ?? false },
-              push: { BOOL: repo.permissions.push },
-              triage: { BOOL: repo.permissions.triage ?? false },
-              pull: { BOOL: repo.permissions.pull },
-            },
-          },
-        },
-      })),
-    },
-    isComplete: { BOOL: false },
-  },
-});
-
-const createUpdateItemParamsForImages = (
-  key: string,
-  githubHandle: string,
-  timestamp: number,
-  imageUrls: string[],
-): UpdateItemCommandInput => {
-  return {
-    TableName: configProfile.tables.intakeForm,
-    Key: {
-      'email-githubHandle': { S: key },
-      timestamp: { N: timestamp.toString() },
-    },
-    UpdateExpression: 'set images = :images',
-    ExpressionAttributeValues: {
-      ':images': {
-        L: imageUrls.map(url => ({ S: url })),
-      },
-    },
-    ReturnValues: 'UPDATED_NEW',
-  };
-};
-
-const formatRepos = (repos: Repo[]) => {
-  let response = `${repos[0].full_name.split('/')[1]}`;
-  for (let i = 1; i < repos.length; i++) {
-    if (i + 1 === repos.length) {
-      response += `, and ${repos[i].full_name.split('/')[1]}`;
-    } else if (i < 5) {
-      response += `, ${repos[i].full_name.split('/')[1]}`;
-    } else {
-      response += `, and ${repos.length - 5} more`;
-      break;
-    }
-  }
-  return response;
-};
-
-const sendConfirmationEmail = async (
-  githubHandle: string,
-  formData: IntakeForm,
-  queueNumber: number | undefined,
-) => {
-  postmarkClient.sendEmailWithTemplate({
-    From: 'team@gitpoap.io',
-    To: formData.email,
-    TemplateAlias: 'welcome-1',
-    TemplateModel: {
-      product_url: 'gitpoap.io',
-      product_name: 'GitPOAP',
-      queue_number: queueNumber ?? '',
-      name: formData.name,
-      email: formData.email,
-      githubHandle,
-      shouldGitPOAPDesign: formData.shouldGitPOAPDesign === 'true' ? 'GitPOAP' : 'You',
-      isOneGitPOAPPerRepo: formData.isOneGitPOAPPerRepo === 'true' ? 'One Per Repo' : 'One For All',
-      notes: formData.notes,
-      repos: formatRepos(JSON.parse(formData.repos)),
-      support_email: 'team@gitpoap.io',
-      company_name: 'MetaRep Labs Inc',
-      company_address: 'One Broadway, Cambridge MA 02142',
-      sender_name: 'GitPOAP Team',
-      help_url: 'https://docs.gitpoap.io',
-    },
-  });
-};
-
-const sendInternalConfirmationEmail = async (
-  githubHandle: string,
-  formData: IntakeForm,
-  queueNumber: number | undefined,
-  urls: string[],
-) => {
-  postmarkClient.sendEmail({
-    From: 'team@gitpoap.io',
-    To: 'team@gitpoap.io',
-    Subject: `New intake form submission from ${githubHandle} / ${formData.email} `,
-    TextBody: `
-      New intake form submission from ${githubHandle} / ${formData.email}
-      Queue number: ${queueNumber ?? ''}
-      Name: ${formData.name}
-      Email: ${formData.email}
-      Notes: ${formData.notes}
-      Github Handle: ${githubHandle}
-      Should GitPOAP Design: ${formData.shouldGitPOAPDesign}
-      Is One GitPOAP Per Repo: ${formData.isOneGitPOAPPerRepo}
-      \n
-      Repos:
-      ${JSON.parse(formData.repos).map(
-        (repo: z.infer<typeof IntakeFormReposSchema>[number]) => repo.full_name,
-      )}
-      \n
-      Images:
-      ${urls.join('\n')}
-      `,
-  });
-};
 
 onboardingRouter.post<'/intake-form', {}, {}, IntakeForm>(
   '/intake-form',
