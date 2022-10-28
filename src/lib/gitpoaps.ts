@@ -7,7 +7,7 @@ export const convertGitPOAPRequestToGitPOAP = async (
   poapInfo: CreatePOAPEventReturnType,
   secretCode: string,
 ): Promise<GitPOAP> => {
-  const gitPOAP = await context.prisma.gitPOAP.create({
+  return await context.prisma.gitPOAP.create({
     data: {
       type: GitPOAPType.CUSTOM,
       name: gitPOAPRequest.name,
@@ -31,6 +31,4 @@ export const convertGitPOAPRequestToGitPOAP = async (
       isEnabled: gitPOAPRequest.isEnabled,
     },
   });
-
-  return gitPOAP;
 };

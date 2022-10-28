@@ -14,7 +14,7 @@ import { claimsRouter } from './routes/claims';
 import { emailRouter } from './routes/email';
 import { featuredRouter } from './routes/featured';
 import { githubRouter } from './routes/github';
-import { gitpoapsRouter } from './routes/gitpoaps';
+import { gitPOAPsRouter } from './routes/gitpoaps';
 import { profilesRouter } from './routes/profiles';
 import { projectsRouter } from './routes/projects';
 import { organizationsRouter } from './routes/organizations';
@@ -74,7 +74,7 @@ export async function setupApp() {
   app.use('/claims', claimsRouter);
   app.use('/email', emailRouter);
   app.use('/featured', featuredRouter);
-  app.use('/gitpoaps', gitpoapsRouter);
+  app.use('/gitpoaps', gitPOAPsRouter);
   app.use('/onboarding', onboardingRouter);
   app.use('/profiles', profilesRouter);
   app.use('/projects', projectsRouter);

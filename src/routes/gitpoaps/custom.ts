@@ -1,5 +1,6 @@
 import {
   CreateCustomGitPOAPSchema,
+  CreateCustomGitPOAPClaimsSchema,
   CustomGitPOAPContributorsSchema,
 } from '../../schemas/gitpoaps/custom';
 import { Request, Router } from 'express';
@@ -9,30 +10,26 @@ import { createPOAPEvent } from '../../external/poap';
 import { createScopedLogger } from '../../logging';
 import { jwtWithAdminOAuth, jwtWithAddress } from '../../middleware';
 import multer from 'multer';
-import { GitPOAPType, AdminApprovalStatus } from '@generated/type-graphql';
 import { httpRequestDurationSeconds } from '../../metrics';
 import { generatePOAPSecret } from '../../lib/secrets';
 import { DateTime } from 'luxon';
-import { Prisma } from '@prisma/client';
+import { AdminApprovalStatus, GitPOAPType, Prisma } from '@prisma/client';
 import { getImageBufferFromS3, s3configProfile, uploadMulterFile } from '../../external/s3';
-import { convertGitPOAPRequestToGitPOAP } from '../../lib/gitpoap';
-import { GitPOAPRequestContributors } from '../../types/gitpoapRequest';
-import {
-  createClaimForEmail,
-  createClaimForEnsName,
-  createClaimForEthAddress,
-  createClaimForGithubHandle,
-} from '../../lib/claims';
-import { deleteGitPOAPRequest } from '../../lib/gitpoapRequest';
+import { convertGitPOAPRequestToGitPOAP } from '../../lib/gitpoaps';
 import { parseJSON } from '../../lib/json';
 import { getAccessTokenPayload } from '../../types/authTokens';
 import { sentInternalGitPOAPRequestMessage } from '../../external/slack';
+import {
+  addGitPOAPRequestContributors,
+  convertContributorsFromSchema,
+  createClaimsForContributors,
+} from '../../lib/gitpoapRequests';
 
-export const customGitpoapsRouter = Router();
+export const customGitPOAPsRouter = Router();
 
 type CreateCustomGitPOAPReqBody = z.infer<typeof CreateCustomGitPOAPSchema>;
 
-customGitpoapsRouter.post(
+customGitPOAPsRouter.post(
   '/',
   jwtWithAddress(),
   multer().single('image'),
@@ -108,13 +105,13 @@ customGitpoapsRouter.post(
 
     /* If a Custom GitPOAP Request is tied to project */
     if (req.body.projectId) {
-      const projectId = req.body.projectId;
+      const projectId = parseInt(req.body.projectId, 10);
       logger.info(
         `Request to create a new Custom GitPOAP "${req.body.name}" for project ${projectId}`,
       );
 
       project = await context.prisma.project.findUnique({
-        where: { id: +projectId },
+        where: { id: projectId },
         select: { id: true },
       });
 
@@ -129,12 +126,12 @@ customGitpoapsRouter.post(
 
     /* If Custom GitPOAP Request is tied to an organization */
     if (req.body.organizationId) {
-      const organizationId = req.body.organizationId;
+      const organizationId = parseInt(req.body.organizationId, 10);
       logger.info(
         `Request to create a new Custom GitPOAP "${req.body.name}" for organization ${organizationId}`,
       );
       organization = await context.prisma.organization.findUnique({
-        where: { id: +organizationId },
+        where: { id: organizationId },
         select: { id: true },
       });
 
@@ -177,10 +174,10 @@ customGitpoapsRouter.post(
         expiryDate,
         eventUrl: req.body.eventUrl,
         email: req.body.email,
-        numRequestedCodes: +req.body.numRequestedCodes,
+        numRequestedCodes: parseInt(req.body.numRequestedCodes, 10),
         project: project ? { connect: { id: project?.id } } : undefined,
         organization: organization ? { connect: { id: organization?.id } } : undefined,
-        ongoing: req.body.ongoing === 'true',
+        ongoing: true,
         isEnabled: req.body.isEnabled !== 'false',
         adminApprovalStatus: AdminApprovalStatus.PENDING,
         contributors: contributors as Prisma.JsonObject,
@@ -205,7 +202,7 @@ customGitpoapsRouter.post(
   },
 );
 
-customGitpoapsRouter.put('/approve/:id', jwtWithAdminOAuth(), async (req, res) => {
+customGitPOAPsRouter.put('/approve/:id', jwtWithAdminOAuth(), async (req, res) => {
   const logger = createScopedLogger('PUT /gitpoaps/custom/approve/:id');
   const endTimer = httpRequestDurationSeconds.startTimer('PUT', '/gitpoaps/custom/approve/:id');
 
@@ -288,30 +285,14 @@ customGitpoapsRouter.put('/approve/:id', jwtWithAdminOAuth(), async (req, res) =
   logger.info(`Created Custom GitPOAP Request with ID: ${gitPOAPRequest.id}`);
 
   /* Create the associated Claims */
+  let claimsCount = 0;
   if (updatedGitPOAPRequest.contributors) {
-    const contributors = updatedGitPOAPRequest.contributors as GitPOAPRequestContributors;
-
-    for (const githubHandle of contributors['githubHandles']) {
-      void createClaimForGithubHandle(githubHandle, gitPOAP.id);
-    }
-
-    for (const email of contributors['emails']) {
-      void createClaimForEmail(email, gitPOAP.id);
-    }
-
-    for (const ethAddress of contributors['ethAddresses']) {
-      void createClaimForEthAddress(ethAddress, gitPOAP.id);
-    }
-
-    for (const ensName of contributors['ensNames']) {
-      void createClaimForEnsName(ensName, gitPOAP.id);
-    }
+    const contributors = convertContributorsFromSchema(
+      updatedGitPOAPRequest.contributors as Prisma.JsonObject,
+    );
+    claimsCount = createClaimsForContributors(gitPOAP.id, contributors);
   }
-
-  logger.info(`Created Claims for GitPOAP Request with ID: ${gitPOAPRequest.id}`);
-
-  /* Delete the GitPOAPRequest */
-  await deleteGitPOAPRequest(gitPOAPRequest.id);
+  logger.info(`Created ${claimsCount} Claims for GitPOAP Request with ID: ${gitPOAPRequest.id}`);
 
   logger.info(`Completed admin request to create Custom GitPOAP with ID:${gitPOAP.id}`);
   endTimer({ status: 200 });
@@ -319,12 +300,13 @@ customGitpoapsRouter.put('/approve/:id', jwtWithAdminOAuth(), async (req, res) =
   return res.status(200).send('Approved');
 });
 
-customGitpoapsRouter.put('/reject/:id', jwtWithAdminOAuth(), async (req, res) => {
+customGitPOAPsRouter.put('/reject/:id', jwtWithAdminOAuth(), async (req, res) => {
   const logger = createScopedLogger('PUT /gitpoaps/custom/reject/:id');
   const endTimer = httpRequestDurationSeconds.startTimer('PUT', '/gitpoaps/custom/reject/:id');
 
   const gitPOAPRequestId = parseInt(req.params.id, 10);
-  logger.info(`Admin request to reject GitPOAP Request with ID:${gitPOAPRequestId}`);
+
+  logger.info(`Admin request to reject GitPOAP Request with ID: ${gitPOAPRequestId}`);
 
   const gitPOAPRequest = await context.prisma.gitPOAPRequest.findUnique({
     where: { id: gitPOAPRequestId },
@@ -367,4 +349,162 @@ customGitpoapsRouter.put('/reject/:id', jwtWithAdminOAuth(), async (req, res) =>
   endTimer({ status: 200 });
 
   return res.status(200).send(`Rejected`);
+});
+
+customGitPOAPsRouter.put('/claims', jwtWithAddress(), async (req, res) => {
+  const logger = createScopedLogger('PUT /gitpoaps/custom/claims');
+  const endTimer = httpRequestDurationSeconds.startTimer('PUT', '/gitpoaps/custom/claims');
+
+  const schemaResult = CreateCustomGitPOAPClaimsSchema.safeParse(req.body);
+
+  if (!schemaResult.success) {
+    logger.warn(
+      `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
+    );
+    endTimer({ status: 400 });
+
+    return res.status(400).send({ issues: schemaResult.error.issues });
+  }
+
+  const { gitPOAPRequestId, contributors } = schemaResult.data;
+
+  logger.info(`Request to create new Claims for custom GitPOAP Request ID ${gitPOAPRequestId}`);
+
+  const gitPOAPRequest = await context.prisma.gitPOAPRequest.findUnique({
+    where: { id: gitPOAPRequestId },
+    select: {
+      addressId: true,
+      adminApprovalStatus: true,
+      contributors: true,
+      gitPOAP: {
+        select: { id: true },
+      },
+    },
+  });
+
+  if (gitPOAPRequest === null) {
+    logger.warn(
+      `User tried to create claims for nonexistant GitPOAPRequest ID ${gitPOAPRequestId}`,
+    );
+    endTimer({ status: 404 });
+    return res.status(404).send({ msg: "Request doesn't exist" });
+  }
+
+  const { addressId } = getAccessTokenPayload(req.user);
+
+  if (gitPOAPRequest.addressId !== addressId) {
+    logger.warn(`Non-requestor tried to add claims to GitPOAPRequest ID ${gitPOAPRequestId}`);
+    endTimer({ status: 401 });
+    return res.status(401).send({ msg: 'Not request owner' });
+  }
+
+  if (gitPOAPRequest.adminApprovalStatus === AdminApprovalStatus.APPROVED) {
+    if (gitPOAPRequest.gitPOAP === null) {
+      logger.error(
+        `GitPOAPRequest ID ${gitPOAPRequestId} is APPROVED but has no associated GitPOAP`,
+      );
+      endTimer({ status: 500 });
+      return res.status(500).send({ msg: 'Request has no associated GitPOAP' });
+    }
+
+    const claimsCount = createClaimsForContributors(
+      gitPOAPRequest.gitPOAP.id,
+      convertContributorsFromSchema(contributors),
+    );
+
+    logger.info(`Created ${claimsCount} Claims for GitPOAP Request with ID: ${gitPOAPRequestId}`);
+  } else {
+    const existingContributors = convertContributorsFromSchema(
+      gitPOAPRequest.contributors ? (gitPOAPRequest.contributors as Prisma.JsonObject) : {},
+    );
+    const newContributors = addGitPOAPRequestContributors(
+      existingContributors,
+      convertContributorsFromSchema(contributors),
+    );
+
+    await context.prisma.gitPOAPRequest.update({
+      where: { id: gitPOAPRequestId },
+      data: { contributors: newContributors },
+    });
+
+    logger.info(`Updated contributor JSON for GitPOAPRequest ID ${gitPOAPRequestId}`);
+  }
+
+  logger.debug(
+    `Completed request to create new Claims for custom GitPOAP Request ID ${gitPOAPRequestId}`,
+  );
+
+  endTimer({ status: 200 });
+
+  return res.status(200).send('CREATED');
+});
+
+customGitPOAPsRouter.delete('/claim/:id', jwtWithAddress(), async (req, res) => {
+  const logger = createScopedLogger('DELETE /gitpoaps/custom/claim/:id');
+  const endTimer = httpRequestDurationSeconds.startTimer('DELETE', '/gitpoaps/custom/claim/:id');
+
+  const claimId = parseInt(req.params.id, 10);
+
+  logger.info(`Request to delete Custom GitPOAP Claim with ID: ${claimId}`);
+
+  const claim = await context.prisma.claim.findUnique({
+    where: { id: claimId },
+    select: {
+      status: true,
+      gitPOAP: {
+        select: {
+          id: true,
+          type: true,
+          gitPOAPRequest: {
+            select: {
+              addressId: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  // If the claim has already been deleted
+  if (claim === null) {
+    logger.info(`Completed request to delete Custom GitPOAP Claim with ID: ${claimId}`);
+    endTimer({ status: 200 });
+    return res.status(200).send('DELETED');
+  }
+
+  // If the GitPOAP is not CUSTOM
+  if (claim.gitPOAP.type !== GitPOAPType.CUSTOM) {
+    logger.warn(
+      `Attempted deletion of Claim (ID: ${claimId}) for non-custom GitPOAP (ID: ${claim.gitPOAP.id}`,
+    );
+    endTimer({ status: 400 });
+    return res.status(400).send({ msg: 'Claim is not associated with a custom GitPOAP' });
+  }
+
+  const { addressId } = getAccessTokenPayload(req.user);
+
+  if (claim.gitPOAP.gitPOAPRequest === null) {
+    logger.error(
+      `Custom GitPOAP ID ${claim.gitPOAP.id} does not have an associated GitPOAPRequest`,
+    );
+    endTimer({ status: 401 });
+    return res.status(401).send({ msg: "Can't authenticated GitPOAP ownership" });
+  }
+
+  if (claim.gitPOAP.gitPOAPRequest.addressId !== addressId) {
+    logger.warn(`User attempted to delete a Claim for a custom GitPOAP that they do not own`);
+    endTimer({ status: 401 });
+    return res.status(401).send({ msg: 'Not Custom GitPOAP creator' });
+  }
+
+  // Use deleteMany so we don't fail if another request deletes the record during this request
+  await context.prisma.claim.deleteMany({
+    where: { id: claimId },
+  });
+
+  logger.debug(`Completed request to delete Custom GitPOAP Claim with ID: ${claimId}`);
+
+  endTimer({ status: 200 });
+
+  return res.status(200).send('DELETED');
 });
