@@ -20,18 +20,18 @@ import {
 } from '../../lib/projects';
 import { upsertCode } from '../../lib/codes';
 import { generatePOAPSecret } from '../../lib/secrets';
-import { customGitpoapsRouter } from './custom';
+import { customGitPOAPsRouter } from './custom';
 
-export const gitpoapsRouter = Router();
+export const gitPOAPsRouter = Router();
 
 /* Add more routes for creating Custom GitPOAPs ~ "/gitpoaps/custom" */
-gitpoapsRouter.use('/custom', customGitpoapsRouter);
+gitPOAPsRouter.use('/custom', customGitPOAPsRouter);
 
 const upload = multer();
 
 type CreateGitPOAPReqBody = z.infer<typeof CreateGitPOAPSchema>;
 
-gitpoapsRouter.post(
+gitPOAPsRouter.post(
   '/',
   jwtWithAdminOAuth(),
   upload.single('image'),
@@ -179,7 +179,7 @@ gitpoapsRouter.post(
   },
 );
 
-gitpoapsRouter.get('/poap-token-id/:id', async function (req, res) {
+gitPOAPsRouter.get('/poap-token-id/:id', async function (req, res) {
   const logger = createScopedLogger('GET /gitpoaps/poap-token-id/:id');
 
   logger.debug(`Params: ${JSON.stringify(req.params)}`);
@@ -237,7 +237,7 @@ gitpoapsRouter.get('/poap-token-id/:id', async function (req, res) {
   return res.status(200).send(data);
 });
 
-gitpoapsRouter.post(
+gitPOAPsRouter.post(
   '/codes',
   jwtWithAdminOAuth(),
   upload.single('codes'),
@@ -340,7 +340,7 @@ gitpoapsRouter.post(
   },
 );
 
-gitpoapsRouter.put('/enable/:id', jwtWithAdminOAuth(), async (req, res) => {
+gitPOAPsRouter.put('/enable/:id', jwtWithAdminOAuth(), async (req, res) => {
   const logger = createScopedLogger('PUT /gitpoaps/enable/:id');
 
   const endTimer = httpRequestDurationSeconds.startTimer('PUT', '/gitpoaps/enable/:id');
@@ -387,7 +387,7 @@ gitpoapsRouter.put('/enable/:id', jwtWithAdminOAuth(), async (req, res) => {
   return res.status(200).send('ENABLED');
 });
 
-gitpoapsRouter.put('/deprecate/:id', jwtWithAdminOAuth(), async (req, res) => {
+gitPOAPsRouter.put('/deprecate/:id', jwtWithAdminOAuth(), async (req, res) => {
   const logger = createScopedLogger('PUT /gitpoaps/deprecate/:id');
 
   const endTimer = httpRequestDurationSeconds.startTimer('PUT', '/gitpoaps/deprecate/:id');
