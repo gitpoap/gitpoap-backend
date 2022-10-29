@@ -573,8 +573,8 @@ customGitPOAPsRouter.delete('/claim/:id', jwtWithAddress(), async (req, res) => 
     logger.error(
       `Custom GitPOAP ID ${claim.gitPOAP.id} does not have an associated GitPOAPRequest`,
     );
-    endTimer({ status: 401 });
-    return res.status(401).send({ msg: "Can't authenticated GitPOAP ownership" });
+    endTimer({ status: 500 });
+    return res.status(500).send({ msg: "Can't authenticate GitPOAP ownership" });
   }
 
   const { addressId } = getAccessTokenPayload(req.user);
