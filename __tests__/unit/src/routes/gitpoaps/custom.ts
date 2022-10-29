@@ -298,11 +298,6 @@ describe('PUT /gitpoaps/custom/approve/:id', () => {
         adminApprovalStatus: AdminApprovalStatus.APPROVED,
       },
     });
-
-    expect(contextMock.prisma.gitPOAPRequest.delete).toHaveBeenCalledTimes(1);
-    expect(contextMock.prisma.gitPOAPRequest.delete).toHaveBeenCalledWith({
-      where: { id: gitPOAPRequestId },
-    });
   });
 });
 
