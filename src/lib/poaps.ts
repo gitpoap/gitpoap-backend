@@ -139,7 +139,7 @@ async function handleTransferPostProcessing(
   for (const claim of claims) {
     if (claim.poapTokenId !== null && !foundPOAPIds.has(claim.poapTokenId)) {
       // Run this in the background
-      checkIfClaimTransferred(claim.id);
+      void checkIfClaimTransferred(claim.id);
     }
   }
 }
@@ -249,7 +249,7 @@ export async function splitUsersPOAPs(address: string): Promise<SplitUsersPOAPsR
   }
 
   // Run this in the background
-  handleTransferPostProcessing(addressLower, foundPOAPIds, claims);
+  void handleTransferPostProcessing(addressLower, foundPOAPIds, claims);
 
   // Return immediately
   return { gitPOAPsOnly, poapsOnly };
