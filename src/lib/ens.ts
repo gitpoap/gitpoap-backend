@@ -82,7 +82,7 @@ async function upsertENSAvatarInDB(address: string, avatarURL: string | null) {
 }
 
 async function updateENSNameLastChecked(address: string) {
-  context.redis.setValue(
+  void context.redis.setValue(
     ENS_NAME_LAST_RUN_CACHE_PREFIX,
     address.toLowerCase(),
     'checked',
@@ -129,7 +129,7 @@ export async function resolveENSAvatar(
     }
   }
 
-  context.redis.setValue(
+  void context.redis.setValue(
     ENS_AVATAR_LAST_RUN_CACHE_PREFIX,
     ensName,
     'checked',
@@ -190,7 +190,7 @@ export async function resolveENS(
     // Run in the background
     const avatarPromise = resolveENSAvatar(ensName, result, resolveExtraArgs?.forceAvatarCheck);
 
-    updateENSNameLastChecked(result);
+    void updateENSNameLastChecked(result);
     const namePromise = upsertENSNameInDB(result, ensName);
 
     if (resolveExtraArgs?.synchronous) {

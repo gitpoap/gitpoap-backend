@@ -68,4 +68,4 @@ const main = async () => {
   startMetricsServer();
 };
 
-main();
+void main();
