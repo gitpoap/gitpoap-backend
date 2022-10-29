@@ -55,9 +55,7 @@ async function handlePotentialTransferIn(
   const logger = createScopedLogger('handlePotentialTransferIn');
 
   const claimData = await context.prisma.claim.findUnique({
-    where: {
-      poapTokenId: poapTokenId,
-    },
+    where: { poapTokenId },
     include: {
       mintedAddress: true,
       user: true,

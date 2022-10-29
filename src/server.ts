@@ -55,7 +55,7 @@ const main = async () => {
 
   startMetricsServer();
 
-  startBatchProcesses();
+  void startBatchProcesses();
 };
 
-main();
+void main();
