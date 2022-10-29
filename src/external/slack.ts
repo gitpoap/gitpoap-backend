@@ -37,6 +37,11 @@ export const sendInternalClaimMessage = async (
   githubHandle: string,
   address: string,
 ) => {
-  const msg = `💸 Claimed GitPOAP(s) ${claims} for GitHub user ${githubHandle} with address ${address} 🥳`;
-  await sendInternalMessage(msg);
+  const logger = createScopedLogger('sendInternalClaimMessage');
+  try {
+    const msg = `💸 Claimed GitPOAP(s) ${claims} for GitHub user ${githubHandle} with address ${address} 🥳`;
+    await sendInternalMessage(msg);
+  } catch (e) {
+    logger.error(`${e}`);
+  }
 };
