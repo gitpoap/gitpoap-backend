@@ -19,7 +19,7 @@ triggersRouter.get('/ongoing-issuance', jwtWithAdminOAuth(), async (req, res) =>
   await updateOngoingIssuanceLastRun();
 
   // Start ongoing issuance process in the background
-  runOngoingIssuanceUpdater();
+  void runOngoingIssuanceUpdater();
 
   logger.debug('Completed admin request to start ongoing issuance now');
 
@@ -40,7 +40,7 @@ triggersRouter.get('/check-for-codes', jwtWithAdminOAuth(), async (req, res) => 
   await updateCheckForNewPOAPCodesLastRun();
 
   // Start the code checking process in the background
-  checkForNewPOAPCodes();
+  void checkForNewPOAPCodes();
 
   logger.debug('Completed admin request to check for new POAP codes now');
 

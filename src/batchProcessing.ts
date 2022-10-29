@@ -6,7 +6,7 @@ import {
 import { tryToRunOngoingIssuanceUpdater } from './lib/ongoing';
 import { tryToCheckForNewPOAPCodes } from './lib/codes';
 
-async function startBatchProcess(processFunction: () => void, frequencyInMinutes: number) {
+async function startBatchProcess(processFunction: () => Promise<void>, frequencyInMinutes: number) {
   // Try to run immediately
   await processFunction();
 
@@ -14,7 +14,7 @@ async function startBatchProcess(processFunction: () => void, frequencyInMinutes
 }
 
 export async function startBatchProcesses() {
-  startBatchProcess(tryToRunOngoingIssuanceUpdater, ONGOING_ISSUANCE_CHECK_FREQUENCY_MINUTES);
+  void startBatchProcess(tryToRunOngoingIssuanceUpdater, ONGOING_ISSUANCE_CHECK_FREQUENCY_MINUTES);
 
-  startBatchProcess(tryToCheckForNewPOAPCodes, CHECK_FOR_CODES_CHECK_FREQUENCY_MINUTES);
+  void startBatchProcess(tryToCheckForNewPOAPCodes, CHECK_FOR_CODES_CHECK_FREQUENCY_MINUTES);
 }
