@@ -594,7 +594,7 @@ export class CustomGitPOAPResolver {
 
       if (claim !== null) {
         results.gitPOAPs.push({
-          claim: claim,
+          claim,
           poap: poapData,
         });
       } else {
@@ -705,13 +705,13 @@ export class CustomGitPOAPResolver {
 
     const totalHolders = await prisma.claim.count({
       where: {
-        gitPOAPId: gitPOAPId,
+        gitPOAPId,
         status: ClaimStatus.CLAIMED,
       },
     });
 
     const holders = {
-      totalHolders: totalHolders,
+      totalHolders,
       holders: results.map(r => {
         const holder: Holder = {
           profileId: r.id,

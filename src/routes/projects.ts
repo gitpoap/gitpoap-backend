@@ -75,7 +75,7 @@ projectsRouter.post('/add-repos', jwtWithAdminOAuth(), async (req, res) => {
 
   // Run backloader in the background so that claims are created immediately
   for (const repoId of addedIds) {
-    backloadGithubPullRequestData(repoId);
+    void backloadGithubPullRequestData(repoId);
   }
 });
 

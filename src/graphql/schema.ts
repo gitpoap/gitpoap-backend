@@ -203,4 +203,4 @@ export const createAndEmitSchema = async () => {
   return schema;
 };
 
-createAndEmitSchema();
+void createAndEmitSchema();
