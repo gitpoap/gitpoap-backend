@@ -13,6 +13,7 @@ import {
 } from '../../../../../src/external/s3';
 import { DateTime } from 'luxon';
 import { ADMIN_GITHUB_IDS } from '../../../../../src/constants';
+import { ADDRESSES, GH_HANDLES } from '../../../../../prisma/constants';
 
 const authTokenId = 4;
 const authTokenGeneration = 1;
@@ -26,6 +27,8 @@ const gitPOAPId = 24;
 const ensName = 'furby.eth';
 const ensAvatarImageUrl = null;
 const claimId = 342;
+const burzEmail = 'burz@gitpoap.io';
+const burzENS = 'burz.eth';
 
 const baseGitPOAP = {
   name: 'foobar-name',
@@ -58,6 +61,16 @@ const claim = {
     gitPOAPRequest: {
       addressId,
     },
+  },
+};
+const gitPOAPRequest = {
+  addressId,
+  adminApprovalStatus: AdminApprovalStatus.PENDING,
+  contributors: {
+    githubHandles: [GH_HANDLES.burz],
+    emails: [burzEmail],
+    ethAddresses: [ADDRESSES.burz],
+    ensNames: [burzENS],
   },
 };
 
@@ -769,5 +782,190 @@ describe('DELETE /gitpoaps/custom/claim/:id', () => {
     expect(contextMock.prisma.claim.deleteMany).toHaveBeenCalledWith({
       where: { id: claimId },
     });
+  });
+});
+
+describe('DELETE /gitpoaps/custom/:gitPOAPRequestId/claim', () => {
+  it('Fails with no Access Token provided', async () => {
+    contextMock.prisma.claim.findUnique.mockResolvedValue(null);
+    const result = await request(await setupApp())
+      .delete(`/gitpoaps/custom/${gitPOAPRequestId}/claim`)
+      .send({ claimType: 'githubHandle', claimData: GH_HANDLES.burz });
+
+    expect(result.statusCode).toEqual(400);
+
+    expect(contextMock.prisma.gitPOAPRequest.findUnique).toHaveBeenCalledTimes(0);
+  });
+
+  it('Fails with invalid body', async () => {
+    mockJwtWithAddress();
+    contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue(null);
+    const authTokens = genAuthTokens();
+    const result = await request(await setupApp())
+      .delete(`/gitpoaps/custom/${gitPOAPRequestId}/claim`)
+      .set('Authorization', `Bearer ${authTokens.accessToken}`)
+      .send({ claimData: GH_HANDLES.burz });
+
+    expect(result.statusCode).toEqual(400);
+
+    expect(contextMock.prisma.gitPOAPRequest.findUnique).toHaveBeenCalledTimes(0);
+  });
+
+  it('Fails with invalid claimType', async () => {
+    mockJwtWithAddress();
+    contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue(null);
+    const authTokens = genAuthTokens();
+    const result = await request(await setupApp())
+      .delete(`/gitpoaps/custom/${gitPOAPRequestId}/claim`)
+      .set('Authorization', `Bearer ${authTokens.accessToken}`)
+      .send({ claimType: 'foobar', claimData: GH_HANDLES.burz });
+
+    expect(result.statusCode).toEqual(400);
+
+    expect(contextMock.prisma.gitPOAPRequest.findUnique).toHaveBeenCalledTimes(0);
+  });
+
+  const expectFindUniqueCalls = (count: number = 1) => {
+    expect(contextMock.prisma.gitPOAPRequest.findUnique).toHaveBeenCalledTimes(count);
+    expect(contextMock.prisma.gitPOAPRequest.findUnique).toHaveBeenCalledWith({
+      where: { id: gitPOAPRequestId },
+      select: {
+        addressId: true,
+        adminApprovalStatus: true,
+        contributors: true,
+      },
+    });
+  };
+
+  it('Fails when GitPOAPRequest not found', async () => {
+    mockJwtWithAddress();
+    contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue(null);
+    const authTokens = genAuthTokens();
+    const result = await request(await setupApp())
+      .delete(`/gitpoaps/custom/${gitPOAPRequestId}/claim`)
+      .set('Authorization', `Bearer ${authTokens.accessToken}`)
+      .send({ claimType: 'githubHandle', claimData: GH_HANDLES.burz });
+
+    expect(result.statusCode).toEqual(404);
+
+    expectFindUniqueCalls();
+  });
+
+  it('Fails when user is not the owner', async () => {
+    mockJwtWithAddress();
+    contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue({
+      ...gitPOAPRequest,
+      addressId: addressId + 2,
+    } as any);
+    const authTokens = genAuthTokens();
+    const result = await request(await setupApp())
+      .delete(`/gitpoaps/custom/${gitPOAPRequestId}/claim`)
+      .set('Authorization', `Bearer ${authTokens.accessToken}`)
+      .send({ claimType: 'githubHandle', claimData: GH_HANDLES.burz });
+
+    expect(result.statusCode).toEqual(401);
+
+    expectFindUniqueCalls();
+  });
+
+  it('Fails when GitPOAPRequest is already APPROVED', async () => {
+    mockJwtWithAddress();
+    contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue({
+      ...gitPOAPRequest,
+      adminApprovalStatus: AdminApprovalStatus.APPROVED,
+    } as any);
+    const authTokens = genAuthTokens();
+    const result = await request(await setupApp())
+      .delete(`/gitpoaps/custom/${gitPOAPRequestId}/claim`)
+      .set('Authorization', `Bearer ${authTokens.accessToken}`)
+      .send({ claimType: 'githubHandle', claimData: GH_HANDLES.burz });
+
+    expect(result.statusCode).toEqual(400);
+
+    expectFindUniqueCalls();
+  });
+
+  it('Removes the correct contributor on success', async () => {
+    mockJwtWithAddress();
+    contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue(gitPOAPRequest as any);
+    const authTokens = genAuthTokens();
+    {
+      const result = await request(await setupApp())
+        .delete(`/gitpoaps/custom/${gitPOAPRequestId}/claim`)
+        .set('Authorization', `Bearer ${authTokens.accessToken}`)
+        .send({ claimType: 'githubHandle', claimData: GH_HANDLES.burz });
+
+      expect(result.statusCode).toEqual(200);
+
+      expect(contextMock.prisma.gitPOAPRequest.update).toHaveBeenCalledTimes(1);
+      expect(contextMock.prisma.gitPOAPRequest.update).toHaveBeenCalledWith({
+        where: { id: gitPOAPRequestId },
+        data: {
+          contributors: {
+            ...gitPOAPRequest.contributors,
+            githubHandles: [],
+          },
+        },
+      });
+    }
+    {
+      const result = await request(await setupApp())
+        .delete(`/gitpoaps/custom/${gitPOAPRequestId}/claim`)
+        .set('Authorization', `Bearer ${authTokens.accessToken}`)
+        .send({ claimType: 'email', claimData: burzEmail });
+
+      expect(result.statusCode).toEqual(200);
+
+      expect(contextMock.prisma.gitPOAPRequest.update).toHaveBeenCalledTimes(2);
+      expect(contextMock.prisma.gitPOAPRequest.update).toHaveBeenLastCalledWith({
+        where: { id: gitPOAPRequestId },
+        data: {
+          contributors: {
+            ...gitPOAPRequest.contributors,
+            emails: [],
+          },
+        },
+      });
+    }
+    {
+      const result = await request(await setupApp())
+        .delete(`/gitpoaps/custom/${gitPOAPRequestId}/claim`)
+        .set('Authorization', `Bearer ${authTokens.accessToken}`)
+        .send({ claimType: 'ethAddress', claimData: ADDRESSES.burz });
+
+      expect(result.statusCode).toEqual(200);
+
+      expect(contextMock.prisma.gitPOAPRequest.update).toHaveBeenCalledTimes(3);
+      expect(contextMock.prisma.gitPOAPRequest.update).toHaveBeenLastCalledWith({
+        where: { id: gitPOAPRequestId },
+        data: {
+          contributors: {
+            ...gitPOAPRequest.contributors,
+            ethAddresses: [],
+          },
+        },
+      });
+    }
+    {
+      const result = await request(await setupApp())
+        .delete(`/gitpoaps/custom/${gitPOAPRequestId}/claim`)
+        .set('Authorization', `Bearer ${authTokens.accessToken}`)
+        .send({ claimType: 'ensName', claimData: burzENS });
+
+      expect(result.statusCode).toEqual(200);
+
+      expect(contextMock.prisma.gitPOAPRequest.update).toHaveBeenCalledTimes(4);
+      expect(contextMock.prisma.gitPOAPRequest.update).toHaveBeenLastCalledWith({
+        where: { id: gitPOAPRequestId },
+        data: {
+          contributors: {
+            ...gitPOAPRequest.contributors,
+            ensNames: [],
+          },
+        },
+      });
+    }
+
+    expectFindUniqueCalls(4);
   });
 });
