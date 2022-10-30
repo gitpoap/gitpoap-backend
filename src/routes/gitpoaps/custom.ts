@@ -442,7 +442,7 @@ customGitPOAPsRouter.put('/claims', jwtWithAddress(), async (req, res) => {
   return res.status(200).send('CREATED');
 });
 
-customGitPOAPsRouter.delete('/:gitPOAPRequestId/claim', async (req, res) => {
+customGitPOAPsRouter.delete('/:gitPOAPRequestId/claim', jwtWithAddress(), async (req, res) => {
   const logger = createScopedLogger('DELETE /gitpoaps/custom/:gitPOAPRequestId/claim');
   const endTimer = httpRequestDurationSeconds.startTimer(
     'DELETE',
