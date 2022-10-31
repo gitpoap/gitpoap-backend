@@ -30,15 +30,10 @@ const sendSlackMessage = async (message: string, channelId: string) => {
   }
 };
 
-const sendInternalMessage = async (message: string) => {
-  const logger = createScopedLogger('sendInternalMessage');
-  try {
-    await sendSlackMessage(message, CHANNELS.gitpoap.alerts);
-  } catch (e) {
-    logger.error(`${e}`);
-  }
-};
+const sendInternalMessage = async (message: string) =>
+  await sendSlackMessage(message, CHANNELS.gitpoap.alerts);
 
+/** -- Use-case specific slack messages -- **/
 export const sendInternalClaimMessage = async (
   claims: number[],
   githubHandle: string,
