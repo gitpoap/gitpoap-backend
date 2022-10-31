@@ -1,6 +1,7 @@
 import {
-  CreateGitPOAPSchema,
+  CreateGitPOAPClaimsSchema,
   CreateGitPOAPProjectSchema,
+  CreateGitPOAPSchema,
   UploadGitPOAPCodesSchema,
 } from '../../schemas/gitpoaps';
 import { Request, Router } from 'express';
@@ -8,11 +9,11 @@ import { z } from 'zod';
 import { context } from '../../context';
 import { createPOAPEvent } from '../../external/poap';
 import { createScopedLogger } from '../../logging';
-import { jwtWithAdminAddress, jwtWithAdminOAuth } from '../../middleware';
+import { jwtWithAddress, jwtWithAdminAddress, jwtWithAdminOAuth } from '../../middleware';
 import multer from 'multer';
-import { ClaimStatus, GitPOAPStatus } from '@generated/type-graphql';
+import { ClaimStatus, GitPOAPStatus, GitPOAPType } from '@prisma/client';
 import { httpRequestDurationSeconds } from '../../metrics';
-import { getAccessTokenPayloadWithOAuth } from '../../types/authTokens';
+import { getAccessTokenPayload, getAccessTokenPayloadWithOAuth } from '../../types/authTokens';
 import { backloadGithubPullRequestData } from '../../lib/pullRequests';
 import {
   createProjectWithGithubRepoIds,
@@ -21,6 +22,8 @@ import {
 import { upsertCode } from '../../lib/codes';
 import { generatePOAPSecret } from '../../lib/secrets';
 import { customGitPOAPsRouter } from './custom';
+import { isAddressAnAdmin } from '../../lib/admins';
+import { convertContributorsFromSchema, createClaimsForContributors } from '../../lib/gitpoaps';
 
 export const gitPOAPsRouter = Router();
 
@@ -434,4 +437,73 @@ gitPOAPsRouter.put('/deprecate/:id', jwtWithAdminAddress(), async (req, res) => 
   endTimer({ status: 200 });
 
   return res.status(200).send('DEPRECATED');
+});
+
+gitPOAPsRouter.put('/:gitPOAPId/claims', jwtWithAddress(), async (req, res) => {
+  const logger = createScopedLogger('PUT /gitpoaps/:gitPOAPId/claims');
+  const endTimer = httpRequestDurationSeconds.startTimer('PUT', '/gitpoaps/:gitPOAPId/claims');
+
+  logger.debug(`Body: ${JSON.stringify(req.body)}, Params: ${JSON.stringify(req.params)}`);
+
+  const gitPOAPId = parseInt(req.params.gitPOAPId, 10);
+
+  logger.info(`Request to create new Claims for GitPOAP ID ${gitPOAPId}`);
+
+  const schemaResult = CreateGitPOAPClaimsSchema.safeParse(req.body);
+
+  if (!schemaResult.success) {
+    logger.warn(
+      `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
+    );
+    endTimer({ status: 400 });
+
+    return res.status(400).send({ issues: schemaResult.error.issues });
+  }
+
+  const { contributors } = schemaResult.data;
+
+  const gitPOAP = await context.prisma.gitPOAP.findUnique({
+    where: { id: gitPOAPId },
+    select: {
+      type: true,
+      creatorAddressId: true,
+    },
+  });
+
+  const { addressId, address } = getAccessTokenPayload(req.user);
+
+  if (gitPOAP === null) {
+    logger.warn(
+      `Address ${address} tried to create claims for nonexistant GitPOAP ID ${gitPOAPId}`,
+    );
+    endTimer({ status: 404 });
+    return res.status(404).send({ msg: "Request doesn't exist" });
+  }
+
+  if (gitPOAP.type === GitPOAPType.CUSTOM) {
+    if (gitPOAP.creatorAddressId !== addressId) {
+      logger.warn(`Non-creator ${address} tried to add claims to Custom GitPOAP ID ${gitPOAPId}`);
+      endTimer({ status: 401 });
+      return res.status(401).send({ msg: 'Not GitPOAP owner' });
+    }
+  } else {
+    if (!isAddressAnAdmin(address)) {
+      logger.warn(`Non-admin ${address} tried to add claims to non-Custom GitPOAP ID ${gitPOAPId}`);
+      endTimer({ status: 401 });
+      return res.status(401).send({ msg: 'Not authorized to create Claims' });
+    }
+  }
+
+  const claimsCount = createClaimsForContributors(
+    gitPOAPId,
+    convertContributorsFromSchema(contributors),
+  );
+
+  logger.info(`Created ${claimsCount} Claims for GitPOAP with ID: ${gitPOAPId}`);
+
+  logger.debug(`Completed request to create new Claims for GitPOAP ID ${gitPOAPId}`);
+
+  endTimer({ status: 200 });
+
+  return res.status(200).send('CREATED');
 });
