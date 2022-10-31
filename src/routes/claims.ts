@@ -252,10 +252,11 @@ claimsRouter.post('/', jwtWithGitHubOAuth(), async function (req, res) {
 
 claimsRouter.post('/create', jwtWithAdminOAuth(), async function (req, res) {
   const logger = createScopedLogger('POST /claims/create');
+  const endTimer = httpRequestDurationSeconds.startTimer('POST', '/claims/create');
+
+  logger.error('[DEPRECATED] POST /claims/create called');
 
   logger.debug(`Body: ${JSON.stringify(req.body)}`);
-
-  const endTimer = httpRequestDurationSeconds.startTimer('POST', '/claims/create');
 
   const schemaResult = CreateGitPOAPClaimsSchema.safeParse(req.body);
   if (!schemaResult.success) {
