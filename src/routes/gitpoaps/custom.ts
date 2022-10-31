@@ -390,9 +390,6 @@ customGitPOAPsRouter.put('/:gitPOAPRequestId/claims', jwtWithAddress(), async (r
       addressId: true,
       adminApprovalStatus: true,
       contributors: true,
-      gitPOAP: {
-        select: { id: true },
-      },
     },
   });
 
@@ -407,46 +404,38 @@ customGitPOAPsRouter.put('/:gitPOAPRequestId/claims', jwtWithAddress(), async (r
   const { addressId } = getAccessTokenPayload(req.user);
 
   if (gitPOAPRequest.addressId !== addressId) {
-    logger.warn(`Non-requestor tried to add claims to GitPOAPRequest ID ${gitPOAPRequestId}`);
+    logger.warn(
+      `Someone other than its creator tried to add claims to GitPOAPRequest ID ${gitPOAPRequestId}`,
+    );
     endTimer({ status: 401 });
     return res.status(401).send({ msg: 'Not request owner' });
   }
 
   if (gitPOAPRequest.adminApprovalStatus === AdminApprovalStatus.APPROVED) {
-    if (gitPOAPRequest.gitPOAP === null) {
-      logger.error(
-        `GitPOAPRequest ID ${gitPOAPRequestId} is APPROVED but has no associated GitPOAP`,
-      );
-      endTimer({ status: 500 });
-      return res.status(500).send({ msg: 'Request has no associated GitPOAP' });
-    }
-
-    const claimsCount = createClaimsForContributors(
-      gitPOAPRequest.gitPOAP.id,
-      convertContributorsFromSchema(contributors),
+    logger.warn(
+      `Creator of GitPOAPRequest ID ${gitPOAPRequestId} tried to create new claims after approval`,
     );
-
-    logger.info(`Created ${claimsCount} Claims for GitPOAP Request with ID: ${gitPOAPRequestId}`);
-  } else {
-    const existingContributors = convertContributorsFromSchema(
-      gitPOAPRequest.contributors ? (gitPOAPRequest.contributors as Prisma.JsonObject) : {},
-    );
-    const newContributors = addGitPOAPRequestContributors(
-      existingContributors,
-      convertContributorsFromSchema(contributors),
-    );
-
-    await context.prisma.gitPOAPRequest.update({
-      where: { id: gitPOAPRequestId },
-      data: { contributors: newContributors },
-    });
-
-    logger.info(`Updated contributor JSON for GitPOAPRequest ID ${gitPOAPRequestId}`);
+    endTimer({ status: 400 });
+    return res.status(400).send({ msg: 'GitPOAPRequest is already APPROVED' });
   }
 
-  logger.debug(
-    `Completed request to create new Claims for custom GitPOAP Request ID ${gitPOAPRequestId}`,
+  const existingContributors = convertContributorsFromSchema(
+    gitPOAPRequest.contributors ? (gitPOAPRequest.contributors as Prisma.JsonObject) : {},
   );
+
+  const newContributors = addGitPOAPRequestContributors(
+    existingContributors,
+    convertContributorsFromSchema(contributors),
+  );
+
+  await context.prisma.gitPOAPRequest.update({
+    where: { id: gitPOAPRequestId },
+    data: { contributors: newContributors },
+  });
+
+  logger.info(`Updated contributor JSON for GitPOAPRequest ID ${gitPOAPRequestId}`);
+
+  logger.debug(`Completed request to create new Claims for GitPOAPRequest ID ${gitPOAPRequestId}`);
 
   endTimer({ status: 200 });
 
