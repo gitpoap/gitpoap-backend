@@ -1,8 +1,8 @@
 import {
-  addGitPOAPRequestContributors,
-  removeContributorFromGitPOAPRequest,
+  addGitPOAPContributors,
+  removeContributorFromGitPOAP,
 } from '../../../../src/lib/gitpoapRequests';
-import { GitPOAPRequestContributors } from '../../../../src/types/gitpoapRequest';
+import { GitPOAPContributors } from '../../../../src/types/gitpoaps';
 
 const contributor = 'foobar';
 const otherContributor = 'yeet';
@@ -14,7 +14,7 @@ const contributorsBase = {
 };
 
 const expectToHaveContributors = (
-  contributors: GitPOAPRequestContributors,
+  contributors: GitPOAPContributors,
   expectedContributors: string[],
 ) => {
   expect(contributors.githubHandles).toHaveLength(expectedContributors.length);
@@ -30,7 +30,7 @@ const expectToHaveContributors = (
   });
 };
 
-describe('addGitPOAPRequestContributors', () => {
+describe('addGitPOAPContributors', () => {
   it('Adds contributors that are not already in the list', () => {
     const newContributors = {
       githubHandles: [otherContributor],
@@ -39,65 +39,61 @@ describe('addGitPOAPRequestContributors', () => {
       ensNames: [otherContributor],
     };
 
-    const result = addGitPOAPRequestContributors(contributorsBase, newContributors);
+    const result = addGitPOAPContributors(contributorsBase, newContributors);
 
     expectToHaveContributors(result, [contributor, otherContributor]);
   });
 
   it("Doesn't add contributors that are already in the list", () => {
-    const result = addGitPOAPRequestContributors(contributorsBase, contributorsBase);
+    const result = addGitPOAPContributors(contributorsBase, contributorsBase);
 
     expectToHaveContributors(result, [contributor]);
   });
 });
 
-describe('removeContributorFromGitPOAPRequest', () => {
+describe('removeContributorFromGitPOAP', () => {
   it('Removes contributors if they exist', () => {
-    const result1 = removeContributorFromGitPOAPRequest(
-      contributorsBase,
-      'githubHandle',
-      contributor,
-    );
+    const result1 = removeContributorFromGitPOAP(contributorsBase, 'githubHandle', contributor);
 
     expect(result1.githubHandles).toEqual([]);
     expect(result1.emails).toEqual(contributorsBase.emails);
     expect(result1.ethAddresses).toEqual(contributorsBase.ethAddresses);
     expect(result1.ensNames).toEqual(contributorsBase.ensNames);
 
-    const result2 = removeContributorFromGitPOAPRequest(result1, 'email', contributor);
+    const result2 = removeContributorFromGitPOAP(result1, 'email', contributor);
 
     expect(result2.githubHandles).toEqual([]);
     expect(result2.emails).toEqual([]);
     expect(result2.ethAddresses).toEqual(contributorsBase.ethAddresses);
     expect(result2.ensNames).toEqual(contributorsBase.ensNames);
 
-    const result3 = removeContributorFromGitPOAPRequest(result2, 'ethAddress', contributor);
+    const result3 = removeContributorFromGitPOAP(result2, 'ethAddress', contributor);
 
     expect(result3.githubHandles).toEqual([]);
     expect(result3.emails).toEqual([]);
     expect(result3.ethAddresses).toEqual([]);
     expect(result3.ensNames).toEqual(contributorsBase.ensNames);
 
-    const result4 = removeContributorFromGitPOAPRequest(result3, 'ensName', contributor);
+    const result4 = removeContributorFromGitPOAP(result3, 'ensName', contributor);
 
     expectToHaveContributors(result4, []);
   });
 
   it("Doesn't change lists for nonexistant contributors", () => {
     expectToHaveContributors(
-      removeContributorFromGitPOAPRequest(contributorsBase, 'githubHandle', otherContributor),
+      removeContributorFromGitPOAP(contributorsBase, 'githubHandle', otherContributor),
       [contributor],
     );
     expectToHaveContributors(
-      removeContributorFromGitPOAPRequest(contributorsBase, 'email', otherContributor),
+      removeContributorFromGitPOAP(contributorsBase, 'email', otherContributor),
       [contributor],
     );
     expectToHaveContributors(
-      removeContributorFromGitPOAPRequest(contributorsBase, 'ethAddress', otherContributor),
+      removeContributorFromGitPOAP(contributorsBase, 'ethAddress', otherContributor),
       [contributor],
     );
     expectToHaveContributors(
-      removeContributorFromGitPOAPRequest(contributorsBase, 'ensName', otherContributor),
+      removeContributorFromGitPOAP(contributorsBase, 'ensName', otherContributor),
       [contributor],
     );
   });

@@ -1,4 +1,4 @@
-export type GitPOAPRequestContributors = {
+export type GitPOAPContributors = {
   githubHandles: string[];
   ethAddresses: string[];
   emails: string[];

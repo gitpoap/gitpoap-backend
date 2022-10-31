@@ -18,19 +18,6 @@ export const CreateCustomGitPOAPSchema = z.object({
   isEnabled: z.enum(['true', 'false']).optional(),
 });
 
-export const CustomGitPOAPContributorsSchema = z
-  .object({
-    githubHandles: z.array(z.string()).optional(),
-    ethAddresses: z.array(z.string()).optional(),
-    ensNames: z.array(z.string()).optional(),
-    emails: z.array(z.string().email()).optional(),
-  })
-  .strict();
-
-export const CreateCustomGitPOAPClaimsSchema = z.object({
-  contributors: CustomGitPOAPContributorsSchema,
-});
-
 export const DeleteGitPOAPRequestClaimSchema = z.object({
   claimType: z.enum(['githubHandle', 'email', 'ethAddress', 'ensName']),
   claimData: z.string().nonempty(),

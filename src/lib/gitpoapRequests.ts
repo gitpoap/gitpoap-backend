@@ -1,16 +1,7 @@
 import { context } from '../context';
-import {
-  createClaimForEmail,
-  createClaimForEnsName,
-  createClaimForEthAddress,
-  createClaimForGithubHandle,
-} from './claims';
-import { GitPOAPRequestContributors } from '../types/gitpoapRequest';
 import { z } from 'zod';
-import {
-  CustomGitPOAPContributorsSchema,
-  DeleteGitPOAPRequestClaimSchema,
-} from '../schemas/gitpoaps/custom';
+import { DeleteGitPOAPRequestClaimSchema } from '../schemas/gitpoaps/custom';
+import { GitPOAPContributors } from '../types/gitpoaps';
 
 export async function deleteGitPOAPRequest(id: number) {
   await context.prisma.gitPOAPRequest.delete({
@@ -18,49 +9,10 @@ export async function deleteGitPOAPRequest(id: number) {
   });
 }
 
-export function convertContributorsFromSchema(
-  contributors: z.infer<typeof CustomGitPOAPContributorsSchema>,
-): GitPOAPRequestContributors {
-  return {
-    githubHandles: contributors.githubHandles ?? [],
-    emails: contributors.emails ?? [],
-    ethAddresses: contributors.ethAddresses ?? [],
-    ensNames: contributors.ensNames ?? [],
-  };
-}
-
-export function createClaimsForContributors(
-  gitPOAPId: number,
-  contributors: GitPOAPRequestContributors,
-) {
-  for (const githubHandle of contributors.githubHandles) {
-    void createClaimForGithubHandle(githubHandle, gitPOAPId);
-  }
-
-  for (const email of contributors.emails) {
-    void createClaimForEmail(email, gitPOAPId);
-  }
-
-  for (const ethAddress of contributors.ethAddresses) {
-    void createClaimForEthAddress(ethAddress, gitPOAPId);
-  }
-
-  for (const ensName of contributors.ensNames) {
-    void createClaimForEnsName(ensName, gitPOAPId);
-  }
-
-  return (
-    contributors['githubHandles'].length +
-    contributors['emails'].length +
-    contributors['ethAddresses'].length +
-    contributors['ensNames'].length
-  );
-}
-
-export function addGitPOAPRequestContributors(
-  existingContributors: GitPOAPRequestContributors,
-  newContributors: GitPOAPRequestContributors,
-): GitPOAPRequestContributors {
+export function addGitPOAPContributors(
+  existingContributors: GitPOAPContributors,
+  newContributors: GitPOAPContributors,
+): GitPOAPContributors {
   const githubHandleSet = new Set<string>(existingContributors.githubHandles);
   const emailSet = new Set<string>(existingContributors.emails);
   const ethAddressSet = new Set<string>(existingContributors.ethAddresses);
@@ -81,11 +33,11 @@ export function addGitPOAPRequestContributors(
   };
 }
 
-export function removeContributorFromGitPOAPRequest(
-  existingContributors: GitPOAPRequestContributors,
+export function removeContributorFromGitPOAP(
+  existingContributors: GitPOAPContributors,
   claimType: z.infer<typeof DeleteGitPOAPRequestClaimSchema>['claimType'],
   claimData: string,
-): GitPOAPRequestContributors {
+): GitPOAPContributors {
   if (claimType === 'githubHandle') {
     const githubHandleSet = new Set<string>(existingContributors.githubHandles);
 

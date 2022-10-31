@@ -4,12 +4,25 @@ import { setupApp } from '../../../../../src/app';
 import { generateAuthTokens } from '../../../../../src/lib/authTokens';
 import { ADMIN_ADDRESSES } from '../../../../../src/constants';
 import request from 'supertest';
-import { ClaimStatus, GitPOAPStatus } from '@prisma/client';
-import { ADDRESSES } from '../../../../../prisma/constants';
+import { ClaimStatus, GitPOAPStatus, GitPOAPType } from '@prisma/client';
+import { ADDRESSES, GH_HANDLES } from '../../../../../prisma/constants';
+import { UserAuthTokens } from '../../../../../src/types/authTokens';
+import {
+  createClaimForEmail,
+  createClaimForEnsName,
+  createClaimForEthAddress,
+  createClaimForGithubHandle,
+} from '../../../../../src/lib/claims';
 
 jest.mock('../../../../../src/logging');
 jest.mock('../../../../../src/lib/repos');
 jest.mock('../../../../../src/lib/pullRequests');
+jest.mock('../../../../../src/lib/claims');
+
+const mockedCreateClaimForEmail = jest.mocked(createClaimForEmail, true);
+const mockedCreateClaimForEnsName = jest.mocked(createClaimForEnsName, true);
+const mockedCreateClaimForEthAddress = jest.mocked(createClaimForEthAddress, true);
+const mockedCreateClaimForGithubHandle = jest.mocked(createClaimForGithubHandle, true);
 
 const authTokenId = 4;
 const authTokenGeneration = 1;
@@ -18,6 +31,8 @@ const address = ADDRESSES.vitalik;
 const gitPOAPId = 24;
 const ensName = 'furby.eth';
 const ensAvatarImageUrl = null;
+const colfaxEmail = 'colfax@gitpoap.io';
+const colfaxENS = 'colfax.eth';
 
 function mockJwtWithAddress() {
   contextMock.prisma.authToken.findUnique.mockResolvedValue({
@@ -199,5 +214,166 @@ describe('PUT /gitpoaps/deprecate/:id', () => {
         status: ClaimStatus.UNCLAIMED,
       },
     });
+  });
+});
+
+describe('PUT /gitpoaps/:gitPOAPId/claims', () => {
+  it('Fails with no Access Token provided', async () => {
+    contextMock.prisma.claim.findUnique.mockResolvedValue(null);
+    const result = await request(await setupApp())
+      .put(`/gitpoaps/${gitPOAPId}/claims`)
+      .send({ githubHandles: GH_HANDLES.colfax });
+
+    expect(result.statusCode).toEqual(400);
+
+    expect(contextMock.prisma.gitPOAP.findUnique).toHaveBeenCalledTimes(0);
+  });
+
+  it('Fails with invalid body', async () => {
+    mockJwtWithAddress();
+    contextMock.prisma.gitPOAP.findUnique.mockResolvedValue(null);
+    const authTokens = genAuthTokens();
+    const result = await request(await setupApp())
+      .put(`/gitpoaps/${gitPOAPId}/claims`)
+      .set('Authorization', `Bearer ${authTokens.accessToken}`)
+      .send({ claimData: GH_HANDLES.burz });
+
+    expect(result.statusCode).toEqual(400);
+
+    expect(contextMock.prisma.gitPOAP.findUnique).toHaveBeenCalledTimes(0);
+  });
+
+  const expectFindUniqueCalls = (count: number = 1) => {
+    expect(contextMock.prisma.gitPOAP.findUnique).toHaveBeenCalledTimes(count);
+    expect(contextMock.prisma.gitPOAP.findUnique).toHaveBeenCalledWith({
+      where: { id: gitPOAPId },
+      select: {
+        type: true,
+        creatorAddressId: true,
+      },
+    });
+  };
+
+  it('Fails when GitPOAP is not found', async () => {
+    mockJwtWithAddress();
+    contextMock.prisma.gitPOAP.findUnique.mockResolvedValue(null);
+    const authTokens = genAuthTokens();
+    const result = await request(await setupApp())
+      .put(`/gitpoaps/${gitPOAPId}/claims`)
+      .set('Authorization', `Bearer ${authTokens.accessToken}`)
+      .send({ contributors: { githubHandles: [GH_HANDLES.colfax] } });
+
+    expect(result.statusCode).toEqual(404);
+
+    expectFindUniqueCalls();
+  });
+
+  it('Fails when user is not the owner of CUSTOM GitPOAP', async () => {
+    mockJwtWithAddress();
+    contextMock.prisma.gitPOAP.findUnique.mockResolvedValue({
+      type: GitPOAPType.CUSTOM,
+      creatorAddressId: addressId + 2,
+    } as any);
+    const authTokens = genAuthTokens();
+    const result = await request(await setupApp())
+      .put(`/gitpoaps/${gitPOAPId}/claims`)
+      .set('Authorization', `Bearer ${authTokens.accessToken}`)
+      .send({ contributors: { githubHandles: [GH_HANDLES.colfax] } });
+
+    expect(result.statusCode).toEqual(401);
+
+    expectFindUniqueCalls();
+  });
+
+  it('Fails when user is not an admin for non-CUSTOM GitPOAPs', async () => {
+    mockJwtWithAddress();
+    contextMock.prisma.gitPOAP.findUnique.mockResolvedValue({
+      type: GitPOAPType.ANNUAL,
+      creatorAddressId: null,
+    } as any);
+    const authTokens = genAuthTokens();
+    const result = await request(await setupApp())
+      .put(`/gitpoaps/${gitPOAPId}/claims`)
+      .set('Authorization', `Bearer ${authTokens.accessToken}`)
+      .send({ contributors: { githubHandles: [GH_HANDLES.colfax] } });
+
+    expect(result.statusCode).toEqual(401);
+
+    expectFindUniqueCalls();
+  });
+
+  const testSuccessWithAuthTokens = async (authTokens: UserAuthTokens) => {
+    {
+      const result = await request(await setupApp())
+        .put(`/gitpoaps/${gitPOAPId}/claims`)
+        .set('Authorization', `Bearer ${authTokens.accessToken}`)
+        .send({ contributors: { githubHandles: [GH_HANDLES.colfax] } });
+      expect(result.statusCode).toEqual(200);
+      expect(mockedCreateClaimForEmail).toHaveBeenCalledTimes(0);
+      expect(mockedCreateClaimForEnsName).toHaveBeenCalledTimes(0);
+      expect(mockedCreateClaimForEthAddress).toHaveBeenCalledTimes(0);
+      expect(mockedCreateClaimForGithubHandle).toHaveBeenCalledTimes(1);
+      expect(mockedCreateClaimForGithubHandle).toHaveBeenCalledWith(GH_HANDLES.colfax, gitPOAPId);
+    }
+    {
+      const result = await request(await setupApp())
+        .put(`/gitpoaps/${gitPOAPId}/claims`)
+        .set('Authorization', `Bearer ${authTokens.accessToken}`)
+        .send({ contributors: { emails: [colfaxEmail] } });
+      expect(result.statusCode).toEqual(200);
+      expect(mockedCreateClaimForEmail).toHaveBeenCalledTimes(1);
+      expect(mockedCreateClaimForEmail).toHaveBeenCalledWith(colfaxEmail, gitPOAPId);
+      expect(mockedCreateClaimForEnsName).toHaveBeenCalledTimes(0);
+      expect(mockedCreateClaimForEthAddress).toHaveBeenCalledTimes(0);
+      expect(mockedCreateClaimForGithubHandle).toHaveBeenCalledTimes(1);
+    }
+    {
+      const result = await request(await setupApp())
+        .put(`/gitpoaps/${gitPOAPId}/claims`)
+        .set('Authorization', `Bearer ${authTokens.accessToken}`)
+        .send({ contributors: { ethAddresses: [ADDRESSES.colfax] } });
+      expect(result.statusCode).toEqual(200);
+      expect(mockedCreateClaimForEmail).toHaveBeenCalledTimes(1);
+      expect(mockedCreateClaimForEnsName).toHaveBeenCalledTimes(0);
+      expect(mockedCreateClaimForEthAddress).toHaveBeenCalledTimes(1);
+      expect(mockedCreateClaimForEthAddress).toHaveBeenCalledWith(ADDRESSES.colfax, gitPOAPId);
+      expect(mockedCreateClaimForGithubHandle).toHaveBeenCalledTimes(1);
+    }
+    {
+      const result = await request(await setupApp())
+        .put(`/gitpoaps/${gitPOAPId}/claims`)
+        .set('Authorization', `Bearer ${authTokens.accessToken}`)
+        .send({ contributors: { ensNames: [colfaxENS] } });
+      expect(result.statusCode).toEqual(200);
+      expect(mockedCreateClaimForEmail).toHaveBeenCalledTimes(1);
+      expect(mockedCreateClaimForEnsName).toHaveBeenCalledTimes(1);
+      expect(mockedCreateClaimForEnsName).toHaveBeenCalledWith(colfaxENS, gitPOAPId);
+      expect(mockedCreateClaimForEthAddress).toHaveBeenCalledTimes(1);
+      expect(mockedCreateClaimForGithubHandle).toHaveBeenCalledTimes(1);
+    }
+
+    expectFindUniqueCalls(4);
+  };
+
+  it('Succeeds for owner of Custom GitPOAP', async () => {
+    mockJwtWithAddress();
+    contextMock.prisma.gitPOAP.findUnique.mockResolvedValue({
+      type: GitPOAPType.CUSTOM,
+      creatorAddressId: addressId,
+    } as any);
+    const authTokens = genAuthTokens();
+
+    await testSuccessWithAuthTokens(authTokens);
+  });
+
+  it('Succeeds for admin with non-Custom GitPOAP', async () => {
+    mockJwtWithAddress();
+    contextMock.prisma.gitPOAP.findUnique.mockResolvedValue({
+      type: GitPOAPType.ANNUAL,
+      creatorAddressId: null,
+    } as any);
+    const authTokens = genAuthTokens(ADMIN_ADDRESSES[0]);
+
+    await testSuccessWithAuthTokens(authTokens);
   });
 });
