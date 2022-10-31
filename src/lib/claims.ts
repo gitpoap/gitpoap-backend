@@ -431,15 +431,20 @@ export const createClaimForGithubHandle = async (githubHandle: string, gitPOAPId
     return null;
   }
 
-  const claim = await context.prisma.claim.create({
-    data: {
+  return await context.prisma.claim.upsert({
+    where: {
+      gitPOAPId_userId: {
+        gitPOAPId,
+        userId: user.id,
+      },
+    },
+    update: {},
+    create: {
       userId: user.id,
       gitPOAPId,
       status: ClaimStatus.UNCLAIMED,
     },
   });
-
-  return claim;
 };
 
 export const createClaimForEmail = async (emailAddress: string, gitPOAPId: number) => {
@@ -461,15 +466,20 @@ export const createClaimForEmail = async (emailAddress: string, gitPOAPId: numbe
     return null;
   }
 
-  const claim = await context.prisma.claim.create({
-    data: {
+  return await context.prisma.claim.upsert({
+    where: {
+      gitPOAPId_emailId: {
+        gitPOAPId,
+        emailId: email.id,
+      },
+    },
+    update: {},
+    create: {
       emailId: email.id,
       gitPOAPId,
       status: ClaimStatus.UNCLAIMED,
     },
   });
-
-  return claim;
 };
 
 export async function createClaimForEthAddress(ethAddress: string, gitPOAPId: number) {
@@ -496,15 +506,20 @@ export async function createClaimForEthAddress(ethAddress: string, gitPOAPId: nu
     return null;
   }
 
-  const claim = await context.prisma.claim.create({
-    data: {
+  return await context.prisma.claim.upsert({
+    where: {
+      gitPOAPId_issuedAddressId: {
+        gitPOAPId,
+        issuedAddressId: address.id,
+      },
+    },
+    update: {},
+    create: {
       issuedAddressId: address.id,
       gitPOAPId,
       status: ClaimStatus.UNCLAIMED,
     },
   });
-
-  return claim;
 }
 
 export const createClaimForEnsName = async (ensName: string, gitPOAPId: number) => {
@@ -538,13 +553,18 @@ export const createClaimForEnsName = async (ensName: string, gitPOAPId: number) 
     return null;
   }
 
-  const claim = await context.prisma.claim.create({
-    data: {
+  return await context.prisma.claim.upsert({
+    where: {
+      gitPOAPId_issuedAddressId: {
+        gitPOAPId,
+        issuedAddressId: address.id,
+      },
+    },
+    update: {},
+    create: {
       issuedAddressId: address.id,
       gitPOAPId,
       status: ClaimStatus.UNCLAIMED,
     },
   });
-
-  return claim;
 };
