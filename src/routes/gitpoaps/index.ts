@@ -8,7 +8,7 @@ import { z } from 'zod';
 import { context } from '../../context';
 import { createPOAPEvent } from '../../external/poap';
 import { createScopedLogger } from '../../logging';
-import { jwtWithAdminOAuth } from '../../middleware';
+import { jwtWithAdminAddress, jwtWithAdminOAuth } from '../../middleware';
 import multer from 'multer';
 import { ClaimStatus, GitPOAPStatus } from '@generated/type-graphql';
 import { httpRequestDurationSeconds } from '../../metrics';
@@ -239,7 +239,7 @@ gitPOAPsRouter.get('/poap-token-id/:id', async function (req, res) {
 
 gitPOAPsRouter.post(
   '/codes',
-  jwtWithAdminOAuth(),
+  jwtWithAdminAddress(),
   upload.single('codes'),
   async function (req, res) {
     const logger = createScopedLogger('POST /gitpoaps/codes');
@@ -340,7 +340,7 @@ gitPOAPsRouter.post(
   },
 );
 
-gitPOAPsRouter.put('/enable/:id', jwtWithAdminOAuth(), async (req, res) => {
+gitPOAPsRouter.put('/enable/:id', jwtWithAdminAddress(), async (req, res) => {
   const logger = createScopedLogger('PUT /gitpoaps/enable/:id');
 
   const endTimer = httpRequestDurationSeconds.startTimer('PUT', '/gitpoaps/enable/:id');
@@ -387,7 +387,7 @@ gitPOAPsRouter.put('/enable/:id', jwtWithAdminOAuth(), async (req, res) => {
   return res.status(200).send('ENABLED');
 });
 
-gitPOAPsRouter.put('/deprecate/:id', jwtWithAdminOAuth(), async (req, res) => {
+gitPOAPsRouter.put('/deprecate/:id', jwtWithAdminAddress(), async (req, res) => {
   const logger = createScopedLogger('PUT /gitpoaps/deprecate/:id');
 
   const endTimer = httpRequestDurationSeconds.startTimer('PUT', '/gitpoaps/deprecate/:id');

@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { createScopedLogger } from '../logging';
 import { httpRequestDurationSeconds } from '../metrics';
-import { jwtWithAdminOAuth } from '../middleware';
+import { jwtWithAdminAddress, jwtWithAdminOAuth } from '../middleware';
 import { AddReposSchema } from '../schemas/projects';
 import { createRepoByGithubId } from '../lib/repos';
 import { context } from '../context';
@@ -79,7 +79,7 @@ projectsRouter.post('/add-repos', jwtWithAdminOAuth(), async (req, res) => {
   }
 });
 
-projectsRouter.put('/enable/:id', jwtWithAdminOAuth(), async (req, res) => {
+projectsRouter.put('/enable/:id', jwtWithAdminAddress(), async (req, res) => {
   const logger = createScopedLogger('PUT /projects/enable/:id');
 
   const endTimer = httpRequestDurationSeconds.startTimer('PUT', '/projects/enable/:id');
