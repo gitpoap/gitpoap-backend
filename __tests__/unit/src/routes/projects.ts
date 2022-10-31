@@ -2,10 +2,11 @@ import '../../../../__mocks__/src/logging';
 import { contextMock } from '../../../../__mocks__/src/context';
 import { setupApp } from '../../../../src/app';
 import { generateAuthTokens } from '../../../../src/lib/authTokens';
-import { ADMIN_GITHUB_IDS } from '../../../../src/constants';
+import { ADMIN_ADDRESSES, ADMIN_GITHUB_IDS } from '../../../../src/constants';
 import request from 'supertest';
 import { createRepoByGithubId } from '../../../../src/lib/repos';
 import { backloadGithubPullRequestData } from '../../../../src/lib/pullRequests';
+import { ADDRESSES } from '../../../../prisma/constants';
 
 jest.mock('../../../../src/logging');
 jest.mock('../../../../src/lib/repos');
@@ -17,7 +18,7 @@ const mockedBackloadGithubPullRequestData = jest.mocked(backloadGithubPullReques
 const authTokenId = 4;
 const authTokenGeneration = 0;
 const addressId = 45;
-const address = '0xfoobar';
+const address = ADDRESSES.vitalik;
 const githubId = 232444;
 const githubOAuthToken = 'foobar34543';
 const githubHandle = 'b-burz';
@@ -26,6 +27,13 @@ const githubRepoIds = [2];
 const ensName = 'wowza.eth';
 const ensAvatarImageUrl = 'https://foobar.com/a.jpg';
 
+function mockJwtWithAddress() {
+  contextMock.prisma.authToken.findUnique.mockResolvedValue({
+    id: authTokenId,
+    address: { ensName, ensAvatarImageUrl },
+  } as any);
+}
+
 function mockJwtWithOAuth() {
   contextMock.prisma.authToken.findUnique.mockResolvedValue({
     address: { ensName, ensAvatarImageUrl },
@@ -33,16 +41,16 @@ function mockJwtWithOAuth() {
   } as any);
 }
 
-function genAuthTokens(someGithubId: number) {
+function genAuthTokens(someAddress?: string, someGithubId?: number, someGithubHandle?: string) {
   return generateAuthTokens(
     authTokenId,
     authTokenGeneration,
     addressId,
-    address,
+    someAddress ?? address,
     ensName,
     ensAvatarImageUrl,
-    someGithubId,
-    githubHandle,
+    someGithubId ?? null,
+    someGithubHandle ?? null,
   );
 }
 
@@ -55,10 +63,10 @@ describe('POST /projects/add-repos', () => {
     expect(result.statusCode).toEqual(400);
   });
 
-  it('Fails with non-admin Access Token provided', async () => {
+  it('Fails with non-admin OAuth Access Token provided', async () => {
     mockJwtWithOAuth();
 
-    const authTokens = genAuthTokens(githubId);
+    const authTokens = genAuthTokens(ADMIN_ADDRESSES[0], githubId, githubHandle);
 
     const result = await request(await setupApp())
       .post('/projects/add-repos')
@@ -74,7 +82,7 @@ describe('POST /projects/add-repos', () => {
     mockJwtWithOAuth();
     contextMock.prisma.project.findUnique.mockResolvedValue(null);
 
-    const authTokens = genAuthTokens(ADMIN_GITHUB_IDS[0]);
+    const authTokens = genAuthTokens(ADMIN_ADDRESSES[0], ADMIN_GITHUB_IDS[0], githubHandle);
 
     const result = await request(await setupApp())
       .post('/projects/add-repos')
@@ -96,7 +104,7 @@ describe('POST /projects/add-repos', () => {
     contextMock.prisma.project.findUnique.mockResolvedValue({ id: projectId } as any);
     mockedCreateRepoByGithubId.mockResolvedValue(null);
 
-    const authTokens = genAuthTokens(ADMIN_GITHUB_IDS[0]);
+    const authTokens = genAuthTokens(ADMIN_ADDRESSES[0], ADMIN_GITHUB_IDS[0], githubHandle);
 
     const result = await request(await setupApp())
       .post('/projects/add-repos')
@@ -125,7 +133,7 @@ describe('POST /projects/add-repos', () => {
     const repoId = 234232;
     mockedCreateRepoByGithubId.mockResolvedValue({ id: repoId } as any);
 
-    const authTokens = genAuthTokens(ADMIN_GITHUB_IDS[0]);
+    const authTokens = genAuthTokens(ADMIN_ADDRESSES[0], ADMIN_GITHUB_IDS[0], githubHandle);
 
     const result = await request(await setupApp())
       .post('/projects/add-repos')
@@ -161,9 +169,9 @@ describe('PUT /projects/enable/:id', () => {
   });
 
   it('Fails with non-admin Access Token provided', async () => {
-    mockJwtWithOAuth();
+    mockJwtWithAddress();
 
-    const authTokens = genAuthTokens(githubId);
+    const authTokens = genAuthTokens();
 
     const result = await request(await setupApp())
       .put(`/projects/enable/${projectId}`)
@@ -176,10 +184,10 @@ describe('PUT /projects/enable/:id', () => {
   });
 
   it('Returns a 404 when the Project is not found', async () => {
-    mockJwtWithOAuth();
+    mockJwtWithAddress();
     contextMock.prisma.project.findUnique.mockResolvedValue(null);
 
-    const authTokens = genAuthTokens(ADMIN_GITHUB_IDS[0]);
+    const authTokens = genAuthTokens(ADMIN_ADDRESSES[0]);
 
     const result = await request(await setupApp())
       .put(`/projects/enable/${projectId}`)
@@ -197,10 +205,10 @@ describe('PUT /projects/enable/:id', () => {
   });
 
   it('Enables all GitPOAPs when the Project is found', async () => {
-    mockJwtWithOAuth();
+    mockJwtWithAddress();
     contextMock.prisma.project.findUnique.mockResolvedValue({ id: projectId } as any);
 
-    const authTokens = genAuthTokens(ADMIN_GITHUB_IDS[0]);
+    const authTokens = genAuthTokens(ADMIN_ADDRESSES[0]);
 
     const result = await request(await setupApp())
       .put(`/projects/enable/${projectId}`)

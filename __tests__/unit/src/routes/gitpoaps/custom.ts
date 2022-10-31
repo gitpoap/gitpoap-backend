@@ -12,7 +12,7 @@ import {
   uploadMulterFile,
 } from '../../../../../src/external/s3';
 import { DateTime } from 'luxon';
-import { ADMIN_GITHUB_IDS } from '../../../../../src/constants';
+import { ADMIN_ADDRESSES } from '../../../../../src/constants';
 import { ADDRESSES, GH_HANDLES } from '../../../../../prisma/constants';
 import {
   createClaimForEmail,
@@ -24,7 +24,7 @@ import {
 const authTokenId = 4;
 const authTokenGeneration = 1;
 const addressId = 342;
-const address = '0xburzistheword';
+const address = ADDRESSES.vitalik;
 const githubId = 232444;
 const githubOAuthToken = 'foobar34543';
 const githubHandle = 'anna-burz';
@@ -150,23 +150,16 @@ jest.spyOn(DateTime, 'now').mockReturnValue(DateTime.fromSeconds(123456789));
 const mockedGetImageBufferFromS3 = jest.mocked(getImageBufferFromS3, true);
 const mockedUploadMulterFile = jest.mocked(uploadMulterFile, true);
 
-function mockJwtWithOAuth() {
-  contextMock.prisma.authToken.findUnique.mockResolvedValue({
-    address: { ensName, ensAvatarImageUrl },
-    user: { githubOAuthToken },
-  } as any);
-}
-
-function genAuthTokens(someGithubId?: number, githubHandle?: string) {
+function genAuthTokens(someAddress?: string) {
   return generateAuthTokens(
     authTokenId,
     authTokenGeneration,
     addressId,
-    address,
+    someAddress ?? address,
     ensName,
     ensAvatarImageUrl,
-    someGithubId ?? null,
-    githubHandle ?? null,
+    null,
+    null,
   );
 }
 
@@ -187,8 +180,8 @@ describe('PUT /gitpoaps/custom/approve/:id', () => {
   });
 
   it('Fails with non-admin Access Token provided', async () => {
-    mockJwtWithOAuth();
-    const authTokens = genAuthTokens(githubId, githubHandle);
+    mockJwtWithAddress();
+    const authTokens = genAuthTokens();
     const result = await request(await setupApp())
       .put(`/gitpoaps/custom/approve/${gitPOAPRequestId}`)
       .set('Authorization', `Bearer ${authTokens.accessToken}`)
@@ -199,9 +192,9 @@ describe('PUT /gitpoaps/custom/approve/:id', () => {
   });
 
   it('Returns a 404 when the GitPOAP Request is not found', async () => {
-    mockJwtWithOAuth();
+    mockJwtWithAddress();
     contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue(null);
-    const authTokens = genAuthTokens(ADMIN_GITHUB_IDS[0], githubHandle);
+    const authTokens = genAuthTokens(ADMIN_ADDRESSES[0]);
 
     const result = await request(await setupApp())
       .put(`/gitpoaps/custom/approve/${gitPOAPRequestId}`)
@@ -217,13 +210,13 @@ describe('PUT /gitpoaps/custom/approve/:id', () => {
   });
 
   it('Returns 400 if the GitPOAP Request is not of type CUSTOM', async () => {
-    mockJwtWithOAuth();
+    mockJwtWithAddress();
     contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue({
       id: gitPOAPRequestId,
       type: GitPOAPType.ANNUAL,
       adminApprovalStatus: AdminApprovalStatus.PENDING,
     } as any);
-    const authTokens = genAuthTokens(ADMIN_GITHUB_IDS[0], githubHandle);
+    const authTokens = genAuthTokens(ADMIN_ADDRESSES[0]);
 
     const result = await request(await setupApp())
       .put(`/gitpoaps/custom/approve/${gitPOAPRequestId}`)
@@ -239,13 +232,13 @@ describe('PUT /gitpoaps/custom/approve/:id', () => {
   });
 
   it('Returns 200 if the GitPOAP Request is already approved', async () => {
-    mockJwtWithOAuth();
+    mockJwtWithAddress();
     contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue({
       id: gitPOAPRequestId,
       type: GitPOAPType.CUSTOM,
       adminApprovalStatus: AdminApprovalStatus.APPROVED,
     } as any);
-    const authTokens = genAuthTokens(ADMIN_GITHUB_IDS[0], githubHandle);
+    const authTokens = genAuthTokens(ADMIN_ADDRESSES[0]);
 
     const result = await request(await setupApp())
       .put(`/gitpoaps/custom/approve/${gitPOAPRequestId}`)
@@ -262,7 +255,7 @@ describe('PUT /gitpoaps/custom/approve/:id', () => {
 
   it('Creates the POAP via the POAP API', async () => {
     mockedGetImageBufferFromS3.mockResolvedValue(Buffer.from(''));
-    mockJwtWithOAuth();
+    mockJwtWithAddress();
 
     contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue({
       id: gitPOAPRequestId,
@@ -289,7 +282,7 @@ describe('PUT /gitpoaps/custom/approve/:id', () => {
       adminApprovalStatus: AdminApprovalStatus.APPROVED,
     } as any);
 
-    const authTokens = genAuthTokens(ADMIN_GITHUB_IDS[0], githubHandle);
+    const authTokens = genAuthTokens(ADMIN_ADDRESSES[0]);
 
     const result = await request(await setupApp())
       .put(`/gitpoaps/custom/approve/${gitPOAPRequestId}`)
@@ -351,8 +344,8 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
   });
 
   it('Fails with non-admin Access Token provided', async () => {
-    mockJwtWithOAuth();
-    const authTokens = genAuthTokens(githubId, githubHandle);
+    mockJwtWithAddress();
+    const authTokens = genAuthTokens();
     const result = await request(await setupApp())
       .put(`/gitpoaps/custom/reject/${gitPOAPRequestId}`)
       .set('Authorization', `Bearer ${authTokens.accessToken}`)
@@ -363,9 +356,9 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
   });
 
   it('Fails and returns a 404 when the GitPOAP Request is not found', async () => {
-    mockJwtWithOAuth();
+    mockJwtWithAddress();
     contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue(null);
-    const authTokens = genAuthTokens(ADMIN_GITHUB_IDS[0], githubHandle);
+    const authTokens = genAuthTokens(ADMIN_ADDRESSES[0]);
 
     const result = await request(await setupApp())
       .put(`/gitpoaps/custom/reject/${gitPOAPRequestId}`)
@@ -381,7 +374,7 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
   });
 
   it('Fails and returns 400 when the GitPOAP Request is already approved', async () => {
-    mockJwtWithOAuth();
+    mockJwtWithAddress();
     contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue({
       id: gitPOAPRequestId,
       type: GitPOAPType.CUSTOM,
@@ -394,7 +387,7 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
       ongoing: true,
       year: 2021,
     } as any);
-    const authTokens = genAuthTokens(ADMIN_GITHUB_IDS[0], githubHandle);
+    const authTokens = genAuthTokens(ADMIN_ADDRESSES[0]);
 
     const result = await request(await setupApp())
       .put(`/gitpoaps/custom/reject/${gitPOAPRequestId}`)
@@ -410,7 +403,7 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
   });
 
   it('Fails and returns 400 when the GitPOAP Request is already rejected', async () => {
-    mockJwtWithOAuth();
+    mockJwtWithAddress();
     contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue({
       id: gitPOAPRequestId,
       type: GitPOAPType.CUSTOM,
@@ -425,7 +418,7 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
       year: 2021,
     } as any);
 
-    const authTokens = genAuthTokens(ADMIN_GITHUB_IDS[0], githubHandle);
+    const authTokens = genAuthTokens(ADMIN_ADDRESSES[0]);
 
     const result = await request(await setupApp())
       .put(`/gitpoaps/custom/reject/${gitPOAPRequestId}`)
@@ -441,7 +434,7 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
   });
 
   it('Updates the GitPOAP Request status in the DB to be REJECTED', async () => {
-    mockJwtWithOAuth();
+    mockJwtWithAddress();
     contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue({
       id: gitPOAPRequestId,
       type: GitPOAPType.CUSTOM,
@@ -460,7 +453,7 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
       adminApprovalStatus: AdminApprovalStatus.REJECTED,
     } as any);
 
-    const authTokens = genAuthTokens(ADMIN_GITHUB_IDS[0], githubHandle);
+    const authTokens = genAuthTokens(ADMIN_ADDRESSES[0]);
 
     const result = await request(await setupApp())
       .put(`/gitpoaps/custom/reject/${gitPOAPRequestId}`)

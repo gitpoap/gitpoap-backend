@@ -9,7 +9,7 @@ import { z } from 'zod';
 import { context } from '../../context';
 import { createPOAPEvent } from '../../external/poap';
 import { createScopedLogger } from '../../logging';
-import { jwtWithAdminOAuth, jwtWithAddress } from '../../middleware';
+import { jwtWithAdminAddress, jwtWithAddress } from '../../middleware';
 import multer from 'multer';
 import { httpRequestDurationSeconds } from '../../metrics';
 import { generatePOAPSecret } from '../../lib/secrets';
@@ -205,7 +205,7 @@ customGitPOAPsRouter.post(
   },
 );
 
-customGitPOAPsRouter.put('/approve/:id', jwtWithAdminOAuth(), async (req, res) => {
+customGitPOAPsRouter.put('/approve/:id', jwtWithAdminAddress(), async (req, res) => {
   const logger = createScopedLogger('PUT /gitpoaps/custom/approve/:id');
   const endTimer = httpRequestDurationSeconds.startTimer('PUT', '/gitpoaps/custom/approve/:id');
 
@@ -300,10 +300,10 @@ customGitPOAPsRouter.put('/approve/:id', jwtWithAdminOAuth(), async (req, res) =
   logger.info(`Completed admin request to create Custom GitPOAP with ID:${gitPOAP.id}`);
   endTimer({ status: 200 });
 
-  return res.status(200).send('Approved');
+  return res.status(200).send('APPROVED');
 });
 
-customGitPOAPsRouter.put('/reject/:id', jwtWithAdminOAuth(), async (req, res) => {
+customGitPOAPsRouter.put('/reject/:id', jwtWithAdminAddress(), async (req, res) => {
   const logger = createScopedLogger('PUT /gitpoaps/custom/reject/:id');
   const endTimer = httpRequestDurationSeconds.startTimer('PUT', '/gitpoaps/custom/reject/:id');
 
@@ -351,7 +351,7 @@ customGitPOAPsRouter.put('/reject/:id', jwtWithAdminOAuth(), async (req, res) =>
   );
   endTimer({ status: 200 });
 
-  return res.status(200).send(`Rejected`);
+  return res.status(200).send('REJECTED');
 });
 
 customGitPOAPsRouter.put('/:gitPOAPRequestId/claims', jwtWithAddress(), async (req, res) => {
