@@ -268,6 +268,7 @@ describe('PUT /gitpoaps/custom/approve/:id', () => {
       name: 'foobar',
       ongoing: true,
       year: 2021,
+      addressId,
     } as any);
 
     contextMock.prisma.gitPOAPRequest.update.mockResolvedValue({
@@ -311,14 +312,13 @@ describe('PUT /gitpoaps/custom/approve/:id', () => {
         poapEventId: 1,
         poapSecret: '123423123',
         organization: {
-          connect: {
-            id: undefined,
-          },
+          connect: { id: undefined },
         },
         project: {
-          connect: {
-            id: undefined,
-          },
+          connect: { id: undefined },
+        },
+        creatorAddress: {
+          connect: { id: addressId },
         },
       },
     });
@@ -330,6 +330,11 @@ describe('PUT /gitpoaps/custom/approve/:id', () => {
       data: {
         adminApprovalStatus: AdminApprovalStatus.APPROVED,
       },
+    });
+
+    expect(contextMock.prisma.gitPOAPRequest.delete).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.gitPOAPRequest.delete).toHaveBeenCalledWith({
+      where: { id: gitPOAPRequestId },
     });
   });
 });
