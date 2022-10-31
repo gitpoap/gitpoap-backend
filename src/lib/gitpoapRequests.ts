@@ -1,3 +1,4 @@
+import { context } from '../context';
 import {
   createClaimForEmail,
   createClaimForEnsName,
@@ -10,6 +11,12 @@ import {
   CustomGitPOAPContributorsSchema,
   DeleteGitPOAPRequestClaimSchema,
 } from '../schemas/gitpoaps/custom';
+
+export async function deleteGitPOAPRequest(id: number) {
+  await context.prisma.gitPOAPRequest.delete({
+    where: { id },
+  });
+}
 
 export function convertContributorsFromSchema(
   contributors: z.infer<typeof CustomGitPOAPContributorsSchema>,

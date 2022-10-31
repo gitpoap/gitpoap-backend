@@ -24,6 +24,7 @@ import {
   addGitPOAPRequestContributors,
   convertContributorsFromSchema,
   createClaimsForContributors,
+  deleteGitPOAPRequest,
   removeContributorFromGitPOAPRequest,
 } from '../../lib/gitpoapRequests';
 
@@ -296,6 +297,9 @@ customGitPOAPsRouter.put('/approve/:id', jwtWithAdminAddress(), async (req, res)
     claimsCount = createClaimsForContributors(gitPOAP.id, contributors);
   }
   logger.info(`Created ${claimsCount} Claims for GitPOAP Request with ID: ${gitPOAPRequest.id}`);
+
+  /* Delete the GitPOAPRequest */
+  await deleteGitPOAPRequest(gitPOAPRequest.id);
 
   logger.info(`Completed admin request to create Custom GitPOAP with ID:${gitPOAP.id}`);
   endTimer({ status: 200 });

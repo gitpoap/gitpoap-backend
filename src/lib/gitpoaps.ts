@@ -29,6 +29,11 @@ export const convertGitPOAPRequestToGitPOAP = async (
       ongoing: gitPOAPRequest.ongoing,
       isPRBased: gitPOAPRequest.isPRBased,
       isEnabled: gitPOAPRequest.isEnabled,
+      creatorAddress: {
+        connect: {
+          id: gitPOAPRequest.addressId,
+        },
+      },
     },
   });
 };
