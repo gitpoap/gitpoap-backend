@@ -26,6 +26,7 @@ import {
 import { deleteGitPOAPRequest } from '../../lib/gitpoapRequest';
 import { parseJSON } from '../../lib/json';
 import { getAccessTokenPayload } from '../../types/authTokens';
+import { sentInternalGitPOAPRequestMessage } from '../../external/slack';
 
 export const customGitpoapsRouter = Router();
 
@@ -191,6 +192,9 @@ customGitpoapsRouter.post(
         },
       },
     });
+
+    /* Send message to slack */
+    void sentInternalGitPOAPRequestMessage(gitPOAPRequest);
 
     logger.info(
       `Completed request to create a new GitPOAP Request with ID: ${gitPOAPRequest.id} "${req.body.name}" for project ${project?.id} and organization ${organization?.id}`,
