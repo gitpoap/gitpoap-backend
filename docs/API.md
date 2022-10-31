@@ -428,7 +428,7 @@ Data:
 
 Note that all of the fields within "contributors" are optional.
 
-## Deleting Claims for a `PENDING/REJECTED` GitPOAPRequest
+## Delete a Claim for a GitPOAPRequest
 
 `DELETE /gitpoaps/custom/:gitPOAPRequestId/claim`
 
@@ -444,11 +444,14 @@ Data:
 
 Where `claimType` is one of `['githubHandle', 'email', 'ethAddress', 'ensName']`.
 
-## Deleting Claims for an `APPROVED` GitPOAPRequest
+## Delete a Claim
 
-`DELETE /gitpoaps/custom/claim/:id`
+`DELETE /claims/:id`
 
-This endpoint allows the creator of a GitPOAPRequest to remove Claims for a GitPOAPRequest that is `APPROVED` given the ID of the Claim.
+This endpoint users to delete Claims. If the GitPOAP for the claim is `CUSTOM` then only the creator of that Custom GitPOAP
+(specified by `creatorAddress`) can delete the Claim, otherwise the user who is attempting to delete a Claim for an `ANNUAL`
+GitPOAP must be an admin as defined by
+[`ADMIN_ADDRESSES` at `src/constants.ts`](https://github.com/gitpoap/gitpoap-backend/blob/main/src/constants.ts)
 
 Note that the Claim can only be deleted if it is still `UNCLAIMED`.
 
