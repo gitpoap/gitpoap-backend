@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { jwtWithAdminOAuth } from '../middleware';
+import { jwtWithAdminAddress } from '../middleware';
 import { httpRequestDurationSeconds } from '../metrics';
 import { createScopedLogger } from '../logging';
 import { lookupLastOngoingIssuanceRun } from '../lib/ongoing';
@@ -7,7 +7,7 @@ import { lookupLastCheckForNewPOAPCodesRun } from '../lib/codes';
 
 export const vitalsRouter = Router();
 
-vitalsRouter.get('/ongoing-issuance', jwtWithAdminOAuth(), async (req, res) => {
+vitalsRouter.get('/ongoing-issuance', jwtWithAdminAddress(), async (req, res) => {
   const logger = createScopedLogger('GET /vitals/ongoing-issuance');
 
   const endTimer = httpRequestDurationSeconds.startTimer('GET', '/vitals/ongoing-issuance');
@@ -23,7 +23,7 @@ vitalsRouter.get('/ongoing-issuance', jwtWithAdminOAuth(), async (req, res) => {
   return res.status(200).send({ lastRun });
 });
 
-vitalsRouter.get('/check-for-codes', jwtWithAdminOAuth(), async (req, res) => {
+vitalsRouter.get('/check-for-codes', jwtWithAdminAddress(), async (req, res) => {
   const logger = createScopedLogger('GET /vitals/check-for-codes');
 
   const endTimer = httpRequestDurationSeconds.startTimer('GET', '/vitals/check-for-codes');

@@ -58,7 +58,10 @@ for convenience):
 
 ```json
 {
-  "project": "{ \"projectName\": \"some name\", \"githubRepoIds\": [ 9001 ], }", // JSON string
+  "project": {
+    "projectName": "some name",
+    "githubRepoIds": [ 9001 ]
+  }, // This should be a JSON string
   "name": "GitPOAP Contributor 2022",
   "description": "You contributed to GitPOAP in 2022!\nCongrats, you are a super cool person!",
   "startDate": "01-Jan-2022",
@@ -78,7 +81,9 @@ to create a project, or for an existing project:
 
 ```json
 {
-  "project": "{ \"id\": 5 }", // JSON string
+  "project": {
+    "id": 5
+  }, // This should be a JSON string
   "name": "GitPOAP Contributor 2022",
   "description": "You contributed to GitPOAP in 2022!\nCongrats, you are a super cool person!",
   "startDate": "01-Jan-2022",
@@ -152,9 +157,8 @@ we can upload it to this endpoint via `multipart/form-data` with two input field
 - `id`: the (our DB) ID of the GitPOAP we are uploading codes for
 - `codes`: the `link.txt` file
 
-Note that this endpoint requires an address-based JWT to be provided where the user is logged into GitHub
-(i.e. both `githubId` and `githubHandle` are non-null) and that the authenticated user be an admin of GitPOAP,
-as defined by [`ADMIN_GITHUB_IDS` at `src/constants.ts`](https://github.com/gitpoap/gitpoap-backend/blob/main/src/constants.ts).
+Note that this endpoint requires an address-based JWT where the authenticated user be an admin of GitPOAP,
+as defined by [`ADMIN_ADDRESSES` at `src/constants.ts`](https://github.com/gitpoap/gitpoap-backend/blob/main/src/constants.ts).
 
 ## Check if a POAP is a GitPOAP
 
@@ -289,9 +293,8 @@ Data:
 This endpoint enables a GitPOAP. This means that after this action, if the GitPOAP were not already enabled,
 then users will be able to complete claims on the GitPOAP as well as view the GitPOAP on the site.
 
-Note that this endpoint requires an address-based JWT to be provided where the user is logged into GitHub
-(i.e. both `githubId` and `githubHandle` are non-null) and that the authenticated user be an admin of GitPOAP,
-as defined by [`ADMIN_GITHUB_IDS` at `src/constants.ts`](https://github.com/gitpoap/gitpoap-backend/blob/main/src/constants.ts).
+Note that this endpoint requires an address-based JWT where the authenticated user be an admin of GitPOAP,
+as defined by [`ADMIN_ADDRESSES` at `src/constants.ts`](https://github.com/gitpoap/gitpoap-backend/blob/main/src/constants.ts).
 
 ## Enable all GitPOAPs within a Project
 
@@ -301,9 +304,8 @@ This endpoint enables all GitPOAPs that are associated with an individual Projec
 action, if the GitPOAP were not already enabled, then users will be able to complete claims on the GitPOAPs
 within the Project as well as view those GitPOAPs on the site.
 
-Note that this endpoint requires an address-based JWT to be provided where the user is logged into GitHub
-(i.e. both `githubId` and `githubHandle` are non-null) and that the authenticated user be an admin of GitPOAP,
-as defined by [`ADMIN_GITHUB_IDS` at `src/constants.ts`](https://github.com/gitpoap/gitpoap-backend/blob/main/src/constants.ts).
+Note that this endpoint requires an address-based JWT where the authenticated user be an admin of GitPOAP,
+as defined by [`ADMIN_ADDRESSES` at `src/constants.ts`](https://github.com/gitpoap/gitpoap-backend/blob/main/src/constants.ts).
 
 ## Revalidate GitPOAPs
 
@@ -346,11 +348,65 @@ Note that this endpoint requires an address-based JWT to be provided where the u
 This endpoint deprecates a GitPOAP. This means that after this action, the GitPOAP will no longer be
 claimable, all existing UNCLAIMED claims will be deleted, and ongoing issuance will skip this GitPOAP.
 
-Note that this endpoint requires an address-based JWT to be provided where the user is logged into GitHub
-(i.e. both `githubId` and `githubHandle` are non-null) and that the authenticated user be an admin of GitPOAP,
-as defined by [`ADMIN_GITHUB_IDS` at `src/constants.ts`](https://github.com/gitpoap/gitpoap-backend/blob/main/src/constants.ts).
+Note that this endpoint requires an address-based JWT where the authenticated user be an admin of GitPOAP,
+as defined by [`ADMIN_ADDRESSES` at `src/constants.ts`](https://github.com/gitpoap/gitpoap-backend/blob/main/src/constants.ts).
 
-## Creating Claims for a GitPOAPRequest
+## Create a GitPOAPRequest
+
+`POST /gitpoaps/custom`
+
+This endpoint allows external users to submit requests to create new Custom GitPOAPs.
+It should receive the data as `multipart/form-data` with fields like the following (shown in JSON
+for convenience):
+
+```json
+{
+  "projectId": 2342, // optional (either projectId or organizationId must be present)
+  "organizationId": 45, // optional (either projectId or organizationId must be present)
+  "name": "GitPOAP Custsom Contributor 2022",
+  "contributors": {
+    "githubHandles": ["burz"],
+    "emails": ["burz@gitpoap.io"],
+    "ethAddresses": ["0xAe95f7e7fb2FCF86148ef832FAeD2752Ae5A358a"],
+    "ensNames": ["burz.eth"]
+  }, // Note that all of the fields in this object are optional and it should be a JSON string
+  "description": "You contributed to Custom GitPOAPs in 2022!\nCongrats, you are a super cool person!",
+  "startDate": "01-Jan-2022",
+  "endDate": "31-Dec-2022",
+  "expiryDate": "31-Jan-2023",
+  "eventUrl": "https://github.com/gitpoap/gitpoap-backend",
+  "email": "burz@gitpoap.io",
+  "numRequestedCodes": 10,
+  "city": "London", // optional
+  "country": "UK", // optional
+  "isEnabled": true // optional (defaults to true)
+}
+```
+
+Furthermore, there should be a part of the `multipart/form-data` named `"image"` that contains an uploaded
+image.
+
+Note that this endpoint requires an address-based JWT to be provided.
+
+## Approving a GitPOAPRequest
+
+`PUT /gitpoaps/custom/approve/:id`
+
+This endpoint allows an admin to approve an external user's request to create a Custom GitPOAP. Note that this endpoint will put in a request to create a POAP via the POAP API to create the POAP and will also generate all of the Claims that the submitter requested.
+
+Note that this endpoint requires an address-based JWT where the authenticated user be an admin of GitPOAP,
+as defined by [`ADMIN_ADDRESSES` at `src/constants.ts`](https://github.com/gitpoap/gitpoap-backend/blob/main/src/constants.ts).
+
+## Rejecting a GitPOAPRequest
+
+`PUT /gitpoaps/custom/reject/:id`
+
+This endpoint allows an admin to reject an external user's request to create a Custom GitPOAP.
+
+Note that this endpoint requires an address-based JWT where the authenticated user be an admin of GitPOAP,
+as defined by [`ADMIN_ADDRESSES` at `src/constants.ts`](https://github.com/gitpoap/gitpoap-backend/blob/main/src/constants.ts).
+
+## Create Claims for a GitPOAPRequest
 
 `PUT /gitpoaps/custom/:gitPOAPRequestId/claims`
 

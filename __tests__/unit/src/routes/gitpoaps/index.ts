@@ -2,9 +2,10 @@ import '../../../../../__mocks__/src/logging';
 import { contextMock } from '../../../../../__mocks__/src/context';
 import { setupApp } from '../../../../../src/app';
 import { generateAuthTokens } from '../../../../../src/lib/authTokens';
-import { ADMIN_GITHUB_IDS } from '../../../../../src/constants';
+import { ADMIN_ADDRESSES } from '../../../../../src/constants';
 import request from 'supertest';
 import { ClaimStatus, GitPOAPStatus } from '@prisma/client';
+import { ADDRESSES } from '../../../../../prisma/constants';
 
 jest.mock('../../../../../src/logging');
 jest.mock('../../../../../src/lib/repos');
@@ -13,31 +14,28 @@ jest.mock('../../../../../src/lib/pullRequests');
 const authTokenId = 4;
 const authTokenGeneration = 1;
 const addressId = 342;
-const address = '0xburzistheword';
-const githubId = 232444;
-const githubOAuthToken = 'foobar34543';
-const githubHandle = 'anna-burz';
+const address = ADDRESSES.vitalik;
 const gitPOAPId = 24;
 const ensName = 'furby.eth';
 const ensAvatarImageUrl = null;
 
-function mockJwtWithOAuth() {
+function mockJwtWithAddress() {
   contextMock.prisma.authToken.findUnique.mockResolvedValue({
+    id: authTokenId,
     address: { ensName, ensAvatarImageUrl },
-    user: { githubOAuthToken },
   } as any);
 }
 
-function genAuthTokens(someGithubId: number) {
+function genAuthTokens(someAddress?: string) {
   return generateAuthTokens(
     authTokenId,
     authTokenGeneration,
     addressId,
-    address,
+    someAddress ?? address,
     ensName,
     ensAvatarImageUrl,
-    someGithubId,
-    githubHandle,
+    null,
+    null,
   );
 }
 
@@ -51,9 +49,9 @@ describe('PUT /gitpoaps/enable/:id', () => {
   });
 
   it('Fails with non-admin Access Token provided', async () => {
-    mockJwtWithOAuth();
+    mockJwtWithAddress();
 
-    const authTokens = genAuthTokens(githubId);
+    const authTokens = genAuthTokens();
 
     const result = await request(await setupApp())
       .put(`/gitpoaps/enable/${gitPOAPId}`)
@@ -66,10 +64,10 @@ describe('PUT /gitpoaps/enable/:id', () => {
   });
 
   it('Returns a 404 when the GitPOAP is not found', async () => {
-    mockJwtWithOAuth();
+    mockJwtWithAddress();
     contextMock.prisma.gitPOAP.findUnique.mockResolvedValue(null);
 
-    const authTokens = genAuthTokens(ADMIN_GITHUB_IDS[0]);
+    const authTokens = genAuthTokens(ADMIN_ADDRESSES[0]);
 
     const result = await request(await setupApp())
       .put(`/gitpoaps/enable/${gitPOAPId}`)
@@ -90,10 +88,10 @@ describe('PUT /gitpoaps/enable/:id', () => {
   });
 
   it('Enables valid GitPOAPs', async () => {
-    mockJwtWithOAuth();
+    mockJwtWithAddress();
     contextMock.prisma.gitPOAP.findUnique.mockResolvedValue({ id: gitPOAPId } as any);
 
-    const authTokens = genAuthTokens(ADMIN_GITHUB_IDS[0]);
+    const authTokens = genAuthTokens(ADMIN_ADDRESSES[0]);
 
     const result = await request(await setupApp())
       .put(`/gitpoaps/enable/${gitPOAPId}`)
@@ -130,9 +128,9 @@ describe('PUT /gitpoaps/deprecate/:id', () => {
   });
 
   it('Fails with non-admin Access Token provided', async () => {
-    mockJwtWithOAuth();
+    mockJwtWithAddress();
 
-    const authTokens = genAuthTokens(githubId);
+    const authTokens = genAuthTokens();
 
     const result = await request(await setupApp())
       .put(`/gitpoaps/deprecate/${gitPOAPId}`)
@@ -145,10 +143,10 @@ describe('PUT /gitpoaps/deprecate/:id', () => {
   });
 
   it('Returns a 404 when the GitPOAP is not found', async () => {
-    mockJwtWithOAuth();
+    mockJwtWithAddress();
     contextMock.prisma.gitPOAP.findUnique.mockResolvedValue(null);
 
-    const authTokens = genAuthTokens(ADMIN_GITHUB_IDS[0]);
+    const authTokens = genAuthTokens(ADMIN_ADDRESSES[0]);
 
     const result = await request(await setupApp())
       .put(`/gitpoaps/deprecate/${gitPOAPId}`)
@@ -166,10 +164,10 @@ describe('PUT /gitpoaps/deprecate/:id', () => {
   });
 
   it('DEPRECATES valid GitPOAPs and deletes unclaimed claims', async () => {
-    mockJwtWithOAuth();
+    mockJwtWithAddress();
     contextMock.prisma.gitPOAP.findUnique.mockResolvedValue({ id: gitPOAPId } as any);
 
-    const authTokens = genAuthTokens(ADMIN_GITHUB_IDS[0]);
+    const authTokens = genAuthTokens(ADMIN_ADDRESSES[0]);
 
     const result = await request(await setupApp())
       .put(`/gitpoaps/deprecate/${gitPOAPId}`)

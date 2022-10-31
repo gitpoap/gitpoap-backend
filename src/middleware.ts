@@ -5,9 +5,10 @@ import { getAccessTokenPayload, getAccessTokenPayloadWithOAuth } from './types/a
 import { ErrorRequestHandler, RequestHandler } from 'express';
 import { JWT_SECRET } from './environment';
 import { createScopedLogger } from './logging';
-import { ADMIN_GITHUB_IDS, GITPOAP_BOT_APP_ID } from './constants';
+import { GITPOAP_BOT_APP_ID } from './constants';
 import { getGithubAuthenticatedApp } from './external/github';
 import { captureException } from './lib/sentry';
+import { isAddressAnAdmin, isGithubIdAnAdmin } from './lib/admins';
 
 const jwtMiddleware = jwt({ secret: JWT_SECRET as string, algorithms: ['HS256'] });
 
@@ -43,6 +44,36 @@ export function jwtWithAddress() {
       // Update the ensName and ensAvatarImageUrl in case they've updated
       set(req, 'user.ensName', tokenInfo.address.ensName);
       set(req, 'user.ensAvatarImageUrl', tokenInfo.address.ensAvatarImageUrl);
+
+      next();
+    };
+
+    jwtMiddleware(req, res, callback);
+  };
+
+  return middleware;
+}
+
+export function jwtWithAdminAddress() {
+  const logger = createScopedLogger('jwtWithAdminAddress');
+
+  const jwtMiddleware = jwtWithAddress();
+
+  const middleware: RequestHandler = async (req, res, next) => {
+    const callback = (err?: any) => {
+      // If the previous middleware failed, pass on the error
+      if (err) {
+        next(err);
+        return;
+      }
+
+      const { address } = getAccessTokenPayload(req.user);
+
+      if (!isAddressAnAdmin(address)) {
+        logger.warn(`Non-admin user (Address: ${address}) attempted to use admin-only routes`);
+        next({ status: 401, msg: 'You are not privileged for this endpoint' });
+        return;
+      }
 
       next();
     };
@@ -116,11 +147,11 @@ export function jwtWithAdminOAuth() {
         return;
       }
 
-      const payload = getAccessTokenPayloadWithOAuth(req.user);
+      const { githubId, githubHandle } = getAccessTokenPayloadWithOAuth(req.user);
 
-      if (!ADMIN_GITHUB_IDS.includes(payload.githubId)) {
+      if (!isGithubIdAnAdmin(githubId)) {
         logger.warn(
-          `Non-admin user (GitHub handle: ${payload.githubHandle}) attempted to use admin-only routes`,
+          `Non-admin user (GitHub handle: ${githubHandle}) attempted to use admin-only routes`,
         );
         next({ status: 401, msg: 'You are not privileged for this endpoint' });
         return;
