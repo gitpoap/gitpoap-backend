@@ -1,4 +1,5 @@
 import '../../../../__mocks__/src/logging';
+import { contextMock } from '../../../../__mocks__/src/context';
 import { setupApp } from '../../../../src/app';
 import request from 'supertest';
 import { getGithubAuthenticatedApp } from '../../../../src/external/github';
@@ -13,6 +14,10 @@ import {
   retrieveClaimsCreatedByPR,
   retrieveClaimsCreatedByMention,
 } from '../../../../src/lib/claims';
+import { generateAuthTokens } from '../../../../src/lib/authTokens';
+import { ADMIN_ADDRESSES } from '../../../../src/constants';
+import { ADDRESSES } from '../../../../prisma/constants';
+import { ClaimStatus, GitPOAPType } from '@prisma/client';
 
 jest.mock('../../../../src/logging');
 jest.mock('../../../../src/external/github');
@@ -25,7 +30,7 @@ const mockedCreateClaimsForIssue = jest.mocked(createClaimsForIssue, true);
 const mockedRetrieveClaimsCreatedByPR = jest.mocked(retrieveClaimsCreatedByPR, true);
 const mockedRetrieveClaimsCreatedByMention = jest.mocked(retrieveClaimsCreatedByMention, true);
 
-const authToken = 'foobar2';
+const botJWTToken = 'foobar2';
 const contributorId = 2;
 const pullRequest = {
   organization: 'foo',
@@ -41,8 +46,9 @@ const issue = {
   contributorGithubIds: [contributorId],
   wasEarnedByMention: true,
 };
+const claimId = 234;
 const claim: ClaimData = {
-  id: 234,
+  id: claimId,
   user: {
     githubId: contributorId,
     githubHandle: 'batman',
@@ -55,6 +61,32 @@ const claim: ClaimData = {
     threshold: 1,
   },
 };
+const addressId = 2342222;
+const address = ADDRESSES.vitalik;
+const authTokenId = 2;
+const authTokenGeneration = 32;
+const ensName = null;
+const ensAvatarImageUrl = null;
+
+function mockJwtWithAddress() {
+  contextMock.prisma.authToken.findUnique.mockResolvedValue({
+    id: authTokenId,
+    address: { ensName, ensAvatarImageUrl },
+  } as any);
+}
+
+function genAuthTokens(someAddress?: string) {
+  return generateAuthTokens(
+    authTokenId,
+    authTokenGeneration,
+    addressId,
+    someAddress ?? address,
+    ensName,
+    ensAvatarImageUrl,
+    null,
+    null,
+  );
+}
 
 describe('POST /claims/gitpoap-bot/create', () => {
   it('Fails with no Access Token provided', async () => {
@@ -89,13 +121,13 @@ describe('POST /claims/gitpoap-bot/create', () => {
 
     const result = await request(await setupApp())
       .post('/claims/gitpoap-bot/create')
-      .set('Authorization', `Bearer ${authToken}`)
+      .set('Authorization', `Bearer ${botJWTToken}`)
       .send();
 
     expect(result.statusCode).toEqual(400);
 
     expect(mockedGetGithubAuthenticatedApp).toHaveBeenCalledTimes(1);
-    expect(mockedGetGithubAuthenticatedApp).toHaveBeenCalledWith(authToken);
+    expect(mockedGetGithubAuthenticatedApp).toHaveBeenCalledWith(botJWTToken);
   });
 
   it("Fails when app isn't gitpoap-bot", async () => {
@@ -105,13 +137,13 @@ describe('POST /claims/gitpoap-bot/create', () => {
 
     const result = await request(await setupApp())
       .post('/claims/gitpoap-bot/create')
-      .set('Authorization', `Bearer ${authToken}`)
+      .set('Authorization', `Bearer ${botJWTToken}`)
       .send();
 
     expect(result.statusCode).toEqual(401);
 
     expect(mockedGetGithubAuthenticatedApp).toHaveBeenCalledTimes(1);
-    expect(mockedGetGithubAuthenticatedApp).toHaveBeenCalledWith(authToken);
+    expect(mockedGetGithubAuthenticatedApp).toHaveBeenCalledWith(botJWTToken);
   });
 
   it('Fails on invalid request bodies', async () => {
@@ -120,7 +152,7 @@ describe('POST /claims/gitpoap-bot/create', () => {
     {
       const result = await request(await setupApp())
         .post('/claims/gitpoap-bot/create')
-        .set('Authorization', `Bearer ${authToken}`)
+        .set('Authorization', `Bearer ${botJWTToken}`)
         .send({ bad: 'body' });
 
       expect(result.statusCode).toEqual(400);
@@ -128,7 +160,7 @@ describe('POST /claims/gitpoap-bot/create', () => {
     {
       const result = await request(await setupApp())
         .post('/claims/gitpoap-bot/create')
-        .set('Authorization', `Bearer ${authToken}`)
+        .set('Authorization', `Bearer ${botJWTToken}`)
         .send({ pullRequest: [] });
 
       expect(result.statusCode).toEqual(400);
@@ -136,7 +168,7 @@ describe('POST /claims/gitpoap-bot/create', () => {
     {
       const result = await request(await setupApp())
         .post('/claims/gitpoap-bot/create')
-        .set('Authorization', `Bearer ${authToken}`)
+        .set('Authorization', `Bearer ${botJWTToken}`)
         .send({ issue: [] });
 
       expect(result.statusCode).toEqual(400);
@@ -144,7 +176,7 @@ describe('POST /claims/gitpoap-bot/create', () => {
     {
       const result = await request(await setupApp())
         .post('/claims/gitpoap-bot/create')
-        .set('Authorization', `Bearer ${authToken}`)
+        .set('Authorization', `Bearer ${botJWTToken}`)
         .send({
           pullRequest: {
             organization: 'foo',
@@ -159,7 +191,7 @@ describe('POST /claims/gitpoap-bot/create', () => {
     {
       const result = await request(await setupApp())
         .post('/claims/gitpoap-bot/create')
-        .set('Authorization', `Bearer ${authToken}`)
+        .set('Authorization', `Bearer ${botJWTToken}`)
         .send({
           issue: {
             organization: 'foo',
@@ -178,7 +210,7 @@ describe('POST /claims/gitpoap-bot/create', () => {
 
     const result = await request(await setupApp())
       .post('/claims/gitpoap-bot/create')
-      .set('Authorization', `Bearer ${authToken}`)
+      .set('Authorization', `Bearer ${botJWTToken}`)
       .send({ ...pullRequest, contributorGithubIds: [4, 5] });
 
     expect(result.statusCode).toEqual(400);
@@ -191,7 +223,7 @@ describe('POST /claims/gitpoap-bot/create', () => {
 
     const result = await request(await setupApp())
       .post('/claims/gitpoap-bot/create')
-      .set('Authorization', `Bearer ${authToken}`)
+      .set('Authorization', `Bearer ${botJWTToken}`)
       .send({ ...issue, wasEarnedByMention: false });
 
     expect(result.statusCode).toEqual(400);
@@ -207,7 +239,7 @@ describe('POST /claims/gitpoap-bot/create', () => {
     {
       const result = await request(await setupApp())
         .post('/claims/gitpoap-bot/create')
-        .set('Authorization', `Bearer ${authToken}`)
+        .set('Authorization', `Bearer ${botJWTToken}`)
         .send({ pullRequest });
 
       expect(result.statusCode).toEqual(404);
@@ -215,7 +247,7 @@ describe('POST /claims/gitpoap-bot/create', () => {
     {
       const result = await request(await setupApp())
         .post('/claims/gitpoap-bot/create')
-        .set('Authorization', `Bearer ${authToken}`)
+        .set('Authorization', `Bearer ${botJWTToken}`)
         .send({ issue });
 
       expect(result.statusCode).toEqual(404);
@@ -247,7 +279,7 @@ describe('POST /claims/gitpoap-bot/create', () => {
     {
       const result = await request(await setupApp())
         .post('/claims/gitpoap-bot/create')
-        .set('Authorization', `Bearer ${authToken}`)
+        .set('Authorization', `Bearer ${botJWTToken}`)
         .send({ pullRequest });
 
       expect(result.statusCode).toEqual(404);
@@ -255,7 +287,7 @@ describe('POST /claims/gitpoap-bot/create', () => {
     {
       const result = await request(await setupApp())
         .post('/claims/gitpoap-bot/create')
-        .set('Authorization', `Bearer ${authToken}`)
+        .set('Authorization', `Bearer ${botJWTToken}`)
         .send({ issue });
 
       expect(result.statusCode).toEqual(404);
@@ -285,7 +317,7 @@ describe('POST /claims/gitpoap-bot/create', () => {
 
     const result = await request(await setupApp())
       .post('/claims/gitpoap-bot/create')
-      .set('Authorization', `Bearer ${authToken}`)
+      .set('Authorization', `Bearer ${botJWTToken}`)
       .send({ issue });
 
     expect(result.statusCode).toEqual(500);
@@ -307,7 +339,7 @@ describe('POST /claims/gitpoap-bot/create', () => {
     {
       const result = await request(await setupApp())
         .post('/claims/gitpoap-bot/create')
-        .set('Authorization', `Bearer ${authToken}`)
+        .set('Authorization', `Bearer ${botJWTToken}`)
         .send({ pullRequest });
 
       expect(result.statusCode).toEqual(200);
@@ -316,7 +348,7 @@ describe('POST /claims/gitpoap-bot/create', () => {
     {
       const result = await request(await setupApp())
         .post('/claims/gitpoap-bot/create')
-        .set('Authorization', `Bearer ${authToken}`)
+        .set('Authorization', `Bearer ${botJWTToken}`)
         .send({ issue });
 
       expect(result.statusCode).toEqual(200);
@@ -358,7 +390,7 @@ describe('POST /claims/gitpoap-bot/create', () => {
     {
       const result = await request(await setupApp())
         .post('/claims/gitpoap-bot/create')
-        .set('Authorization', `Bearer ${authToken}`)
+        .set('Authorization', `Bearer ${botJWTToken}`)
         .send({ pullRequest });
 
       expect(result.statusCode).toEqual(200);
@@ -367,7 +399,7 @@ describe('POST /claims/gitpoap-bot/create', () => {
     {
       const result = await request(await setupApp())
         .post('/claims/gitpoap-bot/create')
-        .set('Authorization', `Bearer ${authToken}`)
+        .set('Authorization', `Bearer ${botJWTToken}`)
         .send({ issue });
 
       expect(result.statusCode).toEqual(200);
@@ -409,7 +441,7 @@ describe('POST /claims/gitpoap-bot/create', () => {
 
     const result = await request(await setupApp())
       .post('/claims/gitpoap-bot/create')
-      .set('Authorization', `Bearer ${authToken}`)
+      .set('Authorization', `Bearer ${botJWTToken}`)
       .send({
         issue: {
           ...issue,
@@ -434,5 +466,186 @@ describe('POST /claims/gitpoap-bot/create', () => {
 
     expect(mockedRetrieveClaimsCreatedByMention).toHaveBeenCalledTimes(1);
     expect(mockedRetrieveClaimsCreatedByMention).toHaveBeenCalledWith(contributionId);
+  });
+});
+
+describe('DELETE /claims/:id', () => {
+  it('Fails with no Access Token provided', async () => {
+    contextMock.prisma.claim.findUnique.mockResolvedValue(null);
+    const result = await request(await setupApp())
+      .delete(`/claims/${claimId}`)
+      .send();
+
+    expect(result.statusCode).toEqual(400);
+
+    expect(contextMock.prisma.claim.findUnique).toHaveBeenCalledTimes(0);
+  });
+
+  const expectFindUniqueCalls = (count: number = 1) => {
+    expect(contextMock.prisma.claim.findUnique).toHaveBeenCalledTimes(count);
+    expect(contextMock.prisma.claim.findUnique).toHaveBeenCalledWith({
+      where: { id: claimId },
+      select: {
+        status: true,
+        gitPOAP: {
+          select: {
+            id: true,
+            type: true,
+            creatorAddressId: true,
+          },
+        },
+      },
+    });
+  };
+
+  it('Succeeds if the claim is already deleted', async () => {
+    mockJwtWithAddress();
+    contextMock.prisma.claim.findUnique.mockResolvedValue(null);
+    const authTokens = genAuthTokens();
+    const result = await request(await setupApp())
+      .delete(`/claims/${claimId}`)
+      .set('Authorization', `Bearer ${authTokens.accessToken}`)
+      .send();
+
+    expect(result.statusCode).toEqual(200);
+
+    expectFindUniqueCalls();
+  });
+
+  it('Fails if the claim is not CUSTOM and user is not an admin', async () => {
+    mockJwtWithAddress();
+    contextMock.prisma.claim.findUnique.mockResolvedValue({
+      gitPOAP: { type: GitPOAPType.ANNUAL },
+    } as any);
+    const authTokens = genAuthTokens();
+    const result = await request(await setupApp())
+      .delete(`/claims/${claimId}`)
+      .set('Authorization', `Bearer ${authTokens.accessToken}`)
+      .send();
+
+    expect(result.statusCode).toEqual(401);
+
+    expectFindUniqueCalls();
+  });
+
+  it('Fails if claim is CUSTOM and creatorAddress does not exist', async () => {
+    mockJwtWithAddress();
+    contextMock.prisma.claim.findUnique.mockResolvedValue({
+      gitPOAP: {
+        type: GitPOAPType.CUSTOM,
+        creatorAddressId: null,
+      },
+    } as any);
+    const authTokens = genAuthTokens();
+    const result = await request(await setupApp())
+      .delete(`/claims/${claimId}`)
+      .set('Authorization', `Bearer ${authTokens.accessToken}`)
+      .send();
+
+    expect(result.statusCode).toEqual(500);
+
+    expectFindUniqueCalls();
+  });
+
+  it('Fails if claim is CUSTOM the caller is not the creator', async () => {
+    mockJwtWithAddress();
+    contextMock.prisma.claim.findUnique.mockResolvedValue({
+      gitPOAP: {
+        type: GitPOAPType.CUSTOM,
+        creatorAddressId: addressId + 2,
+      },
+    } as any);
+    const authTokens = genAuthTokens();
+    const result = await request(await setupApp())
+      .delete(`/claims/${claimId}`)
+      .set('Authorization', `Bearer ${authTokens.accessToken}`)
+      .send();
+
+    expect(result.statusCode).toEqual(401);
+
+    expectFindUniqueCalls();
+  });
+
+  it('Fails if the Claim is not UNCLAIMED', async () => {
+    mockJwtWithAddress();
+    const testClaimStatusValue = async (
+      type: GitPOAPType,
+      status: ClaimStatus,
+      creatorAddressId?: number,
+    ) => {
+      const authTokens = genAuthTokens(ADMIN_ADDRESSES[0]);
+
+      contextMock.prisma.claim.findUnique.mockResolvedValueOnce({
+        status,
+        gitPOAP: {
+          type,
+          creatorAddressId: addressId,
+        },
+      } as any);
+      const result = await request(await setupApp())
+        .delete(`/claims/${claimId}`)
+        .set('Authorization', `Bearer ${authTokens.accessToken}`)
+        .send();
+      expect(result.statusCode).toEqual(400);
+    };
+
+    await testClaimStatusValue(GitPOAPType.ANNUAL, ClaimStatus.PENDING);
+    await testClaimStatusValue(GitPOAPType.ANNUAL, ClaimStatus.MINTING);
+    await testClaimStatusValue(GitPOAPType.ANNUAL, ClaimStatus.CLAIMED);
+    await testClaimStatusValue(GitPOAPType.CUSTOM, ClaimStatus.PENDING, addressId);
+    await testClaimStatusValue(GitPOAPType.CUSTOM, ClaimStatus.MINTING, addressId);
+    await testClaimStatusValue(GitPOAPType.CUSTOM, ClaimStatus.CLAIMED, addressId);
+
+    expectFindUniqueCalls(6);
+  });
+
+  it('Succeeds if Claim is UNCLAIMED', async () => {
+    mockJwtWithAddress();
+    // ANNUAL
+    {
+      contextMock.prisma.claim.findUnique.mockResolvedValueOnce({
+        status: ClaimStatus.UNCLAIMED,
+        gitPOAP: {
+          type: GitPOAPType.ANNUAL,
+          creatorAddressId: null,
+        },
+      } as any);
+      const authTokens = genAuthTokens(ADMIN_ADDRESSES[0]);
+      const result = await request(await setupApp())
+        .delete(`/claims/${claimId}`)
+        .set('Authorization', `Bearer ${authTokens.accessToken}`)
+        .send();
+
+      expect(result.statusCode).toEqual(200);
+
+      expect(contextMock.prisma.claim.deleteMany).toHaveBeenCalledTimes(1);
+      expect(contextMock.prisma.claim.deleteMany).toHaveBeenCalledWith({
+        where: { id: claimId },
+      });
+    }
+    // CUSTOM
+    {
+      contextMock.prisma.claim.findUnique.mockResolvedValueOnce({
+        status: ClaimStatus.UNCLAIMED,
+        gitPOAP: {
+          type: GitPOAPType.CUSTOM,
+          creatorAddressId: addressId,
+        },
+      } as any);
+      const authTokens = genAuthTokens();
+      const result = await request(await setupApp())
+        .delete(`/claims/${claimId}`)
+        .set('Authorization', `Bearer ${authTokens.accessToken}`)
+        .send();
+
+      expect(result.statusCode).toEqual(200);
+
+      expect(contextMock.prisma.claim.deleteMany).toHaveBeenCalledTimes(2);
+      expect(contextMock.prisma.claim.deleteMany).toHaveBeenLastCalledWith({
+        where: { id: claimId },
+      });
+    }
+
+    expectFindUniqueCalls(2);
   });
 });

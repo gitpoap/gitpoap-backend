@@ -5,8 +5,13 @@ import {
 } from '../schemas/claims';
 import { Router, Request } from 'express';
 import { context } from '../context';
-import { ClaimStatus, GitPOAP, GitPOAPStatus } from '@prisma/client';
-import { jwtWithGitHubOAuth, jwtWithAdminOAuth, gitpoapBotAuth } from '../middleware';
+import { ClaimStatus, GitPOAP, GitPOAPStatus, GitPOAPType } from '@prisma/client';
+import {
+  gitpoapBotAuth,
+  jwtWithAddress,
+  jwtWithAdminOAuth,
+  jwtWithGitHubOAuth,
+} from '../middleware';
 import { getAccessTokenPayloadWithOAuth } from '../types/authTokens';
 import { redeemPOAP, requestPOAPCodes, retrieveClaimInfo } from '../external/poap';
 import { getGithubUserById } from '../external/github';
@@ -27,6 +32,8 @@ import { z } from 'zod';
 import { BotCreateClaimsErrorType, createClaimsForPR, createClaimsForIssue } from '../lib/bot';
 import { RestrictedContribution } from '../lib/contributions';
 import { sendInternalClaimMessage } from '../external/slack';
+import { isAddressAnAdmin } from '../lib/admins';
+import { getAccessTokenPayload } from '../types/authTokens';
 
 export const claimsRouter = Router();
 
@@ -693,4 +700,79 @@ claimsRouter.post('/revalidate', jwtWithGitHubOAuth(), async (req, res) => {
     claimed: foundClaims,
     invalid: [],
   });
+});
+
+claimsRouter.delete('/:id', jwtWithAddress(), async (req, res) => {
+  const logger = createScopedLogger('DELETE /claims/:id');
+  const endTimer = httpRequestDurationSeconds.startTimer('DELETE', '/claims/:id');
+
+  const claimId = parseInt(req.params.id, 10);
+
+  logger.info(`Request to delete Claim with ID: ${claimId}`);
+
+  const claim = await context.prisma.claim.findUnique({
+    where: { id: claimId },
+    select: {
+      status: true,
+      gitPOAP: {
+        select: {
+          id: true,
+          type: true,
+          creatorAddressId: true,
+        },
+      },
+    },
+  });
+
+  // If the claim has already been deleted
+  if (claim === null) {
+    logger.info(`Completed request to delete Claim with ID: ${claimId}`);
+    endTimer({ status: 200 });
+    return res.status(200).send('DELETED');
+  }
+
+  const { addressId, address } = getAccessTokenPayload(req.user);
+
+  if (claim.gitPOAP.type === GitPOAPType.CUSTOM) {
+    // If the GitPOAP is CUSTOM ensure that requestor is it's creator
+    if (claim.gitPOAP.creatorAddressId === null) {
+      logger.error(
+        `Custom GitPOAP ID ${claim.gitPOAP.id} does not have an associated creatorAddress`,
+      );
+      endTimer({ status: 500 });
+      return res.status(500).send({ msg: "Can't authenticate GitPOAP ownership" });
+    }
+
+    if (claim.gitPOAP.creatorAddressId !== addressId) {
+      logger.warn(
+        `User attempted to delete a Claim for a custom GitPOAP (ID: ${claim.gitPOAP.id} that they do not own`,
+      );
+      endTimer({ status: 401 });
+      return res.status(401).send({ msg: 'Not Custom GitPOAP creator' });
+    }
+  } else {
+    // Otherwise ensure that the requestor is an admin
+    if (!isAddressAnAdmin(address)) {
+      logger.warn(`Non-admin address ${address} attempted to delete a Claim for a GitPOAP`);
+      endTimer({ status: 401 });
+      return res.status(401).send({ msg: 'Not authorized to delete claims' });
+    }
+  }
+
+  if (claim.status !== ClaimStatus.UNCLAIMED) {
+    logger.warn(`User attempted to delete a Claim (ID: ${claimId}) that has already been claimed`);
+    endTimer({ status: 400 });
+    return res.status(400).send({ msg: 'Already claimed' });
+  }
+
+  // Use deleteMany so we don't fail if another request deletes the record during this request
+  await context.prisma.claim.deleteMany({
+    where: { id: claimId },
+  });
+
+  logger.debug(`Completed request to delete Claim with ID: ${claimId}`);
+
+  endTimer({ status: 200 });
+
+  return res.status(200).send('DELETED');
 });
