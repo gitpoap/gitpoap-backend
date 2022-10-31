@@ -361,8 +361,8 @@ for convenience):
 
 ```json
 {
-  "projectId": 2342, // optional (either projectId or organizationId must be present)
-  "organizationId": 45, // optional (either projectId or organizationId must be present)
+  "projectId": 2342, // optional
+  "organizationId": 45, // optional
   "name": "GitPOAP Custsom Contributor 2022",
   "contributors": {
     "githubHandles": ["burz"],
