@@ -862,9 +862,6 @@ describe('PUT /gitpoaps/custom/:gitPOAPRequestId/claims', () => {
         addressId: true,
         adminApprovalStatus: true,
         contributors: true,
-        gitPOAP: {
-          select: { id: true },
-        },
       },
     });
   };
@@ -900,12 +897,11 @@ describe('PUT /gitpoaps/custom/:gitPOAPRequestId/claims', () => {
     expectFindUniqueCalls();
   });
 
-  it('Fails when GitPOAPRequest is APPROVED but related GitPOAP is null', async () => {
+  it('Fails when GitPOAPRequest is APPROVED', async () => {
     mockJwtWithAddress();
     contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue({
       ...gitPOAPRequest,
       adminApprovalStatus: AdminApprovalStatus.APPROVED,
-      gitPOAP: null,
     } as any);
     const authTokens = genAuthTokens();
     const result = await request(await setupApp())
@@ -913,73 +909,9 @@ describe('PUT /gitpoaps/custom/:gitPOAPRequestId/claims', () => {
       .set('Authorization', `Bearer ${authTokens.accessToken}`)
       .send({ contributors: { githubHandles: [GH_HANDLES.colfax] } });
 
-    expect(result.statusCode).toEqual(500);
+    expect(result.statusCode).toEqual(400);
 
     expectFindUniqueCalls();
-
-    expect(mockedCreateClaimForEmail).toHaveBeenCalledTimes(0);
-    expect(mockedCreateClaimForEnsName).toHaveBeenCalledTimes(0);
-    expect(mockedCreateClaimForEthAddress).toHaveBeenCalledTimes(0);
-    expect(mockedCreateClaimForGithubHandle).toHaveBeenCalledTimes(0);
-  });
-
-  it('Succeeds when GitPOAPRequest is APPROVED', async () => {
-    mockJwtWithAddress();
-    contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue({
-      ...gitPOAPRequest,
-      adminApprovalStatus: AdminApprovalStatus.APPROVED,
-    } as any);
-    const authTokens = genAuthTokens();
-    {
-      const result = await request(await setupApp())
-        .put(`/gitpoaps/custom/${gitPOAPRequestId}/claims`)
-        .set('Authorization', `Bearer ${authTokens.accessToken}`)
-        .send({ contributors: { githubHandles: [GH_HANDLES.colfax] } });
-      expect(result.statusCode).toEqual(200);
-      expect(mockedCreateClaimForEmail).toHaveBeenCalledTimes(0);
-      expect(mockedCreateClaimForEnsName).toHaveBeenCalledTimes(0);
-      expect(mockedCreateClaimForEthAddress).toHaveBeenCalledTimes(0);
-      expect(mockedCreateClaimForGithubHandle).toHaveBeenCalledTimes(1);
-      expect(mockedCreateClaimForGithubHandle).toHaveBeenCalledWith(GH_HANDLES.colfax, gitPOAPId);
-    }
-    {
-      const result = await request(await setupApp())
-        .put(`/gitpoaps/custom/${gitPOAPRequestId}/claims`)
-        .set('Authorization', `Bearer ${authTokens.accessToken}`)
-        .send({ contributors: { emails: [colfaxEmail] } });
-      expect(result.statusCode).toEqual(200);
-      expect(mockedCreateClaimForEmail).toHaveBeenCalledTimes(1);
-      expect(mockedCreateClaimForEmail).toHaveBeenCalledWith(colfaxEmail, gitPOAPId);
-      expect(mockedCreateClaimForEnsName).toHaveBeenCalledTimes(0);
-      expect(mockedCreateClaimForEthAddress).toHaveBeenCalledTimes(0);
-      expect(mockedCreateClaimForGithubHandle).toHaveBeenCalledTimes(1);
-    }
-    {
-      const result = await request(await setupApp())
-        .put(`/gitpoaps/custom/${gitPOAPRequestId}/claims`)
-        .set('Authorization', `Bearer ${authTokens.accessToken}`)
-        .send({ contributors: { ethAddresses: [ADDRESSES.colfax] } });
-      expect(result.statusCode).toEqual(200);
-      expect(mockedCreateClaimForEmail).toHaveBeenCalledTimes(1);
-      expect(mockedCreateClaimForEnsName).toHaveBeenCalledTimes(0);
-      expect(mockedCreateClaimForEthAddress).toHaveBeenCalledTimes(1);
-      expect(mockedCreateClaimForEthAddress).toHaveBeenCalledWith(ADDRESSES.colfax, gitPOAPId);
-      expect(mockedCreateClaimForGithubHandle).toHaveBeenCalledTimes(1);
-    }
-    {
-      const result = await request(await setupApp())
-        .put(`/gitpoaps/custom/${gitPOAPRequestId}/claims`)
-        .set('Authorization', `Bearer ${authTokens.accessToken}`)
-        .send({ contributors: { ensNames: [colfaxENS] } });
-      expect(result.statusCode).toEqual(200);
-      expect(mockedCreateClaimForEmail).toHaveBeenCalledTimes(1);
-      expect(mockedCreateClaimForEnsName).toHaveBeenCalledTimes(1);
-      expect(mockedCreateClaimForEnsName).toHaveBeenCalledWith(colfaxENS, gitPOAPId);
-      expect(mockedCreateClaimForEthAddress).toHaveBeenCalledTimes(1);
-      expect(mockedCreateClaimForGithubHandle).toHaveBeenCalledTimes(1);
-    }
-
-    expectFindUniqueCalls(4);
   });
 
   it('Succeeds when GitPOAPRequest is not APPROVED', async () => {
