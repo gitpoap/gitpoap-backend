@@ -12,6 +12,7 @@ import {
   createClaimForEnsName,
   createClaimForEthAddress,
   createClaimForGithubHandle,
+  ensureRedeemCodeThreshold,
 } from '../../../../../src/lib/claims';
 
 jest.mock('../../../../../src/logging');
@@ -23,6 +24,7 @@ const mockedCreateClaimForEmail = jest.mocked(createClaimForEmail, true);
 const mockedCreateClaimForEnsName = jest.mocked(createClaimForEnsName, true);
 const mockedCreateClaimForEthAddress = jest.mocked(createClaimForEthAddress, true);
 const mockedCreateClaimForGithubHandle = jest.mocked(createClaimForGithubHandle, true);
+const mockedEnsureRedeemCodeThreshold = jest.mocked(ensureRedeemCodeThreshold, true);
 
 const authTokenId = 4;
 const authTokenGeneration = 1;
@@ -248,8 +250,13 @@ describe('PUT /gitpoaps/:gitPOAPId/claims', () => {
     expect(contextMock.prisma.gitPOAP.findUnique).toHaveBeenCalledWith({
       where: { id: gitPOAPId },
       select: {
-        type: true,
         creatorAddressId: true,
+        id: true,
+        ongoing: true,
+        poapApprovalStatus: true,
+        poapEventId: true,
+        poapSecret: true,
+        type: true,
       },
     });
   };
@@ -314,6 +321,8 @@ describe('PUT /gitpoaps/:gitPOAPId/claims', () => {
       expect(mockedCreateClaimForEthAddress).toHaveBeenCalledTimes(0);
       expect(mockedCreateClaimForGithubHandle).toHaveBeenCalledTimes(1);
       expect(mockedCreateClaimForGithubHandle).toHaveBeenCalledWith(GH_HANDLES.colfax, gitPOAPId);
+
+      expect(mockedEnsureRedeemCodeThreshold).toHaveBeenCalledTimes(1);
     }
     {
       const result = await request(await setupApp())
@@ -326,6 +335,8 @@ describe('PUT /gitpoaps/:gitPOAPId/claims', () => {
       expect(mockedCreateClaimForEnsName).toHaveBeenCalledTimes(0);
       expect(mockedCreateClaimForEthAddress).toHaveBeenCalledTimes(0);
       expect(mockedCreateClaimForGithubHandle).toHaveBeenCalledTimes(1);
+
+      expect(mockedEnsureRedeemCodeThreshold).toHaveBeenCalledTimes(2);
     }
     {
       const result = await request(await setupApp())
@@ -338,6 +349,8 @@ describe('PUT /gitpoaps/:gitPOAPId/claims', () => {
       expect(mockedCreateClaimForEthAddress).toHaveBeenCalledTimes(1);
       expect(mockedCreateClaimForEthAddress).toHaveBeenCalledWith(ADDRESSES.colfax, gitPOAPId);
       expect(mockedCreateClaimForGithubHandle).toHaveBeenCalledTimes(1);
+
+      expect(mockedEnsureRedeemCodeThreshold).toHaveBeenCalledTimes(3);
     }
     {
       const result = await request(await setupApp())
@@ -350,6 +363,8 @@ describe('PUT /gitpoaps/:gitPOAPId/claims', () => {
       expect(mockedCreateClaimForEnsName).toHaveBeenCalledWith(colfaxENS, gitPOAPId);
       expect(mockedCreateClaimForEthAddress).toHaveBeenCalledTimes(1);
       expect(mockedCreateClaimForGithubHandle).toHaveBeenCalledTimes(1);
+
+      expect(mockedEnsureRedeemCodeThreshold).toHaveBeenCalledTimes(4);
     }
 
     expectFindUniqueCalls(4);
