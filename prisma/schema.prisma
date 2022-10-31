@@ -72,6 +72,7 @@ model Address {
   /// @TypeGraphQL.omit(output: true, input: true)
   authTokens        AuthToken[]
   gitPOAPRequests   GitPOAPRequest[]
+  createdGitPOAPs   GitPOAP[]
 
   @@index([ethAddress])
 }
@@ -218,6 +219,8 @@ model GitPOAP {
   isPRBased          Boolean         @default(true)
   isEnabled          Boolean         @default(true)
   gitPOAPRequest     GitPOAPRequest?
+  creatorAddressId   Int?
+  creatorAddress     Address?        @relation(fields: [creatorAddressId], references: [id])
 }
 
 // Records in this table are used for GitPOAP Creation Requests via the Creation Form
