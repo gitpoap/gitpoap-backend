@@ -106,7 +106,7 @@ Note that this endpoint requires an address-based JWT to be provided where the u
 (i.e. both `githubId` and `githubHandle` are non-null) and that the authenticated user be an admin of GitPOAP,
 as defined by [`ADMIN_GITHUB_IDS` at `src/constants.ts`](https://github.com/gitpoap/gitpoap-backend/blob/main/src/constants.ts).
 
-## Create Claims for a GitPOAP
+## **[DEPRECATED]** Create Claims for a GitPOAP
 
 `POST /claims/create`
 
@@ -122,6 +122,27 @@ Data:
 Note that this endpoint requires an address-based JWT to be provided where the user is logged into GitHub
 (i.e. both `githubId` and `githubHandle` are non-null) and that the authenticated user be an admin of GitPOAP,
 as defined by [`ADMIN_GITHUB_IDS` at `src/constants.ts`](https://github.com/gitpoap/gitpoap-backend/blob/main/src/constants.ts).
+
+## Create Claims for a GitPOAP
+
+`PUT /gitpoaps/:gitPOAPId/claims`
+
+This endpoint allows the creator of a `CUSTOM` GitPOAP, or a site admin for some other `GitPOAPType` to create new Claims.
+
+Data:
+```json
+{
+  "contributors": {
+    "githubHandles": ["burz"],
+    "emails": ["burz@gitpoap.io"],
+    "ethAddresses": ["0xAe95f7e7fb2FCF86148ef832FAeD2752Ae5A358a"],
+    "ensNames": ["burz.eth"]
+  }
+}
+```
+
+Note that for the admin functionality of this endpoint requires an address-based JWT where the authenticated user is an admin of GitPOAP,
+as defined by [`ADMIN_ADDRESSES` at `src/constants.ts`](https://github.com/gitpoap/gitpoap-backend/blob/main/src/constants.ts).
 
 ## Update Organization
 

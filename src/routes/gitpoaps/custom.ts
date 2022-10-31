@@ -1,9 +1,8 @@
 import {
   CreateCustomGitPOAPSchema,
-  CreateCustomGitPOAPClaimsSchema,
-  CustomGitPOAPContributorsSchema,
   DeleteGitPOAPRequestClaimSchema,
 } from '../../schemas/gitpoaps/custom';
+import { CreateGitPOAPClaimsSchema, GitPOAPContributorsSchema } from '../../schemas/gitpoaps';
 import { Request, Router } from 'express';
 import { z } from 'zod';
 import { context } from '../../context';
@@ -20,12 +19,11 @@ import { convertGitPOAPRequestToGitPOAP } from '../../lib/gitpoaps';
 import { parseJSON } from '../../lib/json';
 import { getAccessTokenPayload } from '../../types/authTokens';
 import { sentInternalGitPOAPRequestMessage } from '../../external/slack';
+import { convertContributorsFromSchema, createClaimsForContributors } from '../../lib/gitpoaps';
 import {
-  addGitPOAPRequestContributors,
-  convertContributorsFromSchema,
-  createClaimsForContributors,
+  addGitPOAPContributors,
   deleteGitPOAPRequest,
-  removeContributorFromGitPOAPRequest,
+  removeContributorFromGitPOAP,
 } from '../../lib/gitpoapRequests';
 
 export const customGitPOAPsRouter = Router();
@@ -62,7 +60,7 @@ customGitPOAPsRouter.post(
     }
 
     /* Validate the contributors object */
-    const contributors = parseJSON<z.infer<typeof CustomGitPOAPContributorsSchema>>(
+    const contributors = parseJSON<z.infer<typeof GitPOAPContributorsSchema>>(
       req.body.contributors,
     );
 
@@ -74,7 +72,7 @@ customGitPOAPsRouter.post(
       return res.status(400).send({ msg });
     }
 
-    const contributorsSchemaResult = CustomGitPOAPContributorsSchema.safeParse(contributors);
+    const contributorsSchemaResult = GitPOAPContributorsSchema.safeParse(contributors);
 
     if (!contributorsSchemaResult.success) {
       logger.warn(
@@ -371,7 +369,7 @@ customGitPOAPsRouter.put('/:gitPOAPRequestId/claims', jwtWithAddress(), async (r
 
   logger.info(`Request to create new Claims for custom GitPOAP Request ID ${gitPOAPRequestId}`);
 
-  const schemaResult = CreateCustomGitPOAPClaimsSchema.safeParse(req.body);
+  const schemaResult = CreateGitPOAPClaimsSchema.safeParse(req.body);
 
   if (!schemaResult.success) {
     logger.warn(
@@ -423,7 +421,7 @@ customGitPOAPsRouter.put('/:gitPOAPRequestId/claims', jwtWithAddress(), async (r
     gitPOAPRequest.contributors ? (gitPOAPRequest.contributors as Prisma.JsonObject) : {},
   );
 
-  const newContributors = addGitPOAPRequestContributors(
+  const newContributors = addGitPOAPContributors(
     existingContributors,
     convertContributorsFromSchema(contributors),
   );
@@ -507,11 +505,7 @@ customGitPOAPsRouter.delete('/:gitPOAPRequestId/claim', jwtWithAddress(), async 
     gitPOAPRequest.contributors ? (gitPOAPRequest.contributors as Prisma.JsonObject) : {},
   );
 
-  const newContributors = removeContributorFromGitPOAPRequest(
-    existingContributors,
-    claimType,
-    claimData,
-  );
+  const newContributors = removeContributorFromGitPOAP(existingContributors, claimType, claimData);
 
   await context.prisma.gitPOAPRequest.update({
     where: { id: gitPOAPRequestId },
