@@ -24,6 +24,7 @@ import { generatePOAPSecret } from '../../lib/secrets';
 import { customGitPOAPsRouter } from './custom';
 import { isAddressAnAdmin } from '../../lib/admins';
 import { convertContributorsFromSchema, createClaimsForContributors } from '../../lib/gitpoaps';
+import { ensureRedeemCodeThreshold } from '../../lib/claims';
 
 export const gitPOAPsRouter = Router();
 
@@ -465,8 +466,13 @@ gitPOAPsRouter.put('/:gitPOAPId/claims', jwtWithAddress(), async (req, res) => {
   const gitPOAP = await context.prisma.gitPOAP.findUnique({
     where: { id: gitPOAPId },
     select: {
-      type: true,
       creatorAddressId: true,
+      id: true,
+      ongoing: true,
+      poapApprovalStatus: true,
+      poapEventId: true,
+      poapSecret: true,
+      type: true,
     },
   });
 
@@ -500,6 +506,9 @@ gitPOAPsRouter.put('/:gitPOAPId/claims', jwtWithAddress(), async (req, res) => {
   );
 
   logger.info(`Created ${claimsCount} Claims for GitPOAP with ID: ${gitPOAPId}`);
+
+  // Run in background
+  void ensureRedeemCodeThreshold(gitPOAP);
 
   logger.debug(`Completed request to create new Claims for GitPOAP ID ${gitPOAPId}`);
 
