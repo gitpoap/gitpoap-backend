@@ -350,6 +350,53 @@ Note that this endpoint requires an address-based JWT to be provided where the u
 (i.e. both `githubId` and `githubHandle` are non-null) and that the authenticated user be an admin of GitPOAP,
 as defined by [`ADMIN_GITHUB_IDS` at `src/constants.ts`](https://github.com/gitpoap/gitpoap-backend/blob/main/src/constants.ts).
 
+## Creating Claims for a GitPOAPRequest
+
+`PUT /gitpoaps/custom/claims`
+
+This endpoint allows the creator of a GitPOAPRequest to create new Claims for that request.
+
+Note that it doesn't matter whether the GitPOAPRequest is approved yet or not, the same endpoint is used.
+
+Data:
+```json
+{
+  "gitPOAPRequestId": 342,
+  "contributors": {
+    "githubHandles": ["burz"],
+    "emails": ["burz@gitpoap.io"],
+    "ethAddresses": ["0xAe95f7e7fb2FCF86148ef832FAeD2752Ae5A358a"],
+    "ensNames": ["burz.eth"]
+  }
+}
+```
+
+Note that all of the fields within "contributors" are optional.
+
+## Deleting Claims for a `PENDING/REJECTED` GitPOAPRequest
+
+`DELETE /gitpoaps/custom/:gitPOAPRequestId/claim`
+
+This endpoint allows the creator of a GitPOAPRequest to remove Claims for a GitPOAPRequest that is *not yet* `APPROVED`.
+
+Data:
+```json
+{
+  "claimType": "githubHandle",
+  "claimData": "burz"
+}
+```
+
+Where `claimType` is one of `['githubHandle', 'email', 'ethAddress', 'ensName']`.
+
+## Deleting Claims for an `APPROVED` GitPOAPRequest
+
+`DELETE /gitpoaps/custom/claim/:id`
+
+This endpoint allows the creator of a GitPOAPRequest to remove Claims for a GitPOAPRequest that is `APPROVED` given the ID of the Claim.
+
+Note that the Claim can only be deleted if it is still `UNCLAIMED`.
+
 ## [gitpoap-bot] Create a Claim
 
 `PUT /claims/gitpoap-bot/create`
