@@ -8,6 +8,7 @@ export const ADMIN_GITHUB_IDS = [
   23272494, // Kayleen / nixorokish
   109097759, // Kayla
   19416312, // Aldo
+  110413633, // Tyler
 ];
 
 export const ADMIN_ADDRESSES = [
@@ -17,6 +18,7 @@ export const ADMIN_ADDRESSES = [
   '0x04c0cd38b8c203b14ef2b7b8d736d69b938aff71', // Kayleen / nixorokish
   '0xa4c58baf393ebf3a281a4bc6152ae084e63dc28e', // Kayla
   '0x02738d122e0970aaf8deadf0c6a217a1923e1e99', // Aldo
+  '0xe078c3bdee620829135e1ab526be860498b06339', // Tyler
 ];
 
 export const GITPOAP_BOT_APP_ID = 209535;
