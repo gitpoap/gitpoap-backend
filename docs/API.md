@@ -352,7 +352,7 @@ as defined by [`ADMIN_GITHUB_IDS` at `src/constants.ts`](https://github.com/gitp
 
 ## Creating Claims for a GitPOAPRequest
 
-`PUT /gitpoaps/custom/claims`
+`PUT /gitpoaps/custom/:gitPOAPRequestId/claims`
 
 This endpoint allows the creator of a GitPOAPRequest to create new Claims for that request.
 
@@ -361,7 +361,6 @@ Note that it doesn't matter whether the GitPOAPRequest is approved yet or not, t
 Data:
 ```json
 {
-  "gitPOAPRequestId": 342,
   "contributors": {
     "githubHandles": ["burz"],
     "emails": ["burz@gitpoap.io"],

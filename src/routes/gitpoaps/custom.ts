@@ -354,9 +354,18 @@ customGitPOAPsRouter.put('/reject/:id', jwtWithAdminOAuth(), async (req, res) =>
   return res.status(200).send(`Rejected`);
 });
 
-customGitPOAPsRouter.put('/claims', jwtWithAddress(), async (req, res) => {
-  const logger = createScopedLogger('PUT /gitpoaps/custom/claims');
-  const endTimer = httpRequestDurationSeconds.startTimer('PUT', '/gitpoaps/custom/claims');
+customGitPOAPsRouter.put('/:gitPOAPRequestId/claims', jwtWithAddress(), async (req, res) => {
+  const logger = createScopedLogger('PUT /gitpoaps/custom/:gitPOAPRequestId/claims');
+  const endTimer = httpRequestDurationSeconds.startTimer(
+    'PUT',
+    '/gitpoaps/custom/:gitPOAPRequestId/claims',
+  );
+
+  logger.debug(`Body: ${JSON.stringify(req.body)}, Params: ${JSON.stringify(req.params)}`);
+
+  const gitPOAPRequestId = parseInt(req.params.gitPOAPRequestId, 10);
+
+  logger.info(`Request to create new Claims for custom GitPOAP Request ID ${gitPOAPRequestId}`);
 
   const schemaResult = CreateCustomGitPOAPClaimsSchema.safeParse(req.body);
 
@@ -369,9 +378,7 @@ customGitPOAPsRouter.put('/claims', jwtWithAddress(), async (req, res) => {
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
-  const { gitPOAPRequestId, contributors } = schemaResult.data;
-
-  logger.info(`Request to create new Claims for custom GitPOAP Request ID ${gitPOAPRequestId}`);
+  const { contributors } = schemaResult.data;
 
   const gitPOAPRequest = await context.prisma.gitPOAPRequest.findUnique({
     where: { id: gitPOAPRequestId },
@@ -449,7 +456,7 @@ customGitPOAPsRouter.delete('/:gitPOAPRequestId/claim', jwtWithAddress(), async 
     '/gitpoaps/custom/:gitPOAPRequestId/claim',
   );
 
-  logger.debug(`Body: ${JSON.stringify(req.body)}`);
+  logger.debug(`Body: ${JSON.stringify(req.body)}, Params: ${JSON.stringify(req.params)}`);
 
   const gitPOAPRequestId = parseInt(req.params.gitPOAPRequestId, 10);
 
