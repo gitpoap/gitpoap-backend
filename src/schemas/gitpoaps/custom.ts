@@ -28,7 +28,6 @@ export const CustomGitPOAPContributorsSchema = z
   .strict();
 
 export const CreateCustomGitPOAPClaimsSchema = z.object({
-  gitPOAPRequestId: z.number(),
   contributors: CustomGitPOAPContributorsSchema,
 });
 
