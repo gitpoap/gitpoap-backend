@@ -32,3 +32,16 @@ export const CreateGitPOAPProjectSchema = z.union([
 export const UploadGitPOAPCodesSchema = z.object({
   id: z.string().nonempty(),
 });
+
+export const GitPOAPContributorsSchema = z
+  .object({
+    githubHandles: z.array(z.string()).optional(),
+    ethAddresses: z.array(z.string()).optional(),
+    ensNames: z.array(z.string()).optional(),
+    emails: z.array(z.string().email()).optional(),
+  })
+  .strict();
+
+export const CreateGitPOAPClaimsSchema = z.object({
+  contributors: GitPOAPContributorsSchema,
+});
