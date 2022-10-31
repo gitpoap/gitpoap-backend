@@ -1,3 +1,4 @@
+import { GitPOAPRequest } from '@prisma/client';
 import { WebClient } from '@slack/web-api';
 import { SLACK_TOKEN } from '../environment';
 import { createScopedLogger } from '../logging';
@@ -29,19 +30,25 @@ const sendSlackMessage = async (message: string, channelId: string) => {
   }
 };
 
-const sendInternalMessage = async (message: string) =>
-  await sendSlackMessage(message, CHANNELS.gitpoap.alerts);
+const sendInternalMessage = async (message: string) => {
+  const logger = createScopedLogger('sendInternalMessage');
+  try {
+    await sendSlackMessage(message, CHANNELS.gitpoap.alerts);
+  } catch (e) {
+    logger.error(`${e}`);
+  }
+};
 
 export const sendInternalClaimMessage = async (
   claims: number[],
   githubHandle: string,
   address: string,
 ) => {
-  const logger = createScopedLogger('sendInternalClaimMessage');
-  try {
-    const msg = `💸 Claimed GitPOAP(s) ${claims} for GitHub user ${githubHandle} with address ${address} 🥳`;
-    await sendInternalMessage(msg);
-  } catch (e) {
-    logger.error(`${e}`);
-  }
+  const msg = `💸 Claimed GitPOAP(s) ${claims} for GitHub user ${githubHandle} with address ${address} 🥳`;
+  await sendInternalMessage(msg);
+};
+
+export const sentInternalGitPOAPRequestMessage = async ({ id, name }: GitPOAPRequest) => {
+  const msg = `📬 Received request to create GitPOAP - Request ID: ${id}, Name: ${name}. View https://gitpoap.io/admin/gitpoaps/requests to view more information`;
+  await sendInternalMessage(msg);
 };
