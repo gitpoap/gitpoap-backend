@@ -431,8 +431,6 @@ customGitPOAPsRouter.put('/:gitPOAPRequestId/claims', jwtWithAddress(), async (r
     data: { contributors: newContributors },
   });
 
-  logger.info(`Updated contributor JSON for GitPOAPRequest ID ${gitPOAPRequestId}`);
-
   logger.debug(`Completed request to create new Claims for GitPOAPRequest ID ${gitPOAPRequestId}`);
 
   endTimer({ status: 200 });
@@ -494,6 +492,9 @@ customGitPOAPsRouter.delete('/:gitPOAPRequestId/claim', jwtWithAddress(), async 
     return res.status(401).send({ msg: 'Not GitPOAPRequest creator' });
   }
 
+  // This could happen if the admin approval request is put in around the same time
+  // that the creator is trying to add new contributors, i.e. that the conversion
+  // from GitPOAPRequest to GitPOAP hasn't completed yet.
   if (gitPOAPRequest.adminApprovalStatus === AdminApprovalStatus.APPROVED) {
     const msg = `GitPOAPRequest with ID ${gitPOAPRequestId} is already APPROVED`;
     logger.warn(msg);
