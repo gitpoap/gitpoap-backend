@@ -78,14 +78,14 @@ export class CustomOrganizationResolver {
   async allOrganizations(
     @Ctx() { prisma }: Context,
     @Arg('sort', { defaultValue: 'alphabetical' }) sort: string,
-    @Arg('searchValue', { defaultValue: null }) searchValue?: string,
+    @Arg('search', { defaultValue: null }) search?: string,
     @Arg('perPage', { defaultValue: null }) perPage?: number,
     @Arg('page', { defaultValue: null }) page?: number,
   ): Promise<Organization[] | null> {
     const logger = createScopedLogger('GQL allOrganizations');
 
     logger.info(
-      `Request for all organizations using sort ${sort}, searchValue ${searchValue} with ${perPage} results per page and page ${page}`,
+      `Request for all organizations using sort ${sort}, search ${search} with ${perPage} results per page and page ${page}`,
     );
 
     const endTimer = gqlRequestDurationSeconds.startTimer('allOrganizations');
@@ -114,16 +114,16 @@ export class CustomOrganizationResolver {
       return null;
     }
 
-    if (searchValue && searchValue.length < 2) {
-      logger.warn('"searchValue" must has more than 2 characters');
+    if (search && search.length < 2) {
+      logger.warn('"search" must has more than 2 characters');
       endTimer({ success: 0 });
       return null;
     }
 
     let where: Prisma.OrganizationWhereInput | undefined;
-    if (searchValue)
+    if (search)
       where = {
-        name: { contains: searchValue, mode: 'insensitive' },
+        name: { contains: search, mode: 'insensitive' },
       };
 
     const results = await prisma.organization.findMany({
