@@ -433,6 +433,7 @@ type Query {
   allOrganizations(
     page: Float = null
     perPage: Float = null
+    search: String = null
     sort: String = "alphabetical"
   ): [Organization!]
   organizationRepos(
