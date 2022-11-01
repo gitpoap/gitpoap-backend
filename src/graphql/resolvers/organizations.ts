@@ -114,6 +114,12 @@ export class CustomOrganizationResolver {
       return null;
     }
 
+    if (searchValue && searchValue.length < 2) {
+      logger.warn('"searchValue" must has more than 2 characters');
+      endTimer({ success: 0 });
+      return null;
+    }
+
     let where: Prisma.OrganizationWhereInput | undefined;
     if (searchValue)
       where = {
