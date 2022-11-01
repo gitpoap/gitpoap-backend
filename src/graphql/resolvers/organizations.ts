@@ -78,13 +78,14 @@ export class CustomOrganizationResolver {
   async allOrganizations(
     @Ctx() { prisma }: Context,
     @Arg('sort', { defaultValue: 'alphabetical' }) sort: string,
+    @Arg('searchValue', { defaultValue: null }) searchValue?: string,
     @Arg('perPage', { defaultValue: null }) perPage?: number,
     @Arg('page', { defaultValue: null }) page?: number,
   ): Promise<Organization[] | null> {
     const logger = createScopedLogger('GQL allOrganizations');
 
     logger.info(
-      `Request for all organizations using sort ${sort}, with ${perPage} results per page and page ${page}`,
+      `Request for all organizations using sort ${sort}, searchValue ${searchValue} with ${perPage} results per page and page ${page}`,
     );
 
     const endTimer = gqlRequestDurationSeconds.startTimer('allOrganizations');
@@ -113,10 +114,17 @@ export class CustomOrganizationResolver {
       return null;
     }
 
+    let where: Prisma.OrganizationWhereInput | undefined;
+    if (searchValue)
+      where = {
+        name: { contains: searchValue, mode: 'insensitive' },
+      };
+
     const results = await prisma.organization.findMany({
       orderBy,
       skip: page ? (page - 1) * <number>perPage : undefined,
       take: perPage ?? undefined,
+      where,
     });
 
     logger.info(
