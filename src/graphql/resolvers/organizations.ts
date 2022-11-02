@@ -85,7 +85,7 @@ export class CustomOrganizationResolver {
     const logger = createScopedLogger('GQL allOrganizations');
 
     logger.info(
-      `Request for all organizations using sort ${sort}, search ${search} with ${perPage} results per page and page ${page}`,
+      `Request for all organizations using sort ${sort}, search '${search}' with ${perPage} results per page and page ${page}`,
     );
 
     const endTimer = gqlRequestDurationSeconds.startTimer('allOrganizations');
@@ -115,7 +115,7 @@ export class CustomOrganizationResolver {
     }
 
     if (search && search.length < 2) {
-      logger.warn('"search" must has more than 2 characters');
+      logger.debug('"search" must has more than 2 characters');
       endTimer({ success: 0 });
       return null;
     }
@@ -134,7 +134,7 @@ export class CustomOrganizationResolver {
     });
 
     logger.info(
-      `Request for all organizations using sort ${sort}, with ${perPage} results per page and page ${page}`,
+      `Request for all organizations using sort ${sort}, search '${search}' with ${perPage} results per page and page ${page}`,
     );
 
     endTimer({ success: 1 });
