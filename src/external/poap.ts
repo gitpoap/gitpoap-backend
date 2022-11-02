@@ -402,3 +402,54 @@ export async function createPOAPEvent({
 
   return await makeGenericPOAPRequest(`${POAP_API_URL}/events`, 'POST', headers, form);
 }
+
+type EventPOAPTokenInfo = {
+  id: string;
+  created: string;
+  owner: {
+    id: string;
+  };
+};
+
+const MAX_EVENT_POAP_TOKENS_PER_PAGE = 300;
+
+async function retrievePagedPOAPsForEvent(
+  poapEventId: number,
+  page: number = 0,
+  perPage: number = MAX_EVENT_POAP_TOKENS_PER_PAGE,
+): Promise<EventPOAPTokenInfo[] | null> {
+  const offset = perPage * page;
+
+  const poapResponse = await makePOAPRequest(
+    `${POAP_API_URL}/event/${poapEventId}/poaps?page=${page}&offset=${offset}`,
+    'GET',
+    null,
+  );
+
+  if (poapResponse === null) {
+    return null;
+  }
+
+  return poapResponse.tokens;
+}
+
+export async function retrievePOAPsForEvent(
+  poapEventId: number,
+): Promise<EventPOAPTokenInfo[] | null> {
+  let tokens: EventPOAPTokenInfo[] = [];
+  let lastCount = MAX_EVENT_POAP_TOKENS_PER_PAGE;
+
+  for (let page = 0; lastCount === MAX_EVENT_POAP_TOKENS_PER_PAGE; ++page) {
+    const tokensPage = await retrievePagedPOAPsForEvent(poapEventId, page);
+
+    if (tokensPage === null) {
+      return null;
+    }
+
+    tokens = tokens.concat(tokensPage);
+
+    lastCount = tokensPage.length;
+  }
+
+  return tokens;
+}
