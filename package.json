@@ -37,7 +37,8 @@
     "test:quick-integration": "TEST_ENV=integration docker-compose up --no-deps --build integration-tests",
     "test:all": "yarn build && yarn test:unit && yarn test:integration",
     "heat-up-ens-cache": "APP_NAME=heat-up-ens-cache ts-node-dev ./scripts/heat-up-ens-cache.ts",
-    "first-users": "APP_NAME=first-users ts-node-dev ./scripts/first-users.ts"
+    "first-users": "APP_NAME=first-users ts-node-dev ./scripts/first-users.ts",
+    "poap-to-gitpoap": "APP_NAME=poap-to-gitpoap ts-node-dev ./scripts/poap-to-gitpoap.ts"
   },
   "devDependencies": {
     "@types/badgen": "^2.7.1",
