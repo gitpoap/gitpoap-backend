@@ -39,7 +39,8 @@ export const sendInternalClaimMessage = async (
   githubHandle: string,
   address: string,
 ) => {
-  const msg = `💸 Claimed GitPOAP(s) ${claims} for GitHub user ${githubHandle} with address ${address} 🥳`;
+  const profileLink = `<https://www.gitpoap.io/p/${address}|GitPOAP Profile>`
+  const msg = `💸 Claimed GitPOAP(s) ${claims} for GitHub user ${githubHandle} with address ${address} (${profileLink}) 🥳`;
   await sendInternalMessage(msg);
 };
 
