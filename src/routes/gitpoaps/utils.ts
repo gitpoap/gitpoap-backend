@@ -12,3 +12,8 @@ export const generateGitPOAPRequestLink = (customGitPOAPId: number): string => {
   // need to update
   return `${GITPOAP_ROOT_URL}/org/${customGitPOAPId}`;
 };
+
+export const generateGitPOAPRequestLink = (cgId: number): string => {
+  // need to update
+  return `https://www.gitpoap.io/org/${cgId}`;
+};
