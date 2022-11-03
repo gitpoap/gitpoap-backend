@@ -3,6 +3,7 @@ import { WebClient } from '@slack/web-api';
 import { SLACK_TOKEN } from '../environment';
 import { createScopedLogger } from '../logging';
 import { FoundClaim } from '../types/claims';
+import { shortenAddress } from '../lib/addresses';
 
 const slackClient = new WebClient(SLACK_TOKEN);
 
@@ -41,7 +42,7 @@ export const sendInternalClaimMessage = async (
   address: string,
 ) => {
   const profileLink = `<https://www.gitpoap.io/p/${address}|GitPOAP Profile>`;
-  const etherscanLink = `<https://etherscan.io/address/${address}|${address}>`;
+  const etherscanLink = `<https://etherscan.io/address/${address}|${shortenAddress(address)}>`;
   const githubLink = `<https://github.com/${githubHandle}|${githubHandle}>`;
   const topMsg = `💸 [${profileLink}]: GitHub user ${githubLink} with address ${etherscanLink} claimed new GitPOAP(s)! 🥳`;
   let list = '';
