@@ -33,6 +33,8 @@ import {
 import { getRequestLogger } from '../../middleware/loggingAndTiming';
 import { GITPOAP_ISSUER_EMAIL } from '../../constants';
 import { upsertEmail } from '../../lib/emails';
+import { sendCGRequestSubmissionConfirmationEmail } from '../../external/postmark';
+import { CGRequestEmailForm } from '../../types/gitpoaps';
 
 export const customGitPOAPsRouter = Router();
 
@@ -99,7 +101,7 @@ customGitPOAPsRouter.post(
     }
 
     let project: { id: number } | null = null;
-    let organization: { id: number } | null = null;
+    let organization: { id: number; name: string } | null = null;
 
     /* If a GitPOAPRequest is tied to project */
     if (schemaResult.data.projectId) {
@@ -128,7 +130,7 @@ customGitPOAPsRouter.post(
       );
       organization = await context.prisma.organization.findUnique({
         where: { id: organizationId },
-        select: { id: true },
+        select: { id: true, name: true },
       });
 
       if (organization === null) {
@@ -186,6 +188,16 @@ customGitPOAPsRouter.post(
 
     /* Send message to slack */
     void sentInternalGitPOAPRequestMessage(gitPOAPRequest);
+    /* Send CG request submission confirmation email */
+    const emailForm: CGRequestEmailForm = {
+      email: req.body.name,
+      name: req.body.email,
+      description: req.body.description,
+      imageKey,
+      organizationId: organization?.id,
+      organizationName: organization?.name,
+    };
+    void sendCGRequestSubmissionConfirmationEmail(emailForm);
 
     logger.info(
       `Completed request to create a new GitPOAP Request with ID: ${gitPOAPRequest.id} "${schemaResult.data.name}" for project ${project?.id} and organization ${organization?.id}`,
