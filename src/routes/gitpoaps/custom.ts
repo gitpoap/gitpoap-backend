@@ -34,8 +34,11 @@ import {
 import { getRequestLogger } from '../../middleware/loggingAndTiming';
 import { GITPOAP_ISSUER_EMAIL } from '../../constants';
 import { upsertEmail } from '../../lib/emails';
-import { sendCGRequestEmail } from '../../external/postmark';
-import { CGRequestEmailForm, CGRequestEmailAlias } from '../../types/gitpoaps';
+import {
+  sendCustomGitPOAPRequestConfirmationEmail,
+  sendCustomGitPOAPRequestRejectionEmail,
+} from '../../external/postmark';
+import { CustomGitPOAPRequestEmailForm } from '../../types/gitpoaps';
 
 export const customGitPOAPsRouter = Router();
 
@@ -190,16 +193,16 @@ customGitPOAPsRouter.post(
     /* Send message to slack */
     void sentInternalGitPOAPRequestMessage(gitPOAPRequest);
     /* Send CG request submission confirmation email */
-    const emailForm: CGRequestEmailForm = {
+    const emailForm: CustomGitPOAPRequestEmailForm = {
       id: gitPOAPRequest.id,
-      email: req.body.name,
-      name: req.body.email,
-      description: req.body.description,
+      email: gitPOAPRequest.name,
+      name: gitPOAPRequest.email,
+      description: gitPOAPRequest.description,
       imageKey,
       organizationId: organization?.id ?? null,
       organizationName: organization?.name ?? null,
     };
-    void sendCGRequestEmail(CGRequestEmailAlias.RECEIVED, emailForm);
+    void sendCustomGitPOAPRequestConfirmationEmail(emailForm);
 
     logger.info(
       `Completed request to create a new GitPOAP Request with ID: ${gitPOAPRequest.id} "${schemaResult.data.name}" for project ${project?.id} and organization ${organization?.id}`,
@@ -346,8 +349,8 @@ customGitPOAPsRouter.put('/reject/:id', jwtWithAdminAddress(), async (req, res) 
     });
   }
 
-  /* Send CG request submission confirmation email */
-  const emailForm: CGRequestEmailForm = {
+  /* Send CG request rejection email */
+  const emailForm: CustomGitPOAPRequestEmailForm = {
     id: gitPOAPRequest.id,
     email: gitPOAPRequest.name,
     name: gitPOAPRequest.email,
@@ -356,7 +359,7 @@ customGitPOAPsRouter.put('/reject/:id', jwtWithAdminAddress(), async (req, res) 
     organizationId: organization?.id ?? null,
     organizationName: organization?.name ?? null,
   };
-  void sendCGRequestEmail(CGRequestEmailAlias.REJECTED, emailForm);
+  void sendCustomGitPOAPRequestRejectionEmail(emailForm);
 
   logger.info(
     `Completed admin request to reject Custom GitPOAP with Request ID:${gitPOAPRequest.id}`,
