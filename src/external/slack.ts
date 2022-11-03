@@ -2,6 +2,7 @@ import { GitPOAPRequest } from '@prisma/client';
 import { WebClient } from '@slack/web-api';
 import { SLACK_TOKEN } from '../environment';
 import { createScopedLogger } from '../logging';
+import { FoundClaim } from '../types/claims';
 
 const slackClient = new WebClient(SLACK_TOKEN);
 
@@ -35,7 +36,7 @@ const sendInternalMessage = async (message: string) =>
 
 /** -- Use-case specific slack messages -- **/
 export const sendInternalClaimMessage = async (
-  claims: number[],
+  claims: FoundClaim[],
   githubHandle: string,
   address: string,
 ) => {
@@ -45,7 +46,7 @@ export const sendInternalClaimMessage = async (
   const topMsg = `💸 GitHub user ${githubLink} with address ${etherscanLink} (${profileLink}) Claimed new GitPOAP(s)! 🥳`;
   let list = '';
   for (const claim of claims) {
-    list += `\n* <https://www.gitpoap.io/gp/${claim}|GitPOAP ID ${claim}>`
+    list += `\n* <https://www.gitpoap.io/gp/${claim.gitPOAPId}|[GitPOAP ID ${claim.gitPOAPId}]: ${claim.gitPOAPName}>`;
   }
   await sendInternalMessage(topMsg + list);
 };
