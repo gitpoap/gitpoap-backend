@@ -8,7 +8,8 @@ import { Request, Router } from 'express';
 import { z } from 'zod';
 import { context } from '../../context';
 import { createPOAPEvent } from '../../external/poap';
-import { jwtWithAdminAddress, jwtWithAddress } from '../../middleware/auth';
+import { createScopedLogger } from '../../logging';
+import { jwtWithAdminAddress, jwtWithAddress, gitpoapBotAuth } from '../../middleware';
 import multer from 'multer';
 import { generatePOAPSecret } from '../../lib/secrets';
 import { DateTime } from 'luxon';
@@ -190,6 +191,7 @@ customGitPOAPsRouter.post(
     void sentInternalGitPOAPRequestMessage(gitPOAPRequest);
     /* Send CG request submission confirmation email */
     const emailForm: CGRequestEmailForm = {
+      id: gitPOAPRequest.id,
       email: req.body.name,
       name: req.body.email,
       description: req.body.description,
@@ -346,6 +348,7 @@ customGitPOAPsRouter.put('/reject/:id', jwtWithAdminAddress(), async (req, res) 
 
   /* Send CG request submission confirmation email */
   const emailForm: CGRequestEmailForm = {
+    id: gitPOAPRequest.id,
     email: gitPOAPRequest.name,
     name: gitPOAPRequest.email,
     description: gitPOAPRequest.description,
