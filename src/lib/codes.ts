@@ -1,10 +1,13 @@
 import { context } from '../context';
-import { GitPOAPStatus, RedeemCode } from '@generated/type-graphql';
+import { GitPOAPType } from '@prisma/client';
+import { GitPOAPStatus, RedeemCode, Organization, Address } from '@generated/type-graphql';
 import { createScopedLogger } from '../logging';
 import { retrieveUnusedPOAPCodes } from '../external/poap';
 import { DateTime } from 'luxon';
 import { lookupLastRun, updateLastRun } from './batchProcessing';
 import { backloadGithubPullRequestData } from './pullRequests';
+import { CustomGitPOAPRequestEmailForm } from '../types/gitpoaps';
+import { sendCustomGitPOAPRequestLiveEmail } from '../external/postmark';
 
 // The name of the row in the BatchTiming table used for checking for new codes
 const CHECK_FOR_CODES_BATCH_TIMING_KEY = 'check-for-codes';
@@ -43,6 +46,12 @@ export type GitPOAPWithSecret = {
   poapApprovalStatus: string;
   poapEventId: number;
   poapSecret: string;
+  type: GitPOAPType;
+  name: string;
+  description: string;
+  organization: Organization | null;
+  creatorAddress: Address | null;
+  imageUrl: string;
 };
 
 async function lookupRepoIds(gitPOAPId: number): Promise<number[]> {
@@ -121,6 +130,28 @@ export async function checkGitPOAPForNewCodes(gitPOAP: GitPOAPWithSecret): Promi
     // If we just got the first codes for a GitPOAP, we need to backload
     // its repos so that claims are created
     if (gitPOAP.poapApprovalStatus === GitPOAPStatus.UNAPPROVED) {
+      // if it is custom gitPOAP, we send an email for approval
+      if (gitPOAP.type === GitPOAPType.CUSTOM) {
+        // if email exists
+        if (
+          gitPOAP.creatorAddress &&
+          gitPOAP.creatorAddress.email &&
+          gitPOAP.creatorAddress.email.emailAddress
+        ) {
+          const emailForm: CustomGitPOAPRequestEmailForm = {
+            id: gitPOAP.id,
+            name: gitPOAP.name,
+            email: gitPOAP.creatorAddress.email.emailAddress,
+            description: gitPOAP.description,
+            imageKey: gitPOAP.imageUrl,
+            organizationId: gitPOAP.organization?.id ?? null,
+            organizationName: gitPOAP.organization?.name ?? null,
+          };
+          void sendCustomGitPOAPRequestLiveEmail(emailForm);
+        }
+      }
+
+      // return repo ids
       return lookupRepoIds(gitPOAP.id);
     }
   }
@@ -143,6 +174,12 @@ export async function checkForNewPOAPCodes() {
       poapApprovalStatus: true,
       poapEventId: true,
       poapSecret: true,
+      name: true,
+      type: true,
+      description: true,
+      organization: true,
+      creatorAddress: true,
+      imageUrl: true,
     },
   });
 
