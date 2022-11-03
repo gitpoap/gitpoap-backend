@@ -5,7 +5,11 @@ import { z } from 'zod';
 import { formatRepos } from '../routes/onboarding/utils';
 import { IntakeForm } from '../routes/onboarding/types';
 import { CGRequestEmailForm, CGRequestEmailAlias } from '../types/gitpoaps';
-import { generateS3ImageUrl, generateOrganizationLink } from '../routes/gitpoaps/utils';
+import {
+  generateS3ImageUrl,
+  generateOrganizationLink,
+  generateGitPOAPRequestLink,
+} from '../routes/gitpoaps/utils';
 import { createScopedLogger } from '../logging';
 
 export const postmarkClient = new ServerClient(POSTMARK_SERVER_TOKEN);
@@ -152,6 +156,7 @@ export const sendCGRequestEmail = async (
       product_url: 'gitpoap.io',
       product_name: 'GitPOAP',
       gitpoap_name: formData.name,
+      gitpoap_link: generateGitPOAPRequestLink(formData.id),
       gitpoap_image: generateS3ImageUrl(formData.imageKey),
       gitpoap_description: formData.description,
       organization_link: formData?.organizationId
