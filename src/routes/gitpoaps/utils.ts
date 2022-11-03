@@ -1,12 +1,14 @@
+import { GITPOAP_ROOT_URL, AWS_S3_ROOT_URL } from '../../environment';
+
 export const generateS3ImageUrl = (imageKey: string): string => {
-  return `https://s3.us-east-2.amazonaws.com/${imageKey}`;
+  return `${AWS_S3_ROOT_URL}/${imageKey}`;
 };
 
 export const generateOrganizationLink = (orgId: number): string => {
-  return `https://www.gitpoap.io/org/${orgId}`;
+  return `${GITPOAP_ROOT_URL}/org/${orgId}`;
 };
 
-export const generateGitPOAPRequestLink = (cgId: number): string => {
+export const generateGitPOAPRequestLink = (customGitPOAPId: number): string => {
   // need to update
-  return `https://www.gitpoap.io/org/${cgId}`;
+  return `${GITPOAP_ROOT_URL}/org/${customGitPOAPId}`;
 };

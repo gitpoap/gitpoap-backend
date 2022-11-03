@@ -4,7 +4,7 @@ import { IntakeFormReposSchema } from '../schemas/onboarding';
 import { z } from 'zod';
 import { formatRepos } from '../routes/onboarding/utils';
 import { IntakeForm } from '../routes/onboarding/types';
-import { CGRequestEmailForm, CGRequestEmailAlias } from '../types/gitpoaps';
+import { CustomGitPOAPRequestEmailForm, CustomGitPOAPRequestEmailAlias } from '../types/gitpoaps';
 import {
   generateS3ImageUrl,
   generateOrganizationLink,
@@ -144,9 +144,20 @@ export const sendInternalConfirmationEmail = async (
   });
 };
 
-export const sendCGRequestEmail = async (
-  alias: CGRequestEmailAlias,
-  formData: CGRequestEmailForm,
+export const sendCustomGitPOAPRequestConfirmationEmail = async (
+  formData: CustomGitPOAPRequestEmailForm,
+) => await sendCustomGitPOAPRequestEmail(CustomGitPOAPRequestEmailAlias.RECEIVED, formData);
+
+export const sendCustomGitPOAPRequestRejectionEmail = async (
+  formData: CustomGitPOAPRequestEmailForm,
+) => await sendCustomGitPOAPRequestEmail(CustomGitPOAPRequestEmailAlias.REJECTED, formData);
+
+export const sendCustomGitPOAPRequestLiveEmail = async (formData: CustomGitPOAPRequestEmailForm) =>
+  await sendCustomGitPOAPRequestEmail(CustomGitPOAPRequestEmailAlias.LIVE, formData);
+
+export const sendCustomGitPOAPRequestEmail = async (
+  alias: CustomGitPOAPRequestEmailAlias,
+  formData: CustomGitPOAPRequestEmailForm,
 ) =>
   await sendEmailWithTemplateHandler({
     to: formData.email,
