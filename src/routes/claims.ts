@@ -34,6 +34,7 @@ import { sendInternalClaimMessage } from '../external/slack';
 import { isAddressAnAdmin } from '../lib/admins';
 import { getAccessTokenPayload } from '../types/authTokens';
 import { ensureRedeemCodeThreshold } from '../lib/claims';
+import { FoundClaim } from '../types/claims';
 
 export const claimsRouter = Router();
 
@@ -107,7 +108,7 @@ claimsRouter.post('/', jwtWithGitHubOAuth(), async function (req, res) {
 
   logger.info(`Request claiming IDs ${req.body.claimIds} for address ${address}`);
 
-  const foundClaims: number[] = [];
+  const foundClaims: FoundClaim[] = [];
   const qrHashes: string[] = [];
   const invalidClaims: { claimId: number; reason: string }[] = [];
 
@@ -204,7 +205,11 @@ claimsRouter.post('/', jwtWithGitHubOAuth(), async function (req, res) {
 
       continue;
     }
-    foundClaims.push(claimId);
+    foundClaims.push({
+      claimId,
+      gitPOAPId: claim.gitPOAP.id,
+      gitPOAPName: claim.gitPOAP.name,
+    });
     qrHashes.push(poapData.qr_hash);
 
     // Mark that the POAP has been claimed
@@ -224,13 +229,15 @@ claimsRouter.post('/', jwtWithGitHubOAuth(), async function (req, res) {
     void ensureRedeemCodeThreshold(claim.gitPOAP);
   }
 
+  const claimedIds = foundClaims.map((foundClaim: FoundClaim) => foundClaim.claimId);
+
   if (invalidClaims.length > 0) {
     logger.warn(`Some claims were invalid: ${JSON.stringify(invalidClaims)}`);
 
     // Return 400 iff no claims were completed
     if (foundClaims.length === 0) {
       return res.status(400).send({
-        claimed: foundClaims,
+        claimed: claimedIds,
         invalid: invalidClaims,
       });
     }
@@ -243,11 +250,11 @@ claimsRouter.post('/', jwtWithGitHubOAuth(), async function (req, res) {
   endTimer({ status: 200 });
 
   res.status(200).send({
-    claimed: foundClaims,
+    claimed: claimedIds,
     invalid: [],
   });
 
-  await runClaimsPostProcessing(foundClaims, qrHashes);
+  await runClaimsPostProcessing(claimedIds, qrHashes);
 });
 
 claimsRouter.post('/create', jwtWithAdminOAuth(), async function (req, res) {
