@@ -43,7 +43,7 @@ export const sendInternalClaimMessage = async (
   const profileLink = `<https://www.gitpoap.io/p/${address}|GitPOAP Profile>`;
   const etherscanLink = `<https://etherscan.io/address/${address}|${address}>`;
   const githubLink = `<https://github.com/${githubHandle}|${githubHandle}>`;
-  const topMsg = `💸 GitHub user ${githubLink} with address ${etherscanLink} (${profileLink}) Claimed new GitPOAP(s)! 🥳`;
+  const topMsg = `💸 [${profileLink}]: GitHub user ${githubLink} with address ${etherscanLink} claimed new GitPOAP(s)! 🥳`;
   let list = '';
   for (const claim of claims) {
     list += `\n* <https://www.gitpoap.io/gp/${claim.gitPOAPId}|[GitPOAP ID ${claim.gitPOAPId}]: ${claim.gitPOAPName}>`;
