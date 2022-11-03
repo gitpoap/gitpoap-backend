@@ -168,7 +168,10 @@ export const sendCustomGitPOAPRequestEmail = async (
       product_name: 'GitPOAP',
       gitpoap_name: formData.name,
       gitpoap_link: generateGitPOAPRequestLink(formData.id),
-      gitpoap_image: generateS3ImageUrl(formData.imageKey),
+      gitpoap_image:
+        alias === CustomGitPOAPRequestEmailAlias.LIVE
+          ? formData.imageKey
+          : generateS3ImageUrl(formData.imageKey),
       gitpoap_description: formData.description,
       organization_link: formData?.organizationId
         ? generateOrganizationLink(formData?.organizationId)
