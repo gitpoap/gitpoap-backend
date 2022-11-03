@@ -33,8 +33,8 @@ import {
 import { getRequestLogger } from '../../middleware/loggingAndTiming';
 import { GITPOAP_ISSUER_EMAIL } from '../../constants';
 import { upsertEmail } from '../../lib/emails';
-import { sendCGRequestSubmissionConfirmationEmail } from '../../external/postmark';
-import { CGRequestEmailForm } from '../../types/gitpoaps';
+import { sendCGRequestEmail } from '../../external/postmark';
+import { CGRequestEmailForm, CGRequestEmailAlias } from '../../types/gitpoaps';
 
 export const customGitPOAPsRouter = Router();
 
@@ -194,10 +194,10 @@ customGitPOAPsRouter.post(
       name: req.body.email,
       description: req.body.description,
       imageKey,
-      organizationId: organization?.id,
-      organizationName: organization?.name,
+      organizationId: organization?.id ?? null,
+      organizationName: organization?.name ?? null,
     };
-    void sendCGRequestSubmissionConfirmationEmail(emailForm);
+    void sendCGRequestEmail(CGRequestEmailAlias.RECEIVED, emailForm);
 
     logger.info(
       `Completed request to create a new GitPOAP Request with ID: ${gitPOAPRequest.id} "${schemaResult.data.name}" for project ${project?.id} and organization ${organization?.id}`,
@@ -335,6 +335,30 @@ customGitPOAPsRouter.put('/reject/:id', jwtWithAdminAddress(), async (req, res) 
   });
 
   logger.info(`Completed admin request to reject GitPOAPRequest ID ${gitPOAPRequest.id}`);
+  /* Find organization */
+  let organization: { id: number; name: string } | null = null;
+  if (gitPOAPRequest.organizationId) {
+    organization = await context.prisma.organization.findUnique({
+      where: { id: gitPOAPRequest.organizationId },
+      select: { id: true, name: true },
+    });
+  }
+
+  /* Send CG request submission confirmation email */
+  const emailForm: CGRequestEmailForm = {
+    email: gitPOAPRequest.name,
+    name: gitPOAPRequest.email,
+    description: gitPOAPRequest.description,
+    imageKey: gitPOAPRequest.imageKey,
+    organizationId: organization?.id ?? null,
+    organizationName: organization?.name ?? null,
+  };
+  void sendCGRequestEmail(CGRequestEmailAlias.REJECTED, emailForm);
+
+  logger.info(
+    `Completed admin request to reject Custom GitPOAP with Request ID:${gitPOAPRequest.id}`,
+  );
+  endTimer({ status: 200 });
 
   return res.status(200).send('REJECTED');
 });

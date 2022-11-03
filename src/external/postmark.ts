@@ -4,7 +4,7 @@ import { IntakeFormReposSchema } from '../schemas/onboarding';
 import { z } from 'zod';
 import { formatRepos } from '../routes/onboarding/utils';
 import { IntakeForm } from '../routes/onboarding/types';
-import { CGRequestEmailForm } from '../types/gitpoaps';
+import { CGRequestEmailForm, CGRequestEmailAlias } from '../types/gitpoaps';
 import { generateS3ImageUrl, generateOrganizationLink } from '../routes/gitpoaps/utils';
 import { createScopedLogger } from '../logging';
 
@@ -140,34 +140,14 @@ export const sendInternalConfirmationEmail = async (
   });
 };
 
-export const sendCGRequestSubmissionConfirmationEmail = async (formData: CGRequestEmailForm) =>
+export const sendCGRequestEmail = async (
+  alias: CGRequestEmailAlias,
+  formData: CGRequestEmailForm,
+) =>
   await sendEmailWithTemplateHandler({
     to: formData.email,
     from: 'team@gitpoap.io',
-    alias: 'cg-received',
-    templateModel: {
-      product_url: 'gitpoap.io',
-      product_name: 'GitPOAP',
-      gitpoap_name: formData.name,
-      gitpoap_image: generateS3ImageUrl(formData.imageKey),
-      gitpoap_description: formData.description,
-      organization_link: formData?.organizationId
-        ? generateOrganizationLink(formData?.organizationId)
-        : '',
-      organization_name: formData?.organizationName ?? '',
-      support_email: 'team@gitpoap.io',
-      company_name: 'MetaRep Labs Inc',
-      company_address: 'One Broadway, Cambridge MA 02142',
-      sender_name: 'GitPOAP Team',
-      help_url: 'https://docs.gitpoap.io',
-    },
-  });
-
-export const sendCGRequestRejectedEmail = async (formData: CGRequestEmailForm) =>
-  await sendEmailWithTemplateHandler({
-    to: formData.email,
-    from: 'team@gitpoap.io',
-    alias: 'cg-rejected',
+    alias,
     templateModel: {
       product_url: 'gitpoap.io',
       product_name: 'GitPOAP',
