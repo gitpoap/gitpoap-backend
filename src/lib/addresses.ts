@@ -58,3 +58,8 @@ export const addGithubLoginForAddress = async (addressId: number, githubUserId: 
     },
   });
 };
+
+/* Shorten version of the input address ~ 0x + 4 chars @ start + end */
+export function shortenAddress(address: string, chars: number = 4): string {
+  return `${address.substring(0, chars + 2)}...${address.substring(42 - chars)}`;
+}
