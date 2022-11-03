@@ -6,6 +6,7 @@ export type GitPOAPContributors = {
 };
 
 export type CGRequestEmailForm = {
+  id: number;
   email: string;
   name: string;
   description: string;
