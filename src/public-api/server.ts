@@ -7,7 +7,7 @@ import cors from 'cors';
 import { createScopedLogger, updateLogLevel } from '../logging';
 import { registerHandler } from 'segfault-handler';
 import minimist from 'minimist';
-import { errorHandler } from '../middleware';
+import { errorHandler } from '../middleware/error';
 import { startMetricsServer } from '../metrics';
 import { NODE_ENV } from '../environment';
 import {

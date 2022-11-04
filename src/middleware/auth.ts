@@ -1,14 +1,14 @@
 import jwt from 'express-jwt';
-import { context } from './context';
+import { context } from '../context';
 import set from 'lodash/set';
-import { getAccessTokenPayload, getAccessTokenPayloadWithOAuth } from './types/authTokens';
-import { ErrorRequestHandler, RequestHandler } from 'express';
-import { JWT_SECRET } from './environment';
-import { createScopedLogger } from './logging';
-import { GITPOAP_BOT_APP_ID } from './constants';
-import { getGithubAuthenticatedApp } from './external/github';
-import { captureException } from './lib/sentry';
-import { isAddressAnAdmin, isGithubIdAnAdmin } from './lib/admins';
+import { getAccessTokenPayload, getAccessTokenPayloadWithOAuth } from '../types/authTokens';
+import { RequestHandler } from 'express';
+import { JWT_SECRET } from '../environment';
+import { createScopedLogger } from '../logging';
+import { GITPOAP_BOT_APP_ID } from '../constants';
+import { getGithubAuthenticatedApp } from '../external/github';
+import { captureException } from '../lib/sentry';
+import { isAddressAnAdmin, isGithubIdAnAdmin } from '../lib/admins';
 
 const jwtMiddleware = jwt({ secret: JWT_SECRET as string, algorithms: ['HS256'] });
 
@@ -213,15 +213,3 @@ export function gitpoapBotAuth() {
 
   return middleware;
 }
-
-export const errorHandler: ErrorRequestHandler = (err, req, res) => {
-  const logger = createScopedLogger('errorHandler');
-
-  if ('status' in err) {
-    logger.warn(`Returning error status ${err.status} to user: ${err.msg}`);
-    res.status(err.status).send(err.msg);
-  } else {
-    logger.error(`Caught unknown error: ${err}`);
-    res.status(500).send(err.message);
-  }
-};

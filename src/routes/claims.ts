@@ -11,7 +11,7 @@ import {
   jwtWithAddress,
   jwtWithAdminOAuth,
   jwtWithGitHubOAuth,
-} from '../middleware';
+} from '../middleware/auth';
 import { getAccessTokenPayloadWithOAuth } from '../types/authTokens';
 import { redeemPOAP, retrieveClaimInfo } from '../external/poap';
 import { getGithubUserById } from '../external/github';

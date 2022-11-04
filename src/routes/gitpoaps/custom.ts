@@ -8,7 +8,7 @@ import { z } from 'zod';
 import { context } from '../../context';
 import { createPOAPEvent } from '../../external/poap';
 import { createScopedLogger } from '../../logging';
-import { jwtWithAdminAddress, jwtWithAddress } from '../../middleware';
+import { jwtWithAdminAddress, jwtWithAddress } from '../../middleware/auth';
 import multer from 'multer';
 import { httpRequestDurationSeconds } from '../../metrics';
 import { generatePOAPSecret } from '../../lib/secrets';
