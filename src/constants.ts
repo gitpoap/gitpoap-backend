@@ -51,3 +51,5 @@ export const JWT_EXP_TIME_SECONDS = 10 * SECONDS_PER_MINUTE;
 export const SIGNATURE_TTL_MINUTES = 1;
 
 export const LOGIN_EXP_TIME_MONTHS = 1;
+
+export const GITPOAP_ISSUER_EMAIL = 'issuer@gitpoap.io';
