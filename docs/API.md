@@ -397,7 +397,6 @@ for convenience):
   "numRequestedCodes": 10,
   "city": "London", // optional
   "country": "UK", // optional
-  "isEnabled": true // optional (defaults to true)
 }
 ```
 

@@ -169,7 +169,7 @@ customGitPOAPsRouter.post(
         project: project ? { connect: { id: project?.id } } : undefined,
         organization: organization ? { connect: { id: organization?.id } } : undefined,
         ongoing: true,
-        isEnabled: req.body.isEnabled !== 'false',
+        isEnabled: true,
         adminApprovalStatus: AdminApprovalStatus.PENDING,
         contributors: contributors as Prisma.JsonObject,
         isPRBased: false,
@@ -463,7 +463,7 @@ customGitPOAPsRouter.delete('/:gitPOAPRequestId/claim', jwtWithAddress(), async 
   return res.status(200).send('DELETED');
 });
 
-customGitPOAPsRouter.patch(':gitPOAPRequestId', jwtWithAddress(), async (req, res) => {
+customGitPOAPsRouter.patch('/:gitPOAPRequestId', jwtWithAddress(), async (req, res) => {
   const logger = getRequestLogger(req);
 
   const gitPOAPRequestId = parseInt(req.params.gitPOAPRequestId, 10);
