@@ -1,16 +1,13 @@
 import { Router } from 'express';
 import { jwtWithAdminAddress } from '../middleware/auth';
 import { runOngoingIssuanceUpdater, updateOngoingIssuanceLastRun } from '../lib/ongoing';
-import { httpRequestDurationSeconds } from '../metrics';
-import { createScopedLogger } from '../logging';
 import { checkForNewPOAPCodes, updateCheckForNewPOAPCodesLastRun } from '../lib/codes';
+import { getRequestLogger } from '../middleware/loggingAndTiming';
 
 export const triggersRouter = Router();
 
 triggersRouter.get('/ongoing-issuance', jwtWithAdminAddress(), async (req, res) => {
-  const logger = createScopedLogger('GET /triggers/ongoing-issuance');
-
-  const endTimer = httpRequestDurationSeconds.startTimer('GET', '/triggers/ongoing-issuance');
+  const logger = getRequestLogger(req);
 
   logger.info('Admin request to start ongoing issuance now');
 
@@ -23,15 +20,11 @@ triggersRouter.get('/ongoing-issuance', jwtWithAdminAddress(), async (req, res) 
 
   logger.debug('Completed admin request to start ongoing issuance now');
 
-  endTimer({ status: 200 });
-
   return res.status(200).send('STARTED');
 });
 
 triggersRouter.get('/check-for-codes', jwtWithAdminAddress(), async (req, res) => {
-  const logger = createScopedLogger('GET /triggers/check-for-codes');
-
-  const endTimer = httpRequestDurationSeconds.startTimer('GET', '/triggers/check-for-codes');
+  const logger = getRequestLogger(req);
 
   logger.info('Admin request to check for new POAP codes now');
 
@@ -43,8 +36,6 @@ triggersRouter.get('/check-for-codes', jwtWithAdminAddress(), async (req, res) =
   void checkForNewPOAPCodes();
 
   logger.debug('Completed admin request to check for new POAP codes now');
-
-  endTimer({ status: 200 });
 
   return res.status(200).send('STARTED');
 });

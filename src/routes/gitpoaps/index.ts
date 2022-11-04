@@ -8,11 +8,9 @@ import { Request, Router } from 'express';
 import { z } from 'zod';
 import { context } from '../../context';
 import { createPOAPEvent } from '../../external/poap';
-import { createScopedLogger } from '../../logging';
 import { jwtWithAddress, jwtWithAdminAddress, jwtWithAdminOAuth } from '../../middleware/auth';
 import multer from 'multer';
 import { ClaimStatus, GitPOAPStatus, GitPOAPType } from '@prisma/client';
-import { httpRequestDurationSeconds } from '../../metrics';
 import { getAccessTokenPayload, getAccessTokenPayloadWithOAuth } from '../../types/authTokens';
 import { backloadGithubPullRequestData } from '../../lib/pullRequests';
 import {
@@ -25,6 +23,7 @@ import { customGitPOAPsRouter } from './custom';
 import { isAddressAnAdmin } from '../../lib/admins';
 import { convertContributorsFromSchema, createClaimsForContributors } from '../../lib/gitpoaps';
 import { ensureRedeemCodeThreshold } from '../../lib/claims';
+import { getRequestLogger } from '../../middleware/loggingAndTiming';
 
 export const gitPOAPsRouter = Router();
 
@@ -40,24 +39,18 @@ gitPOAPsRouter.post(
   jwtWithAdminOAuth(),
   upload.single('image'),
   async function (req: Request<any, any, CreateGitPOAPReqBody>, res) {
-    const logger = createScopedLogger('POST /gitpoaps');
-
-    logger.debug(`Body: ${JSON.stringify(req.body)}`);
-
-    const endTimer = httpRequestDurationSeconds.startTimer('POST', '/gitpoaps');
+    const logger = getRequestLogger(req);
 
     const schemaResult = CreateGitPOAPSchema.safeParse(req.body);
     if (!schemaResult.success) {
       logger.warn(
         `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
       );
-      endTimer({ status: 400 });
       return res.status(400).send({ issues: schemaResult.error.issues });
     }
     if (!req.file) {
       const msg = 'Missing/invalid "image" upload in request';
       logger.warn(msg);
-      endTimer({ status: 400 });
       return res.status(400).send({ msg });
     }
 
@@ -71,7 +64,6 @@ gitPOAPsRouter.post(
           projectSchemaResult.error.issues,
         )}`,
       );
-      endTimer({ status: 400 });
       return res.status(400).send({ issues: projectSchemaResult.error.issues });
     }
 
@@ -92,7 +84,6 @@ gitPOAPsRouter.post(
       if (project === null) {
         const msg = `Failed to find project with id: ${projectChoice.projectId}`;
         logger.warn(msg);
-        endTimer({ status: 404 });
         return res.status(404).send({ msg });
       }
     } else if ('githubRepoIds' in projectChoice) {
@@ -115,7 +106,6 @@ gitPOAPsRouter.post(
     if (project === null) {
       const msg = `Failed to create a new project.`;
       logger.warn(msg);
-      endTimer({ status: 400 });
       return res.status(400).send({ msg });
     }
 
@@ -143,7 +133,6 @@ gitPOAPsRouter.post(
     });
     if (poapInfo == null) {
       logger.error('Failed to create event via POAP API');
-      endTimer({ status: 500 });
       return res.status(500).send({ msg: 'Failed to create POAP via API' });
     }
 
@@ -178,17 +167,12 @@ gitPOAPsRouter.post(
       `Completed request to create a new GitPOAP "${req.body.name}" for project ${project.id}`,
     );
 
-    endTimer({ status: 201 });
     return res.status(201).send('CREATED');
   },
 );
 
 gitPOAPsRouter.get('/poap-token-id/:id', async function (req, res) {
-  const logger = createScopedLogger('GET /gitpoaps/poap-token-id/:id');
-
-  logger.debug(`Params: ${JSON.stringify(req.params)}`);
-
-  const endTimer = httpRequestDurationSeconds.startTimer('GET', '/gitpoaps/poap-token-id/:id');
+  const logger = getRequestLogger(req);
 
   logger.info(`Request to validate if POAP ID ${req.params.id} is a GitPOAP`);
 
@@ -222,7 +206,6 @@ gitPOAPsRouter.get('/poap-token-id/:id', async function (req, res) {
   if (claimData === null || claimData.gitPOAP.poapApprovalStatus === GitPOAPStatus.DEPRECATED) {
     const msg = `There's no GitPOAP claimed with POAP ID: ${req.params.id}`;
     logger.info(msg);
-    endTimer({ status: 404 });
     return res.status(404).send({ msg });
   }
 
@@ -236,8 +219,6 @@ gitPOAPsRouter.get('/poap-token-id/:id', async function (req, res) {
 
   logger.debug(`Completed request to validate if POAP ID ${req.params.id} is a GitPOAP`);
 
-  endTimer({ status: 200 });
-
   return res.status(200).send(data);
 });
 
@@ -246,24 +227,18 @@ gitPOAPsRouter.post(
   jwtWithAdminAddress(),
   upload.single('codes'),
   async function (req, res) {
-    const logger = createScopedLogger('POST /gitpoaps/codes');
-
-    logger.debug(`Body: ${JSON.stringify(req.body)}`);
-
-    const endTimer = httpRequestDurationSeconds.startTimer('POST', '/gitpoaps/codes');
+    const logger = getRequestLogger(req);
 
     const schemaResult = UploadGitPOAPCodesSchema.safeParse(req.body);
     if (!schemaResult.success) {
       logger.warn(
         `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
       );
-      endTimer({ status: 400 });
       return res.status(400).send({ issues: schemaResult.error.issues });
     }
     if (!req.file) {
       const msg = 'Missing/invalid "codes" upload in request';
       logger.warn(msg);
-      endTimer({ status: 400 });
       return res.status(400).send({ msg });
     }
 
@@ -289,7 +264,6 @@ gitPOAPsRouter.post(
     } catch (err) {
       const msg = `Failed to read uploaded file for codes: ${err}`;
       logger.error(msg);
-      endTimer({ status: 500 });
       return res.status(500).send({ msg });
     }
 
@@ -308,8 +282,6 @@ gitPOAPsRouter.post(
     });
 
     logger.debug(`Completed request to upload codes for GitPOAP ID ${gitPOAPId}`);
-
-    endTimer({ status: 200 });
 
     res.status(200).send('UPLOADED');
 
@@ -345,9 +317,7 @@ gitPOAPsRouter.post(
 );
 
 gitPOAPsRouter.put('/enable/:id', jwtWithAdminAddress(), async (req, res) => {
-  const logger = createScopedLogger('PUT /gitpoaps/enable/:id');
-
-  const endTimer = httpRequestDurationSeconds.startTimer('PUT', '/gitpoaps/enable/:id');
+  const logger = getRequestLogger(req);
 
   const gitPOAPId = parseInt(req.params.id, 10);
 
@@ -365,13 +335,11 @@ gitPOAPsRouter.put('/enable/:id', jwtWithAdminAddress(), async (req, res) => {
   if (gitPOAPInfo === null) {
     const msg = `Failed to find GitPOAP with ID ${gitPOAPId}`;
     logger.warn(msg);
-    endTimer({ status: 404 });
     return res.status(404).send({ msg });
   }
   if (gitPOAPInfo.poapApprovalStatus === GitPOAPStatus.DEPRECATED) {
     const msg = `GitPOAP with ID ${gitPOAPId} is deprecated`;
     logger.warn(msg);
-    endTimer({ status: 400 });
     return res.status(400).send({ msg });
   }
 
@@ -386,15 +354,11 @@ gitPOAPsRouter.put('/enable/:id', jwtWithAdminAddress(), async (req, res) => {
 
   logger.debug(`Completed admin request to enable GitPOAP ID ${gitPOAPId}`);
 
-  endTimer({ status: 200 });
-
   return res.status(200).send('ENABLED');
 });
 
 gitPOAPsRouter.put('/deprecate/:id', jwtWithAdminAddress(), async (req, res) => {
-  const logger = createScopedLogger('PUT /gitpoaps/deprecate/:id');
-
-  const endTimer = httpRequestDurationSeconds.startTimer('PUT', '/gitpoaps/deprecate/:id');
+  const logger = getRequestLogger(req);
 
   const gitPOAPId = parseInt(req.params.id, 10);
 
@@ -411,7 +375,6 @@ gitPOAPsRouter.put('/deprecate/:id', jwtWithAdminAddress(), async (req, res) => 
   if (gitPOAPInfo === null) {
     const msg = `Failed to find GitPOAP with ID ${gitPOAPId}`;
     logger.warn(msg);
-    endTimer({ status: 404 });
     return res.status(404).send({ msg });
   }
 
@@ -435,14 +398,11 @@ gitPOAPsRouter.put('/deprecate/:id', jwtWithAdminAddress(), async (req, res) => 
 
   logger.debug(`Completed admin request to deprecate GitPOAP ID ${gitPOAPId}`);
 
-  endTimer({ status: 200 });
-
   return res.status(200).send('DEPRECATED');
 });
 
 gitPOAPsRouter.put('/:gitPOAPId/claims', jwtWithAddress(), async (req, res) => {
-  const logger = createScopedLogger('PUT /gitpoaps/:gitPOAPId/claims');
-  const endTimer = httpRequestDurationSeconds.startTimer('PUT', '/gitpoaps/:gitPOAPId/claims');
+  const logger = getRequestLogger(req);
 
   logger.debug(`Body: ${JSON.stringify(req.body)}, Params: ${JSON.stringify(req.params)}`);
 
@@ -456,8 +416,6 @@ gitPOAPsRouter.put('/:gitPOAPId/claims', jwtWithAddress(), async (req, res) => {
     logger.warn(
       `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
     );
-    endTimer({ status: 400 });
-
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
@@ -482,20 +440,17 @@ gitPOAPsRouter.put('/:gitPOAPId/claims', jwtWithAddress(), async (req, res) => {
     logger.warn(
       `Address ${address} tried to create claims for nonexistant GitPOAP ID ${gitPOAPId}`,
     );
-    endTimer({ status: 404 });
     return res.status(404).send({ msg: "Request doesn't exist" });
   }
 
   if (gitPOAP.type === GitPOAPType.CUSTOM) {
     if (gitPOAP.creatorAddressId !== addressId) {
       logger.warn(`Non-creator ${address} tried to add claims to Custom GitPOAP ID ${gitPOAPId}`);
-      endTimer({ status: 401 });
       return res.status(401).send({ msg: 'Not GitPOAP owner' });
     }
   } else {
     if (!isAddressAnAdmin(address)) {
       logger.warn(`Non-admin ${address} tried to add claims to non-Custom GitPOAP ID ${gitPOAPId}`);
-      endTimer({ status: 401 });
       return res.status(401).send({ msg: 'Not authorized to create Claims' });
     }
   }
@@ -511,8 +466,6 @@ gitPOAPsRouter.put('/:gitPOAPId/claims', jwtWithAddress(), async (req, res) => {
   void ensureRedeemCodeThreshold(gitPOAP);
 
   logger.debug(`Completed request to create new Claims for GitPOAP ID ${gitPOAPId}`);
-
-  endTimer({ status: 200 });
 
   return res.status(200).send('CREATED');
 });

@@ -16,7 +16,6 @@ import { getAccessTokenPayloadWithOAuth } from '../types/authTokens';
 import { redeemPOAP, retrieveClaimInfo } from '../external/poap';
 import { getGithubUserById } from '../external/github';
 import { createScopedLogger } from '../logging';
-import { httpRequestDurationSeconds } from '../metrics';
 import { sleep } from '../lib/sleep';
 import { backloadGithubPullRequestData } from '../lib/pullRequests';
 import { upsertUser } from '../lib/users';
@@ -35,6 +34,7 @@ import { isAddressAnAdmin } from '../lib/admins';
 import { getAccessTokenPayload } from '../types/authTokens';
 import { ensureRedeemCodeThreshold } from '../lib/claims';
 import { FoundClaim } from '../types/claims';
+import { getRequestLogger } from '../middleware/loggingAndTiming';
 
 export const claimsRouter = Router();
 
@@ -89,18 +89,13 @@ async function runClaimsPostProcessing(claimIds: number[], qrHashes: string[]) {
 }
 
 claimsRouter.post('/', jwtWithGitHubOAuth(), async function (req, res) {
-  const logger = createScopedLogger('POST /claims');
-
-  logger.debug(`Body: ${JSON.stringify(req.body)}`);
-
-  const endTimer = httpRequestDurationSeconds.startTimer('POST', '/claims');
+  const logger = getRequestLogger(req);
 
   const schemaResult = ClaimGitPOAPSchema.safeParse(req.body);
   if (!schemaResult.success) {
     logger.warn(
       `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
     );
-    endTimer({ status: 400 });
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
@@ -247,8 +242,6 @@ claimsRouter.post('/', jwtWithGitHubOAuth(), async function (req, res) {
 
   logger.debug(`Completed request claiming IDs ${req.body.claimIds} for address ${address}`);
 
-  endTimer({ status: 200 });
-
   res.status(200).send({
     claimed: claimedIds,
     invalid: [],
@@ -258,19 +251,15 @@ claimsRouter.post('/', jwtWithGitHubOAuth(), async function (req, res) {
 });
 
 claimsRouter.post('/create', jwtWithAdminOAuth(), async function (req, res) {
-  const logger = createScopedLogger('POST /claims/create');
-  const endTimer = httpRequestDurationSeconds.startTimer('POST', '/claims/create');
+  const logger = getRequestLogger(req);
 
   logger.error('[DEPRECATED] POST /claims/create called');
-
-  logger.debug(`Body: ${JSON.stringify(req.body)}`);
 
   const schemaResult = CreateGitPOAPClaimsSchema.safeParse(req.body);
   if (!schemaResult.success) {
     logger.warn(
       `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
     );
-    endTimer({ status: 400 });
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
@@ -298,19 +287,16 @@ claimsRouter.post('/create', jwtWithAdminOAuth(), async function (req, res) {
   });
   if (gitPOAPData === null) {
     logger.warn(`GitPOAP ID ${req.body.gitPOAPId} not found`);
-    endTimer({ status: 404 });
     return res.status(404).send({ msg: `There is not GitPOAP with ID: ${req.body.gitPOAPId}` });
   }
   if (gitPOAPData.poapApprovalStatus === GitPOAPStatus.UNAPPROVED) {
     const msg = `GitPOAP ID ${req.body.gitPOAPId} has not been approved yet`;
     logger.warn(msg);
-    endTimer({ status: 400 });
     return res.status(400).send({ msg });
   }
   if (gitPOAPData.poapApprovalStatus === GitPOAPStatus.DEPRECATED) {
     const msg = `GitPOAP ID ${req.body.gitPOAPId} is deprecated`;
     logger.warn(msg);
-    endTimer({ status: 400 });
     return res.status(400).send({ msg });
   }
 
@@ -357,7 +343,6 @@ claimsRouter.post('/create', jwtWithAdminOAuth(), async function (req, res) {
   }
 
   if (notFound.length > 0) {
-    endTimer({ status: 400 });
     return res.status(400).send({
       msg: 'Some of the githubIds were not found',
       ids: notFound,
@@ -367,8 +352,6 @@ claimsRouter.post('/create', jwtWithAdminOAuth(), async function (req, res) {
   logger.debug(
     `Completed request to create ${req.body.recipientGithubIds.length} claims for GitPOAP Id: ${req.body.gitPOAPId}`,
   );
-
-  endTimer({ status: 200 });
 
   res.status(200).send('CREATED');
 
@@ -385,18 +368,13 @@ claimsRouter.post(
   '/gitpoap-bot/create',
   gitpoapBotAuth(),
   async function (req: Request<any, any, z.infer<typeof CreateGitPOAPBotClaimsSchema>>, res) {
-    const logger = createScopedLogger('POST /claims/gitpoap-bot/create');
-
-    logger.debug(`Body: ${JSON.stringify(req.body)}`);
-
-    const endTimer = httpRequestDurationSeconds.startTimer('POST', '/claims/gitpoap-bot/create');
+    const logger = getRequestLogger(req);
 
     const schemaResult = CreateGitPOAPBotClaimsSchema.safeParse(req.body);
     if (!schemaResult.success) {
       logger.warn(
         `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
       );
-      endTimer({ status: 400 });
       return res.status(400).send({ issues: schemaResult.error.issues });
     }
 
@@ -413,7 +391,6 @@ claimsRouter.post(
         if (contributorGithubIds.length > 1) {
           const msg = `Bot called on merged PR with more than one contributor specified`;
           logger.error(msg);
-          endTimer({ status: 400 });
           return res.status(400).send({ msg });
         }
       }
@@ -531,18 +508,12 @@ claimsRouter.post(
       );
     }
 
-    endTimer({ status: 200 });
-
     res.status(200).send({ newClaims });
   },
 );
 
 claimsRouter.post('/revalidate', jwtWithGitHubOAuth(), async (req, res) => {
-  const logger = createScopedLogger('POST /claims/revalidate');
-
-  logger.debug(`Body: ${JSON.stringify(req.body)}`);
-
-  const endTimer = httpRequestDurationSeconds.startTimer('POST', '/claims/revalidate');
+  const logger = getRequestLogger(req);
 
   // We have the same body requirements here as in the claim endpoint
   const schemaResult = ClaimGitPOAPSchema.safeParse(req.body);
@@ -550,7 +521,6 @@ claimsRouter.post('/revalidate', jwtWithGitHubOAuth(), async (req, res) => {
     logger.warn(
       `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
     );
-    endTimer({ status: 400 });
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
@@ -635,8 +605,6 @@ claimsRouter.post('/revalidate', jwtWithGitHubOAuth(), async (req, res) => {
     `Completed request to revalidate GitPOAP IDs ${req.body.claimIds} by GitHub user ${githubHandle}`,
   );
 
-  endTimer({ status: 200 });
-
   res.status(200).send({
     claimed: foundClaims,
     invalid: [],
@@ -644,8 +612,7 @@ claimsRouter.post('/revalidate', jwtWithGitHubOAuth(), async (req, res) => {
 });
 
 claimsRouter.delete('/:id', jwtWithAddress(), async (req, res) => {
-  const logger = createScopedLogger('DELETE /claims/:id');
-  const endTimer = httpRequestDurationSeconds.startTimer('DELETE', '/claims/:id');
+  const logger = getRequestLogger(req);
 
   const claimId = parseInt(req.params.id, 10);
 
@@ -668,7 +635,6 @@ claimsRouter.delete('/:id', jwtWithAddress(), async (req, res) => {
   // If the claim has already been deleted
   if (claim === null) {
     logger.info(`Completed request to delete Claim with ID: ${claimId}`);
-    endTimer({ status: 200 });
     return res.status(200).send('DELETED');
   }
 
@@ -680,7 +646,6 @@ claimsRouter.delete('/:id', jwtWithAddress(), async (req, res) => {
       logger.error(
         `Custom GitPOAP ID ${claim.gitPOAP.id} does not have an associated creatorAddress`,
       );
-      endTimer({ status: 500 });
       return res.status(500).send({ msg: "Can't authenticate GitPOAP ownership" });
     }
 
@@ -688,21 +653,18 @@ claimsRouter.delete('/:id', jwtWithAddress(), async (req, res) => {
       logger.warn(
         `User attempted to delete a Claim for a custom GitPOAP (ID: ${claim.gitPOAP.id} that they do not own`,
       );
-      endTimer({ status: 401 });
       return res.status(401).send({ msg: 'Not Custom GitPOAP creator' });
     }
   } else {
     // Otherwise ensure that the requestor is an admin
     if (!isAddressAnAdmin(address)) {
       logger.warn(`Non-admin address ${address} attempted to delete a Claim for a GitPOAP`);
-      endTimer({ status: 401 });
       return res.status(401).send({ msg: 'Not authorized to delete claims' });
     }
   }
 
   if (claim.status !== ClaimStatus.UNCLAIMED) {
     logger.warn(`User attempted to delete a Claim (ID: ${claimId}) that has already been claimed`);
-    endTimer({ status: 400 });
     return res.status(400).send({ msg: 'Already claimed' });
   }
 
@@ -712,8 +674,6 @@ claimsRouter.delete('/:id', jwtWithAddress(), async (req, res) => {
   });
 
   logger.debug(`Completed request to delete Claim with ID: ${claimId}`);
-
-  endTimer({ status: 200 });
 
   return res.status(200).send('DELETED');
 });
