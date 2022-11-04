@@ -5,7 +5,7 @@ import { Context } from '../../context';
 import { createScopedLogger } from '../../logging';
 import { gqlRequestDurationSeconds } from '../../metrics';
 import { getGithubRepositoryStarCount } from '../../external/github';
-import { ClaimStatus, Prisma, Repo } from '@prisma/client';
+import { ClaimStatus, Prisma } from '@prisma/client';
 
 @ObjectType()
 export class RepoReturnData extends RepoValue {
@@ -17,9 +17,9 @@ export class RepoReturnData extends RepoValue {
   mintedGitPOAPCount: number;
 }
 
-@Resolver(of => RepoValue)
+@Resolver(() => RepoValue)
 export class CustomRepoResolver {
-  @Query(returns => RepoReturnData, { nullable: true })
+  @Query(() => RepoReturnData, { nullable: true })
   async repoData(
     @Ctx() { prisma }: Context,
     @Arg('repoId', { defaultValue: null }) repoId?: number,
@@ -36,14 +36,14 @@ export class CustomRepoResolver {
 
     if (repoId) {
       results = await prisma.$queryRaw<RepoReturnData[]>`
-        SELECT r.*, 
+        SELECT r.*,
           COUNT(DISTINCT c."userId")::INTEGER AS "contributorCount",
           COUNT(DISTINCT g.id)::INTEGER AS "gitPOAPCount",
           COUNT(c.id)::INTEGER AS "mintedGitPOAPCount"
         FROM "Repo" as r
         INNER JOIN "Project" AS p ON r."projectId" = p.id
         INNER JOIN "GitPOAP" AS g ON g."projectId" = p.id AND g."isEnabled" IS TRUE
-        LEFT JOIN 
+        LEFT JOIN
           (
             SELECT * FROM "Claim"
             WHERE status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
@@ -61,7 +61,7 @@ export class CustomRepoResolver {
       logger.debug(`Completed request for data from repo: ${repoId}`);
     } else if (orgName && repoName) {
       results = await prisma.$queryRaw<RepoReturnData[]>`
-        SELECT r.*, 
+        SELECT r.*,
           COUNT(DISTINCT c."userId")::INTEGER AS "contributorCount",
           COUNT(DISTINCT g.id)::INTEGER AS "gitPOAPCount",
           COUNT(c.id)::INTEGER AS "mintedGitPOAPCount"
@@ -70,7 +70,7 @@ export class CustomRepoResolver {
           AND o.name = ${orgName}
         INNER JOIN "Project" AS p ON r."projectId" = p.id
         INNER JOIN "GitPOAP" AS g ON g."projectId" = p.id AND g."isEnabled" IS TRUE
-        LEFT JOIN 
+        LEFT JOIN
           (
             SELECT * FROM "Claim"
             WHERE status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
@@ -101,11 +101,11 @@ export class CustomRepoResolver {
     return results[0];
   }
 
-  @Query(returns => Number)
+  @Query(() => Number)
   async repoStarCount(
     @Ctx() { prisma }: Context,
     @Arg('repoId') repoId: number,
-  ): Promise<Number | null> {
+  ): Promise<number | null> {
     const logger = createScopedLogger('GQL repoStarCount');
 
     logger.info(`Request for star count of repo id: ${repoId}`);
@@ -123,7 +123,7 @@ export class CustomRepoResolver {
       return null;
     }
 
-    // This returns 0 if there's an error or repo doesn't exist
+    // This () 0 if there's an error or repo doesn't exist
     const result = await getGithubRepositoryStarCount(repo.githubRepoId);
 
     logger.debug(`Completed request for star count of repo id: ${repoId}`);
@@ -133,8 +133,8 @@ export class CustomRepoResolver {
     return result;
   }
 
-  @Query(returns => Number)
-  async totalRepos(@Ctx() { prisma }: Context): Promise<Number> {
+  @Query(() => Number)
+  async totalRepos(@Ctx() { prisma }: Context): Promise<number> {
     const logger = createScopedLogger('GQL totalRepos');
 
     logger.info('Request for total number of repos');
@@ -150,8 +150,8 @@ export class CustomRepoResolver {
     return result;
   }
 
-  @Query(returns => Number)
-  async lastMonthRepos(@Ctx() { prisma }: Context): Promise<Number> {
+  @Query(() => Number)
+  async lastMonthRepos(@Ctx() { prisma }: Context): Promise<number> {
     const logger = createScopedLogger('GQL lastMonthRepos');
 
     logger.info("Request for count of last month's new repos");
@@ -174,7 +174,7 @@ export class CustomRepoResolver {
     return result._count.id;
   }
 
-  @Query(returns => [RepoValue])
+  @Query(() => [RepoValue])
   async recentlyAddedRepos(
     @Ctx() { prisma }: Context,
     @Arg('count', { defaultValue: 10 }) count: number,
@@ -202,7 +202,7 @@ export class CustomRepoResolver {
     return results;
   }
 
-  @Query(returns => [RepoValue], { nullable: true })
+  @Query(() => [RepoValue], { nullable: true })
   async allRepos(
     @Ctx() { prisma }: Context,
     @Arg('sort', { defaultValue: 'alphabetical' }) sort: string,
@@ -282,7 +282,7 @@ export class CustomRepoResolver {
     return results;
   }
 
-  @Query(returns => [RepoReturnData], { nullable: true })
+  @Query(() => [RepoReturnData], { nullable: true })
   async trendingRepos(
     @Ctx() { prisma }: Context,
     @Arg('count', { defaultValue: 10 }) count: number,

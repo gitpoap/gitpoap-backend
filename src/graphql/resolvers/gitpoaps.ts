@@ -169,10 +169,10 @@ export async function addPRCountData(
   return results;
 }
 
-@Resolver(of => GitPOAP)
+@Resolver(() => GitPOAP)
 export class CustomGitPOAPResolver {
-  @Query(returns => Number)
-  async totalGitPOAPs(@Ctx() { prisma }: Context): Promise<Number> {
+  @Query(() => Number)
+  async totalGitPOAPs(@Ctx() { prisma }: Context): Promise<number> {
     const logger = createScopedLogger('GQL totalGitPOAPs');
 
     logger.info('Request for total number of GitPOAPs');
@@ -195,8 +195,8 @@ export class CustomGitPOAPResolver {
     return result;
   }
 
-  @Query(returns => Number)
-  async lastMonthGitPOAPs(@Ctx() { prisma }: Context): Promise<Number> {
+  @Query(() => Number)
+  async lastMonthGitPOAPs(@Ctx() { prisma }: Context): Promise<number> {
     const logger = createScopedLogger('GQL lastMonthGitPOAPs');
 
     logger.info('Request for the count of GitPOAPs created last month');
@@ -223,7 +223,7 @@ export class CustomGitPOAPResolver {
     return result._count.id;
   }
 
-  @Query(returns => FullGitPOAPEventData, { nullable: true })
+  @Query(() => FullGitPOAPEventData, { nullable: true })
   async gitPOAPEvent(
     @Ctx() { prisma }: Context,
     @Arg('id') id: number,
@@ -257,9 +257,9 @@ export class CustomGitPOAPResolver {
     return { gitPOAP, event };
   }
 
-  @Query(returns => UserPOAPs, { nullable: true })
+  @Query(() => UserPOAPs, { nullable: true })
   async userPOAPs(
-    @Ctx() { prisma }: Context,
+    @Ctx() {}: Context,
     @Arg('address') address: string,
     @Arg('sort', { defaultValue: 'date' }) sort: string,
     @Arg('perPage', { defaultValue: null }) perPage?: number,
@@ -363,7 +363,7 @@ export class CustomGitPOAPResolver {
     }
   }
 
-  @Query(returns => RepoGitPOAPs, { nullable: true })
+  @Query(() => RepoGitPOAPs, { nullable: true })
   async repoGitPOAPs(
     @Ctx() { prisma }: Context,
     @Arg('repoId') repoId: number,
@@ -482,7 +482,7 @@ export class CustomGitPOAPResolver {
     }
   }
 
-  @Query(returns => [GitPOAPWithClaimsCount], { nullable: true })
+  @Query(() => [GitPOAPWithClaimsCount], { nullable: true })
   async mostClaimedGitPOAPs(
     @Ctx() { prisma }: Context,
     @Arg('count', { defaultValue: 10 }) count: number,
@@ -532,7 +532,7 @@ export class CustomGitPOAPResolver {
     return finalResults;
   }
 
-  @Query(returns => UserFeaturedPOAPs, { nullable: true })
+  @Query(() => UserFeaturedPOAPs, { nullable: true })
   async profileFeaturedPOAPs(
     @Ctx() { prisma }: Context,
     @Arg('address') address: string,
@@ -609,7 +609,7 @@ export class CustomGitPOAPResolver {
     return results;
   }
 
-  @Query(returns => Holders, { nullable: true })
+  @Query(() => Holders, { nullable: true })
   async gitPOAPHolders(
     @Ctx() { prisma }: Context,
     @Arg('gitPOAPId') gitPOAPId: number,

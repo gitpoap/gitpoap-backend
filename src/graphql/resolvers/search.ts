@@ -17,7 +17,7 @@ class SearchResults {
 
 @Resolver()
 export class CustomSearchResolver {
-  @Query(returns => SearchResults)
+  @Query(() => SearchResults)
   async search(@Ctx() { prisma }: Context, @Arg('text') text: string): Promise<SearchResults> {
     const logger = createScopedLogger('GQL search');
 

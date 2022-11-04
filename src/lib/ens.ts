@@ -117,7 +117,7 @@ async function updateENSName(address: string) {
 export async function resolveENSAvatar(
   ensName: string,
   resolvedAddress: string,
-  forceCheck: boolean = false,
+  forceCheck = false,
 ) {
   const logger = createScopedLogger('resolveAvatar');
 
@@ -224,7 +224,7 @@ export async function resolveAddress(
 
   const namePromise = updateENSName(address);
 
-  if (result !== null && result.ensName !== null) {
+  if (result?.ensName) {
     const avatarPromise = resolveENSAvatar(
       result.ensName,
       address,

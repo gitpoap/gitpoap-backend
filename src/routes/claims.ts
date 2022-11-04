@@ -5,7 +5,7 @@ import {
 } from '../schemas/claims';
 import { Router, Request } from 'express';
 import { context } from '../context';
-import { ClaimStatus, GitPOAP, GitPOAPStatus, GitPOAPType } from '@prisma/client';
+import { ClaimStatus, GitPOAPStatus, GitPOAPType } from '@prisma/client';
 import {
   gitpoapBotAuth,
   jwtWithAddress,
@@ -399,8 +399,6 @@ claimsRouter.post(
       endTimer({ status: 400 });
       return res.status(400).send({ issues: schemaResult.error.issues });
     }
-
-    let wasEarnedByMention: boolean;
 
     let newClaims: ClaimData[] = [];
     if ('pullRequest' in schemaResult.data) {
