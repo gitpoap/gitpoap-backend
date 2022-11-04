@@ -1,7 +1,12 @@
 {
   "parser": "@typescript-eslint/parser",
   "plugins": ["@typescript-eslint/eslint-plugin", "jest"],
-  "extends": ["plugin:prettier/recommended", "plugin:jest/recommended"],
+  "extends": [
+    "plugin:prettier/recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:jest/recommended",
+    "prettier"
+  ],
   "overrides": [
     {
       "files": ["*.ts", "*.tsx"], // Your TypeScript files extension
@@ -22,6 +27,8 @@
     "@typescript-eslint/explicit-module-boundary-types": 0,
     "@typescript-eslint/no-explicit-any": 0,
     "@typescript-eslint/no-floating-promises": [1, { "ignoreVoid": true }],
+    "@typescript-eslint/prefer-optional-chain": "error",
+    "@typescript-eslint/no-unused-vars": "error",
     "prettier/prettier": 1,
     "prefer-const": 1,
     "no-console": [1, { "allow": ["warn", "error"] }],
@@ -31,6 +38,7 @@
     "jest/prefer-to-have-length": "warn",
     "jest/valid-expect": "error",
     "jest/no-mocks-import": 0,
+    "jest/expect-expect": ["error", { "assertFunctionNames": ["expect*"] }],
     "object-shorthand": ["error", "always"]
   }
 }
