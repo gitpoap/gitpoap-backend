@@ -1,4 +1,5 @@
-require('dotenv').config();
+import { config } from 'dotenv';
+config();
 
 import 'reflect-metadata';
 import { backloadGithubPullRequestData } from '../src/lib/pullRequests';
@@ -82,4 +83,4 @@ const main = async () => {
   }
 };
 
-main();
+void main();

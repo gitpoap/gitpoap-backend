@@ -5,7 +5,7 @@ const baseFormat = winston.format.combine(
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
   winston.format.errors({ stack: true }),
   // Pad the levels and uppercase before they are colored
-  winston.format((info, opts) => {
+  winston.format(info => {
     info.level = info.level.toUpperCase().padStart(5);
     return info;
   })(),

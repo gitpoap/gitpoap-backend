@@ -1,4 +1,5 @@
-require('dotenv').config();
+import { config } from 'dotenv';
+config();
 
 import 'reflect-metadata';
 import { createScopedLogger, updateLogLevel } from '../src/logging';
@@ -67,7 +68,7 @@ async function heatUpENSCache() {
       synchronous: true,
     });
 
-    sleep(HEATER_DELAY_BETWEEN_ADDRESSES_SECONDS);
+    void sleep(HEATER_DELAY_BETWEEN_ADDRESSES_SECONDS);
   }
 
   const skipped = addresses.length - checkedCount;
@@ -117,4 +118,4 @@ const main = async () => {
   await context.redis.disconnect();
 };
 
-main();
+void main();

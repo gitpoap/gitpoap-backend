@@ -29,7 +29,7 @@ export const onboardingRouter = Router();
 
 const upload = multer();
 
-onboardingRouter.post<'/intake-form', {}, {}, IntakeForm>(
+onboardingRouter.post<'/intake-form', any, any, IntakeForm>(
   '/intake-form',
   jwtWithGitHubOAuth(),
   upload.array('images', 5),
@@ -175,7 +175,7 @@ onboardingRouter.post<'/intake-form', {}, {}, IntakeForm>(
   },
 );
 
-onboardingRouter.get<'/github/repos', {}, APIResponseData<Repo[]>>(
+onboardingRouter.get<'/github/repos', any, APIResponseData<Repo[]>>(
   '/github/repos',
   jwtWithGitHubOAuth(),
   async function (req, res) {

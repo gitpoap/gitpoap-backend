@@ -2,7 +2,7 @@ import { Arg, Ctx, Field, ObjectType, Resolver, Query } from 'type-graphql';
 import { ClaimStatus, FeaturedPOAP, Profile } from '@generated/type-graphql';
 import { Context } from '../../context';
 import { resolveAddressInternal } from '../../external/ens';
-import { resolveAddress, resolveENS, resolveENSAvatar } from '../../lib/ens';
+import { resolveENS, resolveENSAvatar } from '../../lib/ens';
 import { createScopedLogger } from '../../logging';
 import { gqlRequestDurationSeconds } from '../../metrics';
 import { getLastMonthStartDatetime } from './util';
@@ -62,13 +62,13 @@ class ProfileWithClaimsCount {
   profile: Profile;
 
   @Field()
-  claimsCount: Number;
+  claimsCount: number;
 }
 
-@Resolver(of => Profile)
+@Resolver(() => Profile)
 export class CustomProfileResolver {
-  @Query(returns => Number)
-  async totalContributors(@Ctx() { prisma }: Context): Promise<Number> {
+  @Query(() => Number)
+  async totalContributors(@Ctx() { prisma }: Context): Promise<number> {
     const logger = createScopedLogger('GQL totalContributors');
 
     logger.info('Request for total contributors');
@@ -89,8 +89,8 @@ export class CustomProfileResolver {
     return result[0].count;
   }
 
-  @Query(returns => Number)
-  async lastMonthContributors(@Ctx() { prisma }: Context): Promise<Number> {
+  @Query(() => Number)
+  async lastMonthContributors(@Ctx() { prisma }: Context): Promise<number> {
     const logger = createScopedLogger('GQL lastMonthContributors');
 
     logger.info("Request for last month's contributors");
@@ -112,7 +112,7 @@ export class CustomProfileResolver {
     return result[0].count;
   }
 
-  @Query(returns => NullableProfile, { nullable: true })
+  @Query(() => NullableProfile, { nullable: true })
   async profileData(
     @Ctx() { prisma }: Context,
     @Arg('address') addressOrEns: string,
@@ -213,10 +213,10 @@ export class CustomProfileResolver {
     return resultWithEns;
   }
 
-  @Query(returns => [ProfileWithClaimsCount])
+  @Query(() => [ProfileWithClaimsCount])
   async mostHonoredContributors(
     @Ctx() { prisma }: Context,
-    @Arg('count', { defaultValue: 10 }) count: Number,
+    @Arg('count', { defaultValue: 10 }) count: number,
   ): Promise<ProfileWithClaimsCount[]> {
     const logger = createScopedLogger('GQL mostHonoredContributors');
 
@@ -225,7 +225,7 @@ export class CustomProfileResolver {
     const endTimer = gqlRequestDurationSeconds.startTimer('mostHonoredContributors');
 
     type ResultType = Profile & {
-      claimsCount: Number;
+      claimsCount: number;
     };
 
     const results: ResultType[] = await prisma.$queryRaw`
@@ -254,7 +254,7 @@ export class CustomProfileResolver {
     return finalResults;
   }
 
-  @Query(returns => [ProfileWithClaimsCount], { nullable: true })
+  @Query(() => [ProfileWithClaimsCount], { nullable: true })
   async repoMostHonoredContributors(
     @Ctx() { prisma }: Context,
     @Arg('repoId') repoId: number,
@@ -270,7 +270,7 @@ export class CustomProfileResolver {
     const endTimer = gqlRequestDurationSeconds.startTimer('repoMostHonoredContributors');
 
     type ResultType = Profile & {
-      claimsCount: Number;
+      claimsCount: number;
     };
 
     const results: ResultType[] = await prisma.$queryRaw`
