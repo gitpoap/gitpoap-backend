@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { createScopedLogger } from '../logging';
 import { httpRequestDurationSeconds } from '../metrics';
-import { jwtWithAdminAddress, jwtWithAdminOAuth } from '../middleware';
+import { jwtWithAdminAddress, jwtWithAdminOAuth } from '../middleware/auth';
 import { AddReposSchema } from '../schemas/projects';
 import { createRepoByGithubId } from '../lib/repos';
 import { context } from '../context';

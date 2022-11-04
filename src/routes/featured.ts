@@ -4,7 +4,7 @@ import { retrievePOAPTokenInfo } from '../external/poap';
 import { createScopedLogger } from '../logging';
 import { httpRequestDurationSeconds } from '../metrics';
 import { getProfileByAddress, upsertProfileForAddressId } from '../lib/profiles';
-import { jwtWithAddress } from '../middleware';
+import { jwtWithAddress } from '../middleware/auth';
 import { getAccessTokenPayload } from '../types/authTokens';
 
 export const featuredRouter = Router();

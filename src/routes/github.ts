@@ -5,7 +5,7 @@ import { requestGithubOAuthToken, getGithubCurrentUserInfo } from '../external/g
 import { createScopedLogger } from '../logging';
 import { httpRequestDurationSeconds } from '../metrics';
 import { generateAuthTokens } from '../lib/authTokens';
-import { jwtWithAddress } from '../middleware';
+import { jwtWithAddress } from '../middleware/auth';
 import { getAccessTokenPayload } from '../types/authTokens';
 import { upsertUser } from '../lib/users';
 import { addGithubLoginForAddress, removeGithubLoginForAddress } from '../lib/addresses';
