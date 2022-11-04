@@ -66,7 +66,7 @@ describe('public-api/v1/poap-event/gitpoap-event-ids', () => {
     const data = await response.json();
 
     expect(data.poapEventIds).not.toEqual(null);
-    expect(data.poapEventIds.length).toEqual(17);
+    expect(data.poapEventIds).toHaveLength(17);
     expect(data.poapEventIds).toContainEqual(event1.id);
     expect(data.poapEventIds).toContainEqual(event2.id);
     expect(data.poapEventIds).toContainEqual(event3.id);
@@ -96,7 +96,7 @@ describe('public-api/v1/poap-event/gitpoap-event-fancy-ids', () => {
     const data = await response.json();
 
     expect(data.poapEventFancyIds).not.toEqual(null);
-    expect(data.poapEventFancyIds.length).toEqual(17);
+    expect(data.poapEventFancyIds).toHaveLength(17);
     expect(data.poapEventFancyIds).toContainEqual(event1.fancy_id);
     expect(data.poapEventFancyIds).toContainEqual(event2.fancy_id);
     expect(data.poapEventFancyIds).toContainEqual(event3.fancy_id);
