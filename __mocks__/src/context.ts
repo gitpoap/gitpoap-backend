@@ -4,7 +4,7 @@ import { RedisClient } from '../../src/redis/client';
 import { mockDeep, DeepMockProxy } from 'jest-mock-extended';
 import { context } from '../../src/context';
 
-export type MockContext = {
+type MockContext = {
   prisma: DeepMockProxy<PrismaClient>;
   provider: DeepMockProxy<Provider>;
   redis: DeepMockProxy<RedisClient>;

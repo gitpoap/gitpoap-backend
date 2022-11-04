@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import express, { Express } from 'express';
+import express, { Express, RequestHandler } from 'express';
 import * as Sentry from '@sentry/node';
 import * as Tracing from '@sentry/tracing';
 import { graphqlHTTP } from 'express-graphql';
@@ -49,13 +49,21 @@ const initializeSentry = (app: Express) => {
   }
 };
 
-export async function setupApp() {
+export async function setupAppWithMiddleware(middleware: RequestHandler[]) {
   const app = express();
   initializeSentry(app);
 
   app.use(cors());
   app.use(express.json());
-  app.use(loggingAndTimingMiddleware);
+
+  app.use(
+    '/graphql',
+    graphqlHTTP({ schema: await createAndEmitSchema(), context, graphiql: true }),
+  );
+
+  for (const mw of middleware) {
+    app.use(mw);
+  }
 
   app.get('/', (req, res) => {
     res.send('GitPOAP API Server');
@@ -64,10 +72,6 @@ export async function setupApp() {
   /* Endpoints */
   app.use('/auth', authRouter);
   app.use('/github', githubRouter);
-  app.use(
-    '/graphql',
-    graphqlHTTP({ schema: await createAndEmitSchema(), context, graphiql: true }),
-  );
   app.use('/jwt', jwtRouter);
   app.use('/subscribe', subscribeRouter);
   app.use('/suggest', suggestRouter);
@@ -87,4 +91,8 @@ export async function setupApp() {
   app.use(errorHandler);
 
   return app;
+}
+
+export async function setupApp() {
+  return await setupAppWithMiddleware([loggingAndTimingMiddleware]);
 }

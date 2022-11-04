@@ -1,7 +1,7 @@
 import { contextMock } from '../../../../__mocks__/src/context';
 import '../../../../__mocks__/src/logging';
 import request from 'supertest';
-import { setupApp } from '../../../../src/app';
+import { setupApp } from '../../../../__mocks__/src/app';
 import { sendVerificationEmail } from '../../../../src/external/postmark';
 import { generateAuthTokens } from '../../../../src/lib/authTokens';
 import { DateTime } from 'luxon';

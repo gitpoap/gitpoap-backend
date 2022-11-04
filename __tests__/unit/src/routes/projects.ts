@@ -1,6 +1,6 @@
 import '../../../../__mocks__/src/logging';
 import { contextMock } from '../../../../__mocks__/src/context';
-import { setupApp } from '../../../../src/app';
+import { setupApp } from '../../../../__mocks__/src/app';
 import { generateAuthTokens } from '../../../../src/lib/authTokens';
 import { ADMIN_ADDRESSES, ADMIN_GITHUB_IDS } from '../../../../src/constants';
 import request from 'supertest';
@@ -11,6 +11,8 @@ import { ADDRESSES } from '../../../../prisma/constants';
 jest.mock('../../../../src/logging');
 jest.mock('../../../../src/lib/repos');
 jest.mock('../../../../src/lib/pullRequests');
+
+//mockLoggingAndTiming();
 
 const mockedCreateRepoByGithubId = jest.mocked(createRepoByGithubId, true);
 const mockedBackloadGithubPullRequestData = jest.mocked(backloadGithubPullRequestData, true);

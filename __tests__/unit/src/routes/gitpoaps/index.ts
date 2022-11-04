@@ -1,6 +1,6 @@
 import '../../../../../__mocks__/src/logging';
 import { contextMock } from '../../../../../__mocks__/src/context';
-import { setupApp } from '../../../../../src/app';
+import { setupApp } from '../../../../../__mocks__/src/app';
 import { generateAuthTokens } from '../../../../../src/lib/authTokens';
 import { ADMIN_ADDRESSES } from '../../../../../src/constants';
 import request from 'supertest';
