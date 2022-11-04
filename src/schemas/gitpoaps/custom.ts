@@ -14,7 +14,6 @@ export const CreateCustomGitPOAPSchema = z.object({
   numRequestedCodes: z.string(),
   city: z.string().optional(),
   country: z.string().optional(),
-  isEnabled: z.enum(['true', 'false']).optional(),
 });
 
 export const DeleteGitPOAPRequestClaimSchema = z.object({
@@ -22,18 +21,19 @@ export const DeleteGitPOAPRequestClaimSchema = z.object({
   claimData: z.string().nonempty(),
 });
 
-const CustomGitPOAPData = z.object({
-  name: z.string().nonempty(),
-  description: z.string().nonempty(),
-  startDate: z.string().nonempty(),
-  endDate: z.string().nonempty(),
-  expiryDate: z.string().nonempty(),
-  eventUrl: z.string().nonempty(),
-  numRequestedCodes: z.number(),
-  city: z.string().optional(),
-  country: z.string().optional(),
-  isEnabled: z.boolean(),
-});
+const CustomGitPOAPData = z
+  .object({
+    name: z.string().nonempty(),
+    description: z.string().nonempty(),
+    startDate: z.string().nonempty(),
+    endDate: z.string().nonempty(),
+    expiryDate: z.string().nonempty(),
+    eventUrl: z.string().nonempty(),
+    numRequestedCodes: z.number(),
+    city: z.nullable(z.string()),
+    country: z.nullable(z.string()),
+  })
+  .strict();
 
 export const UpdateCustomGitPOAPSchema = z.object({
   data: CustomGitPOAPData.partial(), // Allows the field to be undefined in the request
