@@ -12,7 +12,7 @@ import {
 import { configProfile, dynamoDBClient } from '../../external/dynamo';
 import { createScopedLogger } from '../../logging';
 import { httpRequestDurationSeconds } from '../../metrics';
-import { jwtWithGitHubOAuth } from '../../middleware';
+import { jwtWithGitHubOAuth } from '../../middleware/auth';
 import { getAccessTokenPayloadWithOAuth } from '../../types/authTokens';
 import { sendConfirmationEmail, sendInternalConfirmationEmail } from '../../external/postmark';
 import {

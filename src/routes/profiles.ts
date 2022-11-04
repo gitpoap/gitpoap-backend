@@ -3,7 +3,7 @@ import { Router } from 'express';
 import { context } from '../context';
 import { createScopedLogger } from '../logging';
 import { httpRequestDurationSeconds } from '../metrics';
-import { jwtWithAddress } from '../middleware';
+import { jwtWithAddress } from '../middleware/auth';
 import { getAccessTokenPayload } from '../types/authTokens';
 
 export const profilesRouter = Router();

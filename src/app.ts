@@ -6,7 +6,7 @@ import { graphqlHTTP } from 'express-graphql';
 import { createAndEmitSchema } from './graphql/schema';
 import { context } from './context';
 import cors from 'cors';
-import { errorHandler } from './middleware';
+import { errorHandler } from './middleware/error';
 import { subscribeRouter } from './routes/subscribe';
 import { suggestRouter } from './routes/suggest';
 import jwtRouter from './routes/jwt';
