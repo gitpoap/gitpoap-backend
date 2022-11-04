@@ -24,6 +24,7 @@ import { isAddressAnAdmin } from '../../lib/admins';
 import { convertContributorsFromSchema, createClaimsForContributors } from '../../lib/gitpoaps';
 import { ensureRedeemCodeThreshold } from '../../lib/claims';
 import { getRequestLogger } from '../../middleware/loggingAndTiming';
+import { GITPOAP_ISSUER_EMAIL } from '../../constants';
 
 export const gitPOAPsRouter = Router();
 
@@ -126,7 +127,7 @@ gitPOAPsRouter.post(
       imageName: req.file.originalname,
       imageBuffer: req.file.buffer,
       secret_code: secretCode,
-      email: req.body.email,
+      email: GITPOAP_ISSUER_EMAIL,
       num_requested_codes: parseInt(req.body.numRequestedCodes, 10),
       city: req.body.city, // optional
       country: req.body.country, // optional

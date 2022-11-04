@@ -1,6 +1,7 @@
 import {
   CreateCustomGitPOAPSchema,
   DeleteGitPOAPRequestClaimSchema,
+  UpdateCustomGitPOAPSchema,
 } from '../../schemas/gitpoaps/custom';
 import { CreateGitPOAPClaimsSchema, GitPOAPContributorsSchema } from '../../schemas/gitpoaps';
 import { Request, Router } from 'express';
@@ -30,6 +31,7 @@ import {
   removeContributorFromGitPOAP,
 } from '../../lib/gitpoapRequests';
 import { getRequestLogger } from '../../middleware/loggingAndTiming';
+import { GITPOAP_ISSUER_EMAIL } from '../../constants';
 
 export const customGitPOAPsRouter = Router();
 
@@ -162,7 +164,7 @@ customGitPOAPsRouter.post(
         endDate,
         expiryDate,
         eventUrl: req.body.eventUrl,
-        email: req.body.email,
+        email: GITPOAP_ISSUER_EMAIL,
         numRequestedCodes: parseInt(req.body.numRequestedCodes, 10),
         project: project ? { connect: { id: project?.id } } : undefined,
         organization: organization ? { connect: { id: organization?.id } } : undefined,
@@ -459,4 +461,72 @@ customGitPOAPsRouter.delete('/:gitPOAPRequestId/claim', jwtWithAddress(), async 
   );
 
   return res.status(200).send('DELETED');
+});
+
+customGitPOAPsRouter.patch(':gitPOAPRequestId', jwtWithAddress(), async (req, res) => {
+  const logger = getRequestLogger(req);
+
+  const gitPOAPRequestId = parseInt(req.params.gitPOAPRequestId, 10);
+
+  const schemaResult = UpdateCustomGitPOAPSchema.safeParse(req.body);
+
+  if (!schemaResult.success) {
+    logger.warn(
+      `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
+    );
+    return res.status(400).send({ issues: schemaResult.error.issues });
+  }
+
+  logger.info(`Request to update Custom GitPOAP ID ${gitPOAPRequestId}`);
+
+  const gitPOAPRequest = await context.prisma.gitPOAPRequest.findUnique({
+    where: { id: gitPOAPRequestId },
+    select: {
+      addressId: true,
+      adminApprovalStatus: true,
+    },
+  });
+
+  if (gitPOAPRequest === null) {
+    const msg = `GitPOAPRequest with ID ${gitPOAPRequestId} doesn't exist`;
+    logger.warn(msg);
+    return res.status(404).send({ msg });
+  }
+
+  const { addressId } = getAccessTokenPayload(req.user);
+
+  if (gitPOAPRequest.addressId !== addressId) {
+    logger.warn(
+      `User attempted to delete a Claim for a GitPOAPRequest (ID: ${gitPOAPRequestId} that they do not own`,
+    );
+    return res.status(401).send({ msg: 'Not GitPOAPRequest creator' });
+  }
+
+  // This could happen if the admin approval request is put in around the same time
+  // that the creator is trying to add new contributors, i.e. that the conversion
+  // from GitPOAPRequest to GitPOAP hasn't completed yet.
+  if (gitPOAPRequest.adminApprovalStatus === AdminApprovalStatus.APPROVED) {
+    const msg = `GitPOAPRequest with ID ${gitPOAPRequestId} is already APPROVED`;
+    logger.warn(msg);
+    return res.status(400).send({ msg });
+  }
+
+  const maybeParseDate = (date?: string) => (date ? new Date(date) : undefined);
+
+  // Parse the dates if they are present
+  const data = {
+    ...schemaResult.data.data,
+    startDate: maybeParseDate(schemaResult.data.data.startDate),
+    endDate: maybeParseDate(schemaResult.data.data.endDate),
+    expiryDate: maybeParseDate(schemaResult.data.data.expiryDate),
+  };
+
+  await context.prisma.gitPOAPRequest.update({
+    where: { id: gitPOAPRequestId },
+    data,
+  });
+
+  logger.debug(`Competed request to update Custom GitPOAP ID ${gitPOAPRequestId}`);
+
+  return res.status(200).send('UPDATED');
 });

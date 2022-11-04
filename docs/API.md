@@ -69,7 +69,6 @@ for convenience):
   "expiryDate": "31-Jan-2023",
   "year": 2022,
   "eventUrl": "https://github.com/gitpoap/gitpoap-backend",
-  "email": "burz@gitpoap.io",
   "numRequestedCodes": 10,
   "ongoing": false,
   "city": "London", // optional
@@ -91,7 +90,6 @@ to create a project, or for an existing project:
   "expiryDate": "31-Jan-2023",
   "year": 2022,
   "eventUrl": "https://github.com/gitpoap/gitpoap-backend",
-  "email": "burz@gitpoap.io",
   "numRequestedCodes": 10,
   "ongoing": false,
   "city": "London", // optional
@@ -396,7 +394,6 @@ for convenience):
   "endDate": "31-Dec-2022",
   "expiryDate": "31-Jan-2023",
   "eventUrl": "https://github.com/gitpoap/gitpoap-backend",
-  "email": "burz@gitpoap.io",
   "numRequestedCodes": 10,
   "city": "London", // optional
   "country": "UK", // optional
