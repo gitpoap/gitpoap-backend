@@ -18,6 +18,7 @@ import {
 import rateLimit from 'express-rate-limit';
 import { v1Router } from './v1';
 import { context } from '../context';
+import { loggingAndTimingMiddleware } from '../middleware/loggingAndTiming';
 
 const main = async () => {
   const logger = createScopedLogger('main');
@@ -42,6 +43,7 @@ const main = async () => {
 
   app.use(cors());
   app.use(express.json());
+  app.use(loggingAndTimingMiddleware);
 
   const apiLimiter = rateLimit({
     windowMs: PUBLIC_API_RATE_LIMIT_WINDOW,

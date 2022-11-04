@@ -41,7 +41,27 @@ const logger = winston.createLogger({
 
 let nextScopeId = 1;
 
-export function createScopedLogger(scope: string) {
+export type Logger = {
+  debug: (msg: string) => void;
+  info: (msg: string) => void;
+  warn: (msg: string) => void;
+  error: (msg: string) => void;
+};
+
+export function isLogger(obj: any): obj is Logger {
+  return (
+    'debug' in obj &&
+    typeof obj.debug === 'function' &&
+    'info' in obj &&
+    typeof obj.info === 'function' &&
+    'warn' in obj &&
+    typeof obj.warn === 'function' &&
+    'error' in obj &&
+    typeof obj.error === 'function'
+  );
+}
+
+export function createScopedLogger(scope: string): Logger {
   const scopeId = nextScopeId++;
 
   const format = (msg: string) => `(${scopeId.toString().padStart(7)}) ${scope}: ${msg}`;
