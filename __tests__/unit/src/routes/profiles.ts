@@ -62,12 +62,20 @@ describe('POST /profiles', () => {
 
     const authTokens = genAuthTokens();
 
-    const result = await request(await setupApp())
-      .post('/profiles')
-      .set('Authorization', `Bearer ${authTokens.accessToken}`)
-      .send({ foobar: 'yeet' });
-
-    expect(result.statusCode).toEqual(400);
+    {
+      const result = await request(await setupApp())
+        .post('/profiles')
+        .set('Authorization', `Bearer ${authTokens.accessToken}`)
+        .send({ foobar: 'yeet' });
+      expect(result.statusCode).toEqual(400);
+    }
+    {
+      const result = await request(await setupApp())
+        .post('/profiles')
+        .set('Authorization', `Bearer ${authTokens.accessToken}`)
+        .send({ data: { foobar: 'yeet' } });
+      expect(result.statusCode).toEqual(400);
+    }
   });
 
   it('Fails on bad address', async () => {
