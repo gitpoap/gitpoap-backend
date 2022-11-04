@@ -245,7 +245,7 @@ describe('PUT /gitpoaps/:gitPOAPId/claims', () => {
     expect(contextMock.prisma.gitPOAP.findUnique).toHaveBeenCalledTimes(0);
   });
 
-  const expectFindUniqueCalls = (count: number = 1) => {
+  const expectFindUniqueCalls = (count = 1) => {
     expect(contextMock.prisma.gitPOAP.findUnique).toHaveBeenCalledTimes(count);
     expect(contextMock.prisma.gitPOAP.findUnique).toHaveBeenCalledWith({
       where: { id: gitPOAPId },
@@ -309,7 +309,7 @@ describe('PUT /gitpoaps/:gitPOAPId/claims', () => {
     expectFindUniqueCalls();
   });
 
-  const testSuccessWithAuthTokens = async (authTokens: UserAuthTokens) => {
+  const expectSuccessWithAuthTokens = async (authTokens: UserAuthTokens) => {
     {
       const result = await request(await setupApp())
         .put(`/gitpoaps/${gitPOAPId}/claims`)
@@ -378,7 +378,7 @@ describe('PUT /gitpoaps/:gitPOAPId/claims', () => {
     } as any);
     const authTokens = genAuthTokens();
 
-    await testSuccessWithAuthTokens(authTokens);
+    await expectSuccessWithAuthTokens(authTokens);
   });
 
   it('Succeeds for admin with non-Custom GitPOAP', async () => {
@@ -389,6 +389,6 @@ describe('PUT /gitpoaps/:gitPOAPId/claims', () => {
     } as any);
     const authTokens = genAuthTokens(ADMIN_ADDRESSES[0]);
 
-    await testSuccessWithAuthTokens(authTokens);
+    await expectSuccessWithAuthTokens(authTokens);
   });
 });

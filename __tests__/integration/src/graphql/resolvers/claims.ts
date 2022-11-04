@@ -38,6 +38,6 @@ describe('CustomClaimResolver', () => {
       }
     `);
 
-    expect(data.userClaims.length).toEqual(6);
+    expect(data.userClaims).toHaveLength(6);
   });
 });

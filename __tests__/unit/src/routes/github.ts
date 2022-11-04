@@ -47,7 +47,7 @@ function mockJwtWithAddress() {
   } as any);
 }
 
-function genAuthTokens(hasGithub: boolean = false) {
+function genAuthTokens(hasGithub = false) {
   return generateAuthTokens(
     authTokenId,
     authTokenGeneration,
