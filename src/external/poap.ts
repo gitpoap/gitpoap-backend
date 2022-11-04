@@ -415,7 +415,7 @@ const MAX_EVENT_POAP_TOKENS_PER_PAGE = 300;
 
 async function retrievePagedPOAPsForEvent(
   poapEventId: number,
-  page: number = 0,
+  page = 0,
   perPage: number = MAX_EVENT_POAP_TOKENS_PER_PAGE,
 ): Promise<EventPOAPTokenInfo[] | null> {
   const offset = perPage * page;

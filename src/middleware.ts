@@ -214,7 +214,7 @@ export function gitpoapBotAuth() {
   return middleware;
 }
 
-export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
+export const errorHandler: ErrorRequestHandler = (err, req, res) => {
   const logger = createScopedLogger('errorHandler');
 
   if ('status' in err) {

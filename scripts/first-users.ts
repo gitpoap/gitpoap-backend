@@ -1,4 +1,5 @@
-require('dotenv').config();
+import { config } from 'dotenv';
+config();
 
 import 'reflect-metadata';
 import { createScopedLogger, updateLogLevel } from '../src/logging';
@@ -81,4 +82,4 @@ const main = async () => {
   await findFirstUsers(count);
 };
 
-main();
+void main();

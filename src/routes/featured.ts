@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import { context } from '../context';
-import { resolveENS } from '../lib/ens';
 import { retrievePOAPTokenInfo } from '../external/poap';
 import { createScopedLogger } from '../logging';
 import { httpRequestDurationSeconds } from '../metrics';
@@ -53,7 +52,7 @@ featuredRouter.put('/:poapTokenId', jwtWithAddress(), async function (req, res) 
       needsRevalidation: true,
     },
   });
-  if (claimData !== null && claimData.needsRevalidation) {
+  if (claimData?.needsRevalidation) {
     logger.warn(`Address ${address} attempted to feature a GitPOAP that needs revalidation`);
     endTimer({ status: 400 });
     return res.status(400).send({
