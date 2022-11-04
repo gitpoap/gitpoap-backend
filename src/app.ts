@@ -23,6 +23,7 @@ import { triggersRouter } from './routes/triggers';
 import { vitalsRouter } from './routes/vitals';
 import { NODE_ENV, SENTRY_DSN } from './environment';
 import { authRouter } from './routes/auth';
+import { loggingAndTimingMiddleware } from './middleware/loggingAndTiming';
 
 const initializeSentry = (app: Express) => {
   if (SENTRY_DSN) {
@@ -54,6 +55,7 @@ export async function setupApp() {
 
   app.use(cors());
   app.use(express.json());
+  app.use(loggingAndTimingMiddleware);
 
   app.get('/', (req, res) => {
     res.send('GitPOAP API Server');

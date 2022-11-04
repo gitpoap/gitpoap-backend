@@ -1,0 +1,42 @@
+import { RequestHandler } from 'express';
+import { Logger, createScopedLogger, isLogger } from '../logging';
+import { httpRequestDurationSeconds } from '../metrics';
+import set from 'lodash/set';
+
+export const loggingAndTimingMiddleware: RequestHandler = (req, res, next) => {
+  const logger = createScopedLogger(`${req.method} ${req.path}`);
+  const endTimer = httpRequestDurationSeconds.startTimer(req.method, req.path);
+
+  logger.debug(`Handling ${req.method} ${req.path}`);
+
+  if (req.body !== {}) {
+    logger.debug(`Body: ${JSON.stringify(req.body)}`);
+  }
+
+  if (req.params !== {}) {
+    logger.debug(`Params: ${JSON.stringify(req.params)}`);
+  }
+
+  const originalEnd = res.end;
+
+  // Override the end function
+  res.end = (chunk: any, encoding?: any) => {
+    logger.debug(`Completed request (status ${res.statusCode}) ${req.method} ${req.path}`);
+
+    endTimer({ status: res.statusCode });
+
+    res.end = originalEnd;
+    res.end(chunk, encoding);
+  };
+
+  // Set the logger on the request
+  set(req, 'logger', logger);
+};
+
+export function getRequestLogger(req: any): Logger {
+  if (isLogger(req.logger)) {
+    return req.logger;
+  }
+
+  throw Error(`The logger is not setup on ${req.method} ${req.path}`);
+}
