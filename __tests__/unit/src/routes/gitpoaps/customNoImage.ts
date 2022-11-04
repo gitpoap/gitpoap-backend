@@ -2,7 +2,7 @@ import { mockDeep } from 'jest-mock-extended';
 import { Multer } from 'multer';
 import '../../../../../__mocks__/src/logging';
 import { contextMock } from '../../../../../__mocks__/src/context';
-import { setupApp } from '../../../../../src/app';
+import { setupApp } from '../../../../../__mocks__/src/app';
 import { generateAuthTokens } from '../../../../../src/lib/authTokens';
 import request from 'supertest';
 import { uploadMulterFile } from '../../../../../src/external/s3';
