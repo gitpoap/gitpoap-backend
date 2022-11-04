@@ -1,17 +1,14 @@
 import { Router } from 'express';
 import { context } from '../../../context';
-import { httpRequestDurationSeconds } from '../../../metrics';
-import { createScopedLogger } from '../../../logging';
 import { ClaimStatus, GitPOAPStatus } from '@generated/type-graphql';
+import { getRequestLogger } from '../../../middleware/loggingAndTiming';
 
 export const poapRouter = Router();
 
 poapRouter.get('/:poapTokenId/is-gitpoap', async function (req, res) {
-  const logger = createScopedLogger('GET /v1/poap/:poapTokenId/is-gitpoap');
+  const logger = getRequestLogger(req);
 
   logger.info(`Request to check it POAP token id ${req.params.poapTokenId} is a GitPOAP`);
-
-  const endTimer = httpRequestDurationSeconds.startTimer('GET', '/v1/poap/:poapTokenId/is-gitpoap');
 
   const claim = await context.prisma.claim.findUnique({
     where: {
@@ -26,8 +23,6 @@ poapRouter.get('/:poapTokenId/is-gitpoap', async function (req, res) {
       },
     },
   });
-
-  endTimer({ status: 200 });
 
   logger.debug(
     `Completed request to check it POAP token id ${req.params.poapTokenId} is a GitPOAP`,
@@ -45,11 +40,9 @@ poapRouter.get('/:poapTokenId/is-gitpoap', async function (req, res) {
 });
 
 poapRouter.get('/gitpoap-ids', async function (req, res) {
-  const logger = createScopedLogger('GET /v1/poap/gitpoap-ids');
+  const logger = getRequestLogger(req);
 
   logger.info('Request for all the POAP Token IDs that are GitPOAPs');
-
-  const endTimer = httpRequestDurationSeconds.startTimer('GET', '/v1/poap/gitpoap-ids');
 
   const claims = await context.prisma.claim.findMany({
     where: {
@@ -61,8 +54,6 @@ poapRouter.get('/gitpoap-ids', async function (req, res) {
   });
 
   const results = claims.map(c => c.poapTokenId);
-
-  endTimer({ status: 200 });
 
   logger.info('Completed request for all the POAP Token IDs that are GitPOAPs');
 

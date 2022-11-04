@@ -3,18 +3,15 @@ import { DateTime } from 'luxon';
 import { context } from '../context';
 import { sendVerificationEmail } from '../external/postmark';
 import { generateUniqueEmailToken } from '../lib/email';
-import { createScopedLogger } from '../logging';
-import { httpRequestDurationSeconds } from '../metrics';
 import { jwtWithAddress } from '../middleware/auth';
 import { AddEmailSchema } from '../schemas/email';
 import { getAccessTokenPayload } from '../types/authTokens';
+import { getRequestLogger } from '../middleware/loggingAndTiming';
 
 export const emailRouter = Router();
 
 emailRouter.get('/', jwtWithAddress(), async function (req, res) {
-  const logger = createScopedLogger('GET /email');
-
-  const endTimer = httpRequestDurationSeconds.startTimer('GET', '/email');
+  const logger = getRequestLogger(req);
 
   const { address: ethAddress, addressId } = getAccessTokenPayload(req.user);
 
@@ -34,24 +31,17 @@ emailRouter.get('/', jwtWithAddress(), async function (req, res) {
 
   logger.debug(`Completed request to retrieve the email connected to: ${ethAddress}`);
 
-  endTimer({ status: 200 });
-
   return res.status(200).send({ email });
 });
 
 emailRouter.post('/', jwtWithAddress(), async function (req, res) {
-  const logger = createScopedLogger('POST /email');
-
-  logger.debug(`Body: ${JSON.stringify(req.body)}`);
-
-  const endTimer = httpRequestDurationSeconds.startTimer('POST', '/email');
+  const logger = getRequestLogger(req);
 
   const schemaResult = AddEmailSchema.safeParse(req.body);
   if (!schemaResult.success) {
     logger.warn(
       `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
     );
-    endTimer({ status: 400 });
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
@@ -94,15 +84,11 @@ emailRouter.post('/', jwtWithAddress(), async function (req, res) {
 
   logger.debug(`Completed request from ${ethAddress} to connect email: ${emailAddress}`);
 
-  endTimer({ status: 200 });
-
   return res.status(200).send('ADDED');
 });
 
 emailRouter.delete('/', jwtWithAddress(), async function (req, res) {
-  const logger = createScopedLogger('DELETE /email');
-
-  const endTimer = httpRequestDurationSeconds.startTimer('DELETE', '/email');
+  const logger = getRequestLogger(req);
 
   const { address: ethAddress, addressId } = getAccessTokenPayload(req.user);
 
@@ -116,23 +102,16 @@ emailRouter.delete('/', jwtWithAddress(), async function (req, res) {
     });
   } catch (err) {
     logger.warn(`Tried to remove email connection that doesn't exist: ${err}`);
-    endTimer({ status: 404 });
     return res.status(404).send({ msg: `No email connection present` });
   }
 
   logger.debug(`Completed request from ${ethAddress} to remove email connection`);
 
-  endTimer({ status: 200 });
-
   return res.status(200).send('DELETED');
 });
 
 emailRouter.post('/verify/:activeToken', jwtWithAddress(), async function (req, res) {
-  const logger = createScopedLogger('POST /email/verify/:activeToken');
-
-  logger.debug(`Params: ${JSON.stringify(req.params)}`);
-
-  const endTimer = httpRequestDurationSeconds.startTimer('POST', '/email/verify/:activeToken');
+  const logger = getRequestLogger(req);
 
   const { address: ethAddress } = getAccessTokenPayload(req.user);
   const activeToken = req.params.activeToken;
@@ -149,19 +128,16 @@ emailRouter.post('/verify/:activeToken', jwtWithAddress(), async function (req, 
   });
   if (email === null) {
     logger.error(`Invalid email validation token provided: ${activeToken}`);
-    endTimer({ status: 404 });
     return res.status(404).send({ msg: 'INVALID' });
   }
 
   if (!email.tokenExpiresAt) {
     logger.error(`Email validation token has no expiration date: ${activeToken}`);
-    endTimer({ status: 400 });
     return res.status(400).send({ msg: 'INVALID' });
   }
 
   if (email.isValidated) {
     logger.warn('User attempted to validate emailAddress that has already been validated');
-    endTimer({ status: 400 });
     return res.status(400).send({ msg: 'USED' });
   }
 
@@ -174,7 +150,6 @@ emailRouter.post('/verify/:activeToken', jwtWithAddress(), async function (req, 
       },
     });
 
-    endTimer({ status: 401 });
     return res.status(401).send({ msg: 'EXPIRED' });
   }
 
@@ -188,8 +163,6 @@ emailRouter.post('/verify/:activeToken', jwtWithAddress(), async function (req, 
   });
 
   logger.debug(`Completed request from ${ethAddress} to verify token: ${activeToken}`);
-
-  endTimer({ status: 200 });
 
   return res.status(200).send({ msg: 'VALID' });
 });

@@ -1,28 +1,22 @@
 import { Router } from 'express';
-import { createScopedLogger } from '../logging';
-import { httpRequestDurationSeconds } from '../metrics';
 import { jwtWithAdminAddress, jwtWithAdminOAuth } from '../middleware/auth';
 import { AddReposSchema } from '../schemas/projects';
 import { createRepoByGithubId } from '../lib/repos';
 import { context } from '../context';
 import { getAccessTokenPayloadWithOAuth } from '../types/authTokens';
 import { backloadGithubPullRequestData } from '../lib/pullRequests';
+import { getRequestLogger } from '../middleware/loggingAndTiming';
 
 export const projectsRouter = Router();
 
 projectsRouter.post('/add-repos', jwtWithAdminOAuth(), async (req, res) => {
-  const logger = createScopedLogger('POST /projects/add-repos');
-
-  logger.debug(`Body: ${JSON.stringify(req.body)}`);
-
-  const endTimer = httpRequestDurationSeconds.startTimer('POST', '/projects/add-repos');
+  const logger = getRequestLogger(req);
 
   const schemaResult = AddReposSchema.safeParse(req.body);
   if (!schemaResult.success) {
     logger.warn(
       `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
     );
-    endTimer({ status: 400 });
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
@@ -43,7 +37,6 @@ projectsRouter.post('/add-repos', jwtWithAdminOAuth(), async (req, res) => {
   if (project === null) {
     const msg = `Project with ID ${req.body.projectId} does not exist!`;
     logger.warn(msg);
-    endTimer({ status: 404 });
     return res.status(404).send({ msg });
   }
 
@@ -61,15 +54,12 @@ projectsRouter.post('/add-repos', jwtWithAdminOAuth(), async (req, res) => {
   if (failures.length > 0) {
     const msg = `Failed to add GitHub Repo IDs ${failures} to Project ID ${project.id}`;
     logger.warn(msg);
-    endTimer({ status: 500 });
     return res.status(500).send({ msg });
   }
 
   logger.debug(
     `Completed request to add GitHub Repo IDs ${req.body.githubRepoIds} to Project ID ${project.id}`,
   );
-
-  endTimer({ status: 200 });
 
   res.status(200).send('ADDED');
 
@@ -80,9 +70,7 @@ projectsRouter.post('/add-repos', jwtWithAdminOAuth(), async (req, res) => {
 });
 
 projectsRouter.put('/enable/:id', jwtWithAdminAddress(), async (req, res) => {
-  const logger = createScopedLogger('PUT /projects/enable/:id');
-
-  const endTimer = httpRequestDurationSeconds.startTimer('PUT', '/projects/enable/:id');
+  const logger = getRequestLogger(req);
 
   const projectId = parseInt(req.params.id, 10);
 
@@ -99,7 +87,6 @@ projectsRouter.put('/enable/:id', jwtWithAdminAddress(), async (req, res) => {
   if (projectData === null) {
     const msg = `Failed to find Project with ID ${projectId}`;
     logger.warn(msg);
-    endTimer({ status: 404 });
     return res.status(404).send({ msg });
   }
 
@@ -113,8 +100,6 @@ projectsRouter.put('/enable/:id', jwtWithAdminAddress(), async (req, res) => {
   });
 
   logger.debug(`Completed admin request to enable all GitPOAPs in Project ID ${projectId}`);
-
-  endTimer({ status: 200 });
 
   return res.status(200).send('ENABLED');
 });

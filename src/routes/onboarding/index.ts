@@ -10,8 +10,6 @@ import {
   UpdateItemCommand,
 } from '@aws-sdk/client-dynamodb';
 import { configProfile, dynamoDBClient } from '../../external/dynamo';
-import { createScopedLogger } from '../../logging';
-import { httpRequestDurationSeconds } from '../../metrics';
 import { jwtWithGitHubOAuth } from '../../middleware/auth';
 import { getAccessTokenPayloadWithOAuth } from '../../types/authTokens';
 import { sendConfirmationEmail, sendInternalConfirmationEmail } from '../../external/postmark';
@@ -24,6 +22,7 @@ import { APIResponseData, IntakeForm, PullRequestsRes, Repo } from './types';
 import { getMappedOrgRepo, getMappedPrRepo, getMappedRepo } from './utils';
 import { publicPRsQuery } from './queries';
 import { createIntakeFormDocForDynamo, createUpdateItemParamsForImages } from './dynamo';
+import { getRequestLogger } from '../../middleware/loggingAndTiming';
 
 export const onboardingRouter = Router();
 
@@ -34,10 +33,8 @@ onboardingRouter.post<'/intake-form', any, any, IntakeForm>(
   jwtWithGitHubOAuth(),
   upload.array('images', 5),
   async (req, res) => {
-    const logger = createScopedLogger('GET /onboarding/intake-form');
-    logger.debug(`Body: ${JSON.stringify(req.body)}`);
+    const logger = getRequestLogger(req);
 
-    const endTimer = httpRequestDurationSeconds.startTimer('GET', '/onboarding/intake-form');
     const { githubHandle } = getAccessTokenPayloadWithOAuth(req.user);
     const unixTime = DateTime.local().toUnixInteger();
     const intakeFormTable = configProfile.tables.intakeForm;
@@ -50,7 +47,6 @@ onboardingRouter.post<'/intake-form', any, any, IntakeForm>(
       logger.warn(
         `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
       );
-      endTimer({ status: 400 });
       return res.status(400).send({ issues: schemaResult.error.issues });
     }
 
@@ -60,7 +56,6 @@ onboardingRouter.post<'/intake-form', any, any, IntakeForm>(
       logger.warn(
         `Missing/invalid body fields in request: ${JSON.stringify(reposSchemaResult.error.issues)}`,
       );
-      endTimer({ status: 400 });
       return res.status(400).send({ issues: reposSchemaResult.error.issues });
     }
 
@@ -70,7 +65,6 @@ onboardingRouter.post<'/intake-form', any, any, IntakeForm>(
       logger.warn(
         `Missing/invalid body fields in request: ${JSON.stringify(imageSchemaResult.error.issues)}`,
       );
-      endTimer({ status: 400 });
       return res.status(400).send({ issues: imageSchemaResult.error.issues });
     }
 
@@ -85,7 +79,6 @@ onboardingRouter.post<'/intake-form', any, any, IntakeForm>(
       logger.error(
         `Received error when pushing new item to DynamoDB table ${intakeFormTable} - ${err} `,
       );
-      endTimer({ status: 400 });
       return res.status(400).send({ msg: 'Failed to submit intake form' });
     }
 
@@ -106,7 +99,6 @@ onboardingRouter.post<'/intake-form', any, any, IntakeForm>(
           );
         } catch (err) {
           logger.error(`Received error when uploading image to S3 - ${err}`);
-          endTimer({ status: 400 });
           return res.status(400).send({ msg: 'Failed to submit intake form assets to S3' });
         }
       }
@@ -126,7 +118,6 @@ onboardingRouter.post<'/intake-form', any, any, IntakeForm>(
         );
       } catch (err) {
         logger.error(`Received error when updating DynamoDB table ${intakeFormTable} - ${err} `);
-        endTimer({ status: 400 });
         return res.status(400).send({ msg: 'Failed to submit image URLs to DynamoDB' });
       }
     } else {
@@ -164,8 +155,6 @@ onboardingRouter.post<'/intake-form', any, any, IntakeForm>(
       `Successfully submitted intake form for GitHub user - ${githubHandle} and email - ${req.body.email}`,
     );
 
-    endTimer({ status: 200 });
-
     /* Return form data, the queue number, and a confirmation message to the user */
     return res.status(200).send({
       formData: req.body,
@@ -179,8 +168,7 @@ onboardingRouter.get<'/github/repos', any, APIResponseData<Repo[]>>(
   '/github/repos',
   jwtWithGitHubOAuth(),
   async function (req, res) {
-    const logger = createScopedLogger('GET /onboarding/github/repos');
-    const endTimer = httpRequestDurationSeconds.startTimer('GET', '/onboarding/github/repos');
+    const logger = getRequestLogger(req);
 
     const { githubOAuthToken } = getAccessTokenPayloadWithOAuth(req.user);
     const octokit = new Octokit({ auth: githubOAuthToken });
@@ -280,7 +268,6 @@ onboardingRouter.get<'/github/repos', any, APIResponseData<Repo[]>>(
         .map(repo => getMappedRepo(repo));
     } catch (error) {
       logger.error(`Received error when fetching repos for GitHub user - ${error}`);
-      endTimer({ status: 400 });
       return res.status(400).send({ message: 'Failed to fetch repos for GitHub user' });
     }
 
@@ -290,7 +277,6 @@ onboardingRouter.get<'/github/repos', any, APIResponseData<Repo[]>>(
     logger.info(
       `Found ${allRepos.length} total applicable repos for GitHub user ${user.data.login}. Rejected ${rejectedRepoIds.size} repos.`,
     );
-    endTimer({ status: 200 });
 
     /* Return status 200 and set a stale-while-revalidate cache-control header */
     res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=1800');
