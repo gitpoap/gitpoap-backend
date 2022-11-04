@@ -6,6 +6,9 @@ const ProfileData = z
     bannerImageUrl: z.nullable(z.string()),
     name: z.nullable(z.string()),
     profileImageUrl: z.nullable(z.string()),
+    githubHandle: z.nullable(z.string()),
+    twitterHandle: z.nullable(z.string()),
+    personalSiteUrl: z.nullable(z.string()),
     isVisibleOnLeaderboard: z.boolean(),
   })
   .strict();
