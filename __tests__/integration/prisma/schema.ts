@@ -10,7 +10,7 @@ describe('prisma/schema assumptions', () => {
     });
 
     // Expect that there's at least 2 GithubPullRequests already in the DB
-    expect(pullRequests.length).toEqual(2);
+    expect(pullRequests).toHaveLength(2);
 
     const mention1 = await context.prisma.githubMention.create({
       data: {
@@ -59,101 +59,6 @@ describe('prisma/schema assumptions', () => {
       where: {
         id: {
           in: [mention1.id, mention2.id],
-        },
-      },
-    });
-  });
-
-  it('Allows creating multiple GithubMention records with issueId = null', async () => {
-    const issue1 = await context.prisma.githubIssue.create({
-      data: {
-        githubCreatedAt: new Date(),
-        githubIssueNumber: 234,
-        githubTitle: 'Big Issue',
-        user: {
-          connect: {
-            id: 3,
-          },
-        },
-        repo: {
-          connect: {
-            id: 1,
-          },
-        },
-      },
-    });
-    const issue2 = await context.prisma.githubIssue.create({
-      data: {
-        githubCreatedAt: new Date(),
-        githubIssueNumber: 34,
-        githubTitle: 'Small Issue',
-        user: {
-          connect: {
-            id: 1,
-          },
-        },
-        repo: {
-          connect: {
-            id: 1,
-          },
-        },
-      },
-    });
-
-    const mention1 = await context.prisma.githubMention.create({
-      data: {
-        githubMentionedAt: new Date(),
-        issue: {
-          connect: {
-            id: issue1.id,
-          },
-        },
-        user: {
-          connect: {
-            id: 1,
-          },
-        },
-        repo: {
-          connect: {
-            id: 1,
-          },
-        },
-      },
-    });
-
-    const mention2 = await context.prisma.githubMention.create({
-      data: {
-        githubMentionedAt: new Date(),
-        issue: {
-          connect: {
-            id: issue2.id,
-          },
-        },
-        user: {
-          connect: {
-            id: 1,
-          },
-        },
-        repo: {
-          connect: {
-            id: 1,
-          },
-        },
-      },
-    });
-
-    // Cleanup
-    await context.prisma.githubMention.deleteMany({
-      where: {
-        id: {
-          in: [mention1.id, mention2.id],
-        },
-      },
-    });
-    await context.prisma.githubIssue.deleteMany({
-      where: {
-        id: {
-          in: [issue1.id, issue2.id],
         },
       },
     });

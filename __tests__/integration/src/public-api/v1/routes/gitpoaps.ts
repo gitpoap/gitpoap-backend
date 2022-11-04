@@ -70,7 +70,7 @@ describe('public-api/v1/gitpoaps/events', () => {
     event: POAPEvent,
     repositories: string[],
     mintedCount: number,
-    isDeprecated: boolean = false,
+    isDeprecated = false,
   ): GitPOAPEventResultType => ({
     gitPoapEventId,
     poapEventId: event.id,

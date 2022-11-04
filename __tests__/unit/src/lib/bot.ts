@@ -1,6 +1,5 @@
 import 'reflect-metadata';
 import '../../../../__mocks__/src/logging';
-import { contextMock } from '../../../../__mocks__/src/context';
 import {
   BotCreateClaimsErrorType,
   createClaimsForPR,

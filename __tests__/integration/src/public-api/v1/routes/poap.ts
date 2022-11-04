@@ -47,24 +47,24 @@ describe('public-api/v1/poap/gitpoap-ids', () => {
     const data = await response.json();
 
     expect(data.poapTokenIds).not.toEqual(null);
-    expect(data.poapTokenIds.length).toEqual(16);
+    expect(data.poapTokenIds).toHaveLength(16);
 
     // names are from variables in prisma/seed.ts
     expect(data.poapTokenIds).toContainEqual('thunderdome'); // claim1
-    expect(data.poapTokenIds).toContainEqual('4068606');     // claim2
-    expect(data.poapTokenIds).toContainEqual('ethdenver');   // claim4
-    expect(data.poapTokenIds).toContainEqual('4078452');     // claim5
-    expect(data.poapTokenIds).toContainEqual('pizza-pie');   // claim8
-    expect(data.poapTokenIds).toContainEqual('4082459');     // claim9
-    expect(data.poapTokenIds).toContainEqual('3217451');     // claim14
-    expect(data.poapTokenIds).toContainEqual('3973554');     // claim16
-    expect(data.poapTokenIds).toContainEqual('4126448');     // claim17
-    expect(data.poapTokenIds).toContainEqual('123456789');   // claim21
-    expect(data.poapTokenIds).toContainEqual('1234567891');  // claim31
-    expect(data.poapTokenIds).toContainEqual('1234567892');  // claim32
-    expect(data.poapTokenIds).toContainEqual('1234567893');  // claim36
-    expect(data.poapTokenIds).toContainEqual('1234567894');  // claim41
-    expect(data.poapTokenIds).toContainEqual('77777');       // claim42
-    expect(data.poapTokenIds).toContainEqual('77778');       // claim43
+    expect(data.poapTokenIds).toContainEqual('4068606'); // claim2
+    expect(data.poapTokenIds).toContainEqual('ethdenver'); // claim4
+    expect(data.poapTokenIds).toContainEqual('4078452'); // claim5
+    expect(data.poapTokenIds).toContainEqual('pizza-pie'); // claim8
+    expect(data.poapTokenIds).toContainEqual('4082459'); // claim9
+    expect(data.poapTokenIds).toContainEqual('3217451'); // claim14
+    expect(data.poapTokenIds).toContainEqual('3973554'); // claim16
+    expect(data.poapTokenIds).toContainEqual('4126448'); // claim17
+    expect(data.poapTokenIds).toContainEqual('123456789'); // claim21
+    expect(data.poapTokenIds).toContainEqual('1234567891'); // claim31
+    expect(data.poapTokenIds).toContainEqual('1234567892'); // claim32
+    expect(data.poapTokenIds).toContainEqual('1234567893'); // claim36
+    expect(data.poapTokenIds).toContainEqual('1234567894'); // claim41
+    expect(data.poapTokenIds).toContainEqual('77777'); // claim42
+    expect(data.poapTokenIds).toContainEqual('77778'); // claim43
   });
 });
