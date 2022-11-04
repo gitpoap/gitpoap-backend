@@ -5,6 +5,6 @@ describe('addPRCountData', () => {
   it('Can handle when the list of GitPOAPs is empty', async () => {
     const result = await addPRCountData([]);
 
-    expect(result.length).toEqual(0);
+    expect(result).toHaveLength(0);
   });
 });
