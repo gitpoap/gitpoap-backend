@@ -2,7 +2,7 @@ import { mockDeep } from 'jest-mock-extended';
 import { Multer } from 'multer';
 import '../../../../../__mocks__/src/logging';
 import { contextMock } from '../../../../../__mocks__/src/context';
-import { AdminApprovalStatus, ClaimStatus, GitPOAPType } from '@prisma/client';
+import { AdminApprovalStatus, GitPOAPType } from '@prisma/client';
 import { setupApp } from '../../../../../src/app';
 import { generateAuthTokens } from '../../../../../src/lib/authTokens';
 import request from 'supertest';
@@ -25,14 +25,10 @@ const authTokenId = 4;
 const authTokenGeneration = 1;
 const addressId = 342;
 const address = ADDRESSES.vitalik;
-const githubId = 232444;
-const githubOAuthToken = 'foobar34543';
-const githubHandle = 'anna-burz';
 const gitPOAPRequestId = 2;
 const gitPOAPId = 24;
 const ensName = 'furby.eth';
 const ensAvatarImageUrl = null;
-const claimId = 342;
 const burzEmail = 'burz@gitpoap.io';
 const burzENS = 'burz.eth';
 const colfaxEmail = 'colfax@gitpoap.io';
@@ -60,17 +56,7 @@ const baseGitPOAP = {
     ensNames: ['burz.eth'],
   }),
 };
-const claim = {
-  id: claimId,
-  status: ClaimStatus.UNCLAIMED,
-  gitPOAP: {
-    id: gitPOAPId,
-    type: GitPOAPType.CUSTOM,
-    gitPOAPRequest: {
-      addressId,
-    },
-  },
-};
+
 const gitPOAPRequest = {
   addressId,
   adminApprovalStatus: AdminApprovalStatus.PENDING,
@@ -141,10 +127,10 @@ jest.mock('multer', () =>
 );
 
 jest.mock('../../../../../src/lib/claims');
-const mockedCreateClaimForEmail = jest.mocked(createClaimForEmail, true);
-const mockedCreateClaimForEnsName = jest.mocked(createClaimForEnsName, true);
-const mockedCreateClaimForEthAddress = jest.mocked(createClaimForEthAddress, true);
-const mockedCreateClaimForGithubHandle = jest.mocked(createClaimForGithubHandle, true);
+jest.mocked(createClaimForEmail, true);
+jest.mocked(createClaimForEnsName, true);
+jest.mocked(createClaimForEthAddress, true);
+jest.mocked(createClaimForGithubHandle, true);
 
 jest.spyOn(DateTime, 'now').mockReturnValue(DateTime.fromSeconds(123456789));
 const mockedGetImageBufferFromS3 = jest.mocked(getImageBufferFromS3, true);
@@ -691,7 +677,7 @@ describe('DELETE /gitpoaps/custom/:gitPOAPRequestId/claim', () => {
     expect(contextMock.prisma.gitPOAPRequest.findUnique).toHaveBeenCalledTimes(0);
   });
 
-  const expectFindUniqueCalls = (count: number = 1) => {
+  const expectFindUniqueCalls = (count = 1) => {
     expect(contextMock.prisma.gitPOAPRequest.findUnique).toHaveBeenCalledTimes(count);
     expect(contextMock.prisma.gitPOAPRequest.findUnique).toHaveBeenCalledWith({
       where: { id: gitPOAPRequestId },
@@ -854,7 +840,7 @@ describe('PUT /gitpoaps/custom/:gitPOAPRequestId/claims', () => {
     expect(contextMock.prisma.gitPOAPRequest.findUnique).toHaveBeenCalledTimes(0);
   });
 
-  const expectFindUniqueCalls = (count: number = 1) => {
+  const expectFindUniqueCalls = (count = 1) => {
     expect(contextMock.prisma.gitPOAPRequest.findUnique).toHaveBeenCalledTimes(count);
     expect(contextMock.prisma.gitPOAPRequest.findUnique).toHaveBeenCalledWith({
       where: { id: gitPOAPRequestId },

@@ -33,8 +33,8 @@ function fillInUpsert(userId: number, gitPOAPId: number, contribution: Contribut
   return {
     where: {
       gitPOAPId_userId: {
-        gitPOAPId: gitPOAPId,
-        userId: userId,
+        gitPOAPId,
+        userId,
       },
     },
     update: {},

@@ -28,7 +28,7 @@ const gitPOAP: GitPOAPWithSecret = {
   poapApprovalStatus: GitPOAPStatus.UNAPPROVED,
   poapEventId: 32423,
   poapSecret: 'foobar',
-};
+} as any;
 
 const repoIds = [34, 4, 3];
 

@@ -26,7 +26,7 @@ const mockedUpsertGithubPullRequest = jest.mocked(upsertGithubPullRequest, true)
 type GithubPullRequestData = DeepPartial<OctokitResponseData<PullsAPI['get']>> & {
   number: number;
   title: string;
-  user: {};
+  user: Record<string, any>;
   created_at: string;
   updated_at: string;
   merge_commit_sha: string;

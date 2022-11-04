@@ -15,7 +15,7 @@ describe('CustomSearchResolver', () => {
       }
     `);
 
-    expect(data.search.users.length).toEqual(1);
+    expect(data.search.users).toHaveLength(1);
     expect(data.search.users[0].id).toEqual(5);
   });
 
@@ -30,7 +30,7 @@ describe('CustomSearchResolver', () => {
       }
     `);
 
-    expect(data.search.profiles.length).toEqual(1);
+    expect(data.search.profiles).toHaveLength(1);
     expect(data.search.profiles[0].id).toEqual(3);
   });
 
@@ -45,7 +45,7 @@ describe('CustomSearchResolver', () => {
       }
     `);
 
-    expect(data.search.profiles.length).toEqual(1);
+    expect(data.search.profiles).toHaveLength(1);
     expect(data.search.profiles[0].id).toEqual(1);
   });
 
@@ -60,7 +60,7 @@ describe('CustomSearchResolver', () => {
       }
     `);
 
-    expect(data.search.profiles.length).toEqual(1);
+    expect(data.search.profiles).toHaveLength(1);
     expect(data.search.profiles[0].id).toEqual(4);
   });
 });

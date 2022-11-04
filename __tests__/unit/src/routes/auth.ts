@@ -372,7 +372,7 @@ describe('POST /auth/refresh', () => {
     expectAuthTokenLookup();
   });
 
-  const mockAuthTokenLookup = (createdAt: Date, generation: number, hasUser: boolean = false) => {
+  const mockAuthTokenLookup = (createdAt: Date, generation: number, hasUser = false) => {
     let user = null;
     if (hasUser) {
       user = {

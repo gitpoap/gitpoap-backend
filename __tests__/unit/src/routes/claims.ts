@@ -481,7 +481,7 @@ describe('DELETE /claims/:id', () => {
     expect(contextMock.prisma.claim.findUnique).toHaveBeenCalledTimes(0);
   });
 
-  const expectFindUniqueCalls = (count: number = 1) => {
+  const expectFindUniqueCalls = (count = 1) => {
     expect(contextMock.prisma.claim.findUnique).toHaveBeenCalledTimes(count);
     expect(contextMock.prisma.claim.findUnique).toHaveBeenCalledWith({
       where: { id: claimId },
@@ -579,7 +579,7 @@ describe('DELETE /claims/:id', () => {
         status,
         gitPOAP: {
           type,
-          creatorAddressId: addressId,
+          creatorAddressId,
         },
       } as any);
       const result = await request(await setupApp())
