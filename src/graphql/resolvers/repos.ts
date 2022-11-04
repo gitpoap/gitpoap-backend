@@ -123,7 +123,7 @@ export class CustomRepoResolver {
       return null;
     }
 
-    // This () 0 if there's an error or repo doesn't exist
+    // This returns 0 if there's an error or repo doesn't exist
     const result = await getGithubRepositoryStarCount(repo.githubRepoId);
 
     logger.debug(`Completed request for star count of repo id: ${repoId}`);

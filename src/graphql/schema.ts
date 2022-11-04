@@ -95,7 +95,9 @@ import { CustomProfileResolver } from './resolvers/profiles';
 import { CustomRepoResolver } from './resolvers/repos';
 import { CustomSearchResolver } from './resolvers/search';
 
-const allResolvers: NonEmptyArray<any> = [
+type ResolverClass = { new (...args: any[]): any };
+
+const allResolvers: NonEmptyArray<ResolverClass> = [
   /* ~~ Generated resolvers ~~ */
   UserRelationsResolver,
   ProfileRelationsResolver,
