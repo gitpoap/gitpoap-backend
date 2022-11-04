@@ -68,7 +68,7 @@ async function heatUpENSCache() {
       synchronous: true,
     });
 
-    void sleep(HEATER_DELAY_BETWEEN_ADDRESSES_SECONDS);
+    await sleep(HEATER_DELAY_BETWEEN_ADDRESSES_SECONDS);
   }
 
   const skipped = addresses.length - checkedCount;
