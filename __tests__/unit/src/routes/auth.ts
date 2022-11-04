@@ -1,7 +1,7 @@
 import '../../../../__mocks__/src/logging';
 import { contextMock } from '../../../../__mocks__/src/context';
 import request from 'supertest';
-import { setupApp } from '../../../../src/app';
+import { setupApp } from '../../../../__mocks__/src/app';
 import { isAuthSignatureDataValid } from '../../../../src/lib/signatures';
 import { isGithubTokenValidForUser } from '../../../../src/external/github';
 import { sign, verify } from 'jsonwebtoken';

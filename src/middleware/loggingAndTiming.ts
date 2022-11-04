@@ -1,5 +1,6 @@
 import { RequestHandler } from 'express';
-import { Logger, createScopedLogger, isLogger } from '../logging';
+import { Logger, isLogger } from '../types/logger';
+import { createScopedLogger } from '../logging';
 import { httpRequestDurationSeconds } from '../metrics';
 import set from 'lodash/set';
 
@@ -7,21 +8,13 @@ export const loggingAndTimingMiddleware: RequestHandler = (req, res, next) => {
   const logger = createScopedLogger(`${req.method} ${req.path}`);
   const endTimer = httpRequestDurationSeconds.startTimer(req.method, req.path);
 
-  logger.debug(`Handling ${req.method} ${req.path}`);
-
-  if (req.body !== {}) {
-    logger.debug(`Body: ${JSON.stringify(req.body)}`);
-  }
-
-  if (req.params !== {}) {
-    logger.debug(`Params: ${JSON.stringify(req.params)}`);
-  }
+  logger.debug(`Handling Body: ${JSON.stringify(req.body)}, Params: ${JSON.stringify(req.params)}`);
 
   const originalEnd = res.end;
 
   // Override the end function
   res.end = (chunk: any, encoding?: any) => {
-    logger.debug(`Completed request (status ${res.statusCode}) ${req.method} ${req.path}`);
+    logger.debug(`Completed request with status: ${res.statusCode}`);
 
     endTimer({ status: res.statusCode });
 
@@ -31,6 +24,8 @@ export const loggingAndTimingMiddleware: RequestHandler = (req, res, next) => {
 
   // Set the logger on the request
   set(req, 'logger', logger);
+
+  next();
 };
 
 export function getRequestLogger(req: any): Logger {

@@ -1,6 +1,6 @@
 import '../../../../__mocks__/src/logging';
 import { contextMock } from '../../../../__mocks__/src/context';
-import { setupApp } from '../../../../src/app';
+import { setupApp } from '../../../../__mocks__/src/app';
 import request from 'supertest';
 import { getGithubAuthenticatedApp } from '../../../../src/external/github';
 import { GITPOAP_BOT_APP_ID } from '../../../../src/constants';
