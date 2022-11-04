@@ -10,8 +10,6 @@ export async function handleGitPOAPTransfer(
   oldAddress: string,
   newAddress: string,
 ): Promise<Claim> {
-  const logger = createScopedLogger('handleTransfer');
-
   // Delete a Feature for this GitPOAP if it exists
   await context.prisma.featuredPOAP.deleteMany({
     where: {

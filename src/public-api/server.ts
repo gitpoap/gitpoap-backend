@@ -1,4 +1,5 @@
-require('dotenv').config();
+import { config } from 'dotenv';
+config();
 
 import express from 'express';
 import 'reflect-metadata';

@@ -3,6 +3,8 @@
  * outcome of tests. Be careful!
  */
 
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import 'reflect-metadata';
 import { ClaimStatus, GitPOAPStatus } from '@generated/type-graphql';
 import {

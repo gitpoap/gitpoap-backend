@@ -5,4 +5,4 @@ const main = async () => {
   await createAndEmitSchema();
 };
 
-main();
+void main();

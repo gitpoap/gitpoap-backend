@@ -13,7 +13,7 @@ import multer from 'multer';
 import { httpRequestDurationSeconds } from '../../metrics';
 import { generatePOAPSecret } from '../../lib/secrets';
 import { DateTime } from 'luxon';
-import { AdminApprovalStatus, ClaimStatus, GitPOAPType, Prisma } from '@prisma/client';
+import { AdminApprovalStatus, GitPOAPType, Prisma } from '@prisma/client';
 import { getImageBufferFromS3, s3configProfile, uploadMulterFile } from '../../external/s3';
 import { convertGitPOAPRequestToGitPOAP } from '../../lib/gitpoaps';
 import { parseJSON } from '../../lib/json';
