@@ -5,7 +5,7 @@ import { JWT_SECRET } from '../environment';
 import { createScopedLogger } from '../logging';
 import { httpRequestDurationSeconds } from '../metrics';
 
-var router = Router();
+const router = Router();
 
 router.get('/', function (req, res) {
   const logger = createScopedLogger('GET /jwt');

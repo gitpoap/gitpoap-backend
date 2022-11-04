@@ -1,4 +1,6 @@
-require('dotenv').config();
+import { config } from 'dotenv';
+config();
+
 import 'reflect-metadata';
 import { CONTACTS_TABLE_NAME } from './external/dynamo';
 import { PORT } from './constants';

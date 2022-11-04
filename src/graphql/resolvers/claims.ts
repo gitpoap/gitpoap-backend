@@ -16,10 +16,10 @@ class FullClaimData {
   event: POAPEvent;
 }
 
-@Resolver(of => Claim)
+@Resolver(() => Claim)
 export class CustomClaimResolver {
-  @Query(returns => Number)
-  async totalClaims(@Ctx() { prisma }: Context): Promise<Number> {
+  @Query(() => Number)
+  async totalClaims(@Ctx() { prisma }: Context): Promise<number> {
     const logger = createScopedLogger('GQL totalClaims');
 
     logger.info('Request for total number of Claims');
@@ -39,8 +39,8 @@ export class CustomClaimResolver {
     return result;
   }
 
-  @Query(returns => Number)
-  async lastMonthClaims(@Ctx() { prisma }: Context): Promise<Number> {
+  @Query(() => Number)
+  async lastMonthClaims(@Ctx() { prisma }: Context): Promise<number> {
     const logger = createScopedLogger('GQL lastMonthClaims');
 
     logger.info('Request for the count of Claims made in the last month');
@@ -64,7 +64,7 @@ export class CustomClaimResolver {
     return result._count.id;
   }
 
-  @Query(returns => [FullClaimData], { nullable: true })
+  @Query(() => [FullClaimData], { nullable: true })
   async userClaims(
     @Ctx() { prisma }: Context,
     @Arg('githubId') githubId: number,

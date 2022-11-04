@@ -1,6 +1,6 @@
 import { context } from '../context';
 import { upsertAddress } from './addresses';
-import { Address, User, Profile } from '@prisma/client';
+import { Profile } from '@prisma/client';
 import { createScopedLogger } from '../logging';
 
 export async function upsertProfile(address: string, ensName?: string | null) {
