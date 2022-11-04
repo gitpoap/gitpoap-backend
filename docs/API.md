@@ -472,6 +472,32 @@ GitPOAP must be an admin as defined by
 
 Note that the Claim can only be deleted if it is still `UNCLAIMED`.
 
+## Update a GitPOAPRequest
+
+`PATCH /gitpoaps/custom/:gitPOAPRequestId`
+
+This endpoint allows the creator of a GitPOAPRequest to update (non-contributor) fields while the GitPOAPRequest is *not yet*
+`APPROVED`.
+
+Data:
+```json
+{
+  "data": {
+    "name": "Hi",
+    "description": "There",
+    "startDate": "2022-11-04",
+    "endDate": "2022-11-06",
+    "expiryDate": "2022-11-11",
+    "eventUrl": "https://gitpoap.io",
+    "numRequestedCodes": 2304,
+    "city": null,
+    "country": "Ukraine",
+  },
+}
+```
+
+Note that all the fields within `"data"` are optional.
+
 ## [gitpoap-bot] Create a Claim
 
 `PUT /claims/gitpoap-bot/create`
