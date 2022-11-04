@@ -1,7 +1,5 @@
 import { Router } from 'express';
 import { context } from '../../context';
-import { httpRequestDurationSeconds } from '../../metrics';
-import { createScopedLogger } from '../../logging';
 import { resolveENS } from '../../lib/ens';
 import { ClaimStatus } from '@generated/type-graphql';
 import { badgen } from 'badgen';
@@ -11,6 +9,7 @@ import { z } from 'zod';
 import { poapRouter } from './routes/poap';
 import { poapEventRouter } from './routes/poapEvent';
 import { gitpoapsRouter } from './routes/gitpoaps';
+import { getRequestLogger } from '../../middleware/loggingAndTiming';
 
 export const v1Router = Router();
 
@@ -19,16 +18,13 @@ v1Router.use('/poap-event', poapEventRouter);
 v1Router.use('/gitpoaps', gitpoapsRouter);
 
 v1Router.get('/address/:address/gitpoaps', async function (req, res) {
-  const logger = createScopedLogger('GET /v1/address/:address/gitpoaps');
+  const logger = getRequestLogger(req);
 
   logger.info(`Request for GitPOAPs for address "${req.params.address}"`);
-
-  const endTimer = httpRequestDurationSeconds.startTimer('GET', '/v1/address/:address/gitpoaps');
 
   const resolvedAddress = await resolveENS(req.params.address);
   if (resolvedAddress === null) {
     logger.warn('Request address is invalid');
-    endTimer({ status: 400 });
     return res.status(400).send({ msg: `${req.body.address} is not a valid address` });
   }
 
@@ -94,7 +90,6 @@ v1Router.get('/address/:address/gitpoaps', async function (req, res) {
   if (results === null) {
     const msg = 'Failed to query POAP data for claims';
     logger.error(msg);
-    endTimer({ status: 500 });
     return res.status(500).send({ msg });
   }
 
@@ -102,12 +97,9 @@ v1Router.get('/address/:address/gitpoaps', async function (req, res) {
 });
 
 v1Router.get('/github/user/:githubHandle/gitpoaps', async function (req, res) {
-  const logger = createScopedLogger('GET /v1/github/user/:githubHandle/gitpoaps');
+  const logger = getRequestLogger(req);
+
   logger.info(`Request for GitPOAPs for githubHandle "${req.params.githubHandle}"`);
-  const endTimer = httpRequestDurationSeconds.startTimer(
-    'GET',
-    '/v1/github/user/:githubHandle/gitpoaps',
-  );
 
   const QuerySchema = z.object({
     status: z.enum(['claimed', 'unclaimed', 'minting', 'pending']).optional(),
@@ -118,7 +110,6 @@ v1Router.get('/github/user/:githubHandle/gitpoaps', async function (req, res) {
     logger.warn(
       `Missing/invalid query fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
     );
-    endTimer({ status: 400 });
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
@@ -205,7 +196,6 @@ v1Router.get('/github/user/:githubHandle/gitpoaps', async function (req, res) {
   if (results === null) {
     const msg = `Failed to query POAP data for claims`;
     logger.error(msg);
-    endTimer({ status: 500 });
     return res.status(500).send({ msg });
   }
 
@@ -213,11 +203,9 @@ v1Router.get('/github/user/:githubHandle/gitpoaps', async function (req, res) {
 });
 
 v1Router.get('/repo/:owner/:name/badge', async (req, res) => {
-  const logger = createScopedLogger('GET /v1/repo/:owner/:name/badge');
+  const logger = getRequestLogger(req);
 
   logger.info(`Request for GitHub badge for the repo "${req.params.owner}/${req.params.name}"`);
-
-  const endTimer = httpRequestDurationSeconds.startTimer('GET', '/v1/repo/:owner/:name/badge');
 
   const claimsCount = await context.prisma.claim.count({
     where: {
@@ -244,8 +232,6 @@ v1Router.get('/repo/:owner/:name/badge', async (req, res) => {
     color: '307AE8', // Hex color for GitPOAP Blue
     icon: `data:image/svg+xml;utf8,${encodeURIComponent(GitPOAPMiniLogo)}`,
   });
-
-  endTimer({ status: 200 });
 
   logger.debug(
     `Completed request for GitHub badge for the repo "${req.params.owner}/${req.params.name}"`,

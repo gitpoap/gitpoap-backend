@@ -10,7 +10,7 @@ import { getGithubAuthenticatedApp } from '../external/github';
 import { captureException } from '../lib/sentry';
 import { isAddressAnAdmin, isGithubIdAnAdmin } from '../lib/admins';
 
-const jwtMiddleware = jwt({ secret: JWT_SECRET as string, algorithms: ['HS256'] });
+export const jwtMiddleware = jwt({ secret: JWT_SECRET as string, algorithms: ['HS256'] });
 
 export function jwtWithAddress() {
   const middleware: RequestHandler = async (req, res, next) => {

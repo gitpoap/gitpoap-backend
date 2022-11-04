@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import { createScopedLogger } from '../logging';
-import { httpRequestDurationSeconds } from '../metrics';
 import { RefreshTokenPayload, getRefreshTokenPayload } from '../types/authTokens';
 import { verify } from 'jsonwebtoken';
 import { JWT_SECRET } from '../environment';
@@ -14,6 +13,7 @@ import { removeUsersGithubOAuthToken } from '../lib/users';
 import { removeGithubLoginForAddress } from '../lib/addresses';
 import { LOGIN_EXP_TIME_MONTHS } from '../constants';
 import { DateTime } from 'luxon';
+import { getRequestLogger } from '../middleware/loggingAndTiming';
 
 export const authRouter = Router();
 
@@ -101,16 +101,13 @@ async function upsertAddressAndSelectGithubUser(address: string) {
 }
 
 authRouter.post('/', async function (req, res) {
-  const logger = createScopedLogger('POST /auth');
-  logger.debug(`Body: ${JSON.stringify(req.body)}`);
-  const endTimer = httpRequestDurationSeconds.startTimer('POST', '/auth');
+  const logger = getRequestLogger(req);
 
   const schemaResult = CreateAccessTokenSchema.safeParse(req.body);
   if (!schemaResult.success) {
     logger.warn(
       `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
     );
-    endTimer({ status: 400 });
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
@@ -124,7 +121,6 @@ authRouter.post('/', async function (req, res) {
   // Validate signature
   if (!isAuthSignatureDataValid(address, signatureData)) {
     logger.warn(`Request signature is invalid for address ${address}`);
-    endTimer({ status: 401 });
     return res.status(401).send({ msg: 'The signature is not valid for this address' });
   }
 
@@ -137,7 +133,6 @@ authRouter.post('/', async function (req, res) {
 
   if (dbAddress === null) {
     logger.error(`Failed to upsert address ${address} during login`);
-    endTimer({ status: 500 });
     return res.status(500).send({ msg: 'Login failed, please retry' });
   }
 
@@ -163,24 +158,17 @@ authRouter.post('/', async function (req, res) {
 
   logger.debug(`Completed request to create AuthToken for address ${address}`);
 
-  endTimer({ status: 200 });
-
   return res.status(200).send(userAuthTokens);
 });
 
 authRouter.post('/refresh', async function (req, res) {
-  const logger = createScopedLogger('POST /auth/refresh');
-
-  logger.debug(`Body: ${JSON.stringify(req.body)}`);
-
-  const endTimer = httpRequestDurationSeconds.startTimer('POST', '/auth/refresh');
+  const logger = getRequestLogger(req);
 
   const schemaResult = RefreshAccessTokenSchema.safeParse(req.body);
   if (!schemaResult.success) {
     logger.warn(
       `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
     );
-    endTimer({ status: 400 });
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
@@ -193,7 +181,6 @@ authRouter.post('/refresh', async function (req, res) {
     payload = getRefreshTokenPayload(verify(token, JWT_SECRET));
   } catch (err) {
     logger.warn('The refresh token is invalid');
-    endTimer({ status: 401 });
     return res.status(401).send({ msg: 'The refresh token is invalid' });
   }
 
@@ -224,7 +211,6 @@ authRouter.post('/refresh', async function (req, res) {
   });
   if (authToken === null) {
     logger.warn('The refresh token is invalid');
-    endTimer({ status: 401 });
     return res.status(401).send({ msg: 'The refresh token is invalid' });
   }
 
@@ -235,8 +221,6 @@ authRouter.post('/refresh', async function (req, res) {
     logger.warn(`Address ${authToken.address.ethAddress} had a refresh token reused.`);
 
     await deleteAuthToken(payload.authTokenId);
-
-    endTimer({ status: 401 });
 
     return res.status(401).send({ msg: 'The refresh token has already been used' });
   }
@@ -249,7 +233,6 @@ authRouter.post('/refresh', async function (req, res) {
 
     await deleteAuthToken(payload.authTokenId);
 
-    endTimer({ status: 401 });
     return res.status(401).send({ msg: "User's login has expired" });
   }
 
@@ -288,8 +271,6 @@ authRouter.post('/refresh', async function (req, res) {
   );
 
   logger.debug('Completed request to refresh AuthToken');
-
-  endTimer({ status: 200 });
 
   return res.status(200).send(userAuthTokens);
 });
