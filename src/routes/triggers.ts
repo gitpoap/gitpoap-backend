@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { jwtWithAdminAddress } from '../middleware';
+import { jwtWithAdminAddress } from '../middleware/auth';
 import { runOngoingIssuanceUpdater, updateOngoingIssuanceLastRun } from '../lib/ongoing';
 import { httpRequestDurationSeconds } from '../metrics';
 import { createScopedLogger } from '../logging';

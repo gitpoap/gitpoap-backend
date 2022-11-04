@@ -1,12 +1,11 @@
 import { Router } from 'express';
 import { DateTime } from 'luxon';
-
 import { context } from '../context';
 import { sendVerificationEmail } from '../external/postmark';
 import { generateUniqueEmailToken } from '../lib/email';
 import { createScopedLogger } from '../logging';
 import { httpRequestDurationSeconds } from '../metrics';
-import { jwtWithAddress } from '../middleware';
+import { jwtWithAddress } from '../middleware/auth';
 import { AddEmailSchema } from '../schemas/email';
 import { getAccessTokenPayload } from '../types/authTokens';
 

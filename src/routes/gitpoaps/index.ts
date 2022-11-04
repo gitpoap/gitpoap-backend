@@ -9,7 +9,7 @@ import { z } from 'zod';
 import { context } from '../../context';
 import { createPOAPEvent } from '../../external/poap';
 import { createScopedLogger } from '../../logging';
-import { jwtWithAddress, jwtWithAdminAddress, jwtWithAdminOAuth } from '../../middleware';
+import { jwtWithAddress, jwtWithAdminAddress, jwtWithAdminOAuth } from '../../middleware/auth';
 import multer from 'multer';
 import { ClaimStatus, GitPOAPStatus, GitPOAPType } from '@prisma/client';
 import { httpRequestDurationSeconds } from '../../metrics';

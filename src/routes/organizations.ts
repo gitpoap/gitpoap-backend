@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { createScopedLogger } from '../logging';
-import { jwtWithGitHubOAuth } from '../middleware';
+import { jwtWithGitHubOAuth } from '../middleware/auth';
 import { getGithubOrganizationAdmins } from '../external/github';
 import { UpdateOrganizationSchema } from '../schemas/organizations';
 import { context } from '../context';
