@@ -2,29 +2,23 @@ import { Router } from 'express';
 import { context } from '../context';
 import { RequestAccessTokenSchema } from '../schemas/github';
 import { requestGithubOAuthToken, getGithubCurrentUserInfo } from '../external/github';
-import { createScopedLogger } from '../logging';
-import { httpRequestDurationSeconds } from '../metrics';
 import { generateAuthTokens } from '../lib/authTokens';
 import { jwtWithAddress } from '../middleware/auth';
 import { getAccessTokenPayload } from '../types/authTokens';
 import { upsertUser } from '../lib/users';
 import { addGithubLoginForAddress, removeGithubLoginForAddress } from '../lib/addresses';
+import { getRequestLogger } from '../middleware/loggingAndTiming';
 
 export const githubRouter = Router();
 
 githubRouter.post('/', jwtWithAddress(), async function (req, res) {
-  const logger = createScopedLogger('POST /github');
-
-  logger.debug(`Body: ${JSON.stringify(req.body)}`);
-
-  const endTimer = httpRequestDurationSeconds.startTimer('POST', '/github');
+  const logger = getRequestLogger(req);
 
   const schemaResult = RequestAccessTokenSchema.safeParse(req.body);
   if (!schemaResult.success) {
     logger.warn(
       `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
     );
-    endTimer({ status: 400 });
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
@@ -46,7 +40,6 @@ githubRouter.post('/', jwtWithAddress(), async function (req, res) {
     githubToken = await requestGithubOAuthToken(code);
   } catch (err) {
     logger.warn(`Failed to request OAuth token with code: ${err}`);
-    endTimer({ status: 400 });
     return res.status(400).send({
       msg: 'A server error has occurred - GitHub access token exchange',
     });
@@ -55,7 +48,6 @@ githubRouter.post('/', jwtWithAddress(), async function (req, res) {
   const githubUser = await getGithubCurrentUserInfo(githubToken);
   if (githubUser === null) {
     logger.error('Failed to retrieve data about logged in user');
-    endTimer({ status: 500 });
     return res.status(500).send({
       msg: 'A server error has occurred - GitHub current user',
     });
@@ -91,7 +83,6 @@ githubRouter.post('/', jwtWithAddress(), async function (req, res) {
     ).generation;
   } catch (err) {
     logger.warn(`User ID ${user.id}'s AuthToken was invalidated during GitHub login process`);
-    endTimer({ status: 401 });
     return res.status(401).send({ msg: 'Not logged in with address' });
   }
 
@@ -108,16 +99,12 @@ githubRouter.post('/', jwtWithAddress(), async function (req, res) {
 
   logger.debug(`Completed a GitHub login request for address ${address}`);
 
-  endTimer({ status: 200 });
-
   return res.status(200).send(userAuthTokens);
 });
 
 /* Route to remove a github connection from an address */
 githubRouter.delete('/', jwtWithAddress(), async function (req, res) {
-  const logger = createScopedLogger('DELETE /github');
-
-  const endTimer = httpRequestDurationSeconds.startTimer('DELETE', '/github');
+  const logger = getRequestLogger(req);
 
   const { authTokenId, addressId, address, ensName, ensAvatarImageUrl, githubHandle, githubId } =
     getAccessTokenPayload(req.user);
@@ -126,7 +113,6 @@ githubRouter.delete('/', jwtWithAddress(), async function (req, res) {
 
   if (githubHandle === null || githubId === null) {
     logger.warn('No GitHub login found for address');
-    endTimer({ status: 400 });
     return res.status(400).send({
       msg: 'No GitHub login found for address',
     });
@@ -158,8 +144,6 @@ githubRouter.delete('/', jwtWithAddress(), async function (req, res) {
   );
 
   logger.debug(`Completed Github disconnect request for address ${address}`);
-
-  endTimer({ status: 200 });
 
   return res.status(200).send(userAuthTokens);
 });

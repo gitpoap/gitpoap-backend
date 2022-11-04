@@ -1,19 +1,14 @@
 import { UpdateProfileSchema } from '../schemas/profiles';
 import { Router } from 'express';
 import { context } from '../context';
-import { createScopedLogger } from '../logging';
-import { httpRequestDurationSeconds } from '../metrics';
 import { jwtWithAddress } from '../middleware/auth';
 import { getAccessTokenPayload } from '../types/authTokens';
+import { getRequestLogger } from '../middleware/loggingAndTiming';
 
 export const profilesRouter = Router();
 
 profilesRouter.post('/', jwtWithAddress(), async function (req, res) {
-  const logger = createScopedLogger('POST /profiles');
-
-  logger.debug(`Body: ${JSON.stringify(req.body)}`);
-
-  const endTimer = httpRequestDurationSeconds.startTimer('POST', '/profiles');
+  const logger = getRequestLogger(req);
 
   const { addressId, address } = getAccessTokenPayload(req.user);
 
@@ -22,7 +17,6 @@ profilesRouter.post('/', jwtWithAddress(), async function (req, res) {
     logger.warn(
       `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
     );
-    endTimer({ status: 400 });
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
@@ -42,8 +36,6 @@ profilesRouter.post('/', jwtWithAddress(), async function (req, res) {
   });
 
   logger.debug(`Completed request to update profile for address: ${req.body.address}`);
-
-  endTimer({ status: 200 });
 
   return res.status(200).send('UPDATED');
 });
