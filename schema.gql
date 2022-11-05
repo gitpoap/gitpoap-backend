@@ -1051,7 +1051,7 @@ input GitPOAPRequestWhereInput {
   isPRBased: BoolFilter
   isEnabled: BoolFilter
   contributors: JsonFilter
-  adminApprovalStatus: EnumAdminApprovalStatusNullableFilter
+  adminApprovalStatus: EnumAdminApprovalStatusFilter
   addressId: IntFilter
   address: AddressRelationFilter
 }
@@ -1104,11 +1104,11 @@ scalar JSON
     url: "http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf"
   )
 
-input EnumAdminApprovalStatusNullableFilter {
+input EnumAdminApprovalStatusFilter {
   equals: AdminApprovalStatus
   in: [AdminApprovalStatus!]
   notIn: [AdminApprovalStatus!]
-  not: NestedEnumAdminApprovalStatusNullableFilter
+  not: NestedEnumAdminApprovalStatusFilter
 }
 
 enum AdminApprovalStatus {
@@ -1117,11 +1117,11 @@ enum AdminApprovalStatus {
   REJECTED
 }
 
-input NestedEnumAdminApprovalStatusNullableFilter {
+input NestedEnumAdminApprovalStatusFilter {
   equals: AdminApprovalStatus
   in: [AdminApprovalStatus!]
   notIn: [AdminApprovalStatus!]
-  not: NestedEnumAdminApprovalStatusNullableFilter
+  not: NestedEnumAdminApprovalStatusFilter
 }
 
 input EnumGitPOAPStatusFilter {
@@ -1903,7 +1903,7 @@ type GitPOAPRequest {
   isPRBased: Boolean!
   isEnabled: Boolean!
   contributors: JSON!
-  adminApprovalStatus: AdminApprovalStatus
+  adminApprovalStatus: AdminApprovalStatus!
   addressId: Int!
   project: Project
   organization: Organization
@@ -3267,7 +3267,7 @@ type GitPOAPRequestGroupBy {
   isPRBased: Boolean!
   isEnabled: Boolean!
   contributors: JSON!
-  adminApprovalStatus: AdminApprovalStatus
+  adminApprovalStatus: AdminApprovalStatus!
   addressId: Int!
   _count: GitPOAPRequestCountAggregate
   _avg: GitPOAPRequestAvgAggregate
@@ -3442,7 +3442,7 @@ input GitPOAPRequestScalarWhereWithAggregatesInput {
   isPRBased: BoolWithAggregatesFilter
   isEnabled: BoolWithAggregatesFilter
   contributors: JsonWithAggregatesFilter
-  adminApprovalStatus: EnumAdminApprovalStatusNullableWithAggregatesFilter
+  adminApprovalStatus: EnumAdminApprovalStatusWithAggregatesFilter
   addressId: IntWithAggregatesFilter
 }
 
@@ -3481,24 +3481,24 @@ input NestedJsonFilter {
   not: JSON
 }
 
-input EnumAdminApprovalStatusNullableWithAggregatesFilter {
+input EnumAdminApprovalStatusWithAggregatesFilter {
   equals: AdminApprovalStatus
   in: [AdminApprovalStatus!]
   notIn: [AdminApprovalStatus!]
-  not: NestedEnumAdminApprovalStatusNullableWithAggregatesFilter
-  _count: NestedIntNullableFilter
-  _min: NestedEnumAdminApprovalStatusNullableFilter
-  _max: NestedEnumAdminApprovalStatusNullableFilter
+  not: NestedEnumAdminApprovalStatusWithAggregatesFilter
+  _count: NestedIntFilter
+  _min: NestedEnumAdminApprovalStatusFilter
+  _max: NestedEnumAdminApprovalStatusFilter
 }
 
-input NestedEnumAdminApprovalStatusNullableWithAggregatesFilter {
+input NestedEnumAdminApprovalStatusWithAggregatesFilter {
   equals: AdminApprovalStatus
   in: [AdminApprovalStatus!]
   notIn: [AdminApprovalStatus!]
-  not: NestedEnumAdminApprovalStatusNullableWithAggregatesFilter
-  _count: NestedIntNullableFilter
-  _min: NestedEnumAdminApprovalStatusNullableFilter
-  _max: NestedEnumAdminApprovalStatusNullableFilter
+  not: NestedEnumAdminApprovalStatusWithAggregatesFilter
+  _count: NestedIntFilter
+  _min: NestedEnumAdminApprovalStatusFilter
+  _max: NestedEnumAdminApprovalStatusFilter
 }
 
 type AggregateGithubIssue {

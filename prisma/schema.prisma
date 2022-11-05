@@ -224,38 +224,38 @@ model GitPOAP {
 
 // Records in this table are used for GitPOAP Creation Requests via the Creation Form
 model GitPOAPRequest {
-  id                  Int                  @id @default(autoincrement())
-  createdAt           DateTime             @default(now())
-  updatedAt           DateTime             @updatedAt
-  type                GitPOAPType          @default(ANNUAL)
+  id                  Int                 @id @default(autoincrement())
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  type                GitPOAPType         @default(ANNUAL)
   startDate           DateTime
   endDate             DateTime
   expiryDate          DateTime
-  eventUrl            String               @db.VarChar(255)
-  email               String               @db.VarChar(255)
-  name                String               @db.VarChar(255)
+  eventUrl            String              @db.VarChar(255)
+  email               String              @db.VarChar(255)
+  name                String              @db.VarChar(255)
   numRequestedCodes   Int
   imageKey            String
   description         String
   year                Int
   projectId           Int?
-  project             Project?             @relation(fields: [projectId], references: [id])
+  project             Project?            @relation(fields: [projectId], references: [id])
   organizationId      Int?
-  organization        Organization?        @relation(fields: [organizationId], references: [id])
+  organization        Organization?       @relation(fields: [organizationId], references: [id])
   // If a GitPOAP is marked as ongoing then the backend will automatically
   // request additional codes when we reach a minimum number remaining
-  ongoing             Boolean              @default(false)
+  ongoing             Boolean             @default(false)
   eventId             Int?
-  event               Event?               @relation(fields: [eventId], references: [id])
-  level               Int                  @default(1)
-  threshold           Int                  @default(1)
-  isPRBased           Boolean              @default(true)
-  isEnabled           Boolean              @default(true)
-  contributors        Json                 @db.Json
+  event               Event?              @relation(fields: [eventId], references: [id])
+  level               Int                 @default(1)
+  threshold           Int                 @default(1)
+  isPRBased           Boolean             @default(true)
+  isEnabled           Boolean             @default(true)
+  contributors        Json                @db.Json
   // Internal approval status for Custom GitPOAPs
-  adminApprovalStatus AdminApprovalStatus?
+  adminApprovalStatus AdminApprovalStatus @default(PENDING)
   addressId           Int
-  address             Address              @relation(fields: [addressId], references: [id])
+  address             Address             @relation(fields: [addressId], references: [id])
 }
 
 model AuthToken {
