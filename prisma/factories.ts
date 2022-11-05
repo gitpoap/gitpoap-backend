@@ -15,11 +15,16 @@ import {
   RedeemCode,
   Repo,
   User,
+  GitPOAPRequest,
+  GitPOAPType,
+  AdminApprovalStatus,
 } from '@prisma/client';
 import { POAPEvent } from '../src/types/poap';
 import { createScopedLogger } from '../src/logging';
 import { prisma } from './seed';
 import { generatePOAPSecret } from '../src/lib/secrets';
+import { z } from 'zod';
+import { GitPOAPContributorsSchema } from '../src/schemas/gitpoaps';
 
 const logger = createScopedLogger('factories');
 
@@ -518,5 +523,54 @@ export class GithubMentionFactory {
     logger.debug(`Creating GithubMention with ID: ${githubMention.id}`);
 
     return githubMention;
+  };
+}
+
+type CreateGitPOAPRequestParams = {
+  name: string;
+  description: string;
+  email: string;
+  addressId: number;
+  imageKey: string;
+  contributors: z.infer<typeof GitPOAPContributorsSchema>;
+  startDate: Date;
+  endDate: Date;
+  expiryDate: Date;
+  adminApprovalStatus: AdminApprovalStatus;
+};
+
+export class GitPOAPRequestFactory {
+  static create = async ({
+    name,
+    description,
+    email,
+    addressId,
+    imageKey,
+    contributors,
+    startDate,
+    endDate,
+    expiryDate,
+    adminApprovalStatus = AdminApprovalStatus.PENDING,
+  }: CreateGitPOAPRequestParams): Promise<GitPOAPRequest> => {
+    const data: Prisma.GitPOAPRequestCreateInput = {
+      name,
+      description,
+      email,
+      type: GitPOAPType.CUSTOM,
+      startDate,
+      endDate,
+      expiryDate,
+      eventUrl: 'https://gitpoap.io',
+      year: 2022,
+      numRequestedCodes: 50,
+      address: { connect: { id: addressId } },
+      imageKey,
+      contributors,
+      adminApprovalStatus,
+    };
+    const gitPOAPRequest = await prisma.gitPOAPRequest.create({ data });
+    logger.debug(`Creating GitPOAPRequest with ID: ${gitPOAPRequest.id}`);
+
+    return gitPOAPRequest;
   };
 }
