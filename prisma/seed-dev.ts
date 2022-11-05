@@ -12,6 +12,7 @@ import {
   ClaimFactory,
   FeaturedPOAPFactory,
   GitPOAPFactory,
+  GitPOAPRequestFactory,
   OrganizationFactory,
   ProfileFactory,
   ProjectFactory,
@@ -20,9 +21,10 @@ import {
   UserFactory,
 } from './factories';
 import { DateTime } from 'luxon';
-import { ADDRESSES, GH_HANDLES, GH_IDS } from './constants';
+import { ADDRESSES, GH_HANDLES, GH_IDS, TEAM_EMAIL } from './constants';
 
 import * as data from './data';
+import { AdminApprovalStatus } from '@prisma/client';
 
 export const seed = async () => {
   console.log('Starting DB seeding...');
@@ -213,6 +215,43 @@ export const seed = async () => {
   const featured1 = await FeaturedPOAPFactory.create(claim14.poapTokenId!, profileJay.id); // Featured GitPOAP
   const featured2 = await FeaturedPOAPFactory.create(claim9.poapTokenId!, profileJay.id); // Featured GitPOAP
   const featured3 = await FeaturedPOAPFactory.create('3976027', profileJay.id); // Featured Classic POAP - Bangia Night
+
+  /* Create GitPOAP Requests */
+  const request1 = await GitPOAPRequestFactory.create({
+    name: 'Custom GitPOAPs Feature Release Contributor!',
+    description: 'You contributed heavily to the release of the Custom GitPOAPs feature!',
+    email: TEAM_EMAIL,
+    addressId: addressJay.id,
+    imageKey: 'poap10.png-1666121881.581',
+    startDate: DateTime.fromISO('2022-01-01').toJSDate(),
+    endDate: DateTime.fromISO('2022-01-30').toJSDate(),
+    expiryDate: DateTime.fromISO('2023-01-01').toJSDate(),
+    adminApprovalStatus: AdminApprovalStatus.PENDING,
+    contributors: {
+      ensNames: ['peebeejay.eth'],
+      githubHandles: ['peebeejay'],
+      ethAddresses: ['0xpeebeejay'],
+      emails: ['team@gitpoap.io'],
+    },
+  });
+
+  const request2 = await GitPOAPRequestFactory.create({
+    name: 'Onboarding Form Contributor!',
+    description: 'The onboarding form was an absolutely massive effort, & you are most deserving of recognition for this fine achievement!',
+    email: TEAM_EMAIL,
+    addressId: addressJay.id,
+    imageKey: 'poap10.png-1666121881.581',
+    startDate: DateTime.fromISO('2022-06-01').toJSDate(),
+    endDate: DateTime.fromISO('2022-06-30').toJSDate(),
+    expiryDate: DateTime.fromISO('2023-03-01').toJSDate(),
+    adminApprovalStatus: AdminApprovalStatus.PENDING,
+    contributors: {
+      ensNames: ['lamberti.eth'],
+      githubHandles: ['aldolamb'],
+      ethAddresses: ['0xpeebeejay'],
+      emails: ['aldo@gitpoap.io', 'burz@gitpoap.io', 'jay@gitpoap.io'],
+    },
+  });
 
   console.log('DB Seeding complete. ');
 };
