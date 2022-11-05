@@ -1,4 +1,4 @@
-import { GitPOAP, GitPOAPRequest, GitPOAPType } from '@prisma/client';
+import { GitPOAPRequest, GitPOAPType } from '@prisma/client';
 import { context } from '../context';
 import { CreatePOAPEventReturnType } from '../external/poap';
 import {
@@ -15,7 +15,7 @@ export const convertGitPOAPRequestToGitPOAP = async (
   gitPOAPRequest: GitPOAPRequest,
   poapInfo: CreatePOAPEventReturnType,
   secretCode: string,
-): Promise<GitPOAP> => {
+) => {
   return await context.prisma.gitPOAP.create({
     data: {
       type: GitPOAPType.CUSTOM,
@@ -24,25 +24,13 @@ export const convertGitPOAPRequestToGitPOAP = async (
       description: gitPOAPRequest.description,
       year: gitPOAPRequest.year,
       poapEventId: poapInfo.id,
-      project: {
-        connect: {
-          id: gitPOAPRequest.projectId ?? undefined,
-        },
-      },
-      organization: {
-        connect: {
-          id: gitPOAPRequest.organizationId ?? undefined,
-        },
-      },
+      projectId: gitPOAPRequest.projectId,
+      organizationId: gitPOAPRequest.organizationId,
       poapSecret: secretCode,
       ongoing: gitPOAPRequest.ongoing,
       isPRBased: gitPOAPRequest.isPRBased,
       isEnabled: gitPOAPRequest.isEnabled,
-      creatorAddress: {
-        connect: {
-          id: gitPOAPRequest.addressId,
-        },
-      },
+      creatorAddressId: gitPOAPRequest.addressId,
     },
   });
 };
