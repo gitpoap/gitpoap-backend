@@ -25,6 +25,7 @@ import { ADDRESSES, GH_HANDLES, GH_IDS, TEAM_EMAIL } from './constants';
 
 import * as data from './data';
 import { AdminApprovalStatus } from '@prisma/client';
+import { getS3URL } from '../src/external/s3';
 
 export const seed = async () => {
   console.log('Starting DB seeding...');
@@ -222,7 +223,7 @@ export const seed = async () => {
     description: 'You contributed heavily to the release of the Custom GitPOAPs feature!',
     email: TEAM_EMAIL,
     addressId: addressJay.id,
-    imageKey: 'poap10.png-1666121881.581',
+    imageUrl: getS3URL('gitpoap-request-images-test', 'gitpoap-test-2.png-1666121850.987'),
     startDate: DateTime.fromISO('2022-01-01').toJSDate(),
     endDate: DateTime.fromISO('2022-01-30').toJSDate(),
     expiryDate: DateTime.fromISO('2023-01-01').toJSDate(),
@@ -240,7 +241,7 @@ export const seed = async () => {
     description: 'The onboarding form was an absolutely massive effort, & you are most deserving of recognition for this fine achievement!',
     email: TEAM_EMAIL,
     addressId: addressJay.id,
-    imageKey: 'poap10.png-1666121881.581',
+    imageUrl: getS3URL('gitpoap-request-images-test', 'gitpoap-test-1.png-1666121850.987'),
     startDate: DateTime.fromISO('2022-06-01').toJSDate(),
     endDate: DateTime.fromISO('2022-06-30').toJSDate(),
     expiryDate: DateTime.fromISO('2023-03-01').toJSDate(),
