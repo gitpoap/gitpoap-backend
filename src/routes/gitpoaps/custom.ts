@@ -12,7 +12,13 @@ import multer from 'multer';
 import { generatePOAPSecret } from '../../lib/secrets';
 import { DateTime } from 'luxon';
 import { AdminApprovalStatus, GitPOAPType, Prisma } from '@prisma/client';
-import { getImageBufferFromS3, s3configProfile, uploadMulterFile } from '../../external/s3';
+import {
+  getImageBufferFromS3URL,
+  getKeyFromS3URL,
+  getS3URL,
+  s3configProfile,
+  uploadMulterFile,
+} from '../../external/s3';
 import { convertGitPOAPRequestToGitPOAP } from '../../lib/gitpoaps';
 import { parseJSON } from '../../lib/json';
 import { getAccessTokenPayload } from '../../types/authTokens';
@@ -133,13 +139,12 @@ customGitPOAPsRouter.post(
     const image = req.file;
     let imageKey: string | null = null;
     const timestamp = DateTime.now().toSeconds();
+    const bucket = s3configProfile.buckets.gitPOAPRequestImages;
 
     try {
       imageKey = `${image.originalname}-${timestamp}`;
-      await uploadMulterFile(image, s3configProfile.buckets.gitPOAPRequestImages, imageKey);
-      logger.info(
-        `Uploaded image with imageKey: ${imageKey} to S3 bucket ${s3configProfile.buckets.gitPOAPRequestImages}`,
-      );
+      await uploadMulterFile(image, bucket, imageKey);
+      logger.info(`Uploaded image with imageKey: ${imageKey} to S3 bucket ${bucket}`);
     } catch (err) {
       logger.error(`Received error when uploading image to S3 - ${err}`);
       return res.status(500).send({ msg: 'Failed to upload image to S3' });
@@ -150,7 +155,7 @@ customGitPOAPsRouter.post(
       data: {
         name: req.body.name,
         type: GitPOAPType.CUSTOM,
-        imageKey,
+        imageUrl: getS3URL(bucket, imageKey),
         description: req.body.description,
         year,
         startDate,
@@ -226,10 +231,7 @@ customGitPOAPsRouter.put('/approve/:id', jwtWithAdminAddress(), async (req, res)
 
   logger.info(`Marking GitPOAP Request with ID:${gitPOAPRequestId} as APPROVED.`);
 
-  const imageBuffer = await getImageBufferFromS3(
-    s3configProfile.buckets.gitPOAPRequestImages,
-    gitPOAPRequest.imageKey,
-  );
+  const imageBuffer = await getImageBufferFromS3URL(gitPOAPRequest.imageUrl);
 
   const secretCode = generatePOAPSecret();
   const poapInfo = await createPOAPEvent({
@@ -239,7 +241,7 @@ customGitPOAPsRouter.put('/approve/:id', jwtWithAdminAddress(), async (req, res)
     end_date: DateTime.fromJSDate(gitPOAPRequest.endDate).toFormat('yyyy-MM-dd'),
     expiry_date: DateTime.fromJSDate(gitPOAPRequest.expiryDate).toFormat('yyyy-MM-dd'),
     event_url: gitPOAPRequest.eventUrl,
-    imageName: gitPOAPRequest.imageKey,
+    imageName: getKeyFromS3URL(gitPOAPRequest.imageUrl),
     imageBuffer,
     secret_code: secretCode,
     email: gitPOAPRequest.email,

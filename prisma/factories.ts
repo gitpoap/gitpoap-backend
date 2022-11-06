@@ -531,7 +531,7 @@ type CreateGitPOAPRequestParams = {
   description: string;
   email: string;
   addressId: number;
-  imageKey: string;
+  imageUrl: string;
   contributors: z.infer<typeof GitPOAPContributorsSchema>;
   startDate: Date;
   endDate: Date;
@@ -545,7 +545,7 @@ export class GitPOAPRequestFactory {
     description,
     email,
     addressId,
-    imageKey,
+    imageUrl,
     contributors,
     startDate,
     endDate,
@@ -564,7 +564,7 @@ export class GitPOAPRequestFactory {
       year: 2022,
       numRequestedCodes: 50,
       address: { connect: { id: addressId } },
-      imageKey,
+      imageUrl,
       contributors,
       adminApprovalStatus,
     };
