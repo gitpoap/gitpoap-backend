@@ -235,7 +235,7 @@ model GitPOAPRequest {
   email               String              @db.VarChar(255)
   name                String              @db.VarChar(255)
   numRequestedCodes   Int
-  imageKey            String
+  imageUrl            String
   description         String
   year                Int
   projectId           Int?
