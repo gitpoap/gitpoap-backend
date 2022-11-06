@@ -110,6 +110,24 @@ export const uploadFileFromURL = async (
   }
 };
 
+/**
+ * @param imageUrl - https://gitpoap-test-1.s3.us-east-2.amazonaws.com/the-key-here
+ * @returns the-key-here
+ */
+export const getKeyFromS3URL = (imageUrl: string) => {
+  const url = new URL(imageUrl);
+  return url.pathname.split('/')[1];
+};
+
+/**
+ * @param imageUrl - https://gitpoap-test-1.s3.us-east-2.amazonaws.com/the-key-here
+ * @returns gitpoap-test-1
+ */
+export const getBucketFromS3URL = (imageUrl: string) => {
+  const url = new URL(imageUrl);
+  return url.hostname.split('.')[0];
+};
+
 export const getObjectFromS3 = async (bucket: string, key: string) => {
   return await s3.send(
     new GetObjectCommand({
@@ -128,6 +146,13 @@ export const getImageBufferFromS3 = async (bucket: string, key: string) => {
   }
 
   return Buffer.concat(chunks);
+};
+
+export const getImageBufferFromS3URL = async (imageUrl: string) => {
+  const key = getKeyFromS3URL(imageUrl);
+  const bucket = getBucketFromS3URL(imageUrl);
+
+  return await getImageBufferFromS3(bucket, key);
 };
 
 export function getS3URL(bucket: string, key: string): string {

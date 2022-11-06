@@ -1036,7 +1036,7 @@ input GitPOAPRequestWhereInput {
   email: StringFilter
   name: StringFilter
   numRequestedCodes: IntFilter
-  imageKey: StringFilter
+  imageUrl: StringFilter
   description: StringFilter
   year: IntFilter
   projectId: IntNullableFilter
@@ -1891,7 +1891,7 @@ type GitPOAPRequest {
   email: String!
   name: String!
   numRequestedCodes: Int!
-  imageKey: String!
+  imageUrl: String!
   description: String!
   year: Int!
   projectId: Int
@@ -1945,7 +1945,7 @@ input GitPOAPRequestOrderByWithRelationInput {
   email: SortOrder
   name: SortOrder
   numRequestedCodes: SortOrder
-  imageKey: SortOrder
+  imageUrl: SortOrder
   description: SortOrder
   year: SortOrder
   projectId: SortOrder
@@ -1981,7 +1981,7 @@ enum GitPOAPRequestScalarFieldEnum {
   email
   name
   numRequestedCodes
-  imageKey
+  imageUrl
   description
   year
   projectId
@@ -3148,7 +3148,7 @@ type GitPOAPRequestCountAggregate {
   email: Int!
   name: Int!
   numRequestedCodes: Int!
-  imageKey: Int!
+  imageUrl: Int!
   description: Int!
   year: Int!
   projectId: Int!
@@ -3201,7 +3201,7 @@ type GitPOAPRequestMinAggregate {
   email: String
   name: String
   numRequestedCodes: Int
-  imageKey: String
+  imageUrl: String
   description: String
   year: Int
   projectId: Int
@@ -3228,7 +3228,7 @@ type GitPOAPRequestMaxAggregate {
   email: String
   name: String
   numRequestedCodes: Int
-  imageKey: String
+  imageUrl: String
   description: String
   year: Int
   projectId: Int
@@ -3255,7 +3255,7 @@ type GitPOAPRequestGroupBy {
   email: String!
   name: String!
   numRequestedCodes: Int!
-  imageKey: String!
+  imageUrl: String!
   description: String!
   year: Int!
   projectId: Int
@@ -3288,7 +3288,7 @@ input GitPOAPRequestOrderByWithAggregationInput {
   email: SortOrder
   name: SortOrder
   numRequestedCodes: SortOrder
-  imageKey: SortOrder
+  imageUrl: SortOrder
   description: SortOrder
   year: SortOrder
   projectId: SortOrder
@@ -3321,7 +3321,7 @@ input GitPOAPRequestCountOrderByAggregateInput {
   email: SortOrder
   name: SortOrder
   numRequestedCodes: SortOrder
-  imageKey: SortOrder
+  imageUrl: SortOrder
   description: SortOrder
   year: SortOrder
   projectId: SortOrder
@@ -3361,7 +3361,7 @@ input GitPOAPRequestMaxOrderByAggregateInput {
   email: SortOrder
   name: SortOrder
   numRequestedCodes: SortOrder
-  imageKey: SortOrder
+  imageUrl: SortOrder
   description: SortOrder
   year: SortOrder
   projectId: SortOrder
@@ -3388,7 +3388,7 @@ input GitPOAPRequestMinOrderByAggregateInput {
   email: SortOrder
   name: SortOrder
   numRequestedCodes: SortOrder
-  imageKey: SortOrder
+  imageUrl: SortOrder
   description: SortOrder
   year: SortOrder
   projectId: SortOrder
@@ -3430,7 +3430,7 @@ input GitPOAPRequestScalarWhereWithAggregatesInput {
   email: StringWithAggregatesFilter
   name: StringWithAggregatesFilter
   numRequestedCodes: IntWithAggregatesFilter
-  imageKey: StringWithAggregatesFilter
+  imageUrl: StringWithAggregatesFilter
   description: StringWithAggregatesFilter
   year: IntWithAggregatesFilter
   projectId: IntNullableWithAggregatesFilter

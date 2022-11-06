@@ -7,7 +7,8 @@ import { setupApp } from '../../../../../__mocks__/src/app';
 import { generateAuthTokens } from '../../../../../src/lib/authTokens';
 import request from 'supertest';
 import {
-  getImageBufferFromS3,
+  getImageBufferFromS3URL,
+  getS3URL,
   S3ClientConfigProfile,
   uploadMulterFile,
 } from '../../../../../src/external/s3';
@@ -85,6 +86,7 @@ jest.mock('../../../../../src/external/s3', () => {
     },
     uploadMulterFile: jest.fn(),
     getImageBufferFromS3: jest.fn(),
+    getImageBufferFromS3URL: jest.fn(),
   };
 });
 
@@ -133,7 +135,7 @@ jest.mocked(createClaimForEthAddress, true);
 jest.mocked(createClaimForGithubHandle, true);
 
 jest.spyOn(DateTime, 'now').mockReturnValue(DateTime.fromSeconds(123456789));
-const mockedGetImageBufferFromS3 = jest.mocked(getImageBufferFromS3, true);
+const mockedGetImageBufferFromS3URL = jest.mocked(getImageBufferFromS3URL, true);
 const mockedUploadMulterFile = jest.mocked(uploadMulterFile, true);
 
 function genAuthTokens(someAddress?: string) {
@@ -240,7 +242,7 @@ describe('PUT /gitpoaps/custom/approve/:id', () => {
   });
 
   it('Creates the POAP via the POAP API', async () => {
-    mockedGetImageBufferFromS3.mockResolvedValue(Buffer.from(''));
+    mockedGetImageBufferFromS3URL.mockResolvedValue(Buffer.from(''));
     mockJwtWithAddress();
 
     contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue({
@@ -248,7 +250,7 @@ describe('PUT /gitpoaps/custom/approve/:id', () => {
       type: GitPOAPType.CUSTOM,
       adminApprovalStatus: AdminApprovalStatus.PENDING,
       description: 'foobar',
-      imageKey: 'foobar_imgKey-123456789',
+      imageUrl: getS3URL('gitpoap-request-images-test', 'foobar.png-123456789'),
       isEnabled: true,
       isPRBased: false,
       name: 'foobar',
@@ -297,15 +299,9 @@ describe('PUT /gitpoaps/custom/approve/:id', () => {
         year: 2021,
         poapEventId: 1,
         poapSecret: '123423123',
-        organization: {
-          connect: { id: undefined },
-        },
-        project: {
-          connect: { id: undefined },
-        },
-        creatorAddress: {
-          connect: { id: addressId },
-        },
+        organization: undefined,
+        projectId: undefined,
+        creatorAddressId: addressId,
       },
     });
 
@@ -371,7 +367,7 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
       type: GitPOAPType.CUSTOM,
       adminApprovalStatus: AdminApprovalStatus.APPROVED,
       description: 'foobar',
-      imageKey: 'foobar_imgKey-123456789',
+      imageUrl: getS3URL('gitpoap-request-images-test', 'foobar.png-123456789'),
       isEnabled: true,
       isPRBased: false,
       name: 'foobar',
@@ -400,7 +396,7 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
       type: GitPOAPType.CUSTOM,
       adminApprovalStatus: AdminApprovalStatus.REJECTED,
       description: 'foobar',
-      imageKey: 'foobar_imgKey-123456789',
+      imageUrl: getS3URL('gitpoap-request-images-test', 'foobar.png-123456789'),
       isEnabled: true,
       isPRBased: false,
 
@@ -431,7 +427,7 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
       type: GitPOAPType.CUSTOM,
       adminApprovalStatus: AdminApprovalStatus.PENDING,
       description: 'foobar',
-      imageKey: 'foobar_imgKey-123456789',
+      imageUrl: getS3URL('gitpoap-request-images-test', 'foobar.png-123456789'),
       isEnabled: true,
       isPRBased: false,
       name: 'foobar',
@@ -476,7 +472,7 @@ describe('POST /gitpoaps/custom', () => {
       data: {
         name: 'foobar-name',
         description: 'foobar-description',
-        imageKey: 'foobar.png-123456789',
+        imageUrl: getS3URL('gitpoap-request-images-test', 'foobar.png-123456789'),
         type: GitPOAPType.CUSTOM,
         year: 2021,
         startDate: DateTime.fromISO('2021-01-01').toJSDate(),
@@ -494,8 +490,8 @@ describe('POST /gitpoaps/custom', () => {
           ensNames: ['burz.eth'],
         },
         address: { connect: { id: addressId } },
-        ...(orgId && { organization: { connect: { id: orgId } } }),
-        ...(projectId && { project: { connect: { id: projectId } } }),
+        organization: orgId ? { connect: { id: orgId } } : undefined,
+        project: projectId ? { connect: { id: projectId } } : undefined,
       },
     });
 
