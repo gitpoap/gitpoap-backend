@@ -18,7 +18,7 @@ async function findFirstUsers(requestedCount: number) {
     select: {
       id: true,
       mintedAt: true,
-      user: {
+      githubUser: {
         select: {
           githubHandle: true,
           githubId: true,
@@ -36,7 +36,7 @@ async function findFirstUsers(requestedCount: number) {
   const foundGithubIds = new Set<number>();
 
   for (const claim of claims) {
-    if (claim.user && !foundGithubIds.has(claim.user.githubId)) {
+    if (claim.githubUser && !foundGithubIds.has(claim.githubUser.githubId)) {
       if (claim.mintedAt === null) {
         logger.error(`Claim ID ${claim.id} has status CLAIMED but mintedAt is null`);
         continue;
@@ -44,9 +44,9 @@ async function findFirstUsers(requestedCount: number) {
 
       const mintedAt = claim.mintedAt.toISOString();
 
-      resultContent += `${claim.user.githubHandle},${claim.user.githubId},${mintedAt}\n`;
+      resultContent += `${claim.githubUser.githubHandle},${claim.githubUser.githubId},${mintedAt}\n`;
 
-      foundGithubIds.add(claim.user.githubId);
+      foundGithubIds.add(claim.githubUser.githubId);
 
       if (foundGithubIds.size === requestedCount) {
         break;

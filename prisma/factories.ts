@@ -1,23 +1,23 @@
 import { ClaimStatus, GitPOAPStatus } from '@generated/type-graphql';
 import {
   Address,
+  AdminApprovalStatus,
   Claim,
   Email,
   FeaturedPOAP,
   GitPOAP,
+  GitPOAPRequest,
+  GitPOAPType,
   GithubIssue,
   GithubMention,
   GithubPullRequest,
+  GithubUser,
   Organization,
   Prisma,
   Profile,
   Project,
   RedeemCode,
   Repo,
-  User,
-  GitPOAPRequest,
-  GitPOAPType,
-  AdminApprovalStatus,
 } from '@prisma/client';
 import { POAPEvent } from '../src/types/poap';
 import { createScopedLogger } from '../src/logging';
@@ -31,7 +31,7 @@ const logger = createScopedLogger('factories');
 export class ClaimFactory {
   static create = async (
     gitPOAPId: number,
-    userId: number,
+    githubUserId: number,
     status?: ClaimStatus,
     mintedAddressId?: number,
     poapTokenId?: string,
@@ -47,9 +47,9 @@ export class ClaimFactory {
           id: gitPOAPId,
         },
       },
-      user: {
+      githubUser: {
         connect: {
-          id: userId,
+          id: githubUserId,
         },
       },
       status,
@@ -66,7 +66,7 @@ export class ClaimFactory {
 
   static createForPR = async (
     gitPOAPId: number,
-    userId: number,
+    githubUserId: number,
     githubPullRequestId: number,
     status?: ClaimStatus,
     mintedAddressId?: number,
@@ -83,9 +83,9 @@ export class ClaimFactory {
           id: gitPOAPId,
         },
       },
-      user: {
+      githubUser: {
         connect: {
-          id: userId,
+          id: githubUserId,
         },
       },
       status,
@@ -107,7 +107,7 @@ export class ClaimFactory {
 
   static createForMention = async (
     gitPOAPId: number,
-    userId: number,
+    githubUserId: number,
     githubMentionId: number,
     status?: ClaimStatus,
     mintedAddressId?: number,
@@ -124,9 +124,9 @@ export class ClaimFactory {
           id: gitPOAPId,
         },
       },
-      user: {
+      githubUser: {
         connect: {
-          id: userId,
+          id: githubUserId,
         },
       },
       status,
@@ -147,16 +147,16 @@ export class ClaimFactory {
   };
 }
 
-export class UserFactory {
-  static create = async (githubId: number, githubHandle: string): Promise<User> => {
-    const data: Prisma.UserCreateInput = {
+export class GithubUserFactory {
+  static create = async (githubId: number, githubHandle: string): Promise<GithubUser> => {
+    const data: Prisma.GithubUserCreateInput = {
       githubId,
       githubHandle,
     };
-    const user = await prisma.user.create({ data });
-    logger.debug(`Creating user with id: ${user.id}`);
+    const githubUser = await prisma.githubUser.create({ data });
+    logger.debug(`Creating GithubUser with id: ${githubUser.id}`);
 
-    return user;
+    return githubUser;
   };
 }
 
@@ -406,7 +406,7 @@ export class GithubPullRequestFactory {
     githubMergedAt: Date | null,
     githubMergeCommitSha: string | null,
     repoId: number,
-    userId: number,
+    githubUserId: number,
   ): Promise<GithubPullRequest> => {
     const data: Prisma.GithubPullRequestCreateInput = {
       githubPullNumber,
@@ -419,9 +419,9 @@ export class GithubPullRequestFactory {
           id: repoId,
         },
       },
-      user: {
+      githubUser: {
         connect: {
-          id: userId,
+          id: githubUserId,
         },
       },
     };
@@ -439,7 +439,7 @@ export class GithubIssueFactory {
     githubCreatedAt: Date,
     githubClosedAt: Date | null,
     repoId: number,
-    userId: number,
+    githubUserId: number,
   ): Promise<GithubIssue> => {
     const data: Prisma.GithubIssueCreateInput = {
       githubIssueNumber,
@@ -451,9 +451,9 @@ export class GithubIssueFactory {
           id: repoId,
         },
       },
-      user: {
+      githubUser: {
         connect: {
-          id: userId,
+          id: githubUserId,
         },
       },
     };
@@ -468,7 +468,7 @@ export class GithubMentionFactory {
   static createForPR = async (
     githubMentionedAt: Date,
     repoId: number,
-    userId: number,
+    githubUserId: number,
     pullRequestId: number,
   ): Promise<GithubMention> => {
     const data: Prisma.GithubMentionCreateInput = {
@@ -478,9 +478,9 @@ export class GithubMentionFactory {
           id: repoId,
         },
       },
-      user: {
+      githubUser: {
         connect: {
-          id: userId,
+          id: githubUserId,
         },
       },
       pullRequest: {
@@ -498,7 +498,7 @@ export class GithubMentionFactory {
   static createForIssue = async (
     githubMentionedAt: Date,
     repoId: number,
-    userId: number,
+    githubUserId: number,
     issueId: number,
   ): Promise<GithubMention> => {
     const data: Prisma.GithubMentionCreateInput = {
@@ -508,9 +508,9 @@ export class GithubMentionFactory {
           id: repoId,
         },
       },
-      user: {
+      githubUser: {
         connect: {
-          id: userId,
+          id: githubUserId,
         },
       },
       issue: {

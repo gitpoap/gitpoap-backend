@@ -8,7 +8,7 @@ type ContributionReference = PullRequestContribution | IssueContribution;
 export async function upsertGithubMention(
   repoId: number,
   contribution: ContributionReference,
-  userId: number,
+  githubUserId: number,
 ): Promise<GithubMention> {
   const logger = createScopedLogger('upsertGithubMention');
 
@@ -21,12 +21,14 @@ export async function upsertGithubMention(
   if ('pullRequest' in contribution) {
     pullRequestId = contribution.pullRequest.id;
 
-    logger.info(`Upserting GitHub mention for user ID ${userId} in PR ID ${pullRequestId}`);
+    logger.info(
+      `Upserting GitHub mention for GithubUser ID ${githubUserId} in PR ID ${pullRequestId}`,
+    );
 
     where = {
-      repoId_userId_pullRequestId: {
+      repoId_githubUserId_pullRequestId: {
         repoId,
-        userId,
+        githubUserId,
         pullRequestId,
       },
     };
@@ -40,12 +42,14 @@ export async function upsertGithubMention(
     // 'issue' in contribution
     issueId = contribution.issue.id;
 
-    logger.info(`Upserting GitHub mention for user ID ${userId} in Issue ID ${issueId}`);
+    logger.info(
+      `Upserting GitHub mention for GithubUser ID ${githubUserId} in Issue ID ${issueId}`,
+    );
 
     where = {
-      repoId_userId_issueId: {
+      repoId_githubUserId_issueId: {
         repoId,
-        userId,
+        githubUserId,
         issueId,
       },
     };
@@ -68,9 +72,9 @@ export async function upsertGithubMention(
           id: repoId,
         },
       },
-      user: {
+      githubUser: {
         connect: {
-          id: userId,
+          id: githubUserId,
         },
       },
       pullRequest,

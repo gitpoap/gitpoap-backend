@@ -5,7 +5,7 @@ import { requestGithubOAuthToken, getGithubCurrentUserInfo } from '../external/g
 import { generateAuthTokens } from '../lib/authTokens';
 import { jwtWithAddress } from '../middleware/auth';
 import { getAccessTokenPayload } from '../types/authTokens';
-import { upsertUser } from '../lib/users';
+import { upsertGithubUser } from '../lib/githubUsers';
 import { addGithubLoginForAddress, removeGithubLoginForAddress } from '../lib/addresses';
 import { getRequestLogger } from '../middleware/loggingAndTiming';
 
@@ -45,8 +45,8 @@ githubRouter.post('/', jwtWithAddress(), async function (req, res) {
     });
   }
 
-  const githubUser = await getGithubCurrentUserInfo(githubToken);
-  if (githubUser === null) {
+  const githubInfo = await getGithubCurrentUserInfo(githubToken);
+  if (githubInfo === null) {
     logger.error('Failed to retrieve data about logged in user');
     return res.status(500).send({
       msg: 'A server error has occurred - GitHub current user',
@@ -54,10 +54,10 @@ githubRouter.post('/', jwtWithAddress(), async function (req, res) {
   }
 
   // Update User with new OAuth token
-  const user = await upsertUser(githubUser.id, githubUser.login, githubToken);
+  const githubUser = await upsertGithubUser(githubInfo.id, githubInfo.login, githubToken);
 
   /* Add the GitHub login to the address record */
-  await addGithubLoginForAddress(addressId, user.id);
+  await addGithubLoginForAddress(addressId, githubUser.id);
 
   // Update the generation of the AuthToken (this should exist
   // since it was looked up within the middleware)
@@ -70,9 +70,9 @@ githubRouter.post('/', jwtWithAddress(), async function (req, res) {
         },
         data: {
           generation: { increment: 1 },
-          user: {
+          githubUser: {
             connect: {
-              id: user.id,
+              id: githubUser.id,
             },
           },
         },
@@ -82,7 +82,9 @@ githubRouter.post('/', jwtWithAddress(), async function (req, res) {
       })
     ).generation;
   } catch (err) {
-    logger.warn(`User ID ${user.id}'s AuthToken was invalidated during GitHub login process`);
+    logger.warn(
+      `GithubUser ID ${githubUser.id}'s AuthToken was invalidated during GitHub login process`,
+    );
     return res.status(401).send({ msg: 'Not logged in with address' });
   }
 
@@ -93,8 +95,8 @@ githubRouter.post('/', jwtWithAddress(), async function (req, res) {
     address,
     ensName,
     ensAvatarImageUrl,
-    githubUser.id,
-    githubUser.login,
+    githubInfo.id,
+    githubInfo.login,
   );
 
   logger.debug(`Completed a GitHub login request for address ${address}`);
@@ -127,7 +129,7 @@ githubRouter.delete('/', jwtWithAddress(), async function (req, res) {
     where: { id: authTokenId },
     data: {
       generation: { increment: 1 },
-      user: { disconnect: true },
+      githubUser: { disconnect: true },
     },
     select: { generation: true },
   });

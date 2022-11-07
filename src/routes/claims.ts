@@ -18,7 +18,7 @@ import { getGithubUserById } from '../external/github';
 import { createScopedLogger } from '../logging';
 import { sleep } from '../lib/sleep';
 import { backloadGithubPullRequestData } from '../lib/pullRequests';
-import { upsertUser } from '../lib/users';
+import { upsertGithubUser } from '../lib/githubUsers';
 import {
   ClaimData,
   retrieveClaimsCreatedByMention,
@@ -113,7 +113,7 @@ claimsRouter.post('/', jwtWithGitHubOAuth(), async function (req, res) {
         id: claimId,
       },
       include: {
-        user: true,
+        githubUser: true,
         gitPOAP: true,
       },
     });
@@ -144,8 +144,8 @@ claimsRouter.post('/', jwtWithGitHubOAuth(), async function (req, res) {
       continue;
     }
 
-    // Ensure the user is the owner of the claim
-    if (claim.user?.githubId !== githubId) {
+    // Ensure the githubUser is the owner of the claim
+    if (claim.githubUser?.githubId !== githubId) {
       invalidClaims.push({
         claimId,
         reason: 'User does not own claim',
@@ -314,16 +314,16 @@ claimsRouter.post('/create', jwtWithAdminOAuth(), async function (req, res) {
       continue;
     }
 
-    // Ensure that we've created a user in our
+    // Ensure that we've created a GithubUser in our
     // system for the claim
-    const user = await upsertUser(githubId, githubUserInfo.login);
+    const githubUser = await upsertGithubUser(githubId, githubUserInfo.login);
 
     // Upsert so we can rerun the script if necessary
     await context.prisma.claim.upsert({
       where: {
-        gitPOAPId_userId: {
+        gitPOAPId_githubUserId: {
           gitPOAPId: gitPOAPData.id,
-          userId: user.id,
+          githubUserId: githubUser.id,
         },
       },
       update: {},
@@ -333,9 +333,9 @@ claimsRouter.post('/create', jwtWithAdminOAuth(), async function (req, res) {
             id: gitPOAPData.id,
           },
         },
-        user: {
+        githubUser: {
           connect: {
-            id: user.id,
+            id: githubUser.id,
           },
         },
       },
@@ -435,7 +435,7 @@ claimsRouter.post(
           );
 
           const filteredNewClaims = newClaimsForContribution.filter(
-            claimData => claimData.user && githubIdSet.has(claimData.user.githubId),
+            claimData => claimData.githubUser && githubIdSet.has(claimData.githubUser.githubId),
           );
 
           newClaims = [...newClaims, ...filteredNewClaims];
@@ -492,7 +492,7 @@ claimsRouter.post(
           );
 
           const filteredNewClaims = newClaimsForContribution.filter(
-            claimData => claimData.user && githubIdSet.has(claimData.user.githubId),
+            claimData => claimData.githubUser && githubIdSet.has(claimData.githubUser.githubId),
           );
 
           newClaims = [...newClaims, ...filteredNewClaims];
@@ -541,7 +541,7 @@ claimsRouter.post('/revalidate', jwtWithGitHubOAuth(), async (req, res) => {
       select: {
         status: true,
         mintedAddress: true,
-        user: {
+        githubUser: {
           select: {
             githubId: true,
           },
@@ -572,7 +572,7 @@ claimsRouter.post('/revalidate', jwtWithGitHubOAuth(), async (req, res) => {
       }
     }
 
-    if (claim.user?.githubId !== githubId) {
+    if (claim.githubUser?.githubId !== githubId) {
       invalidClaims.push({
         claimId,
         reason: 'User does not own claim',

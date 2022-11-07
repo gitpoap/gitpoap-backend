@@ -5,7 +5,7 @@ import {
 } from '../external/github';
 import { createScopedLogger } from '../logging';
 import { getRepoByName } from './repos';
-import { upsertUser } from './users';
+import { upsertGithubUser } from './githubUsers';
 import { createNewClaimsForRepoContributionHelper } from './claims';
 import { extractMergeCommitSha, upsertGithubPullRequest } from './pullRequests';
 import { upsertGithubIssue } from './issues';
@@ -55,8 +55,8 @@ export async function createClaimsForPR(
     return BotCreateClaimsErrorType.GithubRecordNotFound;
   }
 
-  // Ensure that we've created a user in our system for the claim
-  const user = await upsertUser(userInfo.id, userInfo.login);
+  // Ensure that we've created a GithubUser in our system for the claim
+  const githubUser = await upsertGithubUser(userInfo.id, userInfo.login);
 
   let mergedAt: Date | null = null;
   let mergeCommitSha: string | null = null;
@@ -73,18 +73,18 @@ export async function createClaimsForPR(
     new Date(pull.created_at),
     mergedAt,
     mergeCommitSha,
-    user.id,
+    githubUser.id,
   );
 
   let contribution: RestrictedContribution = { pullRequest: githubPullRequest };
   if (wasEarnedByMention) {
-    const githubMention = await upsertGithubMention(repoData.id, contribution, user.id);
+    const githubMention = await upsertGithubMention(repoData.id, contribution, githubUser.id);
 
     contribution = { mention: githubMention };
   }
 
   // Create any new claims (if they haven't been already)
-  await createNewClaimsForRepoContributionHelper(user, repoData, contribution);
+  await createNewClaimsForRepoContributionHelper(githubUser, repoData, contribution);
 
   return contribution;
 }
@@ -121,7 +121,7 @@ export async function createClaimsForIssue(
   }
 
   // Ensure that we've created a user in our system for the claim
-  const user = await upsertUser(userInfo.id, userInfo.login);
+  const githubUser = await upsertGithubUser(userInfo.id, userInfo.login);
 
   const githubIssue = await upsertGithubIssue(
     repoData.id,
@@ -129,16 +129,16 @@ export async function createClaimsForIssue(
     issue.title,
     new Date(issue.created_at),
     issue.closed_at === null ? null : new Date(issue.closed_at),
-    user.id,
+    githubUser.id,
   );
 
   let contribution: Contribution = { issue: githubIssue };
 
-  const githubMention = await upsertGithubMention(repoData.id, contribution, user.id);
+  const githubMention = await upsertGithubMention(repoData.id, contribution, githubUser.id);
 
   contribution = { mention: githubMention };
 
-  await createNewClaimsForRepoContributionHelper(user, repoData, contribution);
+  await createNewClaimsForRepoContributionHelper(githubUser, repoData, contribution);
 
   return contribution;
 }

@@ -9,9 +9,9 @@ jest.mock('../../../../src/lib/contributions');
 
 const mockedCountContributionsForClaim = jest.mocked(countContributionsForClaim, true);
 
-const user = { id: 4 };
+const githubUser = { id: 4 };
 
-function fillInUpsert(userId: number, gitPOAPId: number, contribution: Contribution) {
+function fillInUpsert(githubUserId: number, gitPOAPId: number, contribution: Contribution) {
   let pullRequestEarned = undefined;
   let issueEarned = undefined;
   let mentionEarned = undefined;
@@ -32,9 +32,9 @@ function fillInUpsert(userId: number, gitPOAPId: number, contribution: Contribut
 
   return {
     where: {
-      gitPOAPId_userId: {
+      gitPOAPId_githubUserId: {
         gitPOAPId,
-        userId,
+        githubUserId,
       },
     },
     update: {},
@@ -44,9 +44,9 @@ function fillInUpsert(userId: number, gitPOAPId: number, contribution: Contribut
           id: gitPOAPId,
         },
       },
-      user: {
+      githubUser: {
         connect: {
-          id: userId,
+          id: githubUserId,
         },
       },
       pullRequestEarned,
@@ -77,7 +77,7 @@ describe('createNewClaimsForRepoContribution', () => {
       },
     };
 
-    await createNewClaimsForRepoContributionHelper(user, repo, { pullRequest: pr });
+    await createNewClaimsForRepoContributionHelper(githubUser, repo, { pullRequest: pr });
 
     expect(mockedCountContributionsForClaim).toHaveBeenCalledTimes(1);
 
@@ -102,13 +102,13 @@ describe('createNewClaimsForRepoContribution', () => {
       },
     };
 
-    await createNewClaimsForRepoContributionHelper(user, repo, { pullRequest: pr });
+    await createNewClaimsForRepoContributionHelper(githubUser, repo, { pullRequest: pr });
 
     expect(mockedCountContributionsForClaim).toHaveBeenCalledTimes(1);
 
     expect(contextMock.prisma.claim.upsert).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.claim.upsert).toHaveBeenCalledWith(
-      fillInUpsert(user.id, repo.project.gitPOAPs[0].id, { pullRequest: pr }),
+      fillInUpsert(githubUser.id, repo.project.gitPOAPs[0].id, { pullRequest: pr }),
     );
   });
 
@@ -142,16 +142,16 @@ describe('createNewClaimsForRepoContribution', () => {
       },
     };
 
-    await createNewClaimsForRepoContributionHelper(user, repo, { pullRequest: pr });
+    await createNewClaimsForRepoContributionHelper(githubUser, repo, { pullRequest: pr });
 
     expect(mockedCountContributionsForClaim).toHaveBeenCalledTimes(1);
 
     expect(contextMock.prisma.claim.upsert).toHaveBeenCalledTimes(2);
     expect(contextMock.prisma.claim.upsert).toHaveBeenCalledWith(
-      fillInUpsert(user.id, repo.project.gitPOAPs[0].id, { pullRequest: pr }),
+      fillInUpsert(githubUser.id, repo.project.gitPOAPs[0].id, { pullRequest: pr }),
     );
     expect(contextMock.prisma.claim.upsert).toHaveBeenCalledWith(
-      fillInUpsert(user.id, repo.project.gitPOAPs[1].id, { pullRequest: pr }),
+      fillInUpsert(githubUser.id, repo.project.gitPOAPs[1].id, { pullRequest: pr }),
     );
   });
 
@@ -179,16 +179,16 @@ describe('createNewClaimsForRepoContribution', () => {
       },
     };
 
-    await createNewClaimsForRepoContributionHelper(user, repo, { pullRequest: pr });
+    await createNewClaimsForRepoContributionHelper(githubUser, repo, { pullRequest: pr });
 
     expect(mockedCountContributionsForClaim).toHaveBeenCalledTimes(1);
 
     expect(contextMock.prisma.claim.upsert).toHaveBeenCalledTimes(2);
     expect(contextMock.prisma.claim.upsert).toHaveBeenCalledWith(
-      fillInUpsert(user.id, repo.project.gitPOAPs[0].id, { pullRequest: pr }),
+      fillInUpsert(githubUser.id, repo.project.gitPOAPs[0].id, { pullRequest: pr }),
     );
     expect(contextMock.prisma.claim.upsert).toHaveBeenCalledWith(
-      fillInUpsert(user.id, repo.project.gitPOAPs[1].id, { pullRequest: pr }),
+      fillInUpsert(githubUser.id, repo.project.gitPOAPs[1].id, { pullRequest: pr }),
     );
   });
 });

@@ -4,7 +4,7 @@ import { countContributionsForClaim } from '../../../../src/lib/contributions';
 
 jest.mock('../../../../src/logging');
 
-const user = { id: 4 };
+const githubUser = { id: 4 };
 
 describe('countContributionsForClaim', () => {
   const repoIds = [5, 6];
@@ -24,14 +24,14 @@ describe('countContributionsForClaim', () => {
   };
   const pullRequestCountArgObj = {
     where: {
-      userId: user.id,
+      githubUserId: githubUser.id,
       repoId: { in: repoIds },
       githubMergedAt: dateRange,
     },
   };
   const mentionCountArgObj = {
     where: {
-      userId: user.id,
+      githubUserId: githubUser.id,
       repoId: { in: repoIds },
       OR: [
         { pullRequest: { githubCreatedAt: dateRange } },
@@ -44,7 +44,7 @@ describe('countContributionsForClaim', () => {
     contextMock.prisma.githubPullRequest.count.mockResolvedValue(0);
     contextMock.prisma.githubMention.count.mockResolvedValue(0);
 
-    const result = await countContributionsForClaim(user, repos, basedGitPOAP);
+    const result = await countContributionsForClaim(githubUser, repos, basedGitPOAP);
 
     expect(result).toEqual(0);
 
@@ -59,7 +59,7 @@ describe('countContributionsForClaim', () => {
     contextMock.prisma.githubPullRequest.count.mockResolvedValue(4);
     contextMock.prisma.githubMention.count.mockResolvedValue(0);
 
-    const result = await countContributionsForClaim(user, repos, basedGitPOAP);
+    const result = await countContributionsForClaim(githubUser, repos, basedGitPOAP);
 
     expect(result).toEqual(4);
 
@@ -74,7 +74,7 @@ describe('countContributionsForClaim', () => {
     contextMock.prisma.githubPullRequest.count.mockResolvedValue(0);
     contextMock.prisma.githubMention.count.mockResolvedValue(7);
 
-    const result = await countContributionsForClaim(user, repos, basedGitPOAP);
+    const result = await countContributionsForClaim(githubUser, repos, basedGitPOAP);
 
     expect(result).toEqual(7);
 
@@ -89,7 +89,7 @@ describe('countContributionsForClaim', () => {
     contextMock.prisma.githubPullRequest.count.mockResolvedValue(3);
     contextMock.prisma.githubMention.count.mockResolvedValue(7);
 
-    const result = await countContributionsForClaim(user, repos, basedGitPOAP);
+    const result = await countContributionsForClaim(githubUser, repos, basedGitPOAP);
 
     expect(result).toEqual(10);
 
@@ -104,7 +104,7 @@ describe('countContributionsForClaim', () => {
     contextMock.prisma.githubPullRequest.count.mockResolvedValue(3);
     contextMock.prisma.githubMention.count.mockResolvedValue(0);
 
-    const result = await countContributionsForClaim(user, repos, nonBasedGitPOAP);
+    const result = await countContributionsForClaim(githubUser, repos, nonBasedGitPOAP);
 
     expect(result).toEqual(0);
 
@@ -118,7 +118,7 @@ describe('countContributionsForClaim', () => {
     contextMock.prisma.githubPullRequest.count.mockResolvedValue(9001);
     contextMock.prisma.githubMention.count.mockResolvedValue(6);
 
-    const result = await countContributionsForClaim(user, repos, nonBasedGitPOAP);
+    const result = await countContributionsForClaim(githubUser, repos, nonBasedGitPOAP);
 
     expect(result).toEqual(6);
 

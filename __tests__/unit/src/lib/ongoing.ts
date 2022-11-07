@@ -1,8 +1,8 @@
 import { mockedLogger } from '../../../../__mocks__/src/logging';
 import { handleNewPull, RepoReturnType } from '../../../../src/lib/ongoing';
-import { upsertUser } from '../../../../src/lib/users';
+import { upsertGithubUser } from '../../../../src/lib/githubUsers';
 import { upsertGithubPullRequest } from '../../../../src/lib/pullRequests';
-import { GithubPullRequest, User } from '@prisma/client';
+import { GithubPullRequest, GithubUser } from '@prisma/client';
 import {
   createNewClaimsForRepoContribution,
   createYearlyGitPOAPsMap,
@@ -11,7 +11,7 @@ import { OctokitResponseData, PullsAPI } from '../../../../src/external/github';
 import { DeepPartial } from '../../../../src/types/utility';
 
 jest.mock('../../../../src/logging');
-jest.mock('../../../../src/lib/users');
+jest.mock('../../../../src/lib/githubUsers');
 jest.mock('../../../../src/lib/pullRequests', () => ({
   __esModule: true,
   ...(<any>jest.requireActual('../../../../src/lib/pullRequests')),
@@ -20,7 +20,7 @@ jest.mock('../../../../src/lib/pullRequests', () => ({
 
 jest.mock('../../../../src/lib/claims');
 
-const mockedUpsertUser = jest.mocked(upsertUser, true);
+const mockedUpsertUser = jest.mocked(upsertGithubUser, true);
 const mockedUpsertGithubPullRequest = jest.mocked(upsertGithubPullRequest, true);
 
 type GithubPullRequestData = DeepPartial<OctokitResponseData<PullsAPI['get']>> & {
@@ -32,7 +32,7 @@ type GithubPullRequestData = DeepPartial<OctokitResponseData<PullsAPI['get']>> &
   merge_commit_sha: string;
 };
 
-const user: User = {
+const githubUser: GithubUser = {
   id: 32423,
   githubId: 43532,
   githubHandle: 'some-user',
@@ -71,8 +71,8 @@ describe('handleNewPull', () => {
       number: 4,
       title: 'Some unmerged PR',
       user: {
-        id: user.githubId,
-        login: user.githubHandle,
+        id: githubUser.githubId,
+        login: githubUser.githubHandle,
         type: 'User',
       },
       merged_at: null,
@@ -89,7 +89,7 @@ describe('handleNewPull', () => {
     expect(result.finished).toEqual(false);
     expect(result.updatedAt).toEqual(new Date(pull.updated_at));
 
-    expect(upsertUser).toHaveBeenCalledTimes(0);
+    expect(upsertGithubUser).toHaveBeenCalledTimes(0);
   });
 
   it('Stops after updatedAt is less than lastUpdatedAt', async () => {
@@ -97,8 +97,8 @@ describe('handleNewPull', () => {
       number: 2,
       title: 'Some older PR',
       user: {
-        id: user.githubId,
-        login: user.githubHandle,
+        id: githubUser.githubId,
+        login: githubUser.githubHandle,
         type: 'User',
       },
       created_at: '2022-05-20',
@@ -115,18 +115,18 @@ describe('handleNewPull', () => {
     expect(result.finished).toEqual(true);
     expect(result.updatedAt).toEqual(new Date(pull.updated_at));
 
-    expect(upsertUser).toHaveBeenCalledTimes(0);
+    expect(upsertGithubUser).toHaveBeenCalledTimes(0);
   });
 
   it('Logs error without creating claims if newer year found', async () => {
-    mockedUpsertUser.mockResolvedValue(user);
+    mockedUpsertUser.mockResolvedValue(githubUser);
 
     const pull: GithubPullRequestData = {
       number: 20034,
       title: 'Some newer PR',
       user: {
-        id: user.githubId,
-        login: user.githubHandle,
+        id: githubUser.githubId,
+        login: githubUser.githubHandle,
         type: 'User',
       },
       created_at: '2023-05-20',
@@ -143,8 +143,8 @@ describe('handleNewPull', () => {
     expect(result.finished).toEqual(false);
     expect(result.updatedAt).toEqual(new Date(pull.updated_at));
 
-    expect(upsertUser).toHaveBeenCalledTimes(1);
-    expect(upsertUser).toHaveBeenCalledWith(pull.user.id, pull.user.login);
+    expect(upsertGithubUser).toHaveBeenCalledTimes(1);
+    expect(upsertGithubUser).toHaveBeenCalledWith(pull.user.id, pull.user.login);
 
     expect(upsertGithubPullRequest).toHaveBeenCalledTimes(1);
     expect(upsertGithubPullRequest).toHaveBeenCalledWith(
@@ -154,7 +154,7 @@ describe('handleNewPull', () => {
       new Date(pull.created_at),
       new Date(<string>pull.merged_at),
       pull.merge_commit_sha,
-      user.id,
+      githubUser.id,
     );
 
     expect(mockedLogger.error).toHaveBeenCalledTimes(1);
@@ -163,14 +163,14 @@ describe('handleNewPull', () => {
   });
 
   it("Doesn't try to create claims for older years", async () => {
-    mockedUpsertUser.mockResolvedValue(user);
+    mockedUpsertUser.mockResolvedValue(githubUser);
 
     const pull: GithubPullRequestData = {
       number: 204,
       title: 'Some older merged PR',
       user: {
-        id: user.githubId,
-        login: user.githubHandle,
+        id: githubUser.githubId,
+        login: githubUser.githubHandle,
         type: 'User',
       },
       created_at: '2021-03-20',
@@ -187,8 +187,8 @@ describe('handleNewPull', () => {
     expect(result.finished).toEqual(false);
     expect(result.updatedAt).toEqual(new Date(pull.updated_at));
 
-    expect(upsertUser).toHaveBeenCalledTimes(1);
-    expect(upsertUser).toHaveBeenCalledWith(pull.user.id, pull.user.login);
+    expect(upsertGithubUser).toHaveBeenCalledTimes(1);
+    expect(upsertGithubUser).toHaveBeenCalledWith(pull.user.id, pull.user.login);
 
     expect(upsertGithubPullRequest).toHaveBeenCalledTimes(1);
     expect(upsertGithubPullRequest).toHaveBeenCalledWith(
@@ -198,7 +198,7 @@ describe('handleNewPull', () => {
       new Date(pull.created_at),
       new Date(<string>pull.merged_at),
       pull.merge_commit_sha,
-      user.id,
+      githubUser.id,
     );
 
     expect(mockedLogger.error).toHaveBeenCalledTimes(0);
@@ -207,14 +207,14 @@ describe('handleNewPull', () => {
   });
 
   it('Creates claims for this year', async () => {
-    mockedUpsertUser.mockResolvedValue(user);
+    mockedUpsertUser.mockResolvedValue(githubUser);
 
     const pull: GithubPullRequestData = {
       number: 29004,
       title: 'Some just merged PR',
       user: {
-        id: user.githubId,
-        login: user.githubHandle,
+        id: githubUser.githubId,
+        login: githubUser.githubHandle,
         type: 'User',
       },
       created_at: '2022-03-20',
@@ -236,7 +236,7 @@ describe('handleNewPull', () => {
       githubMergedAt: new Date(<string>pull.merged_at),
       githubMergeCommitSha: pull.merge_commit_sha,
       repoId: repo.id,
-      userId: user.id,
+      githubUserId: githubUser.id,
     };
 
     mockedUpsertGithubPullRequest.mockResolvedValue(pr);
@@ -248,8 +248,8 @@ describe('handleNewPull', () => {
     expect(result.finished).toEqual(false);
     expect(result.updatedAt).toEqual(new Date(pull.updated_at));
 
-    expect(upsertUser).toHaveBeenCalledTimes(1);
-    expect(upsertUser).toHaveBeenCalledWith(pull.user.id, pull.user.login);
+    expect(upsertGithubUser).toHaveBeenCalledTimes(1);
+    expect(upsertGithubUser).toHaveBeenCalledWith(pull.user.id, pull.user.login);
 
     expect(upsertGithubPullRequest).toHaveBeenCalledTimes(1);
     expect(upsertGithubPullRequest).toHaveBeenCalledWith(
@@ -259,12 +259,12 @@ describe('handleNewPull', () => {
       new Date(pull.created_at),
       new Date(<string>pull.merged_at),
       pull.merge_commit_sha,
-      user.id,
+      githubUser.id,
     );
 
     expect(createNewClaimsForRepoContribution).toHaveBeenCalledTimes(1);
     expect(createNewClaimsForRepoContribution).toHaveBeenCalledWith(
-      user,
+      githubUser,
       repo.project.repos,
       yearlyGitPOAPsMap,
       { pullRequest: pr },
@@ -272,14 +272,14 @@ describe('handleNewPull', () => {
   });
 
   it('Skips creating claims for bots', async () => {
-    mockedUpsertUser.mockResolvedValue(user);
+    mockedUpsertUser.mockResolvedValue(githubUser);
 
     const pull: GithubPullRequestData = {
       number: 29004,
       title: 'Some just merged PR',
       user: {
-        id: user.githubId,
-        login: user.githubHandle,
+        id: githubUser.githubId,
+        login: githubUser.githubHandle,
         type: 'Bot',
       },
       created_at: '2022-04-20',
@@ -301,7 +301,7 @@ describe('handleNewPull', () => {
       githubMergedAt: new Date(<string>pull.merged_at),
       githubMergeCommitSha: pull.merge_commit_sha,
       repoId: repo.id,
-      userId: user.id,
+      githubUserId: githubUser.id,
     };
 
     mockedUpsertGithubPullRequest.mockResolvedValue(pr);
@@ -311,6 +311,6 @@ describe('handleNewPull', () => {
     expect(result.finished).toEqual(false);
     expect(result.updatedAt).toEqual(new Date(pull.updated_at));
 
-    expect(upsertUser).toHaveBeenCalledTimes(0);
+    expect(upsertGithubUser).toHaveBeenCalledTimes(0);
   });
 });

@@ -5,7 +5,7 @@ import { createScopedLogger } from '../logging';
 import { RestrictedContribution, countContributionsForClaim } from './contributions';
 import { getGithubUserAsAdmin } from '../external/github';
 import { resolveENS, upsertENSNameInDB } from './ens';
-import { upsertUser } from './users';
+import { upsertGithubUser } from './githubUsers';
 import { upsertAddress } from './addresses';
 import { MINIMUM_REMAINING_REDEEM_CODES, REDEEM_CODE_STEP_SIZE } from '../constants';
 import { requestPOAPCodes } from '../external/poap';
@@ -30,7 +30,7 @@ export type RepoData = {
 
 export type ClaimData = {
   id: number;
-  user: {
+  githubUser: {
     githubId: number;
     githubHandle: string;
   } | null;
@@ -44,7 +44,7 @@ export type ClaimData = {
 };
 
 export async function upsertClaim(
-  user: { id: number },
+  githubUser: { id: number },
   gitPOAP: { id: number },
   contribution: RestrictedContribution,
 ): Promise<Claim> {
@@ -68,9 +68,9 @@ export async function upsertClaim(
 
   return await context.prisma.claim.upsert({
     where: {
-      gitPOAPId_userId: {
+      gitPOAPId_githubUserId: {
         gitPOAPId: gitPOAP.id,
-        userId: user.id,
+        githubUserId: githubUser.id,
       },
     },
     update: {},
@@ -80,9 +80,9 @@ export async function upsertClaim(
           id: gitPOAP.id,
         },
       },
-      user: {
+      githubUser: {
         connect: {
-          id: user.id,
+          id: githubUser.id,
         },
       },
       pullRequestEarned,
@@ -133,7 +133,7 @@ export function createYearlyGitPOAPsMap(gitPOAPs: GitPOAPs): YearlyGitPOAPsMap {
 }
 
 export async function createNewClaimsForRepoContribution(
-  user: { id: number },
+  githubUser: { id: number },
   repos: { id: number }[],
   yearlyGitPOAPsMap: YearlyGitPOAPsMap,
   contribution: RestrictedContribution,
@@ -142,12 +142,12 @@ export async function createNewClaimsForRepoContribution(
 
   if ('pullRequest' in contribution) {
     logger.info(
-      `Handling creating new claims for PR ID ${contribution.pullRequest.id} for User ID ${user.id}`,
+      `Handling creating new claims for PR ID ${contribution.pullRequest.id} for User ID ${githubUser.id}`,
     );
   } else {
     // 'mention' in contribution
     logger.info(
-      `Handling creating new claims for Mention ID ${contribution.mention.id} for User ID ${user.id}`,
+      `Handling creating new claims for Mention ID ${contribution.mention.id} for User ID ${githubUser.id}`,
     );
   }
 
@@ -159,9 +159,11 @@ export async function createNewClaimsForRepoContribution(
   for (const year of years) {
     const gitPOAPs = yearlyGitPOAPsMap[year];
 
-    const contributionCount = await countContributionsForClaim(user, repos, gitPOAPs[0]);
+    const contributionCount = await countContributionsForClaim(githubUser, repos, gitPOAPs[0]);
 
-    logger.debug(`User ID ${user.id} has ${contributionCount} Contributions in year ${year}`);
+    logger.debug(
+      `GithubUser ID ${githubUser.id} has ${contributionCount} Contributions in year ${year}`,
+    );
 
     // Skip if there are no PRs for this year
     if (contributionCount === 0) {
@@ -172,14 +174,16 @@ export async function createNewClaimsForRepoContribution(
       // Skip this GitPOAP if the threshold wasn't reached
       if (contributionCount < gitPOAP.threshold) {
         logger.info(
-          `User ID ${user.id} misses threshold of ${gitPOAP.threshold} for GitPOAP ID ${gitPOAP.id}`,
+          `GithubUser ID ${githubUser.id} misses threshold of ${gitPOAP.threshold} for GitPOAP ID ${gitPOAP.id}`,
         );
         continue;
       }
 
-      logger.info(`Upserting claim for User ID ${user.id} for GitPOAP ID ${gitPOAP.id}`);
+      logger.info(
+        `Upserting claim for GithubUser ID ${githubUser.id} for GitPOAP ID ${gitPOAP.id}`,
+      );
 
-      claims.push(await upsertClaim(user, gitPOAP, contribution));
+      claims.push(await upsertClaim(githubUser, gitPOAP, contribution));
     }
   }
 
@@ -187,12 +191,12 @@ export async function createNewClaimsForRepoContribution(
 }
 
 export async function createNewClaimsForRepoContributionHelper(
-  user: { id: number },
+  githubUser: { id: number },
   repo: RepoData,
   contribution: RestrictedContribution,
 ): Promise<Claim[]> {
   return await createNewClaimsForRepoContribution(
-    user,
+    githubUser,
     repo.project.repos,
     createYearlyGitPOAPsMap(repo.project.gitPOAPs),
     contribution,
@@ -213,7 +217,7 @@ export async function retrieveClaimsCreatedByPR(pullRequestId: number) {
           projectId: true,
         },
       },
-      userId: true,
+      githubUserId: true,
     },
   });
 
@@ -243,7 +247,7 @@ export async function retrieveClaimsCreatedByPR(pullRequestId: number) {
             projectId: pullRequestData.repo.projectId,
             year: pullRequestData.githubMergedAt.getFullYear(),
           },
-          userId: pullRequestData.userId,
+          githubUserId: pullRequestData.githubUserId,
           status: ClaimStatus.UNCLAIMED,
         },
       ],
@@ -253,7 +257,7 @@ export async function retrieveClaimsCreatedByPR(pullRequestId: number) {
     },
     select: {
       id: true,
-      user: {
+      githubUser: {
         select: {
           githubId: true,
           githubHandle: true,
@@ -282,7 +286,7 @@ export async function retrieveClaimsCreatedByMention(mentionId: number) {
       id: mentionId,
     },
     select: {
-      userId: true,
+      githubUserId: true,
       repo: {
         select: {
           projectId: true,
@@ -333,7 +337,7 @@ export async function retrieveClaimsCreatedByMention(mentionId: number) {
             projectId: mentionData.repo.projectId,
             year,
           },
-          userId: mentionData.userId,
+          githubUserId: mentionData.githubUserId,
           status: ClaimStatus.UNCLAIMED,
         },
       ],
@@ -343,7 +347,7 @@ export async function retrieveClaimsCreatedByMention(mentionId: number) {
     },
     select: {
       id: true,
-      user: {
+      githubUser: {
         select: {
           githubId: true,
           githubHandle: true,
@@ -415,14 +419,14 @@ export const createClaimForGithubHandle = async (githubHandle: string, gitPOAPId
   const logger = createScopedLogger('createClaimForGithubHandle');
 
   /* Use octokit to get a githubHandles githubId */
-  const githubUser = await getGithubUserAsAdmin(githubHandle);
+  const githubInfo = await getGithubUserAsAdmin(githubHandle);
 
-  if (githubUser === null) {
+  if (githubInfo === null) {
     logger.error(`Failed to lookup GitHub user ${githubHandle}`);
     return null;
   }
 
-  const user = await upsertUser(githubUser.id, githubHandle);
+  const githubUser = await upsertGithubUser(githubInfo.id, githubHandle);
 
   const gitPOAP = await context.prisma.gitPOAP.findUnique({
     where: { id: gitPOAPId },
@@ -436,14 +440,14 @@ export const createClaimForGithubHandle = async (githubHandle: string, gitPOAPId
 
   return await context.prisma.claim.upsert({
     where: {
-      gitPOAPId_userId: {
+      gitPOAPId_githubUserId: {
         gitPOAPId,
-        userId: user.id,
+        githubUserId: githubUser.id,
       },
     },
     update: {},
     create: {
-      userId: user.id,
+      githubUserId: githubUser.id,
       gitPOAPId,
       status: ClaimStatus.UNCLAIMED,
     },

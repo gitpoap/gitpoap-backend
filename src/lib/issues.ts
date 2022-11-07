@@ -8,7 +8,7 @@ export async function upsertGithubIssue(
   githubTitle: string,
   githubCreatedAt: Date,
   githubClosedAt: Date | null,
-  userId: number,
+  githubUserId: number,
 ): Promise<GithubIssue> {
   const logger = createScopedLogger('upsertGithubIssue');
 
@@ -36,9 +36,9 @@ export async function upsertGithubIssue(
           id: repoId,
         },
       },
-      user: {
+      githubUser: {
         connect: {
-          id: userId,
+          id: githubUserId,
         },
       },
     },

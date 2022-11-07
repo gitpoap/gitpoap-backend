@@ -1,16 +1,16 @@
 import { context } from '../context';
 import { createScopedLogger } from '../logging';
 
-export async function upsertUser(
+export async function upsertGithubUser(
   githubId: number,
   githubHandle: string,
   githubOAuthToken?: string,
 ) {
-  const logger = createScopedLogger('upsertUser');
+  const logger = createScopedLogger('upsertGithubUser');
 
   logger.info(`Attempting to upsert GitHub user ${githubHandle}`);
 
-  return await context.prisma.user.upsert({
+  return await context.prisma.githubUser.upsert({
     where: {
       githubId,
     },
@@ -26,10 +26,10 @@ export async function upsertUser(
   });
 }
 
-export async function removeUsersGithubOAuthToken(userId: number) {
-  await context.prisma.user.update({
+export async function removeGithubUsersGithubOAuthToken(githubUserId: number) {
+  await context.prisma.githubUser.update({
     where: {
-      id: userId,
+      id: githubUserId,
     },
     data: {
       githubOAuthToken: null,
