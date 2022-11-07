@@ -12,8 +12,6 @@ jest.mock('../../../../src/logging');
 jest.mock('../../../../src/lib/repos');
 jest.mock('../../../../src/lib/pullRequests');
 
-//mockLoggingAndTiming();
-
 const mockedCreateRepoByGithubId = jest.mocked(createRepoByGithubId, true);
 const mockedBackloadGithubPullRequestData = jest.mocked(backloadGithubPullRequestData, true);
 
