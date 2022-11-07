@@ -10,7 +10,7 @@ export type GitPOAPRequestEmailForm = {
   email: string;
   name: string;
   description: string;
-  imageKey: string;
+  imageUrl: string;
   organizationName: string | null;
   organizationId: number | null;
 };

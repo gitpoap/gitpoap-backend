@@ -1,8 +1,4 @@
-import { GITPOAP_ROOT_URL, AWS_S3_ROOT_URL } from '../../constants';
-
-export const generateS3ImageUrl = (imageKey: string): string => {
-  return `${AWS_S3_ROOT_URL}/${imageKey}`;
-};
+import { GITPOAP_ROOT_URL } from '../../constants';
 
 export const generateOrganizationLink = (orgId: number): string => {
   return `${GITPOAP_ROOT_URL}/org/${orgId}`;
