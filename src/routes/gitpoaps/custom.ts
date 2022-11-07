@@ -61,7 +61,7 @@ customGitPOAPsRouter.post(
 
     /* Validate the contributors object */
     const contributors = parseJSON<z.infer<typeof GitPOAPContributorsSchema>>(
-      req.body.contributors,
+      schemaResult.data.contributors,
     );
 
     if (contributors === null) {
@@ -82,10 +82,10 @@ customGitPOAPsRouter.post(
     }
 
     /* Validate the date fields */
-    const year = DateTime.fromISO(req.body.startDate).year;
-    const startDate = DateTime.fromISO(req.body.startDate).toJSDate();
-    const endDate = DateTime.fromISO(req.body.endDate).toJSDate();
-    const expiryDate = DateTime.fromISO(req.body.expiryDate).toJSDate();
+    const year = DateTime.fromISO(schemaResult.data.startDate).year;
+    const startDate = DateTime.fromISO(schemaResult.data.startDate).toJSDate();
+    const endDate = DateTime.fromISO(schemaResult.data.endDate).toJSDate();
+    const expiryDate = DateTime.fromISO(schemaResult.data.expiryDate).toJSDate();
 
     if (
       !year ||
@@ -101,10 +101,10 @@ customGitPOAPsRouter.post(
     let organization: { id: number } | null = null;
 
     /* If a Custom GitPOAP Request is tied to project */
-    if (req.body.projectId) {
-      const projectId = parseInt(req.body.projectId, 10);
+    if (schemaResult.data.projectId) {
+      const projectId = parseInt(schemaResult.data.projectId, 10);
       logger.info(
-        `Request to create a new Custom GitPOAP "${req.body.name}" for project ${projectId}`,
+        `Request to create a new Custom GitPOAP "${schemaResult.data.name}" for project ${projectId}`,
       );
 
       project = await context.prisma.project.findUnique({
@@ -120,10 +120,10 @@ customGitPOAPsRouter.post(
     }
 
     /* If Custom GitPOAP Request is tied to an organization */
-    if (req.body.organizationId) {
-      const organizationId = parseInt(req.body.organizationId, 10);
+    if (schemaResult.data.organizationId) {
+      const organizationId = parseInt(schemaResult.data.organizationId, 10);
       logger.info(
-        `Request to create a new Custom GitPOAP "${req.body.name}" for organization ${organizationId}`,
+        `Request to create a new Custom GitPOAP "${schemaResult.data.name}" for organization ${organizationId}`,
       );
       organization = await context.prisma.organization.findUnique({
         where: { id: organizationId },
@@ -155,17 +155,16 @@ customGitPOAPsRouter.post(
     const { addressId } = getAccessTokenPayload(req.user);
     const gitPOAPRequest = await context.prisma.gitPOAPRequest.create({
       data: {
-        name: req.body.name,
+        name: schemaResult.data.name,
         type: GitPOAPType.CUSTOM,
         imageUrl: getS3URL(bucket, imageKey),
-        description: req.body.description,
+        description: schemaResult.data.description,
         year,
         startDate,
         endDate,
         expiryDate,
-        eventUrl: req.body.eventUrl,
-        email: GITPOAP_ISSUER_EMAIL,
-        numRequestedCodes: parseInt(req.body.numRequestedCodes, 10),
+        eventUrl: schemaResult.data.eventUrl,
+        numRequestedCodes: parseInt(schemaResult.data.numRequestedCodes, 10),
         project: project ? { connect: { id: project?.id } } : undefined,
         organization: organization ? { connect: { id: organization?.id } } : undefined,
         ongoing: true,
@@ -178,6 +177,7 @@ customGitPOAPsRouter.post(
             id: addressId,
           },
         },
+        creatorEmail: schemaResult.data.creatorEmail,
       },
     });
 
@@ -185,7 +185,7 @@ customGitPOAPsRouter.post(
     void sentInternalGitPOAPRequestMessage(gitPOAPRequest);
 
     logger.info(
-      `Completed request to create a new GitPOAP Request with ID: ${gitPOAPRequest.id} "${req.body.name}" for project ${project?.id} and organization ${organization?.id}`,
+      `Completed request to create a new GitPOAP Request with ID: ${gitPOAPRequest.id} "${schemaResult.data.name}" for project ${project?.id} and organization ${organization?.id}`,
     );
 
     return res.status(201).send('CREATED');
@@ -246,7 +246,7 @@ customGitPOAPsRouter.put('/approve/:id', jwtWithAdminAddress(), async (req, res)
     imageName: getKeyFromS3URL(gitPOAPRequest.imageUrl),
     imageBuffer,
     secret_code: secretCode,
-    email: gitPOAPRequest.email,
+    email: GITPOAP_ISSUER_EMAIL,
     num_requested_codes: gitPOAPRequest.numRequestedCodes,
   });
 

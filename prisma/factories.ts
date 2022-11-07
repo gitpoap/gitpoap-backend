@@ -529,7 +529,7 @@ export class GithubMentionFactory {
 type CreateGitPOAPRequestParams = {
   name: string;
   description: string;
-  email: string;
+  creatorEmail: string;
   addressId: number;
   imageUrl: string;
   contributors: z.infer<typeof GitPOAPContributorsSchema>;
@@ -543,7 +543,7 @@ export class GitPOAPRequestFactory {
   static create = async ({
     name,
     description,
-    email,
+    creatorEmail,
     addressId,
     imageUrl,
     contributors,
@@ -555,7 +555,7 @@ export class GitPOAPRequestFactory {
     const data: Prisma.GitPOAPRequestCreateInput = {
       name,
       description,
-      email,
+      creatorEmail,
       type: GitPOAPType.CUSTOM,
       startDate,
       endDate,

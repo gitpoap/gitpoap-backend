@@ -138,7 +138,6 @@ describe('POST /profiles', () => {
       bannerImageUrl: 'bar',
       name: 'yeet',
       profileImageUrl: 'yolo',
-      githubHandle: 'obi',
       twitterHandle: 'wan',
       personalSiteUrl: 'kenobi',
       isVisibleOnLeaderboard: true,
@@ -168,7 +167,6 @@ describe('POST /profiles', () => {
       bannerImageUrl: null,
       name: null,
       profileImageUrl: null,
-      githubHandle: null,
       twitterHandle: null,
       personalSiteUrl: null,
     };
