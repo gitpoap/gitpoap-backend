@@ -220,6 +220,7 @@ model GitPOAP {
   isEnabled          Boolean       @default(true)
   creatorAddressId   Int?
   creatorAddress     Address?      @relation(fields: [creatorAddressId], references: [id])
+  creatorEmail       String?       @db.VarChar(255)
 }
 
 // Records in this table are used for GitPOAP Creation Requests via the Creation Form
@@ -232,7 +233,7 @@ model GitPOAPRequest {
   endDate             DateTime
   expiryDate          DateTime
   eventUrl            String              @db.VarChar(255)
-  email               String              @db.VarChar(255)
+  creatorEmail        String              @db.VarChar(255)
   name                String              @db.VarChar(255)
   numRequestedCodes   Int
   imageUrl            String

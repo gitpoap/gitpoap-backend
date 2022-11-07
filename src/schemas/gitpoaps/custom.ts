@@ -14,6 +14,7 @@ export const CreateCustomGitPOAPSchema = z.object({
   numRequestedCodes: z.string(),
   city: z.string().optional(),
   country: z.string().optional(),
+  creatorEmail: z.string().email().nonempty(),
 });
 
 export const DeleteGitPOAPRequestClaimSchema = z.object({

@@ -13,7 +13,7 @@ import {
   uploadMulterFile,
 } from '../../../../../src/external/s3';
 import { DateTime } from 'luxon';
-import { ADMIN_ADDRESSES, GITPOAP_ISSUER_EMAIL } from '../../../../../src/constants';
+import { ADMIN_ADDRESSES } from '../../../../../src/constants';
 import { ADDRESSES, GH_HANDLES } from '../../../../../prisma/constants';
 import {
   createClaimForEmail,
@@ -35,7 +35,7 @@ const burzENS = 'burz.eth';
 const colfaxEmail = 'colfax@gitpoap.io';
 const colfaxENS = 'colfax.eth';
 
-const baseGitPOAP = {
+const baseGitPOAPRequest = {
   name: 'foobar-name',
   description: 'foobar-description',
   startDate: '2021-01-01',
@@ -55,6 +55,7 @@ const baseGitPOAP = {
     githubHandles: ['peebeejay'],
     ensNames: ['burz.eth'],
   }),
+  creatorEmail: burzEmail,
 };
 
 const gitPOAPRequest = {
@@ -256,6 +257,7 @@ describe('PUT /gitpoaps/custom/approve/:id', () => {
       ongoing: true,
       year: 2021,
       addressId,
+      creatorEmail: burzEmail,
     } as any);
 
     contextMock.prisma.gitPOAPRequest.update.mockResolvedValue({
@@ -299,8 +301,11 @@ describe('PUT /gitpoaps/custom/approve/:id', () => {
         poapEventId: 1,
         poapSecret: '123423123',
         organization: undefined,
-        projectId: undefined,
-        creatorAddressId: addressId,
+        project: undefined,
+        creatorAddress: {
+          connect: { id: addressId },
+        },
+        creatorEmail: burzEmail,
       },
     });
 
@@ -372,6 +377,7 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
       name: 'foobar',
       ongoing: true,
       year: 2021,
+      creatorEmail: burzEmail,
     } as any);
     const authTokens = genAuthTokens(ADMIN_ADDRESSES[0]);
 
@@ -398,7 +404,6 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
       imageUrl: getS3URL('gitpoap-request-images-test', 'foobar.png-123456789'),
       isEnabled: true,
       isPRBased: false,
-
       name: 'foobar',
       ongoing: true,
       year: 2021,
@@ -478,7 +483,7 @@ describe('POST /gitpoaps/custom', () => {
         endDate: DateTime.fromISO('2021-01-10').toJSDate(),
         expiryDate: DateTime.fromISO('2023-01-01').toJSDate(),
         eventUrl: 'https://foobar.com',
-        email: GITPOAP_ISSUER_EMAIL,
+        creatorEmail: burzEmail,
         numRequestedCodes: 50,
         adminApprovalStatus: AdminApprovalStatus.PENDING,
         isEnabled: true,
@@ -533,7 +538,7 @@ describe('POST /gitpoaps/custom', () => {
       .post('/gitpoaps/custom')
       .set('Authorization', `Bearer ${authTokens.accessToken}`)
       .send({
-        ...baseGitPOAP,
+        ...baseGitPOAPRequest,
         contributors: JSON.stringify('blah'),
       });
 
@@ -547,7 +552,7 @@ describe('POST /gitpoaps/custom', () => {
       .post('/gitpoaps/custom')
       .set('Authorization', `Bearer ${authTokens.accessToken}`)
       .send({
-        ...baseGitPOAP,
+        ...baseGitPOAPRequest,
         contributors: JSON.stringify({
           blah1: ['peebeejay'],
           blah2: ['burz.eth'],
@@ -566,7 +571,7 @@ describe('POST /gitpoaps/custom', () => {
       .post('/gitpoaps/custom')
       .set('Authorization', `Bearer ${authTokens.accessToken}`)
       .send({
-        ...baseGitPOAP,
+        ...baseGitPOAPRequest,
         image: 'foobar',
       });
 
@@ -593,7 +598,7 @@ describe('POST /gitpoaps/custom', () => {
     const result = await request(await setupApp())
       .post('/gitpoaps/custom')
       .set('Authorization', `Bearer ${authTokens.accessToken}`)
-      .send({ ...baseGitPOAP });
+      .send({ ...baseGitPOAPRequest });
 
     expect(result.statusCode).toEqual(201);
     expect(contextMock.prisma.authToken.findUnique).toHaveBeenCalledTimes(1);
@@ -621,7 +626,7 @@ describe('POST /gitpoaps/custom', () => {
       .post('/gitpoaps/custom')
       .set('Authorization', `Bearer ${authTokens.accessToken}`)
       .send({
-        ...baseGitPOAP,
+        ...baseGitPOAPRequest,
         organizationId: '1',
         projectId: '1',
       });
