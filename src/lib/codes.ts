@@ -133,11 +133,7 @@ export async function checkGitPOAPForNewCodes(gitPOAP: GitPOAPWithSecret): Promi
       // if it is custom gitPOAP, we send an email for approval
       if (gitPOAP.type === GitPOAPType.CUSTOM) {
         // if email exists
-        if (
-          gitPOAP.creatorAddress &&
-          gitPOAP.creatorAddress.email &&
-          gitPOAP.creatorAddress.email.emailAddress
-        ) {
+        if (gitPOAP.creatorAddress?.email?.emailAddress) {
           const emailForm: GitPOAPRequestEmailForm = {
             id: gitPOAP.id,
             name: gitPOAP.name,
