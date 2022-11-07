@@ -977,6 +977,7 @@ input GitPOAPWhereInput {
   isEnabled: BoolFilter
   creatorAddressId: IntNullableFilter
   creatorAddress: AddressRelationFilter
+  creatorEmail: StringNullableFilter
 }
 
 input EnumGitPOAPTypeFilter {
@@ -1033,7 +1034,7 @@ input GitPOAPRequestWhereInput {
   endDate: DateTimeFilter
   expiryDate: DateTimeFilter
   eventUrl: StringFilter
-  email: StringFilter
+  creatorEmail: StringFilter
   name: StringFilter
   numRequestedCodes: IntFilter
   imageUrl: StringFilter
@@ -1427,6 +1428,7 @@ input GitPOAPOrderByWithRelationInput {
   isEnabled: SortOrder
   creatorAddressId: SortOrder
   creatorAddress: AddressOrderByWithRelationInput
+  creatorEmail: SortOrder
 }
 
 input ProjectOrderByWithRelationInput {
@@ -1636,6 +1638,7 @@ type GitPOAP {
   isPRBased: Boolean!
   isEnabled: Boolean!
   creatorAddressId: Int
+  creatorEmail: String
   _count: GitPOAPCount
   project: Project
   organization: Organization
@@ -1877,6 +1880,7 @@ enum GitPOAPScalarFieldEnum {
   isPRBased
   isEnabled
   creatorAddressId
+  creatorEmail
 }
 
 type GitPOAPRequest {
@@ -1888,7 +1892,7 @@ type GitPOAPRequest {
   endDate: DateTime!
   expiryDate: DateTime!
   eventUrl: String!
-  email: String!
+  creatorEmail: String!
   name: String!
   numRequestedCodes: Int!
   imageUrl: String!
@@ -1942,7 +1946,7 @@ input GitPOAPRequestOrderByWithRelationInput {
   endDate: SortOrder
   expiryDate: SortOrder
   eventUrl: SortOrder
-  email: SortOrder
+  creatorEmail: SortOrder
   name: SortOrder
   numRequestedCodes: SortOrder
   imageUrl: SortOrder
@@ -1978,7 +1982,7 @@ enum GitPOAPRequestScalarFieldEnum {
   endDate
   expiryDate
   eventUrl
-  email
+  creatorEmail
   name
   numRequestedCodes
   imageUrl
@@ -2845,6 +2849,7 @@ type GitPOAPCountAggregate {
   isPRBased: Int!
   isEnabled: Int!
   creatorAddressId: Int!
+  creatorEmail: Int!
   _all: Int!
 }
 
@@ -2893,6 +2898,7 @@ type GitPOAPMinAggregate {
   isPRBased: Boolean
   isEnabled: Boolean
   creatorAddressId: Int
+  creatorEmail: String
 }
 
 type GitPOAPMaxAggregate {
@@ -2916,6 +2922,7 @@ type GitPOAPMaxAggregate {
   isPRBased: Boolean
   isEnabled: Boolean
   creatorAddressId: Int
+  creatorEmail: String
 }
 
 type GitPOAPGroupBy {
@@ -2939,6 +2946,7 @@ type GitPOAPGroupBy {
   isPRBased: Boolean!
   isEnabled: Boolean!
   creatorAddressId: Int
+  creatorEmail: String
   _count: GitPOAPCountAggregate
   _avg: GitPOAPAvgAggregate
   _sum: GitPOAPSumAggregate
@@ -2966,6 +2974,7 @@ input GitPOAPOrderByWithAggregationInput {
   isPRBased: SortOrder
   isEnabled: SortOrder
   creatorAddressId: SortOrder
+  creatorEmail: SortOrder
   _count: GitPOAPCountOrderByAggregateInput
   _avg: GitPOAPAvgOrderByAggregateInput
   _max: GitPOAPMaxOrderByAggregateInput
@@ -2993,6 +3002,7 @@ input GitPOAPCountOrderByAggregateInput {
   isPRBased: SortOrder
   isEnabled: SortOrder
   creatorAddressId: SortOrder
+  creatorEmail: SortOrder
 }
 
 input GitPOAPAvgOrderByAggregateInput {
@@ -3027,6 +3037,7 @@ input GitPOAPMaxOrderByAggregateInput {
   isPRBased: SortOrder
   isEnabled: SortOrder
   creatorAddressId: SortOrder
+  creatorEmail: SortOrder
 }
 
 input GitPOAPMinOrderByAggregateInput {
@@ -3049,6 +3060,7 @@ input GitPOAPMinOrderByAggregateInput {
   isPRBased: SortOrder
   isEnabled: SortOrder
   creatorAddressId: SortOrder
+  creatorEmail: SortOrder
 }
 
 input GitPOAPSumOrderByAggregateInput {
@@ -3086,6 +3098,7 @@ input GitPOAPScalarWhereWithAggregatesInput {
   isPRBased: BoolWithAggregatesFilter
   isEnabled: BoolWithAggregatesFilter
   creatorAddressId: IntNullableWithAggregatesFilter
+  creatorEmail: StringNullableWithAggregatesFilter
 }
 
 input EnumGitPOAPTypeWithAggregatesFilter {
@@ -3145,7 +3158,7 @@ type GitPOAPRequestCountAggregate {
   endDate: Int!
   expiryDate: Int!
   eventUrl: Int!
-  email: Int!
+  creatorEmail: Int!
   name: Int!
   numRequestedCodes: Int!
   imageUrl: Int!
@@ -3198,7 +3211,7 @@ type GitPOAPRequestMinAggregate {
   endDate: DateTime
   expiryDate: DateTime
   eventUrl: String
-  email: String
+  creatorEmail: String
   name: String
   numRequestedCodes: Int
   imageUrl: String
@@ -3225,7 +3238,7 @@ type GitPOAPRequestMaxAggregate {
   endDate: DateTime
   expiryDate: DateTime
   eventUrl: String
-  email: String
+  creatorEmail: String
   name: String
   numRequestedCodes: Int
   imageUrl: String
@@ -3252,7 +3265,7 @@ type GitPOAPRequestGroupBy {
   endDate: DateTime!
   expiryDate: DateTime!
   eventUrl: String!
-  email: String!
+  creatorEmail: String!
   name: String!
   numRequestedCodes: Int!
   imageUrl: String!
@@ -3285,7 +3298,7 @@ input GitPOAPRequestOrderByWithAggregationInput {
   endDate: SortOrder
   expiryDate: SortOrder
   eventUrl: SortOrder
-  email: SortOrder
+  creatorEmail: SortOrder
   name: SortOrder
   numRequestedCodes: SortOrder
   imageUrl: SortOrder
@@ -3318,7 +3331,7 @@ input GitPOAPRequestCountOrderByAggregateInput {
   endDate: SortOrder
   expiryDate: SortOrder
   eventUrl: SortOrder
-  email: SortOrder
+  creatorEmail: SortOrder
   name: SortOrder
   numRequestedCodes: SortOrder
   imageUrl: SortOrder
@@ -3358,7 +3371,7 @@ input GitPOAPRequestMaxOrderByAggregateInput {
   endDate: SortOrder
   expiryDate: SortOrder
   eventUrl: SortOrder
-  email: SortOrder
+  creatorEmail: SortOrder
   name: SortOrder
   numRequestedCodes: SortOrder
   imageUrl: SortOrder
@@ -3385,7 +3398,7 @@ input GitPOAPRequestMinOrderByAggregateInput {
   endDate: SortOrder
   expiryDate: SortOrder
   eventUrl: SortOrder
-  email: SortOrder
+  creatorEmail: SortOrder
   name: SortOrder
   numRequestedCodes: SortOrder
   imageUrl: SortOrder
@@ -3427,7 +3440,7 @@ input GitPOAPRequestScalarWhereWithAggregatesInput {
   endDate: DateTimeWithAggregatesFilter
   expiryDate: DateTimeWithAggregatesFilter
   eventUrl: StringWithAggregatesFilter
-  email: StringWithAggregatesFilter
+  creatorEmail: StringWithAggregatesFilter
   name: StringWithAggregatesFilter
   numRequestedCodes: IntWithAggregatesFilter
   imageUrl: StringWithAggregatesFilter

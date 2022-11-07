@@ -221,7 +221,7 @@ export const seed = async () => {
   const request1 = await GitPOAPRequestFactory.create({
     name: 'Custom GitPOAPs Feature Release Contributor!',
     description: 'You contributed heavily to the release of the Custom GitPOAPs feature!',
-    email: TEAM_EMAIL,
+    creatorEmail: TEAM_EMAIL,
     addressId: addressJay.id,
     imageUrl: getS3URL('gitpoap-request-images-test', 'gitpoap-test-2.png-1666121850.987'),
     startDate: DateTime.fromISO('2022-01-01').toJSDate(),
@@ -239,7 +239,7 @@ export const seed = async () => {
   const request2 = await GitPOAPRequestFactory.create({
     name: 'Onboarding Form Contributor!',
     description: 'The onboarding form was an absolutely massive effort, & you are most deserving of recognition for this fine achievement!',
-    email: TEAM_EMAIL,
+    creatorEmail: TEAM_EMAIL,
     addressId: addressJay.id,
     imageUrl: getS3URL('gitpoap-request-images-test', 'gitpoap-test-1.png-1666121850.987'),
     startDate: DateTime.fromISO('2022-06-01').toJSDate(),
