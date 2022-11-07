@@ -10,6 +10,7 @@ import { ClaimStatus, GitPOAPStatus } from '@generated/type-graphql';
 import {
   AddressFactory,
   ClaimFactory,
+  EmailFactory,
   FeaturedPOAPFactory,
   GitPOAPFactory,
   GitPOAPRequestFactory,
@@ -217,11 +218,14 @@ export const seed = async () => {
   const featured2 = await FeaturedPOAPFactory.create(claim9.poapTokenId!, profileJay.id); // Featured GitPOAP
   const featured3 = await FeaturedPOAPFactory.create('3976027', profileJay.id); // Featured Classic POAP - Bangia Night
 
+  /* Create email addresses */
+  const teamEmail = await EmailFactory.create(TEAM_EMAIL);
+
   /* Create GitPOAP Requests */
   const request1 = await GitPOAPRequestFactory.create({
     name: 'Custom GitPOAPs Feature Release Contributor!',
     description: 'You contributed heavily to the release of the Custom GitPOAPs feature!',
-    creatorEmail: TEAM_EMAIL,
+    creatorEmailId: teamEmail.id,
     addressId: addressJay.id,
     imageUrl: getS3URL('gitpoap-request-images-test', 'gitpoap-test-2.png-1666121850.987'),
     startDate: DateTime.fromISO('2022-01-01').toJSDate(),
@@ -239,7 +243,7 @@ export const seed = async () => {
   const request2 = await GitPOAPRequestFactory.create({
     name: 'Onboarding Form Contributor!',
     description: 'The onboarding form was an absolutely massive effort, & you are most deserving of recognition for this fine achievement!',
-    creatorEmail: TEAM_EMAIL,
+    creatorEmailId: teamEmail.id,
     addressId: addressJay.id,
     imageUrl: getS3URL('gitpoap-request-images-test', 'gitpoap-test-1.png-1666121850.987'),
     startDate: DateTime.fromISO('2022-06-01').toJSDate(),
