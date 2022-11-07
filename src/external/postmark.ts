@@ -4,7 +4,7 @@ import { IntakeFormReposSchema } from '../schemas/onboarding';
 import { z } from 'zod';
 import { formatRepos } from '../routes/onboarding/utils';
 import { IntakeForm } from '../routes/onboarding/types';
-import { CustomGitPOAPRequestEmailForm, CustomGitPOAPRequestEmailAlias } from '../types/gitpoaps';
+import { GitPOAPRequestEmailForm, GitPOAPRequestEmailAlias } from '../types/gitpoaps';
 import {
   generateS3ImageUrl,
   generateOrganizationLink,
@@ -144,20 +144,18 @@ export const sendInternalConfirmationEmail = async (
   });
 };
 
-export const sendCustomGitPOAPRequestConfirmationEmail = async (
-  formData: CustomGitPOAPRequestEmailForm,
-) => await sendCustomGitPOAPRequestEmail(CustomGitPOAPRequestEmailAlias.RECEIVED, formData);
+export const sendGitPOAPRequestConfirmationEmail = async (formData: GitPOAPRequestEmailForm) =>
+  await sendGitPOAPRequestEmail(GitPOAPRequestEmailAlias.RECEIVED, formData);
 
-export const sendCustomGitPOAPRequestRejectionEmail = async (
-  formData: CustomGitPOAPRequestEmailForm,
-) => await sendCustomGitPOAPRequestEmail(CustomGitPOAPRequestEmailAlias.REJECTED, formData);
+export const sendGitPOAPRequestRejectionEmail = async (formData: GitPOAPRequestEmailForm) =>
+  await sendGitPOAPRequestEmail(GitPOAPRequestEmailAlias.REJECTED, formData);
 
-export const sendCustomGitPOAPRequestLiveEmail = async (formData: CustomGitPOAPRequestEmailForm) =>
-  await sendCustomGitPOAPRequestEmail(CustomGitPOAPRequestEmailAlias.LIVE, formData);
+export const sendGitPOAPRequestLiveEmail = async (formData: GitPOAPRequestEmailForm) =>
+  await sendGitPOAPRequestEmail(GitPOAPRequestEmailAlias.LIVE, formData);
 
-export const sendCustomGitPOAPRequestEmail = async (
-  alias: CustomGitPOAPRequestEmailAlias,
-  formData: CustomGitPOAPRequestEmailForm,
+export const sendGitPOAPRequestEmail = async (
+  alias: GitPOAPRequestEmailAlias,
+  formData: GitPOAPRequestEmailForm,
 ) =>
   await sendEmailWithTemplateHandler({
     to: formData.email,
@@ -169,7 +167,7 @@ export const sendCustomGitPOAPRequestEmail = async (
       gitpoap_name: formData.name,
       gitpoap_link: generateGitPOAPRequestLink(formData.id),
       gitpoap_image:
-        alias === CustomGitPOAPRequestEmailAlias.LIVE
+        alias === GitPOAPRequestEmailAlias.LIVE
           ? formData.imageKey
           : generateS3ImageUrl(formData.imageKey),
       gitpoap_description: formData.description,
