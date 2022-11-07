@@ -9,7 +9,7 @@ import { deleteAuthToken, generateAuthTokens, generateNewAuthTokens } from '../l
 import { resolveAddress } from '../lib/ens';
 import { isAuthSignatureDataValid } from '../lib/signatures';
 import { isGithubTokenValidForUser } from '../external/github';
-import { removeUsersGithubOAuthToken } from '../lib/users';
+import { removeGithubUsersGithubOAuthToken } from '../lib/githubUsers';
 import { removeGithubLoginForAddress } from '../lib/addresses';
 import { LOGIN_EXP_TIME_MONTHS } from '../constants';
 import { DateTime } from 'luxon';
@@ -24,7 +24,7 @@ type GithubTokenData = {
 
 async function getTokenDataWithGithubCheck(
   addressId: number,
-  userId: number,
+  githubUserId: number,
   githubId: number,
   githubHandle: string,
   githubOAuthToken: string | null,
@@ -35,9 +35,9 @@ async function getTokenDataWithGithubCheck(
     return { githubId, githubHandle };
   }
 
-  logger.info(`Removing invalid GitHub OAuth token for User ID ${userId}`);
+  logger.info(`Removing invalid GitHub OAuth token for User ID ${githubUserId}`);
 
-  await removeUsersGithubOAuthToken(userId);
+  await removeGithubUsersGithubOAuthToken(githubUserId);
 
   await removeGithubLoginForAddress(addressId);
 
@@ -199,7 +199,7 @@ authRouter.post('/refresh', async function (req, res) {
           ensAvatarImageUrl: true,
         },
       },
-      user: {
+      githubUser: {
         select: {
           id: true,
           githubId: true,
@@ -249,13 +249,13 @@ authRouter.post('/refresh', async function (req, res) {
   });
 
   let githubTokenData: GithubTokenData = { githubId: null, githubHandle: null };
-  if (authToken.user !== null) {
+  if (authToken.githubUser !== null) {
     githubTokenData = await getTokenDataWithGithubCheck(
       authToken.address.id,
-      authToken.user.id,
-      authToken.user.githubId,
-      authToken.user.githubHandle,
-      authToken.user.githubOAuthToken,
+      authToken.githubUser.id,
+      authToken.githubUser.githubId,
+      authToken.githubUser.githubHandle,
+      authToken.githubUser.githubOAuthToken,
     );
   }
 

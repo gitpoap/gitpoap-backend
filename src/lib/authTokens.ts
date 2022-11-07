@@ -8,9 +8,9 @@ async function createAuthToken(
   addressId: number,
   githubId: number | null,
 ): Promise<{ id: number; generation: number }> {
-  let user = undefined;
+  let githubUser = undefined;
   if (githubId !== null) {
-    user = {
+    githubUser = {
       connect: {
         githubId,
       },
@@ -24,7 +24,7 @@ async function createAuthToken(
           id: addressId,
         },
       },
-      user,
+      githubUser,
     },
     select: {
       id: true,

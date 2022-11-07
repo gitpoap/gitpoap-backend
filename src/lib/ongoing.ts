@@ -8,7 +8,7 @@ import {
   overallOngoingIssuanceDurationSeconds,
 } from '../metrics';
 import { extractMergeCommitSha, upsertGithubPullRequest } from './pullRequests';
-import { upsertUser } from './users';
+import { upsertGithubUser } from './githubUsers';
 import {
   YearlyGitPOAPsMap,
   createNewClaimsForRepoContribution,
@@ -90,7 +90,7 @@ export async function handleNewPull(
   logger.info(`Creating a claims for ${pull.user.login} if they don't exist`);
 
   // Create the User, GithubPullRequest, and Claim if they don't exist
-  const user = await upsertUser(pull.user.id, pull.user.login);
+  const githubUser = await upsertGithubUser(pull.user.id, pull.user.login);
 
   const githubPullRequest = await upsertGithubPullRequest(
     repo.id,
@@ -99,7 +99,7 @@ export async function handleNewPull(
     new Date(pull.created_at),
     new Date(pull.merged_at),
     extractMergeCommitSha(pull), // This must be final since it's been merged
-    user.id,
+    githubUser.id,
   );
 
   const mergedAt = DateTime.fromISO(pull.merged_at);
@@ -120,7 +120,7 @@ export async function handleNewPull(
       return { finished: false, updatedAt };
     }
 
-    await createNewClaimsForRepoContribution(user, repo.project.repos, yearlyGitPOAPsMap, {
+    await createNewClaimsForRepoContribution(githubUser, repo.project.repos, yearlyGitPOAPsMap, {
       pullRequest: githubPullRequest,
     });
   }

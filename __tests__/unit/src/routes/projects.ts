@@ -37,7 +37,7 @@ function mockJwtWithAddress() {
 function mockJwtWithOAuth() {
   contextMock.prisma.authToken.findUnique.mockResolvedValue({
     address: { ensName, ensAvatarImageUrl },
-    user: { githubOAuthToken },
+    githubUser: { githubOAuthToken },
   } as any);
 }
 

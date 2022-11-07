@@ -19,6 +19,10 @@ const claim1 = {
   id: 3,
   poapTokenId: 'foobar',
   status: ClaimStatus.CLAIMED,
+  githubUser: undefined,
+  mintedAddress: {
+    ethAddress: ADDRESSES.jay,
+  },
   gitPOAP: {
     id: 45,
     poapEventId: 'barfoo',
@@ -28,6 +32,7 @@ const claim2 = {
   id: 7,
   poapTokenId: 'yolo',
   status: ClaimStatus.CLAIMED,
+  githubUser: undefined,
   gitPOAP: {
     id: 89,
     poapEventId: 'swag',
@@ -219,7 +224,7 @@ describe('splitUsersPOAPs', () => {
       },
       include: {
         mintedAddress: true,
-        user: true,
+        githubUser: true,
         gitPOAP: {
           include: {
             project: {
@@ -266,7 +271,7 @@ describe('splitUsersPOAPs', () => {
       },
       include: {
         mintedAddress: true,
-        user: true,
+        githubUser: true,
         gitPOAP: {
           include: {
             project: {

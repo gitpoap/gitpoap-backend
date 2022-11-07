@@ -154,11 +154,11 @@ export async function addPRCountData(
   }
 
   for (const gitPOAPData of userGitPOAPData) {
-    if (gitPOAPData.claim.user) {
+    if (gitPOAPData.claim.githubUser) {
       results.push({
         ...gitPOAPData,
         contributionCount: await countContributionsForClaim(
-          gitPOAPData.claim.user,
+          gitPOAPData.claim.githubUser,
           gitPOAPData.claim.gitPOAP.project?.repos ?? [],
           gitPOAPData.claim.gitPOAP,
         ),
@@ -656,7 +656,7 @@ export class CustomGitPOAPResolver {
             FROM "Claim" AS c
             INNER JOIN "Profile" AS p ON c."mintedAddressId" = p."addressId"
             INNER JOIN "Address" AS a ON c."mintedAddressId" = a."id"
-            INNER JOIN "User" AS u ON u.id = c."userId"
+            INNER JOIN "GithubUser" AS u ON u.id = c."githubUserId"
             WHERE c."gitPOAPId" = ${gitPOAPId} AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
             ORDER BY c."updatedAt" DESC
             LIMIT ${<number>perPage} OFFSET ${(<number>page - 1) * <number>perPage}
@@ -667,7 +667,7 @@ export class CustomGitPOAPResolver {
             FROM "Claim" AS c
             JOIN "Profile" AS p ON c."mintedAddressId" = p."addressId"
             JOIN "Address" AS a ON c."mintedAddressId" = a."id"
-            JOIN "User" AS u ON u.id = c."userId"
+            JOIN "GithubUser" AS u ON u.id = c."githubUserId"
             WHERE c."gitPOAPId" = ${gitPOAPId} AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
             ORDER BY c."updatedAt" DESC
           `;
@@ -680,7 +680,7 @@ export class CustomGitPOAPResolver {
             FROM "Claim" AS c
             JOIN "Profile" AS p ON c."mintedAddressId" = p."addressId"
             JOIN "Address" AS a ON c."mintedAddressId" = a."id"
-            JOIN "User" AS u ON u.id = c."userId"
+            JOIN "GithubUser" AS u ON u.id = c."githubUserId"
             WHERE c."gitPOAPId" = ${gitPOAPId} AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
             ORDER BY "claimsCount" DESC
             LIMIT ${<number>perPage} OFFSET ${(<number>page - 1) * <number>perPage}
@@ -691,7 +691,7 @@ export class CustomGitPOAPResolver {
             FROM "Claim" AS c
             JOIN "Profile" AS p ON c."mintedAddressId" = p."addressId"
             JOIN "Address" AS a ON c."mintedAddressId" = a."id"
-            JOIN "User" AS u ON u.id = c."userId"
+            JOIN "GithubUser" AS u ON u.id = c."githubUserId"
             WHERE c."gitPOAPId" = ${gitPOAPId} AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
             ORDER BY "claimsCount" DESC
           `;

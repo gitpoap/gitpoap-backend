@@ -18,17 +18,17 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
+model GithubUser {
   id                 Int                 @id @default(autoincrement())
   githubId           Int                 @unique
   githubHandle       String              @db.VarChar(255)
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
   claims             Claim[]
-  // Hide user.authTokens from generated resolvers
+  // Hide githubUser.authTokens from generated resolvers
   /// @TypeGraphQL.omit(output: true, input: true)
   authTokens         AuthToken[]
-  // Hide user.githubOAuthToken from generated resolvers
+  // Hide githubUser.githubOAuthToken from generated resolvers
   /// @TypeGraphQL.omit(output: true, input: true)
   githubOAuthToken   String?
   githubPullRequests GithubPullRequest[]
@@ -61,7 +61,7 @@ model Address {
   createdAt         DateTime                 @default(now())
   updatedAt         DateTime                 @updatedAt
   githubUserId      Int?
-  githubUser        User?                    @relation(fields: [githubUserId], references: [id])
+  githubUser        GithubUser?              @relation(fields: [githubUserId], references: [id])
   ensAvatarImageUrl String?
   ensName           String?                  @db.VarChar(255)
   memberships       OrganizationMembership[]
@@ -168,8 +168,8 @@ model Claim {
   gitPOAPId           Int
   gitPOAP             GitPOAP            @relation(fields: [gitPOAPId], references: [id])
   // Start: Issuance Fields; Claim can be 'issued' to a Github user, ETH address, or email
-  userId              Int?
-  user                User?              @relation(fields: [userId], references: [id])
+  githubUserId        Int?
+  githubUser          GithubUser?        @relation(fields: [githubUserId], references: [id])
   emailId             Int?
   email               Email?             @relation(fields: [emailId], references: [id])
   issuedAddressId     Int?
@@ -184,7 +184,7 @@ model Claim {
   mentionEarned       GithubMention?     @relation(fields: [mentionEarnedId], references: [id])
   needsRevalidation   Boolean            @default(false)
 
-  @@unique([gitPOAPId, userId])
+  @@unique([gitPOAPId, githubUserId])
   @@unique([gitPOAPId, mintedAddressId])
   @@unique([gitPOAPId, issuedAddressId])
   @@unique([gitPOAPId, emailId])
@@ -264,14 +264,14 @@ model GitPOAPRequest {
 }
 
 model AuthToken {
-  id         Int      @id @default(autoincrement())
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  generation Int      @default(0)
+  id         Int         @id @default(autoincrement())
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  generation Int         @default(0)
   addressId  Int
-  address    Address  @relation(fields: [addressId], references: [id])
+  address    Address     @relation(fields: [addressId], references: [id])
   githubId   Int?
-  user       User?    @relation(fields: [githubId], references: [githubId])
+  githubUser GithubUser? @relation(fields: [githubId], references: [githubId])
 }
 
 model FeaturedPOAP {
@@ -321,8 +321,8 @@ model GithubPullRequest {
   githubMergeCommitSha String?         @db.VarChar(41)
   repoId               Int
   repo                 Repo            @relation(fields: [repoId], references: [id])
-  userId               Int
-  user                 User            @relation(fields: [userId], references: [id])
+  githubUserId         Int
+  githubUser           GithubUser      @relation(fields: [githubUserId], references: [id])
   claims               Claim[]
   githubMentions       GithubMention[]
 
@@ -336,13 +336,13 @@ model GithubIssue {
   githubIssueNumber Int
   githubTitle       String
   githubCreatedAt   DateTime
-  // If the user was tagged in an issue for the bot the issue may not have
+  // If the githubUser was tagged in an issue for the bot the issue may not have
   // been closed yet (or ever)
   githubClosedAt    DateTime?
   repoId            Int
   repo              Repo            @relation(fields: [repoId], references: [id])
-  userId            Int
-  user              User            @relation(fields: [userId], references: [id])
+  githubUserId      Int
+  githubUser        GithubUser      @relation(fields: [githubUserId], references: [id])
   githubMentions    GithubMention[]
 
   @@unique([repoId, githubIssueNumber])
@@ -355,16 +355,16 @@ model GithubMention {
   githubMentionedAt DateTime
   repoId            Int
   repo              Repo               @relation(fields: [repoId], references: [id])
-  userId            Int
-  user              User               @relation(fields: [userId], references: [id])
+  githubUserId      Int
+  githubUser        GithubUser         @relation(fields: [githubUserId], references: [id])
   pullRequestId     Int?
   pullRequest       GithubPullRequest? @relation(fields: [pullRequestId], references: [id])
   issueId           Int?
   issue             GithubIssue?       @relation(fields: [issueId], references: [id])
   claims            Claim[]
 
-  @@unique([repoId, userId, pullRequestId])
-  @@unique([repoId, userId, issueId])
+  @@unique([repoId, githubUserId, pullRequestId])
+  @@unique([repoId, githubUserId, issueId])
 }
 
 model Event {
