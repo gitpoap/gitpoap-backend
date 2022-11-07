@@ -15,12 +15,7 @@ import {
 import { DateTime } from 'luxon';
 import { ADMIN_ADDRESSES } from '../../../../../src/constants';
 import { ADDRESSES, GH_HANDLES } from '../../../../../prisma/constants';
-import {
-  createClaimForEmail,
-  createClaimForEnsName,
-  createClaimForEthAddress,
-  createClaimForGithubHandle,
-} from '../../../../../src/lib/claims';
+import { upsertEmail } from '../../../../../src/lib/emails';
 
 const authTokenId = 4;
 const authTokenGeneration = 1;
@@ -34,6 +29,7 @@ const burzEmail = 'burz@gitpoap.io';
 const burzENS = 'burz.eth';
 const colfaxEmail = 'colfax@gitpoap.io';
 const colfaxENS = 'colfax.eth';
+const creatorEmailId = 234233;
 
 const baseGitPOAPRequest = {
   name: 'foobar-name',
@@ -128,11 +124,8 @@ jest.mock('multer', () =>
   ),
 );
 
-jest.mock('../../../../../src/lib/claims');
-jest.mocked(createClaimForEmail, true);
-jest.mocked(createClaimForEnsName, true);
-jest.mocked(createClaimForEthAddress, true);
-jest.mocked(createClaimForGithubHandle, true);
+jest.mock('../../../../../src/lib/emails');
+const mockedUpsertEmail = jest.mocked(upsertEmail, true);
 
 jest.spyOn(DateTime, 'now').mockReturnValue(DateTime.fromSeconds(123456789));
 const mockedGetImageBufferFromS3URL = jest.mocked(getImageBufferFromS3URL, true);
@@ -257,7 +250,7 @@ describe('PUT /gitpoaps/custom/approve/:id', () => {
       ongoing: true,
       year: 2021,
       addressId,
-      creatorEmail: burzEmail,
+      creatorEmailId,
     } as any);
 
     contextMock.prisma.gitPOAPRequest.update.mockResolvedValue({
@@ -305,7 +298,9 @@ describe('PUT /gitpoaps/custom/approve/:id', () => {
         creatorAddress: {
           connect: { id: addressId },
         },
-        creatorEmail: burzEmail,
+        creatorEmail: {
+          connect: { id: creatorEmailId },
+        },
       },
     });
 
@@ -377,7 +372,7 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
       name: 'foobar',
       ongoing: true,
       year: 2021,
-      creatorEmail: burzEmail,
+      creatorEmailId,
     } as any);
     const authTokens = genAuthTokens(ADMIN_ADDRESSES[0]);
 
@@ -483,7 +478,9 @@ describe('POST /gitpoaps/custom', () => {
         endDate: DateTime.fromISO('2021-01-10').toJSDate(),
         expiryDate: DateTime.fromISO('2023-01-01').toJSDate(),
         eventUrl: 'https://foobar.com',
-        creatorEmail: burzEmail,
+        creatorEmail: {
+          connect: { id: creatorEmailId },
+        },
         numRequestedCodes: 50,
         adminApprovalStatus: AdminApprovalStatus.PENDING,
         isEnabled: true,
@@ -594,6 +591,8 @@ describe('POST /gitpoaps/custom', () => {
       filename: 'foobar_imgKey',
     } as any);
 
+    mockedUpsertEmail.mockResolvedValue({ id: creatorEmailId } as any);
+
     const authTokens = genAuthTokens();
     const result = await request(await setupApp())
       .post('/gitpoaps/custom')
@@ -601,7 +600,12 @@ describe('POST /gitpoaps/custom', () => {
       .send({ ...baseGitPOAPRequest });
 
     expect(result.statusCode).toEqual(201);
+
     expect(contextMock.prisma.authToken.findUnique).toHaveBeenCalledTimes(1);
+
+    expect(mockedUpsertEmail).toHaveBeenCalledTimes(1);
+    expect(mockedUpsertEmail).toHaveBeenCalledWith(burzEmail);
+
     assertGitPOAPRequestCreation();
   });
 
@@ -621,6 +625,8 @@ describe('POST /gitpoaps/custom', () => {
     contextMock.prisma.project.findUnique.mockResolvedValue({ id: 1 } as any);
     contextMock.prisma.organization.findUnique.mockResolvedValue({ id: 1 } as any);
 
+    mockedUpsertEmail.mockResolvedValue({ id: creatorEmailId } as any);
+
     const authTokens = genAuthTokens();
     const result = await request(await setupApp())
       .post('/gitpoaps/custom')
@@ -632,7 +638,12 @@ describe('POST /gitpoaps/custom', () => {
       });
 
     expect(result.statusCode).toEqual(201);
+
     expect(contextMock.prisma.authToken.findUnique).toHaveBeenCalledTimes(1);
+
+    expect(mockedUpsertEmail).toHaveBeenCalledTimes(1);
+    expect(mockedUpsertEmail).toHaveBeenCalledWith(burzEmail);
+
     assertGitPOAPRequestCreation(1, 1);
   });
 });
