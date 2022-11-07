@@ -1,15 +1,15 @@
 import { Arg, Ctx, Field, ObjectType, Resolver, Query } from 'type-graphql';
-import { Profile as ProfileValue, User as UserValue } from '@generated/type-graphql';
+import { Profile as ProfileValue, GithubUser as GithubUserValue } from '@generated/type-graphql';
 import { createScopedLogger } from '../../logging';
 import { gqlRequestDurationSeconds } from '../../metrics';
 import { resolveENS } from '../../lib/ens';
 import { Context, context } from '../../context';
-import { Profile, User } from '@prisma/client';
+import { GithubUser, Profile } from '@prisma/client';
 
 @ObjectType()
 class SearchResults {
-  @Field(() => [UserValue])
-  users: User[];
+  @Field(() => [GithubUserValue])
+  githubUsers: GithubUser[];
 
   @Field(() => [ProfileValue])
   profiles: Profile[];
@@ -29,14 +29,14 @@ export class CustomSearchResolver {
       logger.info('Skipping search for less than two characters');
       endTimer({ success: 1 });
       return {
-        users: [],
+        githubUsers: [],
         profiles: [],
       };
     }
 
     const matchText = `%${text}%`;
 
-    const users = await prisma.user.findMany({
+    const githubUsers = await prisma.githubUser.findMany({
       where: {
         githubHandle: {
           contains: matchText,
@@ -102,7 +102,7 @@ export class CustomSearchResolver {
     endTimer({ success: 1 });
 
     return {
-      users,
+      githubUsers,
       profiles,
     };
   }

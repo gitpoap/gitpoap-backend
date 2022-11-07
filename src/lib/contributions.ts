@@ -9,7 +9,7 @@ export type RestrictedContribution = PullRequestContribution | MentionContributi
 export type Contribution = RestrictedContribution | IssueContribution;
 
 export async function countContributionsForClaim(
-  user: { id: number },
+  githubUser: { id: number },
   repos: { id: number }[],
   gitPOAP: { year: number; isPRBased: boolean },
 ): Promise<number> {
@@ -26,7 +26,7 @@ export async function countContributionsForClaim(
   // Note that these can be UNCLAIMED
   const mentionedCount = await context.prisma.githubMention.count({
     where: {
-      userId: user.id,
+      githubUserId: githubUser.id,
       repoId: {
         in: repoIds,
       },
@@ -50,7 +50,7 @@ export async function countContributionsForClaim(
   if (gitPOAP.isPRBased) {
     const prCount = await context.prisma.githubPullRequest.count({
       where: {
-        userId: user.id,
+        githubUserId: githubUser.id,
         repoId: {
           in: repoIds,
         },

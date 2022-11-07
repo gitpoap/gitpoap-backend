@@ -103,7 +103,7 @@ export function jwtWithGitHubOAuth() {
               ensAvatarImageUrl: true,
             },
           },
-          user: {
+          githubUser: {
             select: {
               githubOAuthToken: true,
             },
@@ -114,12 +114,12 @@ export function jwtWithGitHubOAuth() {
         next({ status: 401, msg: 'Not logged in with address' });
         return;
       }
-      if (tokenInfo.user === null || tokenInfo.user.githubOAuthToken === null) {
+      if (tokenInfo.githubUser === null || tokenInfo.githubUser.githubOAuthToken === null) {
         next({ status: 401, msg: 'Not logged into GitHub' });
         return;
       }
 
-      set(req, 'user.githubOAuthToken', tokenInfo.user.githubOAuthToken);
+      set(req, 'user.githubOAuthToken', tokenInfo.githubUser.githubOAuthToken);
 
       // Update the ensName and ensAvatarImageUrl in case they've updated
       set(req, 'user.ensName', tokenInfo.address.ensName);
