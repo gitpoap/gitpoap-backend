@@ -8,8 +8,7 @@ import { Request, Router } from 'express';
 import { z } from 'zod';
 import { context } from '../../context';
 import { createPOAPEvent } from '../../external/poap';
-import { createScopedLogger } from '../../logging';
-import { jwtWithAdminAddress, jwtWithAddress, gitpoapBotAuth } from '../../middleware';
+import { jwtWithAdminAddress, jwtWithAddress } from '../../middleware/auth';
 import multer from 'multer';
 import { generatePOAPSecret } from '../../lib/secrets';
 import { DateTime } from 'luxon';
@@ -196,9 +195,9 @@ customGitPOAPsRouter.post(
     const emailForm: GitPOAPRequestEmailForm = {
       id: gitPOAPRequest.id,
       email: gitPOAPRequest.name,
-      name: gitPOAPRequest.email,
+      name: gitPOAPRequest.creatorEmail,
       description: gitPOAPRequest.description,
-      imageKey,
+      imageUrl: gitPOAPRequest.imageUrl,
       organizationId: organization?.id ?? null,
       organizationName: organization?.name ?? null,
     };
@@ -353,9 +352,9 @@ customGitPOAPsRouter.put('/reject/:id', jwtWithAdminAddress(), async (req, res) 
   const emailForm: GitPOAPRequestEmailForm = {
     id: gitPOAPRequest.id,
     email: gitPOAPRequest.name,
-    name: gitPOAPRequest.email,
+    name: gitPOAPRequest.creatorEmail,
     description: gitPOAPRequest.description,
-    imageKey: gitPOAPRequest.imageKey,
+    imageUrl: gitPOAPRequest.imageUrl,
     organizationId: organization?.id ?? null,
     organizationName: organization?.name ?? null,
   };
@@ -364,7 +363,6 @@ customGitPOAPsRouter.put('/reject/:id', jwtWithAdminAddress(), async (req, res) 
   logger.info(
     `Completed admin request to reject Custom GitPOAP with Request ID:${gitPOAPRequest.id}`,
   );
-  endTimer({ status: 200 });
 
   return res.status(200).send('REJECTED');
 });
