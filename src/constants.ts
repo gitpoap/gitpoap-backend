@@ -53,3 +53,7 @@ export const SIGNATURE_TTL_MINUTES = 1;
 export const LOGIN_EXP_TIME_MONTHS = 1;
 
 export const GITPOAP_ISSUER_EMAIL = 'issuer@gitpoap.io';
+
+export const GITPOAP_ROOT_URL = 'https://www.gitpoap.io';
+
+export const AWS_S3_ROOT_URL = 'https://s3.us-east-2.amazonaws.com';

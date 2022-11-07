@@ -5,7 +5,7 @@ export type GitPOAPContributors = {
   ensNames: string[];
 };
 
-export type CustomGitPOAPRequestEmailForm = {
+export type GitPOAPRequestEmailForm = {
   id: number;
   email: string;
   name: string;
@@ -15,7 +15,7 @@ export type CustomGitPOAPRequestEmailForm = {
   organizationId: number | null;
 };
 
-export enum CustomGitPOAPRequestEmailAlias {
+export enum GitPOAPRequestEmailAlias {
   RECEIVED = 'cg-received',
   REJECTED = 'cg-rejected',
   LIVE = 'cg-live',
