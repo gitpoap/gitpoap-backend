@@ -100,11 +100,11 @@ customGitPOAPsRouter.post(
     let project: { id: number } | null = null;
     let organization: { id: number } | null = null;
 
-    /* If a Custom GitPOAP Request is tied to project */
+    /* If a GitPOAPRequest is tied to project */
     if (schemaResult.data.projectId) {
       const projectId = parseInt(schemaResult.data.projectId, 10);
       logger.info(
-        `Request to create a new Custom GitPOAP "${schemaResult.data.name}" for project ${projectId}`,
+        `Request to create a new GitPOAPRequest "${schemaResult.data.name}" for project ${projectId}`,
       );
 
       project = await context.prisma.project.findUnique({
@@ -119,11 +119,11 @@ customGitPOAPsRouter.post(
       }
     }
 
-    /* If Custom GitPOAP Request is tied to an organization */
+    /* If GitPOAPRequest is tied to an organization */
     if (schemaResult.data.organizationId) {
       const organizationId = parseInt(schemaResult.data.organizationId, 10);
       logger.info(
-        `Request to create a new Custom GitPOAP "${schemaResult.data.name}" for organization ${organizationId}`,
+        `Request to create a new GitPOAPRequest "${schemaResult.data.name}" for organization ${organizationId}`,
       );
       organization = await context.prisma.organization.findUnique({
         where: { id: organizationId },
@@ -196,7 +196,8 @@ customGitPOAPsRouter.put('/approve/:id', jwtWithAdminAddress(), async (req, res)
   const logger = getRequestLogger(req);
 
   const gitPOAPRequestId = parseInt(req.params.id, 10);
-  logger.info(`Admin request to approve GitPOAP Request with ID:${gitPOAPRequestId}`);
+
+  logger.info(`Admin request to create GitPOAP from GitPOAPRequest ID ${gitPOAPRequestId}`);
 
   const gitPOAPRequest = await context.prisma.gitPOAPRequest.findUnique({
     where: { id: gitPOAPRequestId },
@@ -255,12 +256,12 @@ customGitPOAPsRouter.put('/approve/:id', jwtWithAdminAddress(), async (req, res)
     return res.status(500).send({ msg: 'Failed to create POAP via API' });
   }
 
-  logger.info(`Created Custom GitPOAP in POAP system: ${JSON.stringify(poapInfo)}`);
+  logger.info(`Created GitPOAP in POAP system: ${JSON.stringify(poapInfo)}`);
 
   /* Create the GitPOAP from the GitPOAPRequest */
   const gitPOAP = await convertGitPOAPRequestToGitPOAP(gitPOAPRequest, poapInfo, secretCode);
 
-  logger.info(`Created Custom GitPOAP Request with ID: ${gitPOAPRequest.id}`);
+  logger.info(`Created GitPOAP ID ${gitPOAP.id} from GitPOAPRequest ID: ${gitPOAPRequestId}`);
 
   /* Create the associated Claims */
   let claimsCount = 0;
@@ -270,12 +271,14 @@ customGitPOAPsRouter.put('/approve/:id', jwtWithAdminAddress(), async (req, res)
     );
     claimsCount = createClaimsForContributors(gitPOAP.id, contributors);
   }
-  logger.info(`Created ${claimsCount} Claims for GitPOAP Request with ID: ${gitPOAPRequest.id}`);
+  logger.info(`Created ${claimsCount} Claims for GitPOAP Request with ID: ${gitPOAPRequestId}`);
 
   /* Delete the GitPOAPRequest */
   await deleteGitPOAPRequest(gitPOAPRequest.id);
 
-  logger.info(`Completed admin request to create Custom GitPOAP with ID:${gitPOAP.id}`);
+  logger.debug(
+    `Completed admin request to create GitPOAP from GitPOAPRequest ID ${gitPOAPRequestId}`,
+  );
 
   return res.status(200).send('APPROVED');
 });
@@ -316,9 +319,7 @@ customGitPOAPsRouter.put('/reject/:id', jwtWithAdminAddress(), async (req, res) 
     },
   });
 
-  logger.info(
-    `Completed admin request to reject Custom GitPOAP with Request ID:${gitPOAPRequest.id}`,
-  );
+  logger.info(`Completed admin request to reject GitPOAPRequest ID ${gitPOAPRequest.id}`);
 
   return res.status(200).send('REJECTED');
 });
@@ -477,7 +478,7 @@ customGitPOAPsRouter.patch('/:gitPOAPRequestId', jwtWithAddress(), async (req, r
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
-  logger.info(`Request to update Custom GitPOAP ID ${gitPOAPRequestId}`);
+  logger.info(`Request to update GitPOAPRequest ID ${gitPOAPRequestId}`);
 
   const gitPOAPRequest = await context.prisma.gitPOAPRequest.findUnique({
     where: { id: gitPOAPRequestId },
@@ -526,7 +527,7 @@ customGitPOAPsRouter.patch('/:gitPOAPRequestId', jwtWithAddress(), async (req, r
     data,
   });
 
-  logger.debug(`Competed request to update Custom GitPOAP ID ${gitPOAPRequestId}`);
+  logger.debug(`Competed request to update GitPOAPRequest ID ${gitPOAPRequestId}`);
 
   return res.status(200).send('UPDATED');
 });
