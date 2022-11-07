@@ -22,9 +22,9 @@ class OrganizationData extends Organization {
   repoCount: number;
 }
 
-@Resolver(of => Organization)
+@Resolver(() => Organization)
 export class CustomOrganizationResolver {
-  @Query(returns => OrganizationData, { nullable: true })
+  @Query(() => OrganizationData, { nullable: true })
   async organizationData(
     @Ctx() { prisma }: Context,
     @Arg('orgId', { defaultValue: null }) orgId?: number,
@@ -44,7 +44,7 @@ export class CustomOrganizationResolver {
 
     const results = await prisma.$queryRaw<OrganizationData[]>`
       SELECT o.*,
-        COUNT(DISTINCT c."userId")::INTEGER AS "contributorCount",
+        COUNT(DISTINCT c."githubUserId")::INTEGER AS "contributorCount",
         COUNT(DISTINCT g.id)::INTEGER AS "gitPOAPCount",
         COUNT(DISTINCT c.id)::INTEGER AS "mintedGitPOAPCount",
         COUNT(DISTINCT r.id)::INTEGER AS "repoCount"
@@ -74,7 +74,7 @@ export class CustomOrganizationResolver {
     return results[0];
   }
 
-  @Query(returns => [Organization], { nullable: true })
+  @Query(() => [Organization], { nullable: true })
   async allOrganizations(
     @Ctx() { prisma }: Context,
     @Arg('sort', { defaultValue: 'alphabetical' }) sort: string,
@@ -142,7 +142,7 @@ export class CustomOrganizationResolver {
     return results;
   }
 
-  @Query(returns => [RepoReturnData], { nullable: true })
+  @Query(() => [RepoReturnData], { nullable: true })
   async organizationRepos(
     @Ctx() { prisma }: Context,
     @Arg('orgId') orgId: number,
@@ -190,7 +190,7 @@ export class CustomOrganizationResolver {
 
     const results = await prisma.$queryRaw<RepoReturnData[]>`
       SELECT r.*,
-        COUNT(DISTINCT c."userId")::INTEGER AS "contributorCount",
+        COUNT(DISTINCT c."githubUserId")::INTEGER AS "contributorCount",
         COUNT(DISTINCT g.id)::INTEGER AS "gitPOAPCount",
         COUNT(DISTINCT c.id)::INTEGER AS "mintedGitPOAPCount"
       FROM "Repo" as r

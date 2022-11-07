@@ -4,19 +4,19 @@ import { ADDRESSES, GH_HANDLES } from '../../../../../prisma/constants';
 describe('CustomSearchResolver', () => {
   const client = new GraphQLClient('http://server:3001/graphql');
 
-  it('search - users', async () => {
+  it('search - githubUsers', async () => {
     const data = await client.request(gql`
       {
         search(text: "${GH_HANDLES.aldo}") {
-          users {
+          githubUsers {
             id
           }
         }
       }
     `);
 
-    expect(data.search.users).toHaveLength(1);
-    expect(data.search.users[0].id).toEqual(5);
+    expect(data.search.githubUsers).toHaveLength(1);
+    expect(data.search.githubUsers[0].id).toEqual(5);
   });
 
   it('search - profiles by name', async () => {
