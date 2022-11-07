@@ -32,6 +32,7 @@ import {
 } from '../../lib/gitpoapRequests';
 import { getRequestLogger } from '../../middleware/loggingAndTiming';
 import { GITPOAP_ISSUER_EMAIL } from '../../constants';
+import { upsertEmail } from '../../lib/emails';
 
 export const customGitPOAPsRouter = Router();
 
@@ -152,6 +153,8 @@ customGitPOAPsRouter.post(
       return res.status(500).send({ msg: 'Failed to upload image to S3' });
     }
 
+    const email = await upsertEmail(schemaResult.data.creatorEmail);
+
     const { addressId } = getAccessTokenPayload(req.user);
     const gitPOAPRequest = await context.prisma.gitPOAPRequest.create({
       data: {
@@ -173,11 +176,11 @@ customGitPOAPsRouter.post(
         contributors: contributors as Prisma.JsonObject,
         isPRBased: false,
         address: {
-          connect: {
-            id: addressId,
-          },
+          connect: { id: addressId },
         },
-        creatorEmail: schemaResult.data.creatorEmail,
+        creatorEmail: {
+          connect: { id: email.id },
+        },
       },
     });
 
