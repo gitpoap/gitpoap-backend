@@ -9,6 +9,7 @@ import { upsertUser } from './users';
 import { upsertAddress } from './addresses';
 import { MINIMUM_REMAINING_REDEEM_CODES, REDEEM_CODE_STEP_SIZE } from '../constants';
 import { requestPOAPCodes } from '../external/poap';
+import { upsertEmail } from './emails';
 
 type GitPOAPs = {
   id: number;
@@ -452,11 +453,7 @@ export const createClaimForGithubHandle = async (githubHandle: string, gitPOAPId
 export const createClaimForEmail = async (emailAddress: string, gitPOAPId: number) => {
   const logger = createScopedLogger('createClaimForEmail');
 
-  const email = await context.prisma.email.upsert({
-    where: { emailAddress },
-    update: {},
-    create: { emailAddress },
-  });
+  const email = await upsertEmail(emailAddress);
 
   const gitPOAP = await context.prisma.gitPOAP.findUnique({
     where: { id: gitPOAPId },

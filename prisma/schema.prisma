@@ -78,22 +78,24 @@ model Address {
 }
 
 model Email {
-  id             Int       @id @default(autoincrement())
+  id                     Int              @id @default(autoincrement())
   // Hide email.emailAddress from generated resolvers
   /// @TypeGraphQL.omit(output: true, input: false)
-  emailAddress   String    @unique @db.VarChar(255)
-  addressId      Int?      @unique
-  address        Address?  @relation(fields: [addressId], references: [id])
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  claims         Claim[]
-  isValidated    Boolean   @default(false)
+  emailAddress           String           @unique @db.VarChar(255)
+  addressId              Int?             @unique
+  address                Address?         @relation(fields: [addressId], references: [id])
+  createdAt              DateTime         @default(now())
+  updatedAt              DateTime         @updatedAt
+  claims                 Claim[]
+  isValidated            Boolean          @default(false)
   // Hide email.activeToken from generated resolvers
   /// @TypeGraphQL.omit(output: true, input: true)
-  activeToken    String?   @unique
+  activeToken            String?          @unique
   // Hide email.activeToken from generated resolvers
   /// @TypeGraphQL.omit(output: true, input: true)
-  tokenExpiresAt DateTime?
+  tokenExpiresAt         DateTime?
+  createdGitPOAPs        GitPOAP[]
+  createdGitPOAPRequests GitPOAPRequest[]
 }
 
 model OrganizationMembership {
@@ -220,7 +222,8 @@ model GitPOAP {
   isEnabled          Boolean       @default(true)
   creatorAddressId   Int?
   creatorAddress     Address?      @relation(fields: [creatorAddressId], references: [id])
-  creatorEmail       String?       @db.VarChar(255)
+  creatorEmailId     Int?
+  creatorEmail       Email?        @relation(fields: [creatorEmailId], references: [id])
 }
 
 // Records in this table are used for GitPOAP Creation Requests via the Creation Form
@@ -233,7 +236,8 @@ model GitPOAPRequest {
   endDate             DateTime
   expiryDate          DateTime
   eventUrl            String              @db.VarChar(255)
-  creatorEmail        String              @db.VarChar(255)
+  creatorEmailId      Int
+  creatorEmail        Email               @relation(fields: [creatorEmailId], references: [id])
   name                String              @db.VarChar(255)
   numRequestedCodes   Int
   imageUrl            String
