@@ -380,15 +380,15 @@ export class AddressFactory {
 
 export class EmailFactory {
   static create = async (
-    activeToken: string,
-    address: Prisma.EmailCreateInput['address'],
-    email: string,
-    tokenExpiresAt: string,
+    emailAddress: string,
+    address?: Prisma.EmailCreateInput['address'],
+    activeToken?: string,
+    tokenExpiresAt?: string,
   ): Promise<Email> => {
     const data: Prisma.EmailCreateInput = {
+      emailAddress,
       activeToken,
       address,
-      emailAddress: email,
       tokenExpiresAt,
     };
     const emailObj = await prisma.email.create({ data });
@@ -529,7 +529,7 @@ export class GithubMentionFactory {
 type CreateGitPOAPRequestParams = {
   name: string;
   description: string;
-  creatorEmail: string;
+  creatorEmailId: number;
   addressId: number;
   imageUrl: string;
   contributors: z.infer<typeof GitPOAPContributorsSchema>;
@@ -543,7 +543,7 @@ export class GitPOAPRequestFactory {
   static create = async ({
     name,
     description,
-    creatorEmail,
+    creatorEmailId,
     addressId,
     imageUrl,
     contributors,
@@ -555,7 +555,7 @@ export class GitPOAPRequestFactory {
     const data: Prisma.GitPOAPRequestCreateInput = {
       name,
       description,
-      creatorEmail,
+      creatorEmail: { connect: { id: creatorEmailId } },
       type: GitPOAPType.CUSTOM,
       startDate,
       endDate,
