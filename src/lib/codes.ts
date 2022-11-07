@@ -139,7 +139,7 @@ export async function checkGitPOAPForNewCodes(gitPOAP: GitPOAPWithSecret): Promi
             name: gitPOAP.name,
             email: gitPOAP.creatorAddress.email.emailAddress,
             description: gitPOAP.description,
-            imageKey: gitPOAP.imageUrl,
+            imageUrl: gitPOAP.imageUrl,
             organizationId: gitPOAP.organization?.id ?? null,
             organizationName: gitPOAP.organization?.name ?? null,
           };

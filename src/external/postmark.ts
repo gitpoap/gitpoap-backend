@@ -5,11 +5,7 @@ import { z } from 'zod';
 import { formatRepos } from '../routes/onboarding/utils';
 import { IntakeForm } from '../routes/onboarding/types';
 import { GitPOAPRequestEmailForm, GitPOAPRequestEmailAlias } from '../types/gitpoaps';
-import {
-  generateS3ImageUrl,
-  generateOrganizationLink,
-  generateGitPOAPRequestLink,
-} from '../routes/gitpoaps/utils';
+import { generateOrganizationLink, generateGitPOAPRequestLink } from '../routes/gitpoaps/utils';
 import { createScopedLogger } from '../logging';
 
 export const postmarkClient = new ServerClient(POSTMARK_SERVER_TOKEN);
@@ -166,10 +162,7 @@ export const sendGitPOAPRequestEmail = async (
       product_name: 'GitPOAP',
       gitpoap_name: formData.name,
       gitpoap_link: generateGitPOAPRequestLink(formData.id),
-      gitpoap_image:
-        alias === GitPOAPRequestEmailAlias.LIVE
-          ? formData.imageKey
-          : generateS3ImageUrl(formData.imageKey),
+      gitpoap_image: formData.imageUrl,
       gitpoap_description: formData.description,
       organization_link: formData?.organizationId
         ? generateOrganizationLink(formData?.organizationId)
