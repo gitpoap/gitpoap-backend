@@ -432,7 +432,7 @@ customGitPOAPsRouter.delete('/:gitPOAPRequestId/claim', jwtWithAddress(), async 
 
   if (gitPOAPRequest.addressId !== addressId) {
     logger.warn(
-      `User attempted to delete a Claim for a GitPOAPRequest (ID: ${gitPOAPRequestId} that they do not own`,
+      `User attempted to delete a Claim for a GitPOAPRequest (ID: ${gitPOAPRequestId}) that they do not own`,
     );
     return res.status(401).send({ msg: 'Not GitPOAPRequest creator' });
   }
@@ -498,7 +498,7 @@ customGitPOAPsRouter.patch('/:gitPOAPRequestId', jwtWithAddress(), async (req, r
 
   if (gitPOAPRequest.addressId !== addressId) {
     logger.warn(
-      `User attempted to delete a Claim for a GitPOAPRequest (ID: ${gitPOAPRequestId} that they do not own`,
+      `User attempted to update a GitPOAPRequest (ID: ${gitPOAPRequestId}) that they do not own`,
     );
     return res.status(401).send({ msg: 'Not GitPOAPRequest creator' });
   }
