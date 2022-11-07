@@ -35,10 +35,10 @@ import { getRequestLogger } from '../../middleware/loggingAndTiming';
 import { GITPOAP_ISSUER_EMAIL } from '../../constants';
 import { upsertEmail } from '../../lib/emails';
 import {
-  sendCustomGitPOAPRequestConfirmationEmail,
-  sendCustomGitPOAPRequestRejectionEmail,
+  sendGitPOAPRequestConfirmationEmail,
+  sendGitPOAPRequestRejectionEmail,
 } from '../../external/postmark';
-import { CustomGitPOAPRequestEmailForm } from '../../types/gitpoaps';
+import { GitPOAPRequestEmailForm } from '../../types/gitpoaps';
 
 export const customGitPOAPsRouter = Router();
 
@@ -193,7 +193,7 @@ customGitPOAPsRouter.post(
     /* Send message to slack */
     void sentInternalGitPOAPRequestMessage(gitPOAPRequest);
     /* Send CG request submission confirmation email */
-    const emailForm: CustomGitPOAPRequestEmailForm = {
+    const emailForm: GitPOAPRequestEmailForm = {
       id: gitPOAPRequest.id,
       email: gitPOAPRequest.name,
       name: gitPOAPRequest.email,
@@ -202,7 +202,7 @@ customGitPOAPsRouter.post(
       organizationId: organization?.id ?? null,
       organizationName: organization?.name ?? null,
     };
-    void sendCustomGitPOAPRequestConfirmationEmail(emailForm);
+    void sendGitPOAPRequestConfirmationEmail(emailForm);
 
     logger.info(
       `Completed request to create a new GitPOAP Request with ID: ${gitPOAPRequest.id} "${schemaResult.data.name}" for project ${project?.id} and organization ${organization?.id}`,
@@ -350,7 +350,7 @@ customGitPOAPsRouter.put('/reject/:id', jwtWithAdminAddress(), async (req, res) 
   }
 
   /* Send CG request rejection email */
-  const emailForm: CustomGitPOAPRequestEmailForm = {
+  const emailForm: GitPOAPRequestEmailForm = {
     id: gitPOAPRequest.id,
     email: gitPOAPRequest.name,
     name: gitPOAPRequest.email,
@@ -359,7 +359,7 @@ customGitPOAPsRouter.put('/reject/:id', jwtWithAdminAddress(), async (req, res) 
     organizationId: organization?.id ?? null,
     organizationName: organization?.name ?? null,
   };
-  void sendCustomGitPOAPRequestRejectionEmail(emailForm);
+  void sendGitPOAPRequestRejectionEmail(emailForm);
 
   logger.info(
     `Completed admin request to reject Custom GitPOAP with Request ID:${gitPOAPRequest.id}`,
