@@ -9,6 +9,5 @@ export const generateOrganizationLink = (orgId: number): string => {
 };
 
 export const generateGitPOAPRequestLink = (customGitPOAPId: number): string => {
-  // need to update
-  return `${GITPOAP_ROOT_URL}/org/${customGitPOAPId}`;
+  return `${GITPOAP_ROOT_URL}/me/requests?search=${customGitPOAPId}`;
 };
