@@ -132,7 +132,7 @@ v1Router.get('/github/user/:githubHandle/gitpoaps', async function (req, res) {
 
   const claims = await context.prisma.claim.findMany({
     where: {
-      user: {
+      githubUser: {
         githubHandle: {
           equals: req.params.githubHandle,
         },

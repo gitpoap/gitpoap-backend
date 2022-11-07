@@ -12,14 +12,14 @@ import {
   ClaimFactory,
   FeaturedPOAPFactory,
   GitPOAPFactory,
+  GithubMentionFactory,
+  GithubPullRequestFactory,
+  GithubUserFactory,
   OrganizationFactory,
   ProfileFactory,
   ProjectFactory,
   RedeemCodeFactory,
   RepoFactory,
-  UserFactory,
-  GithubPullRequestFactory,
-  GithubMentionFactory,
 } from './factories';
 import { DateTime } from 'luxon';
 import { ADDRESSES, GH_HANDLES, GH_IDS } from './constants';
@@ -48,14 +48,14 @@ export const seed = async () => {
   console.log('Starting DB seeding...');
 
   /* Create Users */
-  const vitalik = await UserFactory.create(1, GH_HANDLES.vitalik);
-  const colfax = await UserFactory.create(2, GH_HANDLES.colfax);
-  const jay = await UserFactory.create(GH_IDS.jay, GH_HANDLES.jay);
-  const burz = await UserFactory.create(GH_IDS.burz, GH_HANDLES.burz);
-  const aldo = await UserFactory.create(GH_IDS.aldo, GH_HANDLES.aldo);
-  const tyler = await UserFactory.create(GH_IDS.tyler, GH_HANDLES.tyler);
-  const burz2 = await UserFactory.create(6, 'burzzzzz');
-  const kayleen = await UserFactory.create(GH_IDS.kayleen, GH_HANDLES.kayleen);
+  const vitalik = await GithubUserFactory.create(1, GH_HANDLES.vitalik);
+  const colfax = await GithubUserFactory.create(2, GH_HANDLES.colfax);
+  const jay = await GithubUserFactory.create(GH_IDS.jay, GH_HANDLES.jay);
+  const burz = await GithubUserFactory.create(GH_IDS.burz, GH_HANDLES.burz);
+  const aldo = await GithubUserFactory.create(GH_IDS.aldo, GH_HANDLES.aldo);
+  const tyler = await GithubUserFactory.create(GH_IDS.tyler, GH_HANDLES.tyler);
+  const burz2 = await GithubUserFactory.create(6, 'burzzzzz');
+  const kayleen = await GithubUserFactory.create(GH_IDS.kayleen, GH_HANDLES.kayleen);
 
   /* Create Address */
   const addressJay = await AddressFactory.create(ADDRESSES.jay, jay.id);

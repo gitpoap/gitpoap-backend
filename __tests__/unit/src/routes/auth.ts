@@ -11,7 +11,7 @@ import {
   getAccessTokenPayload,
   getRefreshTokenPayload,
 } from '../../../../src/types/authTokens';
-import { removeUsersGithubOAuthToken } from '../../../../src/lib/users';
+import { removeGithubUsersGithubOAuthToken } from '../../../../src/lib/githubUsers';
 import { removeGithubLoginForAddress } from '../../../../src/lib/addresses';
 import { generateAuthTokens } from '../../../../src/lib/authTokens';
 import { DateTime } from 'luxon';
@@ -20,13 +20,16 @@ import { LOGIN_EXP_TIME_MONTHS } from '../../../../src/constants';
 jest.mock('../../../../src/logging');
 jest.mock('../../../../src/lib/signatures');
 jest.mock('../../../../src/lib/ens');
-jest.mock('../../../../src/lib/users');
+jest.mock('../../../../src/lib/githubUsers');
 jest.mock('../../../../src/lib/addresses');
 jest.mock('../../../../src/external/github');
 
 const mockedIsAuthSignatureDataValid = jest.mocked(isAuthSignatureDataValid, true);
 const mockedIsGithubTokenValidForUser = jest.mocked(isGithubTokenValidForUser, true);
-const mockedRemoveUsersGithubOAuthToken = jest.mocked(removeUsersGithubOAuthToken, true);
+const mockedRemoveGithubUsersGithubOAuthToken = jest.mocked(
+  removeGithubUsersGithubOAuthToken,
+  true,
+);
 const mockedRemoveGithubLoginForAddress = jest.mocked(removeGithubLoginForAddress, true);
 
 const authTokenId = 905;
@@ -41,7 +44,7 @@ const signatureData = {
   message: 'The pen is mightier than the sword',
   createdAt: 3423423425,
 };
-const userId = 3233;
+const githubUserId = 3233;
 const githubId = 23422222;
 const githubHandle = 'john-wayne-gacy';
 const githubOAuthToken = 'im_super_spooky';
@@ -159,7 +162,7 @@ describe('POST /auth', () => {
             id: addressId,
           },
         },
-        user: undefined,
+        githubUser: undefined,
       },
       select: {
         id: true,
@@ -175,7 +178,7 @@ describe('POST /auth', () => {
       ensName,
       ensAvatarImageUrl,
       githubUser: {
-        id: userId,
+        id: githubUserId,
         githubId,
         githubHandle,
         githubOAuthToken,
@@ -203,7 +206,7 @@ describe('POST /auth', () => {
     expect(mockedIsGithubTokenValidForUser).toHaveBeenCalledTimes(1);
     expect(mockedIsGithubTokenValidForUser).toHaveBeenCalledWith(githubOAuthToken, githubId);
 
-    expect(mockedRemoveUsersGithubOAuthToken).toHaveBeenCalledTimes(0);
+    expect(mockedRemoveGithubUsersGithubOAuthToken).toHaveBeenCalledTimes(0);
 
     expect(contextMock.prisma.authToken.create).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.authToken.create).toHaveBeenCalledWith({
@@ -213,7 +216,7 @@ describe('POST /auth', () => {
             id: addressId,
           },
         },
-        user: {
+        githubUser: {
           connect: {
             githubId,
           },
@@ -233,7 +236,7 @@ describe('POST /auth', () => {
       ensName,
       ensAvatarImageUrl,
       githubUser: {
-        id: userId,
+        id: githubUserId,
         githubId,
         githubHandle,
         githubOAuthToken,
@@ -261,8 +264,8 @@ describe('POST /auth', () => {
     expect(mockedIsGithubTokenValidForUser).toHaveBeenCalledTimes(1);
     expect(mockedIsGithubTokenValidForUser).toHaveBeenCalledWith(githubOAuthToken, githubId);
 
-    expect(mockedRemoveUsersGithubOAuthToken).toHaveBeenCalledTimes(1);
-    expect(mockedRemoveUsersGithubOAuthToken).toHaveBeenCalledWith(userId);
+    expect(mockedRemoveGithubUsersGithubOAuthToken).toHaveBeenCalledTimes(1);
+    expect(mockedRemoveGithubUsersGithubOAuthToken).toHaveBeenCalledWith(githubUserId);
 
     expect(mockedRemoveGithubLoginForAddress).toHaveBeenCalledTimes(1);
     expect(mockedRemoveGithubLoginForAddress).toHaveBeenCalledWith(addressId);
@@ -275,7 +278,7 @@ describe('POST /auth', () => {
             id: addressId,
           },
         },
-        user: undefined,
+        githubUser: undefined,
       },
       select: {
         id: true,
@@ -346,7 +349,7 @@ describe('POST /auth/refresh', () => {
             ensAvatarImageUrl: true,
           },
         },
-        user: {
+        githubUser: {
           select: {
             id: true,
             githubId: true,
@@ -373,10 +376,10 @@ describe('POST /auth/refresh', () => {
   });
 
   const mockAuthTokenLookup = (createdAt: Date, generation: number, hasUser = false) => {
-    let user = null;
+    let githubUser = null;
     if (hasUser) {
-      user = {
-        id: userId,
+      githubUser = {
+        id: githubUserId,
         githubId,
         githubHandle,
         githubOAuthToken,
@@ -392,7 +395,7 @@ describe('POST /auth/refresh', () => {
         ensName,
         ensAvatarImageUrl,
       },
-      user,
+      githubUser,
     } as any);
   };
 
@@ -511,7 +514,7 @@ describe('POST /auth/refresh', () => {
     expect(mockedIsGithubTokenValidForUser).toHaveBeenCalledTimes(1);
     expect(mockedIsGithubTokenValidForUser).toHaveBeenCalledWith(githubOAuthToken, githubId);
 
-    expect(mockedRemoveUsersGithubOAuthToken).toHaveBeenCalledTimes(0);
+    expect(mockedRemoveGithubUsersGithubOAuthToken).toHaveBeenCalledTimes(0);
   });
 
   it("Removes GitHub login info when user's login is invalid", async () => {
@@ -541,8 +544,8 @@ describe('POST /auth/refresh', () => {
     expect(mockedIsGithubTokenValidForUser).toHaveBeenCalledTimes(1);
     expect(mockedIsGithubTokenValidForUser).toHaveBeenCalledWith(githubOAuthToken, githubId);
 
-    expect(mockedRemoveUsersGithubOAuthToken).toHaveBeenCalledTimes(1);
-    expect(mockedRemoveUsersGithubOAuthToken).toHaveBeenCalledWith(userId);
+    expect(mockedRemoveGithubUsersGithubOAuthToken).toHaveBeenCalledTimes(1);
+    expect(mockedRemoveGithubUsersGithubOAuthToken).toHaveBeenCalledWith(githubUserId);
 
     expect(mockedRemoveGithubLoginForAddress).toHaveBeenCalledTimes(1);
     expect(mockedRemoveGithubLoginForAddress).toHaveBeenCalledWith(addressId);

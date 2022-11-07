@@ -11,7 +11,7 @@ import {
   getSingleGithubRepositoryPullAsAdmin,
 } from '../../../../src/external/github';
 import { getRepoByName } from '../../../../src/lib/repos';
-import { upsertUser } from '../../../../src/lib/users';
+import { upsertGithubUser } from '../../../../src/lib/githubUsers';
 import { upsertGithubPullRequest } from '../../../../src/lib/pullRequests';
 import { createNewClaimsForRepoContributionHelper } from '../../../../src/lib/claims';
 import { upsertGithubIssue } from '../../../../src/lib/issues';
@@ -20,7 +20,7 @@ import { upsertGithubMention } from '../../../../src/lib/mentions';
 jest.mock('../../../../src/logging');
 jest.mock('../../../../src/external/github');
 jest.mock('../../../../src/lib/repos');
-jest.mock('../../../../src/lib/users');
+jest.mock('../../../../src/lib/githubUsers');
 jest.mock('../../../../src/lib/pullRequests', () => ({
   __esModule: true,
   ...(<any>jest.requireActual('../../../../src/lib/pullRequests')),
@@ -40,7 +40,7 @@ const mockedGetSingleGithubRepositoryIssueAsAdmin = jest.mocked(
   true,
 );
 const mockedGetRepoByName = jest.mocked(getRepoByName, true);
-const mockedUpsertUser = jest.mocked(upsertUser, true);
+const mockedUpsertUser = jest.mocked(upsertGithubUser, true);
 const mockedUpsertGithubPullRequest = jest.mocked(upsertGithubPullRequest, true);
 const mockedCreateNewClaimsForRepoContributionHelper = jest.mocked(
   createNewClaimsForRepoContributionHelper,
@@ -53,7 +53,7 @@ const githubId = 234;
 const organization = 'foo';
 const repo = 'bar';
 const repoId = 234232;
-const userId = 32422;
+const githubUserId = 32422;
 
 describe('createClaimsForPR', () => {
   const pullRequestNumber = 3;
@@ -169,7 +169,7 @@ describe('createClaimsForPR', () => {
       merged_at: '2022-01-22',
     };
     mockedGetSingleGithubRepositoryPullAsAdmin.mockResolvedValue(pullRequest as any);
-    mockedUpsertUser.mockResolvedValue({ id: userId } as any);
+    mockedUpsertUser.mockResolvedValue({ id: githubUserId } as any);
     const githubPullRequestId = 9995445;
     mockedUpsertGithubPullRequest.mockResolvedValue({ id: githubPullRequestId } as any);
     const wasEarnedByMention = false;
@@ -208,14 +208,14 @@ describe('createClaimsForPR', () => {
       new Date(pullRequest.created_at),
       new Date(pullRequest.merged_at),
       pullRequest.merge_commit_sha,
-      userId,
+      githubUserId,
     );
 
     expect(mockedUpsertGithubMention).toHaveBeenCalledTimes(0);
 
     expect(mockedCreateNewClaimsForRepoContributionHelper).toHaveBeenCalledTimes(1);
     expect(mockedCreateNewClaimsForRepoContributionHelper).toHaveBeenCalledWith(
-      { id: userId },
+      { id: githubUserId },
       { id: repoId },
       { pullRequest: { id: githubPullRequestId } },
     );
@@ -236,7 +236,7 @@ describe('createClaimsForPR', () => {
       merged_at: '2022-01-22',
     };
     mockedGetSingleGithubRepositoryPullAsAdmin.mockResolvedValue(pullRequest as any);
-    mockedUpsertUser.mockResolvedValue({ id: userId } as any);
+    mockedUpsertUser.mockResolvedValue({ id: githubUserId } as any);
     const githubPullRequestId = 9995445;
     mockedUpsertGithubPullRequest.mockResolvedValue({ id: githubPullRequestId } as any);
     const githubMentionId = 42342;
@@ -277,19 +277,19 @@ describe('createClaimsForPR', () => {
       new Date(pullRequest.created_at),
       new Date(pullRequest.merged_at),
       pullRequest.merge_commit_sha,
-      userId,
+      githubUserId,
     );
 
     expect(mockedUpsertGithubMention).toHaveBeenCalledTimes(1);
     expect(mockedUpsertGithubMention).toHaveBeenCalledWith(
       repoId,
       { pullRequest: { id: githubPullRequestId } },
-      userId,
+      githubUserId,
     );
 
     expect(mockedCreateNewClaimsForRepoContributionHelper).toHaveBeenCalledTimes(1);
     expect(mockedCreateNewClaimsForRepoContributionHelper).toHaveBeenCalledWith(
-      { id: userId },
+      { id: githubUserId },
       { id: repoId },
       { mention: { id: githubMentionId } },
     );
@@ -381,7 +381,7 @@ describe('createClaimsForIssue', () => {
       closed_at: '2022-01-22',
     };
     mockedGetSingleGithubRepositoryIssueAsAdmin.mockResolvedValue(issue as any);
-    mockedUpsertUser.mockResolvedValue({ id: userId } as any);
+    mockedUpsertUser.mockResolvedValue({ id: githubUserId } as any);
     const githubIssueId = 349999;
     mockedUpsertGithubIssue.mockResolvedValue({ id: githubIssueId } as any);
     const githubMentionId = 94234;
@@ -414,19 +414,19 @@ describe('createClaimsForIssue', () => {
       issue.title,
       new Date(issue.created_at),
       new Date(issue.closed_at),
-      userId,
+      githubUserId,
     );
 
     expect(mockedUpsertGithubMention).toHaveBeenCalledTimes(1);
     expect(mockedUpsertGithubMention).toHaveBeenCalledWith(
       repoId,
       { issue: { id: githubIssueId } },
-      userId,
+      githubUserId,
     );
 
     expect(mockedCreateNewClaimsForRepoContributionHelper).toHaveBeenCalledTimes(1);
     expect(mockedCreateNewClaimsForRepoContributionHelper).toHaveBeenCalledWith(
-      { id: userId },
+      { id: githubUserId },
       { id: repoId },
       { mention: { id: githubMentionId } },
     );

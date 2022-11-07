@@ -5,7 +5,7 @@ import { buildSchema, NonEmptyArray } from 'type-graphql';
 
 import {
   /* Auto-generated Relation Resolvers */
-  UserRelationsResolver,
+  GithubUserRelationsResolver,
   ProfileRelationsResolver,
   OrganizationRelationsResolver,
   RepoRelationsResolver,
@@ -21,12 +21,12 @@ import {
   FindManyGitPOAPResolver,
   GroupByGitPOAPResolver,
   AggregateGitPOAPResolver,
-  /* Auto-generated User Resolvers */
-  FindUniqueUserResolver,
-  FindFirstUserResolver,
-  FindManyUserResolver,
-  GroupByUserResolver,
-  AggregateUserResolver,
+  /* Auto-generated GithubUser Resolvers */
+  FindUniqueGithubUserResolver,
+  FindFirstGithubUserResolver,
+  FindManyGithubUserResolver,
+  GroupByGithubUserResolver,
+  AggregateGithubUserResolver,
   /* Auto-generated Profile Resolvers */
   FindUniqueProfileResolver,
   FindFirstProfileResolver,
@@ -99,7 +99,7 @@ type ResolverClass = { new (...args: any[]): any };
 
 const allResolvers: NonEmptyArray<ResolverClass> = [
   /* ~~ Generated resolvers ~~ */
-  UserRelationsResolver,
+  GithubUserRelationsResolver,
   ProfileRelationsResolver,
   OrganizationRelationsResolver,
   RepoRelationsResolver,
@@ -115,12 +115,12 @@ const allResolvers: NonEmptyArray<ResolverClass> = [
   FindManyGitPOAPResolver,
   GroupByGitPOAPResolver,
   AggregateGitPOAPResolver,
-  /* Auto-generated User READ Resolvers */
-  FindUniqueUserResolver,
-  FindFirstUserResolver,
-  FindManyUserResolver,
-  GroupByUserResolver,
-  AggregateUserResolver,
+  /* Auto-generated GithubUser READ Resolvers */
+  FindUniqueGithubUserResolver,
+  FindFirstGithubUserResolver,
+  FindManyGithubUserResolver,
+  GroupByGithubUserResolver,
+  AggregateGithubUserResolver,
   /* Auto-generated Profile READ Resolvers */
   FindUniqueProfileResolver,
   FindFirstProfileResolver,

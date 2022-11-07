@@ -49,7 +49,7 @@ const issue = {
 const claimId = 234;
 const claim: ClaimData = {
   id: claimId,
-  user: {
+  githubUser: {
     githubId: contributorId,
     githubHandle: 'batman',
   },

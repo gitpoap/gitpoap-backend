@@ -37,7 +37,7 @@ export class CustomRepoResolver {
     if (repoId) {
       results = await prisma.$queryRaw<RepoReturnData[]>`
         SELECT r.*,
-          COUNT(DISTINCT c."userId")::INTEGER AS "contributorCount",
+          COUNT(DISTINCT c."githubUserId")::INTEGER AS "contributorCount",
           COUNT(DISTINCT g.id)::INTEGER AS "gitPOAPCount",
           COUNT(c.id)::INTEGER AS "mintedGitPOAPCount"
         FROM "Repo" as r
@@ -62,7 +62,7 @@ export class CustomRepoResolver {
     } else if (orgName && repoName) {
       results = await prisma.$queryRaw<RepoReturnData[]>`
         SELECT r.*,
-          COUNT(DISTINCT c."userId")::INTEGER AS "contributorCount",
+          COUNT(DISTINCT c."githubUserId")::INTEGER AS "contributorCount",
           COUNT(DISTINCT g.id)::INTEGER AS "gitPOAPCount",
           COUNT(c.id)::INTEGER AS "mintedGitPOAPCount"
         FROM "Repo" as r
@@ -301,28 +301,28 @@ export class CustomRepoResolver {
     type RepoIdToClaimCountsMapValue = {
       repoId: number;
       mintedGitPOAPCount: number; // The claim IDs must be distinct so we can simply count
-      userIds: Set<number>;
+      githubUserIds: Set<number>;
     };
     const repoIdToClaimCountsMap: Record<string, RepoIdToClaimCountsMapValue> = {};
 
     // This helper function is necessary so that we can ensure the same logic is used to
     // count claims regardless if they have pullRequestEarned or mentionEarned non-null
-    const handleUserClaim = (repoId: number, userId: number) => {
+    const handleUserClaim = (repoId: number, githubUserId: number) => {
       const key = repoId.toString();
 
       if (key in repoIdToClaimCountsMap) {
         repoIdToClaimCountsMap[key].mintedGitPOAPCount++;
-        repoIdToClaimCountsMap[key].userIds.add(userId);
+        repoIdToClaimCountsMap[key].githubUserIds.add(githubUserId);
       } else {
         repoIdToClaimCountsMap[key] = {
           repoId,
           mintedGitPOAPCount: 1,
-          userIds: new Set<number>([userId]),
+          githubUserIds: new Set<number>([githubUserId]),
         };
       }
     };
 
-    // Here we select all (repoId, userId) pairs for CLAIMED claims
+    // Here we select all (repoId, githubUserId) pairs for CLAIMED claims
     // in the past numDays and then use this data to fill out the
     // repoIdToClaimCountsMap
     (
@@ -346,7 +346,7 @@ export class CustomRepoResolver {
           ],
         },
         select: {
-          userId: true,
+          githubUserId: true,
           pullRequestEarned: {
             select: {
               repoId: true,
@@ -360,10 +360,10 @@ export class CustomRepoResolver {
         },
       })
     ).forEach(result => {
-      if (result.pullRequestEarned !== null && result.userId !== null) {
-        handleUserClaim(result.pullRequestEarned.repoId, result.userId);
-      } else if (result.mentionEarned !== null && result.userId !== null) {
-        handleUserClaim(result.mentionEarned.repoId, result.userId);
+      if (result.pullRequestEarned !== null && result.githubUserId !== null) {
+        handleUserClaim(result.pullRequestEarned.repoId, result.githubUserId);
+      } else if (result.mentionEarned !== null && result.githubUserId !== null) {
+        handleUserClaim(result.mentionEarned.repoId, result.githubUserId);
       } else {
         // This SHOULD NOT be able to happen, but unfortunately
         // Prisma doesn't express this in the return type
@@ -422,7 +422,7 @@ export class CustomRepoResolver {
       results.push({
         ...repoData,
         mintedGitPOAPCount: result.mintedGitPOAPCount,
-        contributorCount: result.userIds.size,
+        contributorCount: result.githubUserIds.size,
         gitPOAPCount,
       });
     }

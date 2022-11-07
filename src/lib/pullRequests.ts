@@ -6,7 +6,7 @@ import {
   OctokitPullItem,
 } from '../external/github';
 import { pullRequestBackloadDurationSeconds } from '../metrics';
-import { upsertUser } from './users';
+import { upsertGithubUser } from './githubUsers';
 import {
   YearlyGitPOAPsMap,
   createNewClaimsForRepoContribution,
@@ -80,7 +80,7 @@ export async function upsertGithubPullRequest(
   githubCreatedAt: Date,
   githubMergedAt: Date | null,
   githubMergeCommitSha: string | null,
-  userId: number,
+  githubUserId: number,
 ) {
   const logger = createScopedLogger('upsertGithubPullRequest');
 
@@ -110,9 +110,9 @@ export async function upsertGithubPullRequest(
           id: repoId,
         },
       },
-      user: {
+      githubUser: {
         connect: {
-          id: userId,
+          id: githubUserId,
         },
       },
     },
@@ -146,7 +146,7 @@ async function backloadGithubPullRequest(
     return;
   }
 
-  const user = await upsertUser(pr.user.id, pr.user.login);
+  const githubUser = await upsertGithubUser(pr.user.id, pr.user.login);
 
   const mergedAt = new Date(pr.merged_at);
 
@@ -159,18 +159,18 @@ async function backloadGithubPullRequest(
     new Date(pr.created_at),
     mergedAt,
     extractMergeCommitSha(pr), // This must be final since it's been merged
-    user.id,
+    githubUser.id,
   );
 
   const claims = await createNewClaimsForRepoContribution(
-    user,
+    githubUser,
     repo.project.repos,
     yearlyGitPOAPsMap,
     { pullRequest: githubPullRequest },
   );
 
   for (const claim of claims) {
-    // If this is the user's first PR set the earned at field
+    // If this is the githubUser's first PR set the earned at field
     if (claim.pullRequestEarnedId === null) {
       logger.info(
         `Setting pullRequestEarned for Claim ID ${claim.id} to GithubPullRequest ID ${githubPullRequest.id} for user ${pr.user.login}`,

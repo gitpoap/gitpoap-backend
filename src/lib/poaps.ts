@@ -1,6 +1,6 @@
 import { context } from '../context';
 import { retrieveUsersPOAPs, retrievePOAPEventInfo } from '../external/poap';
-import { Claim, ClaimStatus, GitPOAP, Project, Repo, User } from '@generated/type-graphql';
+import { Address, Claim, ClaimStatus, GitPOAP, Project, Repo, GithubUser } from '@prisma/client';
 import { createScopedLogger } from '../logging';
 import { POAPEvent, POAPToken } from '../types/poap';
 import { checkIfClaimTransferred, handleGitPOAPTransfer } from './transfers';
@@ -10,7 +10,8 @@ type ExtendedClaimProjectType = Project & {
 };
 
 type ExtendedClaimType = Claim & {
-  user: User | null;
+  mintedAddress: Address | null;
+  githubUser: GithubUser | null;
   gitPOAP: GitPOAP & {
     project: ExtendedClaimProjectType | null;
   };
@@ -58,7 +59,7 @@ async function handlePotentialTransferIn(
     where: { poapTokenId },
     include: {
       mintedAddress: true,
-      user: true,
+      githubUser: true,
       gitPOAP: {
         include: {
           project: {
@@ -91,7 +92,8 @@ async function handlePotentialTransferIn(
       gitPOAP: {
         claim: {
           ...updatedClaim,
-          user: claimData.user,
+          mintedAddress: claimData.mintedAddress,
+          githubUser: claimData.githubUser,
           gitPOAP: claimData.gitPOAP,
         },
         event: poapEvent,
@@ -165,7 +167,7 @@ export async function splitUsersPOAPs(address: string): Promise<SplitUsersPOAPsR
     },
     include: {
       mintedAddress: true,
-      user: true,
+      githubUser: true,
       gitPOAP: {
         include: {
           project: {

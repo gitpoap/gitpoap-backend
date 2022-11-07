@@ -77,7 +77,7 @@ export class CustomClaimResolver {
 
     const claims = await prisma.claim.findMany({
       where: {
-        user: {
+        githubUser: {
           githubId,
         },
         OR: [
