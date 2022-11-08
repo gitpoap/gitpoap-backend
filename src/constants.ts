@@ -1,4 +1,4 @@
-import env from 'env-var';
+import { NODE_ENV } from './environment';
 
 export const PORT = 3001;
 export const PUBLIC_API_PORT = 3122;
@@ -67,4 +67,4 @@ export const TEAM_NAME = 'GitPOAP Team';
 export const PRODUCT_NAME = 'GitPOAP';
 export const GITPOAP_DOC_URL = 'https://docs.gitpoap.io';
 
-export const IS_PROD = env.get('NODE_ENV').asString() === 'production';
+export const IS_PROD = NODE_ENV === 'production';

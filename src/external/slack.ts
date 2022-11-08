@@ -23,7 +23,7 @@ const CHANNELS: SlackChannels = {
   },
 };
 
-const GITPPOAP_URL = IS_PROD ? GITPOAP_ROOT_URL : GITPOAP_DEV_ROOT_URL;
+const GITPOAP_URL = IS_PROD ? GITPOAP_ROOT_URL : GITPOAP_DEV_ROOT_URL;
 
 const sendSlackMessage = async (message: string, channelId: string) => {
   const logger = createScopedLogger('sendSlackMessage');
@@ -53,13 +53,13 @@ export const sendInternalClaimMessage = async (
   githubHandle: string,
   address: string,
 ) => {
-  const profileLink = `<${GITPPOAP_URL}/p/${address}|GitPOAP Profile>`;
+  const profileLink = `<${GITPOAP_URL}/p/${address}|GitPOAP Profile>`;
   const etherscanLink = `<https://etherscan.io/address/${address}|${shortenAddress(address)}>`;
   const githubLink = `<https://github.com/${githubHandle}|${githubHandle}>`;
   const topMsg = `💸 [${profileLink}]: GitHub user ${githubLink} with address ${etherscanLink} claimed new GitPOAP(s)! 🥳`;
   let list = '';
   for (const claim of claims) {
-    list += `\n* <${GITPPOAP_URL}/gp/${claim.gitPOAPId}|[GitPOAP ID ${claim.gitPOAPId}]: ${claim.gitPOAPName}>`;
+    list += `\n* <${GITPOAP_URL}/gp/${claim.gitPOAPId}|[GitPOAP ID ${claim.gitPOAPId}]: ${claim.gitPOAPName}>`;
   }
 
   await sendInternalMessage(topMsg + list);
@@ -70,15 +70,15 @@ export const sentInternalGitPOAPRequestMessage = async ({
   name,
   description,
 }: GitPOAPRequest) => {
-  const gitPOAPRequestLink = GITPPOAP_URL + `/admin/gitpoap/requests?search=${id}`;
+  const gitPOAPRequestLink = `${GITPOAP_URL}/admin/gitpoap/requests?search=${id}`;
   const msg = `📬 Received request to create GitPOAP - Request ID: ${id}, Name: ${name} Description:${description}. View ${gitPOAPRequestLink} to view more information`;
 
   await sendGitPOAPRequestMessage(msg);
 };
 
 export const sentInternalOnboardingMessage = async ({ id, name, description }: GitPOAP) => {
-  const gitPOAPRequestLink = GITPPOAP_URL + `/gp/${id}`;
-  const msg = `📬 Received to create GitPOAP - GitPOAP ID: ${id}, Name: ${name} Description:${description}. View ${gitPOAPRequestLink} to view more information`;
+  const gitPOAPLink = GITPOAP_URL + `/gp/${id}`;
+  const msg = `📬 Received to create GitPOAP - GitPOAP ID: ${id}, Name: ${name} Description:${description}. View ${gitPOAPLink} to view more information`;
 
   await sendOnboardingMessage(msg);
 };
