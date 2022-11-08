@@ -141,6 +141,7 @@ export async function checkForNewContributions(repo: RepoReturnType) {
   let page = 1;
   let isProcessing = true;
   let lastUpdatedAt = null;
+  let newName;
   while (isProcessing) {
     const pulls = await getGithubRepositoryPullsAsAdmin(
       repo.organization.name,
@@ -163,6 +164,14 @@ export async function checkForNewContributions(repo: RepoReturnType) {
       // Save the first updatedAt value
       if (lastUpdatedAt === null) {
         lastUpdatedAt = result.updatedAt;
+
+        // Check to see if the repo name has updated
+        if (pull.base.repo.name !== repo.name) {
+          newName = pull.base.repo.name;
+          logger.info(
+            `Updating repository (ID: ${repo.id}) name from "${repo.name}" to "${newName}"`,
+          );
+        }
       }
 
       if (result.finished) {
@@ -182,6 +191,7 @@ export async function checkForNewContributions(repo: RepoReturnType) {
       },
       data: {
         lastPRUpdatedAt: lastUpdatedAt,
+        name: newName,
       },
     });
   }
