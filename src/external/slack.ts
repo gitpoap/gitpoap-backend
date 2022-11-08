@@ -1,8 +1,9 @@
-import { GitPOAPRequest, GitPOAP } from '@prisma/client';
+import { GitPOAPRequest } from '@prisma/client';
 import { WebClient } from '@slack/web-api';
 import { SLACK_TOKEN } from '../environment';
 import { createScopedLogger } from '../logging';
 import { FoundClaim } from '../types/claims';
+import { IntakeForm } from '../routes/onboarding/types';
 import { shortenAddress } from '../lib/addresses';
 import { GITPOAP_ROOT_URL, GITPOAP_DEV_ROOT_URL, IS_PROD } from '../constants';
 
@@ -76,9 +77,8 @@ export const sentInternalGitPOAPRequestMessage = async ({
   await sendGitPOAPRequestMessage(msg);
 };
 
-export const sentInternalOnboardingMessage = async ({ id, name, description }: GitPOAP) => {
-  const gitPOAPLink = GITPOAP_URL + `/gp/${id}`;
-  const msg = `📬 Received to create GitPOAP - GitPOAP ID: ${id}, Name: ${name} Description:${description}. View ${gitPOAPLink} to view more information`;
+export const sentInternalOnboardingMessage = async (githubHandle: string, formData: IntakeForm) => {
+  const msg = `📬 Received to create GitPOAP - GitHub handle: ${githubHandle}, Name: ${formData.name} Email:${formData.email}. Use DynaList to view details`;
 
   await sendOnboardingMessage(msg);
 };

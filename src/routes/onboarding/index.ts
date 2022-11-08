@@ -23,6 +23,7 @@ import { getMappedOrgRepo, getMappedPrRepo, getMappedRepo } from './utils';
 import { publicPRsQuery } from './queries';
 import { createIntakeFormDocForDynamo, createUpdateItemParamsForImages } from './dynamo';
 import { getRequestLogger } from '../../middleware/loggingAndTiming';
+import { sentInternalOnboardingMessage } from '../../external/slack';
 
 export const onboardingRouter = Router();
 
@@ -150,6 +151,9 @@ onboardingRouter.post<'/intake-form', any, any, IntakeForm>(
       /* Log error, but don't return error to user. Sending the email is secondary to storing the form data */
       logger.error(`Received error when sending confirmation email to ${req.body.email} - ${err} `);
     }
+
+    /* Send message to slack */
+    void sentInternalOnboardingMessage(githubHandle, req.body);
 
     logger.info(
       `Successfully submitted intake form for GitHub user - ${githubHandle} and email - ${req.body.email}`,
