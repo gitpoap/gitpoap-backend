@@ -7,6 +7,15 @@ import { IntakeForm } from '../routes/onboarding/types';
 import { GitPOAPRequestEmailForm, GitPOAPRequestEmailAlias } from '../types/gitpoaps';
 import { generateOrganizationLink, generateGitPOAPRequestLink } from '../routes/gitpoaps/utils';
 import { createScopedLogger } from '../logging';
+import {
+  GITPOAP_ROOT_URL,
+  TEAM_EMAIL,
+  COMPANY_NAME,
+  COMPANY_ADDRESS,
+  PRODUCT_NAME,
+  TEAM_NAME,
+  GITPOAP_DOC_URL,
+} from '../constants';
 
 export const postmarkClient = new ServerClient(POSTMARK_SERVER_TOKEN);
 
@@ -69,15 +78,15 @@ const sendTextEmailHandler = async ({ to, from, subject, textBody }: SendTextEma
 export const sendVerificationEmail = async (email: string, activeToken: string) =>
   await sendEmailWithTemplateHandler({
     to: email,
-    from: 'team@gitpoap.io',
+    from: TEAM_EMAIL,
     alias: 'verify-email',
     templateModel: {
-      product_url: 'https://gitpoap.io',
-      product_name: 'GitPOAP',
+      product_url: GITPOAP_ROOT_URL,
+      product_name: PRODUCT_NAME,
       token: activeToken,
-      support_email: 'team@gitpoap.io',
-      company_name: 'MetaRep Labs Inc',
-      company_address: 'One Broadway, Cambridge MA 02142',
+      support_email: TEAM_EMAIL,
+      company_name: COMPANY_NAME,
+      company_address: COMPANY_ADDRESS,
     },
   });
 
@@ -88,11 +97,11 @@ export const sendConfirmationEmail = async (
 ) =>
   await sendEmailWithTemplateHandler({
     to: formData.email,
-    from: 'team@gitpoap.io',
+    from: TEAM_EMAIL,
     alias: 'welcome-1',
     templateModel: {
-      product_url: 'https://gitpoap.io',
-      product_name: 'GitPOAP',
+      product_url: GITPOAP_ROOT_URL,
+      product_name: PRODUCT_NAME,
       queue_number: queueNumber ?? '',
       name: formData.name,
       email: formData.email,
@@ -101,11 +110,11 @@ export const sendConfirmationEmail = async (
       isOneGitPOAPPerRepo: formData.isOneGitPOAPPerRepo === 'true' ? 'One Per Repo' : 'One For All',
       notes: formData.notes,
       repos: formatRepos(JSON.parse(formData.repos)),
-      support_email: 'team@gitpoap.io',
-      company_name: 'MetaRep Labs Inc',
-      company_address: 'One Broadway, Cambridge MA 02142',
-      sender_name: 'GitPOAP Team',
-      help_url: 'https://docs.gitpoap.io',
+      support_email: TEAM_EMAIL,
+      company_name: COMPANY_NAME,
+      company_address: COMPANY_ADDRESS,
+      sender_name: TEAM_NAME,
+      help_url: GITPOAP_DOC_URL,
     },
   });
 
@@ -116,8 +125,8 @@ export const sendInternalConfirmationEmail = async (
   urls: string[],
 ) => {
   await sendTextEmailHandler({
-    to: 'team@gitpoap.io',
-    from: 'team@gitpoap.io',
+    to: TEAM_EMAIL,
+    from: TEAM_EMAIL,
     subject: `New intake form submission from ${githubHandle} / ${formData.email} `,
     textBody: `
     New intake form submission from ${githubHandle} / ${formData.email}
@@ -155,11 +164,11 @@ export const sendGitPOAPRequestEmail = async (
 ) =>
   await sendEmailWithTemplateHandler({
     to: formData.email,
-    from: 'team@gitpoap.io',
+    from: TEAM_EMAIL,
     alias,
     templateModel: {
-      product_url: 'https://gitpoap.io',
-      product_name: 'GitPOAP',
+      product_url: GITPOAP_ROOT_URL,
+      product_name: PRODUCT_NAME,
       gitpoap_name: formData.name,
       gitpoap_link: generateGitPOAPRequestLink(formData.id),
       gitpoap_image: formData.imageUrl,
@@ -168,10 +177,10 @@ export const sendGitPOAPRequestEmail = async (
         ? generateOrganizationLink(formData?.organizationId)
         : '',
       organization_name: formData?.organizationName ?? '',
-      support_email: 'team@gitpoap.io',
-      company_name: 'MetaRep Labs Inc',
-      company_address: 'One Broadway, Cambridge MA 02142',
-      sender_name: 'GitPOAP Team',
-      help_url: 'https://docs.gitpoap.io',
+      support_email: TEAM_EMAIL,
+      company_name: COMPANY_NAME,
+      company_address: COMPANY_ADDRESS,
+      sender_name: TEAM_NAME,
+      help_url: GITPOAP_DOC_URL,
     },
   });
