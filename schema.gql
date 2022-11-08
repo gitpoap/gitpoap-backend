@@ -1926,6 +1926,7 @@ type GitPOAPRequest {
 
 type Email {
   id: Int!
+  emailAddress: String!
   addressId: Int
   createdAt: DateTime!
   updatedAt: DateTime!
