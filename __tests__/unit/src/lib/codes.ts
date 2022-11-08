@@ -192,6 +192,7 @@ describe('checkGitPOAPForNewCodes', () => {
   });
 
   it('Should send a gitpoap live email for GitPOAPRequest', async () => {
+    expect(gitPOAP.poapApprovalStatus).toEqual(GitPOAPStatus.UNAPPROVED);
     contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue(gitPOAP as any);
     contextMock.prisma.redeemCode.count.mockResolvedValueOnce(5).mockResolvedValueOnce(10);
     mockedRetrieveUnusedPOAPCodes.mockResolvedValue(fakeCodes);
@@ -207,6 +208,15 @@ describe('checkGitPOAPForNewCodes', () => {
       imageUrl: getS3URL('gitpoap-request-images-test', 'foobar.png-123456789'),
       organizationId: 1,
       organizationName: 'organization 1',
+    });
+
+    expect(contextMock.prisma.gitPOAP.update).toHaveBeenCalledWith({
+      where: {
+        id: gitPOAP.id,
+      },
+      data: {
+        poapApprovalStatus: GitPOAPStatus.APPROVED,
+      },
     });
   });
 
