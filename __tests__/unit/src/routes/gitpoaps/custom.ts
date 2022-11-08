@@ -17,12 +17,6 @@ import { ADMIN_ADDRESSES } from '../../../../../src/constants';
 import { ADDRESSES, GH_HANDLES } from '../../../../../prisma/constants';
 import { upsertEmail } from '../../../../../src/lib/emails';
 import {
-  createClaimForEmail,
-  createClaimForEnsName,
-  createClaimForEthAddress,
-  createClaimForGithubHandle,
-} from '../../../../../src/lib/claims';
-import {
   sendGitPOAPRequestEmail,
   sendGitPOAPRequestConfirmationEmail,
   sendGitPOAPRequestRejectionEmail,
