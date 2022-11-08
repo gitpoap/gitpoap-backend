@@ -194,7 +194,7 @@ customGitPOAPsRouter.post(
     /* Send CG request submission confirmation email */
     const emailForm: GitPOAPRequestEmailForm = {
       id: gitPOAPRequest.id,
-      email: gitPOAPRequest.creatorEmail,
+      email: email.emailAddress,
       name: gitPOAPRequest.name,
       description: gitPOAPRequest.description,
       imageUrl: gitPOAPRequest.imageUrl,
@@ -343,6 +343,11 @@ customGitPOAPsRouter.put('/reject/:id', jwtWithAdminAddress(), async (req, res) 
           name: true,
         },
       },
+      creatorEmail: {
+        select: {
+          emailAddress: true,
+        },
+      },
     },
   });
 
@@ -351,7 +356,7 @@ customGitPOAPsRouter.put('/reject/:id', jwtWithAdminAddress(), async (req, res) 
   /* Send CG request rejection email */
   const emailForm: GitPOAPRequestEmailForm = {
     id: gitPOAPRequest.id,
-    email: gitPOAPRequest.creatorEmail,
+    email: updatedGitPOAPRequest.creatorEmail.emailAddress,
     name: gitPOAPRequest.name,
     description: gitPOAPRequest.description,
     imageUrl: gitPOAPRequest.imageUrl,
