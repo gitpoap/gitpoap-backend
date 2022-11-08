@@ -22,7 +22,8 @@ import {
   UserFactory,
 } from './factories';
 import { DateTime } from 'luxon';
-import { ADDRESSES, GH_HANDLES, GH_IDS, TEAM_EMAIL } from './constants';
+import { ADDRESSES, GH_HANDLES, GH_IDS } from './constants';
+import { TEAM_EMAIL } from '../src/constants';
 
 import * as data from './data';
 import { AdminApprovalStatus } from '@prisma/client';
