@@ -566,6 +566,9 @@ customGitPOAPsRouter.patch('/:gitPOAPRequestId', jwtWithAddress(), async (req, r
     startDate: maybeParseDate(schemaResult.data.data.startDate),
     endDate: maybeParseDate(schemaResult.data.data.endDate),
     expiryDate: maybeParseDate(schemaResult.data.data.expiryDate),
+    contributors: (c => (c ? (c as Prisma.JsonObject) : undefined))(
+      schemaResult.data.data.contributors,
+    ),
   };
 
   await context.prisma.gitPOAPRequest.update({
