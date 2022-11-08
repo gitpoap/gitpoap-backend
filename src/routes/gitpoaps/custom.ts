@@ -351,8 +351,6 @@ customGitPOAPsRouter.put('/reject/:id', jwtWithAdminAddress(), async (req, res) 
     },
   });
 
-  logger.info(`Completed admin request to reject GitPOAPRequest ID ${gitPOAPRequest.id}`);
-
   /* Send CG request rejection email */
   const emailForm: GitPOAPRequestEmailForm = {
     id: gitPOAPRequest.id,
