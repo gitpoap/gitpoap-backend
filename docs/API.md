@@ -423,44 +423,6 @@ This endpoint allows an admin to reject an external user's request to create a C
 Note that this endpoint requires an address-based JWT where the authenticated user be an admin of GitPOAP,
 as defined by [`ADMIN_ADDRESSES` at `src/constants.ts`](https://github.com/gitpoap/gitpoap-backend/blob/main/src/constants.ts).
 
-## Create Claims for a GitPOAPRequest
-
-`PUT /gitpoaps/custom/:gitPOAPRequestId/claims`
-
-This endpoint allows the creator of a GitPOAPRequest to create new Claims for that request.
-
-Note that it doesn't matter whether the GitPOAPRequest is approved yet or not, the same endpoint is used.
-
-Data:
-```json
-{
-  "contributors": {
-    "githubHandles": ["burz"],
-    "emails": ["burz@gitpoap.io"],
-    "ethAddresses": ["0xAe95f7e7fb2FCF86148ef832FAeD2752Ae5A358a"],
-    "ensNames": ["burz.eth"]
-  }
-}
-```
-
-Note that all of the fields within "contributors" are optional.
-
-## Delete a Claim for a GitPOAPRequest
-
-`DELETE /gitpoaps/custom/:gitPOAPRequestId/claim`
-
-This endpoint allows the creator of a GitPOAPRequest to remove Claims for a GitPOAPRequest that is *not yet* `APPROVED`.
-
-Data:
-```json
-{
-  "claimType": "githubHandle",
-  "claimData": "burz"
-}
-```
-
-Where `claimType` is one of `['githubHandle', 'email', 'ethAddress', 'ensName']`.
-
 ## Delete a Claim
 
 `DELETE /claims/:id`
