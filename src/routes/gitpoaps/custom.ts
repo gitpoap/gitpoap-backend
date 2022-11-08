@@ -194,7 +194,7 @@ customGitPOAPsRouter.post(
     /* Send CG request submission confirmation email */
     const emailForm: GitPOAPRequestEmailForm = {
       id: gitPOAPRequest.id,
-      email: email.emailAddress,
+      email: schemaResult.data.creatorEmail,
       name: gitPOAPRequest.name,
       description: gitPOAPRequest.description,
       imageUrl: gitPOAPRequest.imageUrl,

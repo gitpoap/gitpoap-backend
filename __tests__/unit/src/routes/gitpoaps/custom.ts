@@ -451,6 +451,9 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
         id: 1,
         name: 'organization 1',
       },
+      creatorEmail: {
+        email: 'test@gitpoap.io',
+      },
     } as any);
 
     const authTokens = genAuthTokens(ADMIN_ADDRESSES[0]);
@@ -481,6 +484,11 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
             name: true,
           },
         },
+        creatorEmail: {
+          select: {
+            emailAddress: true,
+          },
+        },
       },
     });
   });
@@ -507,6 +515,9 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
       organization: {
         id: 1,
         name: 'organization 1',
+      },
+      creatorEmail: {
+        emailAddress: 'test@gitpoap.io',
       },
     } as any);
 
@@ -750,7 +761,7 @@ describe('POST /gitpoaps/custom', () => {
 
     expect(sendGitPOAPRequestConfirmationEmail).toHaveBeenCalledWith({
       id: gitPOAPRequestId,
-      email: 'test@gitpoap.io',
+      email: burzEmail,
       name: 'foobar-name',
       description: 'foobar',
       imageUrl: getS3URL('gitpoap-request-images-test', 'foobar.png-123456789'),
