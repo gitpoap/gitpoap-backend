@@ -1,9 +1,8 @@
 import {
   CreateCustomGitPOAPSchema,
-  DeleteGitPOAPRequestClaimSchema,
   UpdateCustomGitPOAPSchema,
 } from '../../schemas/gitpoaps/custom';
-import { CreateGitPOAPClaimsSchema, GitPOAPContributorsSchema } from '../../schemas/gitpoaps';
+import { GitPOAPContributorsSchema } from '../../schemas/gitpoaps';
 import { Request, Router } from 'express';
 import { z } from 'zod';
 import { context } from '../../context';
@@ -25,11 +24,7 @@ import { parseJSON } from '../../lib/json';
 import { getAccessTokenPayload } from '../../types/authTokens';
 import { sentInternalGitPOAPRequestMessage } from '../../external/slack';
 import { convertContributorsFromSchema, createClaimsForContributors } from '../../lib/gitpoaps';
-import {
-  addGitPOAPContributors,
-  deleteGitPOAPRequest,
-  removeContributorFromGitPOAP,
-} from '../../lib/gitpoapRequests';
+import { deleteGitPOAPRequest } from '../../lib/gitpoapRequests';
 import { getRequestLogger } from '../../middleware/loggingAndTiming';
 import { GITPOAP_ISSUER_EMAIL } from '../../constants';
 import { upsertEmail } from '../../lib/emails';
@@ -368,146 +363,6 @@ customGitPOAPsRouter.put('/reject/:id', jwtWithAdminAddress(), async (req, res) 
   );
 
   return res.status(200).send('REJECTED');
-});
-
-customGitPOAPsRouter.put('/:gitPOAPRequestId/claims', jwtWithAddress(), async (req, res) => {
-  const logger = getRequestLogger(req);
-
-  const gitPOAPRequestId = parseInt(req.params.gitPOAPRequestId, 10);
-
-  logger.info(`Request to create new Claims for custom GitPOAP Request ID ${gitPOAPRequestId}`);
-
-  const schemaResult = CreateGitPOAPClaimsSchema.safeParse(req.body);
-
-  if (!schemaResult.success) {
-    logger.warn(
-      `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
-    );
-    return res.status(400).send({ issues: schemaResult.error.issues });
-  }
-
-  const { contributors } = schemaResult.data;
-
-  const gitPOAPRequest = await context.prisma.gitPOAPRequest.findUnique({
-    where: { id: gitPOAPRequestId },
-    select: {
-      addressId: true,
-      adminApprovalStatus: true,
-      contributors: true,
-    },
-  });
-
-  if (gitPOAPRequest === null) {
-    logger.warn(
-      `User tried to create claims for nonexistant GitPOAPRequest ID ${gitPOAPRequestId}`,
-    );
-    return res.status(404).send({ msg: "Request doesn't exist" });
-  }
-
-  const { addressId } = getAccessTokenPayload(req.user);
-
-  if (gitPOAPRequest.addressId !== addressId) {
-    logger.warn(
-      `Someone other than its creator tried to add claims to GitPOAPRequest ID ${gitPOAPRequestId}`,
-    );
-    return res.status(401).send({ msg: 'Not request owner' });
-  }
-
-  if (gitPOAPRequest.adminApprovalStatus === AdminApprovalStatus.APPROVED) {
-    logger.warn(
-      `Creator of GitPOAPRequest ID ${gitPOAPRequestId} tried to create new claims after approval`,
-    );
-    return res.status(400).send({ msg: 'GitPOAPRequest is already APPROVED' });
-  }
-
-  const existingContributors = convertContributorsFromSchema(
-    gitPOAPRequest.contributors ? (gitPOAPRequest.contributors as Prisma.JsonObject) : {},
-  );
-
-  const newContributors = addGitPOAPContributors(
-    existingContributors,
-    convertContributorsFromSchema(contributors),
-  );
-
-  await context.prisma.gitPOAPRequest.update({
-    where: { id: gitPOAPRequestId },
-    data: { contributors: newContributors },
-  });
-
-  logger.debug(`Completed request to create new Claims for GitPOAPRequest ID ${gitPOAPRequestId}`);
-
-  return res.status(200).send('CREATED');
-});
-
-customGitPOAPsRouter.delete('/:gitPOAPRequestId/claim', jwtWithAddress(), async (req, res) => {
-  const logger = getRequestLogger(req);
-
-  const gitPOAPRequestId = parseInt(req.params.gitPOAPRequestId, 10);
-
-  const schemaResult = DeleteGitPOAPRequestClaimSchema.safeParse(req.body);
-
-  if (!schemaResult.success) {
-    logger.warn(
-      `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
-    );
-    return res.status(400).send({ issues: schemaResult.error.issues });
-  }
-
-  const { claimType, claimData } = schemaResult.data;
-
-  logger.info(
-    `Request to remove ${claimType} "${claimData}" from GitPOAPRequest ID ${gitPOAPRequestId}`,
-  );
-
-  const gitPOAPRequest = await context.prisma.gitPOAPRequest.findUnique({
-    where: { id: gitPOAPRequestId },
-    select: {
-      addressId: true,
-      adminApprovalStatus: true,
-      contributors: true,
-    },
-  });
-
-  if (gitPOAPRequest === null) {
-    const msg = `GitPOAPRequest with ID ${gitPOAPRequestId} doesn't exist`;
-    logger.warn(msg);
-    return res.status(404).send({ msg });
-  }
-
-  const { addressId } = getAccessTokenPayload(req.user);
-
-  if (gitPOAPRequest.addressId !== addressId) {
-    logger.warn(
-      `User attempted to delete a Claim for a GitPOAPRequest (ID: ${gitPOAPRequestId}) that they do not own`,
-    );
-    return res.status(401).send({ msg: 'Not GitPOAPRequest creator' });
-  }
-
-  // This could happen if the admin approval request is put in around the same time
-  // that the creator is trying to add new contributors, i.e. that the conversion
-  // from GitPOAPRequest to GitPOAP hasn't completed yet.
-  if (gitPOAPRequest.adminApprovalStatus === AdminApprovalStatus.APPROVED) {
-    const msg = `GitPOAPRequest with ID ${gitPOAPRequestId} is already APPROVED`;
-    logger.warn(msg);
-    return res.status(400).send({ msg });
-  }
-
-  const existingContributors = convertContributorsFromSchema(
-    gitPOAPRequest.contributors ? (gitPOAPRequest.contributors as Prisma.JsonObject) : {},
-  );
-
-  const newContributors = removeContributorFromGitPOAP(existingContributors, claimType, claimData);
-
-  await context.prisma.gitPOAPRequest.update({
-    where: { id: gitPOAPRequestId },
-    data: { contributors: newContributors },
-  });
-
-  logger.debug(
-    `Completed request to remove ${claimType} "${claimData}" from GitPOAPRequest ID ${gitPOAPRequestId}`,
-  );
-
-  return res.status(200).send('DELETED');
 });
 
 customGitPOAPsRouter.patch('/:gitPOAPRequestId', jwtWithAddress(), async (req, res) => {
