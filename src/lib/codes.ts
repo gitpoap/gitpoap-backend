@@ -1,5 +1,5 @@
 import { context } from '../context';
-import { GitPOAPType } from '@prisma/client';
+import { GitPOAPType, Email } from '@prisma/client';
 import { GitPOAPStatus, RedeemCode, Organization, Address } from '@generated/type-graphql';
 import { createScopedLogger } from '../logging';
 import { retrieveUnusedPOAPCodes } from '../external/poap';
@@ -52,7 +52,7 @@ export type GitPOAPWithSecret = {
   organization: Organization | null;
   creatorAddress: Address | null;
   imageUrl: string;
-  creatorEmail: string | null;
+  creatorEmail: Email | null;
 };
 
 async function lookupRepoIds(gitPOAPId: number): Promise<number[]> {
@@ -134,7 +134,8 @@ export async function checkGitPOAPForNewCodes(gitPOAP: GitPOAPWithSecret): Promi
       // if it is custom gitPOAP, we send an email for approval
       if (gitPOAP.type === GitPOAPType.CUSTOM) {
         // if email exists
-        const email = gitPOAP.creatorEmail ?? gitPOAP.creatorAddress?.email?.emailAddress;
+        const email =
+          gitPOAP.creatorEmail?.emailAddress ?? gitPOAP.creatorAddress?.email?.emailAddress;
         if (email) {
           const emailForm: GitPOAPRequestEmailForm = {
             id: gitPOAP.id,
