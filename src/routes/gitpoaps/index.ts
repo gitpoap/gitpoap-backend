@@ -25,6 +25,7 @@ import { convertContributorsFromSchema, createClaimsForContributors } from '../.
 import { ensureRedeemCodeThreshold } from '../../lib/claims';
 import { getRequestLogger } from '../../middleware/loggingAndTiming';
 import { GITPOAP_ISSUER_EMAIL } from '../../constants';
+import { sentInternalOnboardingMessage } from '../../external/slack';
 
 export const gitPOAPsRouter = Router();
 
@@ -145,7 +146,7 @@ gitPOAPsRouter.post(
 
     logger.debug(`Created GitPOAP in POAP system: ${JSON.stringify(poapInfo)}`);
 
-    await context.prisma.gitPOAP.create({
+    const gitPOAP = await context.prisma.gitPOAP.create({
       data: {
         name: poapInfo.name,
         imageUrl: poapInfo.image_url,
@@ -163,6 +164,9 @@ gitPOAPsRouter.post(
         isEnabled: req.body.isEnabled !== 'false',
       },
     });
+
+    /* Send message to slack */
+    void sentInternalOnboardingMessage(gitPOAP);
 
     logger.debug(
       `Completed request to create a new GitPOAP "${req.body.name}" for project ${project.id}`,
