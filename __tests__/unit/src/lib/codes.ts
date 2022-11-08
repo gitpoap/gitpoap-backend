@@ -1,11 +1,17 @@
+import { GitPOAPStatus } from '@generated/type-graphql';
+import { GitPOAPType } from '@prisma/client';
 import { mockedLogger } from '../../../../__mocks__/src/logging';
 import { contextMock } from '../../../../__mocks__/src/context';
 import { retrieveUnusedPOAPCodes } from '../../../../src/external/poap';
 import { checkGitPOAPForNewCodes, GitPOAPWithSecret } from '../../../../src/lib/codes';
-import { GitPOAPStatus } from '@generated/type-graphql';
+import { sendGitPOAPRequestLiveEmail } from '../../../../src/external/postmark';
+import { getS3URL } from '../../../../src/external/s3';
 
 jest.mock('../../../../src/logging');
 jest.mock('../../../../src/external/poap');
+
+jest.mock('../../../../src/external/postmark');
+jest.mocked(sendGitPOAPRequestLiveEmail, true);
 
 const mockedRetrieveUnusedPOAPCodes = jest.mocked(retrieveUnusedPOAPCodes, true);
 
@@ -28,6 +34,17 @@ const gitPOAP: GitPOAPWithSecret = {
   poapApprovalStatus: GitPOAPStatus.UNAPPROVED,
   poapEventId: 32423,
   poapSecret: 'foobar',
+  type: GitPOAPType.CUSTOM,
+  name: 'foobar',
+  description: 'foobar-description',
+  organization: {
+    id: 1,
+    name: 'organization 1',
+  },
+  imageUrl: getS3URL('gitpoap-request-images-test', 'foobar.png-123456789'),
+  creatorEmail: {
+    emailAddress: 'test@gitpoap.io',
+  },
 } as any;
 
 const repoIds = [34, 4, 3];
@@ -171,6 +188,25 @@ describe('checkGitPOAPForNewCodes', () => {
       data: {
         poapApprovalStatus: GitPOAPStatus.APPROVED,
       },
+    });
+  });
+
+  it('Should send a gitpoap live email for GitPOAPRequest', async () => {
+    contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue(gitPOAP as any);
+    contextMock.prisma.redeemCode.count.mockResolvedValueOnce(5).mockResolvedValueOnce(10);
+    mockedRetrieveUnusedPOAPCodes.mockResolvedValue(fakeCodes);
+    mockLookupRepoIds();
+
+    await checkGitPOAPForNewCodes(gitPOAP);
+
+    expect(sendGitPOAPRequestLiveEmail).toHaveBeenCalledWith({
+      id: 34,
+      email: 'test@gitpoap.io',
+      name: 'foobar',
+      description: 'foobar-description',
+      imageUrl: getS3URL('gitpoap-request-images-test', 'foobar.png-123456789'),
+      organizationId: 1,
+      organizationName: 'organization 1',
     });
   });
 
