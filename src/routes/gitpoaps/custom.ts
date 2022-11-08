@@ -331,22 +331,22 @@ customGitPOAPsRouter.put('/reject/:id', jwtWithAdminAddress(), async (req, res) 
     return res.status(200).send({ msg });
   }
 
-  await context.prisma.gitPOAPRequest.update({
+  const updatedGitPOAPRequest = await context.prisma.gitPOAPRequest.update({
     where: { id: gitPOAPRequestId },
     data: {
       adminApprovalStatus: AdminApprovalStatus.REJECTED,
     },
+    select: {
+      organization: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
   });
 
   logger.info(`Completed admin request to reject GitPOAPRequest ID ${gitPOAPRequest.id}`);
-  /* Find organization */
-  let organization: { id: number; name: string } | null = null;
-  if (gitPOAPRequest.organizationId) {
-    organization = await context.prisma.organization.findUnique({
-      where: { id: gitPOAPRequest.organizationId },
-      select: { id: true, name: true },
-    });
-  }
 
   /* Send CG request rejection email */
   const emailForm: GitPOAPRequestEmailForm = {
@@ -355,8 +355,8 @@ customGitPOAPsRouter.put('/reject/:id', jwtWithAdminAddress(), async (req, res) 
     name: gitPOAPRequest.name,
     description: gitPOAPRequest.description,
     imageUrl: gitPOAPRequest.imageUrl,
-    organizationId: organization?.id ?? null,
-    organizationName: organization?.name ?? null,
+    organizationId: updatedGitPOAPRequest.organization?.id ?? null,
+    organizationName: updatedGitPOAPRequest.organization?.name ?? null,
   };
   void sendGitPOAPRequestRejectionEmail(emailForm);
 

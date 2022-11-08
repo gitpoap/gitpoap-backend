@@ -52,6 +52,7 @@ export type GitPOAPWithSecret = {
   organization: Organization | null;
   creatorAddress: Address | null;
   imageUrl: string;
+  creatorEmail: string | null;
 };
 
 async function lookupRepoIds(gitPOAPId: number): Promise<number[]> {
@@ -133,11 +134,12 @@ export async function checkGitPOAPForNewCodes(gitPOAP: GitPOAPWithSecret): Promi
       // if it is custom gitPOAP, we send an email for approval
       if (gitPOAP.type === GitPOAPType.CUSTOM) {
         // if email exists
-        if (gitPOAP.creatorAddress?.email?.emailAddress) {
+        const email = gitPOAP.creatorEmail ?? gitPOAP.creatorAddress?.email?.emailAddress;
+        if (email) {
           const emailForm: GitPOAPRequestEmailForm = {
             id: gitPOAP.id,
             name: gitPOAP.name,
-            email: gitPOAP.creatorAddress.email.emailAddress,
+            email,
             description: gitPOAP.description,
             imageUrl: gitPOAP.imageUrl,
             organizationId: gitPOAP.organization?.id ?? null,
@@ -176,6 +178,7 @@ export async function checkForNewPOAPCodes() {
       organization: true,
       creatorAddress: true,
       imageUrl: true,
+      creatorEmail: true,
     },
   });
 
