@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { GitPOAPContributorsSchema } from './';
 
 // Everything is a string since it came from multipart
 export const CreateCustomGitPOAPSchema = z.object({
@@ -33,6 +34,7 @@ const CustomGitPOAPData = z
     numRequestedCodes: z.number(),
     city: z.nullable(z.string()),
     country: z.nullable(z.string()),
+    contributors: GitPOAPContributorsSchema,
   })
   .strict();
 
