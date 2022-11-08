@@ -454,7 +454,13 @@ Data:
     "numRequestedCodes": 2304,
     "city": null,
     "country": "Ukraine",
-  },
+    "contributors": {
+      "githubHandles": ["burz"],
+      "emails": ["burz@gitpoap.io"],
+      "ethAddresses": ["0xAe95f7e7fb2FCF86148ef832FAeD2752Ae5A358a"],
+      "ensNames": ["burz.eth"]
+    }
+  }
 }
 ```
 
