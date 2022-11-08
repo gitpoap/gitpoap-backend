@@ -16,6 +16,17 @@ import { DateTime } from 'luxon';
 import { ADMIN_ADDRESSES } from '../../../../../src/constants';
 import { ADDRESSES, GH_HANDLES } from '../../../../../prisma/constants';
 import { upsertEmail } from '../../../../../src/lib/emails';
+import {
+  createClaimForEmail,
+  createClaimForEnsName,
+  createClaimForEthAddress,
+  createClaimForGithubHandle,
+} from '../../../../../src/lib/claims';
+import {
+  sendGitPOAPRequestEmail,
+  sendGitPOAPRequestConfirmationEmail,
+  sendGitPOAPRequestRejectionEmail,
+} from '../../../../../src/external/postmark';
 
 const authTokenId = 4;
 const authTokenGeneration = 1;
@@ -126,6 +137,11 @@ jest.mock('multer', () =>
 
 jest.mock('../../../../../src/lib/emails');
 const mockedUpsertEmail = jest.mocked(upsertEmail, true);
+
+jest.mock('../../../../../src/external/postmark');
+jest.mocked(sendGitPOAPRequestEmail, true);
+jest.mocked(sendGitPOAPRequestConfirmationEmail, true);
+jest.mocked(sendGitPOAPRequestRejectionEmail, true);
 
 jest.spyOn(DateTime, 'now').mockReturnValue(DateTime.fromSeconds(123456789));
 const mockedGetImageBufferFromS3URL = jest.mocked(getImageBufferFromS3URL, true);
@@ -437,6 +453,10 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
     contextMock.prisma.gitPOAPRequest.update.mockResolvedValue({
       id: gitPOAPRequestId,
       adminApprovalStatus: AdminApprovalStatus.REJECTED,
+      organization: {
+        id: 1,
+        name: 'organization 1',
+      },
     } as any);
 
     const authTokens = genAuthTokens(ADMIN_ADDRESSES[0]);
@@ -460,6 +480,57 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
       data: {
         adminApprovalStatus: AdminApprovalStatus.REJECTED,
       },
+      select: {
+        organization: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+  });
+
+  it('should send a rejection email', async () => {
+    mockJwtWithAddress();
+    contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue({
+      id: gitPOAPRequestId,
+      creatorEmail: 'test@gitpoap.io',
+      type: GitPOAPType.CUSTOM,
+      adminApprovalStatus: AdminApprovalStatus.PENDING,
+      description: 'foobar',
+      imageUrl: getS3URL('gitpoap-request-images-test', 'foobar.png-123456789'),
+      isEnabled: true,
+      isPRBased: false,
+      name: 'foobar',
+      ongoing: true,
+      year: 2021,
+    } as any);
+
+    contextMock.prisma.gitPOAPRequest.update.mockResolvedValue({
+      id: gitPOAPRequestId,
+      adminApprovalStatus: AdminApprovalStatus.REJECTED,
+      organization: {
+        id: 1,
+        name: 'organization 1',
+      },
+    } as any);
+
+    const authTokens = genAuthTokens(ADMIN_ADDRESSES[0]);
+
+    await request(await setupApp())
+      .put(`/gitpoaps/custom/reject/${gitPOAPRequestId}`)
+      .set('Authorization', `Bearer ${authTokens.accessToken}`)
+      .send();
+
+    expect(sendGitPOAPRequestRejectionEmail).toHaveBeenCalledWith({
+      id: gitPOAPRequestId,
+      email: 'test@gitpoap.io',
+      name: 'foobar',
+      description: 'foobar',
+      imageUrl: getS3URL('gitpoap-request-images-test', 'foobar.png-123456789'),
+      organizationId: 1,
+      organizationName: 'organization 1',
     });
   });
 });
@@ -645,6 +716,53 @@ describe('POST /gitpoaps/custom', () => {
     expect(mockedUpsertEmail).toHaveBeenCalledWith(burzEmail);
 
     assertGitPOAPRequestCreation(1, 1);
+  });
+
+  it('should send gitPOAPRequest submission confirmation email', async () => {
+    mockJwtWithAddress();
+
+    contextMock.prisma.organization.findUnique.mockResolvedValue({
+      id: 1,
+      name: 'organization 1',
+    } as any);
+
+    contextMock.prisma.gitPOAPRequest.create.mockResolvedValue({
+      id: gitPOAPRequestId,
+      creatorEmail: 'test@gitpoap.io',
+      type: GitPOAPType.CUSTOM,
+      adminApprovalStatus: AdminApprovalStatus.PENDING,
+      description: 'foobar',
+      imageUrl: getS3URL('gitpoap-request-images-test', 'foobar.png-123456789'),
+      isEnabled: true,
+      isPRBased: false,
+      name: 'foobar-name',
+      ongoing: true,
+      year: 2021,
+    } as any);
+
+    mockedUploadMulterFile.mockResolvedValue({
+      filename: 'foobar_imgKey',
+    } as any);
+
+    const authTokens = genAuthTokens();
+    await request(await setupApp())
+      .post('/gitpoaps/custom')
+      .set('Authorization', `Bearer ${authTokens.accessToken}`)
+      .send({
+        ...baseGitPOAPRequest,
+        organizationId: '1',
+        projectId: '1',
+      });
+
+    expect(sendGitPOAPRequestConfirmationEmail).toHaveBeenCalledWith({
+      id: gitPOAPRequestId,
+      email: 'test@gitpoap.io',
+      name: 'foobar-name',
+      description: 'foobar',
+      imageUrl: getS3URL('gitpoap-request-images-test', 'foobar.png-123456789'),
+      organizationId: 1,
+      organizationName: 'organization 1',
+    });
   });
 });
 
