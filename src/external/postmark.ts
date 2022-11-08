@@ -72,7 +72,7 @@ export const sendVerificationEmail = async (email: string, activeToken: string) 
     from: 'team@gitpoap.io',
     alias: 'verify-email',
     templateModel: {
-      product_url: 'gitpoap.io',
+      product_url: 'https://gitpoap.io',
       product_name: 'GitPOAP',
       token: activeToken,
       support_email: 'team@gitpoap.io',
@@ -91,7 +91,7 @@ export const sendConfirmationEmail = async (
     from: 'team@gitpoap.io',
     alias: 'welcome-1',
     templateModel: {
-      product_url: 'gitpoap.io',
+      product_url: 'https://gitpoap.io',
       product_name: 'GitPOAP',
       queue_number: queueNumber ?? '',
       name: formData.name,
@@ -158,7 +158,7 @@ export const sendGitPOAPRequestEmail = async (
     from: 'team@gitpoap.io',
     alias,
     templateModel: {
-      product_url: 'gitpoap.io',
+      product_url: 'https://gitpoap.io',
       product_name: 'GitPOAP',
       gitpoap_name: formData.name,
       gitpoap_link: generateGitPOAPRequestLink(formData.id),
