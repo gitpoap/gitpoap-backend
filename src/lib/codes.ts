@@ -147,6 +147,10 @@ export async function checkGitPOAPForNewCodes(gitPOAP: GitPOAPWithSecret): Promi
             organizationName: gitPOAP.organization?.name ?? null,
           };
           void sendGitPOAPRequestLiveEmail(emailForm);
+        } else {
+          logger.debug(
+            `We are not able to send an confirmation email since creator email for Custom GitPOAP id: ${gitPOAP.id} is null `,
+          );
         }
       }
 
