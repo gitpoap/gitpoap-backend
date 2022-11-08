@@ -413,6 +413,11 @@ customGitPOAPsRouter.patch('/:gitPOAPRequestId', jwtWithAddress(), async (req, r
     return res.status(400).send({ msg });
   }
 
+  let contributors;
+  if (schemaResult.data.data.contributors !== undefined) {
+    contributors = schemaResult.data.data.contributors as Prisma.JsonObject;
+  }
+
   const maybeParseDate = (date?: string) => (date ? new Date(date) : undefined);
 
   // Parse the dates if they are present
@@ -421,9 +426,7 @@ customGitPOAPsRouter.patch('/:gitPOAPRequestId', jwtWithAddress(), async (req, r
     startDate: maybeParseDate(schemaResult.data.data.startDate),
     endDate: maybeParseDate(schemaResult.data.data.endDate),
     expiryDate: maybeParseDate(schemaResult.data.data.expiryDate),
-    contributors: (c => (c ? (c as Prisma.JsonObject) : undefined))(
-      schemaResult.data.data.contributors,
-    ),
+    contributors,
   };
 
   await context.prisma.gitPOAPRequest.update({
