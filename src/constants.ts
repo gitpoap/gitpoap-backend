@@ -1,3 +1,5 @@
+import env from 'env-var';
+
 export const PORT = 3001;
 export const PUBLIC_API_PORT = 3122;
 
@@ -64,3 +66,5 @@ export const COMPANY_ADDRESS = 'One Broadway, Cambridge MA 02142';
 export const TEAM_NAME = 'GitPOAP Team';
 export const PRODUCT_NAME = 'GitPOAP';
 export const GITPOAP_DOC_URL = 'https://docs.gitpoap.io';
+
+export const IS_PROD = env.get('NODE_ENV').asString() === 'production';
