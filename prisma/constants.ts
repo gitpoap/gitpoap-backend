@@ -27,5 +27,3 @@ export const GH_IDS = {
   tyler: 110413633,
   kayleen: 23272494,
 };
-
-export const TEAM_EMAIL = 'team@gitpoap.io';

@@ -55,3 +55,11 @@ export const LOGIN_EXP_TIME_MONTHS = 1;
 export const GITPOAP_ISSUER_EMAIL = 'issuer@gitpoap.io';
 
 export const GITPOAP_ROOT_URL = 'https://www.gitpoap.io';
+
+export const TEAM_EMAIL = 'team@gitpoap.io';
+
+export const COMPANY_NAME = 'MetaRep Labs Inc';
+export const COMPANY_ADDRESS = 'One Broadway, Cambridge MA 02142';
+export const TEAM_NAME = 'GitPOAP Team';
+export const PRODUCT_NAME = 'GitPOAP';
+export const GITPOAP_DOC_URL = 'https://docs.gitpoap.io';
