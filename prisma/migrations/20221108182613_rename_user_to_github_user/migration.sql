@@ -1,17 +1,9 @@
 /*
   Warnings:
 
-  - You are about to drop the column `userId` on the `Claim` table. All the data in the column will be lost.
-  - You are about to drop the column `userId` on the `GithubIssue` table. All the data in the column will be lost.
-  - You are about to drop the column `userId` on the `GithubMention` table. All the data in the column will be lost.
-  - You are about to drop the column `userId` on the `GithubPullRequest` table. All the data in the column will be lost.
-  - You are about to drop the `User` table. If the table is not empty, all the data it contains will be lost.
   - A unique constraint covering the columns `[gitPOAPId,githubUserId]` on the table `Claim` will be added. If there are existing duplicate values, this will fail.
   - A unique constraint covering the columns `[repoId,githubUserId,pullRequestId]` on the table `GithubMention` will be added. If there are existing duplicate values, this will fail.
   - A unique constraint covering the columns `[repoId,githubUserId,issueId]` on the table `GithubMention` will be added. If there are existing duplicate values, this will fail.
-  - Added the required column `githubUserId` to the `GithubIssue` table without a default value. This is not possible if the table is not empty.
-  - Added the required column `githubUserId` to the `GithubMention` table without a default value. This is not possible if the table is not empty.
-  - Added the required column `githubUserId` to the `GithubPullRequest` table without a default value. This is not possible if the table is not empty.
 
 */
 -- DropForeignKey
@@ -42,20 +34,16 @@ DROP INDEX "GithubMention_repoId_userId_issueId_key";
 DROP INDEX "GithubMention_repoId_userId_pullRequestId_key";
 
 -- AlterTable
-ALTER TABLE "Claim" DROP COLUMN "userId",
-ADD COLUMN     "githubUserId" INTEGER;
+ALTER TABLE "Claim" RENAME COLUMN "userId" TO "githubUserId";
 
 -- AlterTable
-ALTER TABLE "GithubIssue" DROP COLUMN "userId",
-ADD COLUMN     "githubUserId" INTEGER NOT NULL;
+ALTER TABLE "GithubIssue" RENAME COLUMN "userId" TO "githubUserId";
 
 -- AlterTable
-ALTER TABLE "GithubMention" DROP COLUMN "userId",
-ADD COLUMN     "githubUserId" INTEGER NOT NULL;
+ALTER TABLE "GithubMention" RENAME COLUMN "userId" TO "githubUserId";
 
 -- AlterTable
-ALTER TABLE "GithubPullRequest" DROP COLUMN "userId",
-ADD COLUMN     "githubUserId" INTEGER NOT NULL;
+ALTER TABLE "GithubPullRequest" RENAME COLUMN "userId" TO "githubUserId";
 
 -- AlterTable
 ALTER TABLE "User" RENAME TO "GithubUser";
