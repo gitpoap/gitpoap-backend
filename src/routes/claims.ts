@@ -20,7 +20,6 @@ import { sleep } from '../lib/sleep';
 import { backloadGithubPullRequestData } from '../lib/pullRequests';
 import { upsertGithubUser } from '../lib/githubUsers';
 import {
-  ClaimData,
   retrieveClaimsCreatedByMention,
   retrieveClaimsCreatedByPR,
   updateClaimStatusById,
@@ -29,11 +28,11 @@ import { checkIfClaimTransferred } from '../lib/transfers';
 import { z } from 'zod';
 import { BotCreateClaimsErrorType, createClaimsForPR, createClaimsForIssue } from '../lib/bot';
 import { RestrictedContribution } from '../lib/contributions';
-import { sendInternalClaimMessage } from '../external/slack';
+import { sendInternalClaimMessage, sendInternalClaimByMentionMessage } from '../external/slack';
 import { isAddressAnAdmin } from '../lib/admins';
 import { getAccessTokenPayload } from '../types/authTokens';
 import { ensureRedeemCodeThreshold } from '../lib/claims';
-import { FoundClaim } from '../types/claims';
+import { ClaimData, FoundClaim } from '../types/claims';
 import { getRequestLogger } from '../middleware/loggingAndTiming';
 
 export const claimsRouter = Router();
@@ -204,6 +203,7 @@ claimsRouter.post('/', jwtWithGitHubOAuth(), async function (req, res) {
       claimId,
       gitPOAPId: claim.gitPOAP.id,
       gitPOAPName: claim.gitPOAP.name,
+      githubUser: claim.githubUser,
     });
     qrHashes.push(poapData.qr_hash);
 
@@ -442,6 +442,15 @@ claimsRouter.post(
         }
       }
 
+      if (wasEarnedByMention) {
+        void sendInternalClaimByMentionMessage(
+          organization,
+          repo,
+          { pullRequestNumber },
+          newClaims,
+        );
+      }
+
       logger.debug(
         `Completed request to create claim for${mentionInfo} PR #${pullRequestNumber} on "${organization}/${repo}`,
       );
@@ -502,6 +511,8 @@ claimsRouter.post(
           return res.status(500).send({ msg: 'createClaimsForIssue failed' });
         }
       }
+
+      void sendInternalClaimByMentionMessage(organization, repo, { issueNumber }, newClaims);
 
       logger.debug(
         `Completed request to create claim for mention in Issue #${issueNumber} on "${organization}/${repo}"`,

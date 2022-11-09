@@ -28,21 +28,6 @@ export type RepoData = {
   };
 };
 
-export type ClaimData = {
-  id: number;
-  githubUser: {
-    githubId: number;
-    githubHandle: string;
-  } | null;
-  gitPOAP: {
-    id: number;
-    name: string;
-    imageUrl: string;
-    description: string;
-    threshold: number;
-  };
-};
-
 export async function upsertClaim(
   githubUser: { id: number },
   gitPOAP: { id: number },

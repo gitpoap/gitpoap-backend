@@ -22,7 +22,7 @@ import {
 import { convertGitPOAPRequestToGitPOAP } from '../../lib/gitpoaps';
 import { parseJSON } from '../../lib/json';
 import { getAccessTokenPayload } from '../../types/authTokens';
-import { sentInternalGitPOAPRequestMessage } from '../../external/slack';
+import { sendInternalGitPOAPRequestMessage } from '../../external/slack';
 import { convertContributorsFromSchema, createClaimsForContributors } from '../../lib/gitpoaps';
 import { deleteGitPOAPRequest } from '../../lib/gitpoapRequests';
 import { getRequestLogger } from '../../middleware/loggingAndTiming';
@@ -185,7 +185,7 @@ customGitPOAPsRouter.post(
     });
 
     /* Send message to slack */
-    void sentInternalGitPOAPRequestMessage(gitPOAPRequest);
+    void sendInternalGitPOAPRequestMessage(gitPOAPRequest);
     /* Send CG request submission confirmation email */
     const emailForm: GitPOAPRequestEmailForm = {
       id: gitPOAPRequest.id,
