@@ -64,6 +64,15 @@ export function convertContributorsFromSchema(
   };
 }
 
+export function countContributors(contributors: GitPOAPContributors): number {
+  return (
+    contributors.githubHandles.length +
+    contributors.emails.length +
+    contributors.ethAddresses.length +
+    contributors.ensNames.length
+  );
+}
+
 export function createClaimsForContributors(
   gitPOAPId: number,
   contributors: GitPOAPContributors,
@@ -84,10 +93,5 @@ export function createClaimsForContributors(
     void createClaimForEnsName(ensName, gitPOAPId);
   }
 
-  return (
-    contributors['githubHandles'].length +
-    contributors['emails'].length +
-    contributors['ethAddresses'].length +
-    contributors['ensNames'].length
-  );
+  return countContributors(contributors);
 }

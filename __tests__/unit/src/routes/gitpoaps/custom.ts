@@ -14,7 +14,11 @@ import {
 } from '../../../../../src/external/s3';
 import { DateTime } from 'luxon';
 import { ADMIN_ADDRESSES } from '../../../../../src/constants';
-import { ADDRESSES, GH_HANDLES } from '../../../../../prisma/constants';
+import {
+  ADDRESSES,
+  CUSTOM_GITPOAP_MINIMUM_CODES,
+  GH_HANDLES,
+} from '../../../../../prisma/constants';
 import { upsertEmail } from '../../../../../src/lib/emails';
 import {
   sendGitPOAPRequestEmail,
@@ -42,7 +46,6 @@ const baseGitPOAPRequest = {
   endDate: '2021-01-10',
   expiryDate: '2023-01-01',
   eventUrl: 'https://foobar.com',
-  numRequestedCodes: '50',
   ongoing: 'true',
   isEnabled: 'true',
   image: {
@@ -621,7 +624,7 @@ describe('POST /gitpoaps/custom', () => {
         creatorEmail: {
           connect: { id: creatorEmailId },
         },
-        numRequestedCodes: 50,
+        numRequestedCodes: CUSTOM_GITPOAP_MINIMUM_CODES,
         adminApprovalStatus: AdminApprovalStatus.PENDING,
         isEnabled: true,
         isPRBased: false, // They should never be PR-based
