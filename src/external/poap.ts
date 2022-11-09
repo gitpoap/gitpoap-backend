@@ -380,7 +380,7 @@ export async function createPOAPEvent({
   num_requested_codes,
   city,
   country,
-}: CreatePOAPEventArgs): Promise<CreatePOAPEventReturnType> {
+}: CreatePOAPEventArgs): Promise<CreatePOAPEventReturnType | null> {
   const form = new FormData();
 
   form.append('name', name);
