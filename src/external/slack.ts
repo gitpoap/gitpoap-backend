@@ -78,7 +78,7 @@ export const sentInternalGitPOAPRequestMessage = async ({
 };
 
 export const sentInternalOnboardingMessage = async (githubHandle: string, formData: IntakeForm) => {
-  const msg = `📬 Received to create GitPOAP - GitHub handle: ${githubHandle}, Name: ${formData.name} Email:${formData.email}. Use DynaList to view details`;
+  const msg = `📬 Received request to create GitPOAP - GitHub handle: ${githubHandle}, Name: ${formData.name} Email:${formData.email}. Use DynaList to view details`;
 
   await sendOnboardingMessage(msg);
 };
