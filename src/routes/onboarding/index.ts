@@ -23,7 +23,7 @@ import { getMappedOrgRepo, getMappedPrRepo, getMappedRepo } from './utils';
 import { publicPRsQuery } from './queries';
 import { createIntakeFormDocForDynamo, createUpdateItemParamsForImages } from './dynamo';
 import { getRequestLogger } from '../../middleware/loggingAndTiming';
-import { sentInternalOnboardingMessage } from '../../external/slack';
+import { sendInternalOnboardingMessage } from '../../external/slack';
 
 export const onboardingRouter = Router();
 
@@ -153,7 +153,7 @@ onboardingRouter.post<'/intake-form', any, any, IntakeForm>(
     }
 
     /* Send message to slack */
-    void sentInternalOnboardingMessage(githubHandle, req.body);
+    void sendInternalOnboardingMessage(githubHandle, req.body);
 
     logger.info(
       `Successfully submitted intake form for GitHub user - ${githubHandle} and email - ${req.body.email}`,
