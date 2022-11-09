@@ -10,7 +10,6 @@ import {
   createClaimsForPR,
 } from '../../../../src/lib/bot';
 import {
-  ClaimData,
   retrieveClaimsCreatedByPR,
   retrieveClaimsCreatedByMention,
 } from '../../../../src/lib/claims';
@@ -18,6 +17,7 @@ import { generateAuthTokens } from '../../../../src/lib/authTokens';
 import { ADMIN_ADDRESSES } from '../../../../src/constants';
 import { ADDRESSES } from '../../../../prisma/constants';
 import { ClaimStatus, GitPOAPType } from '@prisma/client';
+import { ClaimData } from '../../../../src/types/claims';
 
 jest.mock('../../../../src/logging');
 jest.mock('../../../../src/external/github');
