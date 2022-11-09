@@ -943,7 +943,7 @@ describe('PATCH /gitpoaps/custom/:gitPOAPRequestId', () => {
       expect(contextMock.prisma.gitPOAPRequest.update).toHaveBeenCalledTimes(1);
       expect(contextMock.prisma.gitPOAPRequest.update).toHaveBeenCalledWith({
         where: { id: gitPOAPRequestId },
-        data: { name, description },
+        data: { name, description, adminApprovalStatus: AdminApprovalStatus.PENDING },
       });
     }
     {
@@ -956,7 +956,7 @@ describe('PATCH /gitpoaps/custom/:gitPOAPRequestId', () => {
       expect(contextMock.prisma.gitPOAPRequest.update).toHaveBeenCalledTimes(2);
       expect(contextMock.prisma.gitPOAPRequest.update).toHaveBeenLastCalledWith({
         where: { id: gitPOAPRequestId },
-        data: { country },
+        data: { country, adminApprovalStatus: AdminApprovalStatus.PENDING },
       });
     }
     {
@@ -969,7 +969,7 @@ describe('PATCH /gitpoaps/custom/:gitPOAPRequestId', () => {
       expect(contextMock.prisma.gitPOAPRequest.update).toHaveBeenCalledTimes(3);
       expect(contextMock.prisma.gitPOAPRequest.update).toHaveBeenLastCalledWith({
         where: { id: gitPOAPRequestId },
-        data: { city },
+        data: { city, adminApprovalStatus: AdminApprovalStatus.PENDING },
       });
     }
 
