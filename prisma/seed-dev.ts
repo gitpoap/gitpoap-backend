@@ -26,7 +26,7 @@ import { ADDRESSES, GH_HANDLES, GH_IDS } from './constants';
 import { TEAM_EMAIL } from '../src/constants';
 
 import * as data from './data';
-import { AdminApprovalStatus } from '@prisma/client';
+import { AdminApprovalStatus, GitPOAPType } from '@prisma/client';
 import { getS3URL } from '../src/external/s3';
 
 export const seed = async () => {
@@ -132,6 +132,41 @@ export const seed = async () => {
   const gitpoap23 = await GitPOAPFactory.createFromEvent(handcuffsProject.id, data.event54113, GitPOAPStatus.APPROVED, true);
   const gitpoap24 = await GitPOAPFactory.createFromEvent(handcuffsProject.id, data.event54114, GitPOAPStatus.APPROVED, true);
 
+  // Create CUSTOM GitPOAPs
+  const gitpoap25 = await GitPOAPFactory.createFromEvent(
+    frontendProject.id,
+    data.event67501,
+    GitPOAPStatus.APPROVED,
+    true,
+    undefined,
+    undefined,
+    true,
+    GitPOAPType.CUSTOM,
+    addressAldo.id,
+  );
+  const gitpoap26 = await GitPOAPFactory.createFromEvent(
+    frontendProject.id,
+    data.event43356,
+    GitPOAPStatus.APPROVED,
+    true,
+    undefined,
+    undefined,
+    true,
+    GitPOAPType.CUSTOM,
+    addressBurz.id,
+  );
+  const gitpoap27 = await GitPOAPFactory.createFromEvent(
+    backendProject.id,
+    data.event60695,
+    GitPOAPStatus.APPROVED,
+    true,
+    undefined,
+    undefined,
+    true,
+    GitPOAPType.CUSTOM,
+    addressJay.id,
+  );
+
   /* Add codes */
   await RedeemCodeFactory.addRedeemCodes(['6j8wda', 'tqaq9y', 'd4tdh0', 'o9uorf', 'eeyewe', '09wqld', 'tsl7wt', 'i52wvt', 'mshofb', 'v9cbcd'], gitpoap7.id);
   await RedeemCodeFactory.addRedeemCodes(['7s4dn3', 'q9237f', 'd0e21q', 'qzaj5c', 'ozy2c9', 'p7yqjo', 'cgsevm', 'hou5kq', 'j6sxom', '058qv8'], gitpoap8.id);
@@ -204,6 +239,30 @@ export const seed = async () => {
   // GitPOAP 18 - Deprecated
   const claim42 = await ClaimFactory.create(gitpoap18.id, burz.id, ClaimStatus.CLAIMED, addressBurz.id, '77777', DateTime.utc(2019, 12, 11).toJSDate());
   const claim43 = await ClaimFactory.create(gitpoap18.id, kayleen.id, ClaimStatus.CLAIMED, addressKayleen.id, '77778', DateTime.utc(2019, 12, 11).toJSDate());
+
+  // GitPOAP25
+  const claim44 = await ClaimFactory.create(gitpoap25.id, burz.id, ClaimStatus.CLAIMED, addressBurz.id, '100', DateTime.utc(2022, 4, 5).toJSDate());
+  const claim45 = await ClaimFactory.create(gitpoap25.id, jay.id, ClaimStatus.CLAIMED, addressJay.id, '101', DateTime.utc(2020, 1, 5).toJSDate());
+  const claim46 = await ClaimFactory.create(gitpoap25.id, aldo.id, ClaimStatus.CLAIMED, addressAldo.id, '102', DateTime.utc().minus({ days: 2 }).toJSDate());
+  const claim46a = await ClaimFactory.create(gitpoap25.id, kayleen.id, ClaimStatus.UNCLAIMED);
+  const claim46b = await ClaimFactory.create(gitpoap25.id, tyler.id, ClaimStatus.UNCLAIMED);
+  const claim46c = await ClaimFactory.create(gitpoap25.id, colfax.id, ClaimStatus.UNCLAIMED);
+
+  // GitPOAP 26
+  const claim47 = await ClaimFactory.create(gitpoap26.id, burz.id, ClaimStatus.CLAIMED, addressBurz.id, '103', DateTime.utc(2022, 4, 5).toJSDate());
+  const claim48 = await ClaimFactory.create(gitpoap26.id, jay.id, ClaimStatus.CLAIMED, addressJay.id, '104', DateTime.utc(2020, 1, 5).toJSDate());
+  const claim49 = await ClaimFactory.create(gitpoap26.id, aldo.id, ClaimStatus.CLAIMED, addressAldo.id, '105', DateTime.utc().minus({ days: 2 }).toJSDate());
+  const claim49a = await ClaimFactory.create(gitpoap26.id, kayleen.id, ClaimStatus.UNCLAIMED);
+  const claim49b = await ClaimFactory.create(gitpoap26.id, tyler.id, ClaimStatus.UNCLAIMED);
+  const claim49c = await ClaimFactory.create(gitpoap26.id, colfax.id, ClaimStatus.UNCLAIMED);
+
+  // GitPOAP 27
+  const claim50 = await ClaimFactory.create(gitpoap27.id, burz.id, ClaimStatus.CLAIMED, addressBurz.id, '106', DateTime.utc(2022, 4, 5).toJSDate());
+  const claim51 = await ClaimFactory.create(gitpoap27.id, jay.id, ClaimStatus.CLAIMED, addressJay.id, '107', DateTime.utc(2020, 1, 5).toJSDate());
+  const claim52 = await ClaimFactory.create(gitpoap27.id, aldo.id, ClaimStatus.CLAIMED, addressAldo.id, '108', DateTime.utc().minus({ days: 2 }).toJSDate());
+  const claim52a = await ClaimFactory.create(gitpoap27.id, kayleen.id, ClaimStatus.UNCLAIMED);
+  const claim52b = await ClaimFactory.create(gitpoap27.id, tyler.id, ClaimStatus.UNCLAIMED);
+  const claim52c = await ClaimFactory.create(gitpoap27.id, colfax.id, ClaimStatus.UNCLAIMED);
 
   /* Create Profiles */
   const profile1 = await ProfileFactory.create(addressColfax.id, 'I like brisket.');
