@@ -79,13 +79,19 @@ export const sendInternalGitPOAPRequestMessage = async ({
   description,
 }: GitPOAPRequest) => {
   const gitPOAPRequestLink = `${GITPOAP_URL}/admin/gitpoap/requests?search=${id}`;
-  const msg = `📬 Received request to create GitPOAP - Request ID: ${id}, Name: ${name} Description:${description}. View ${gitPOAPRequestLink} to view more information`;
+  const msg = `📬 Received request to create a Custom GitPOAP! View ${gitPOAPRequestLink} to view more information.
+* Request ID: ${id}
+* Name: ${name}
+* Description: ${description}`;
 
   await sendGitPOAPRequestMessage(msg);
 };
 
 export const sendInternalOnboardingMessage = async (githubHandle: string, formData: IntakeForm) => {
-  const msg = `📬 Received request to create GitPOAP - GitHub handle: ${githubHandle}, Name: ${formData.name} Email:${formData.email}. Use DynaList to view details`;
+  const msg = `📬 Received request to onboard a new project to GitPOAP! Use DynaList to view details.
+* GitHub handle: ${githubHandle}
+* Name: ${formData.name}
+* Email: ${formData.email}`;
 
   await sendOnboardingMessage(msg);
 };
