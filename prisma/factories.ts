@@ -228,11 +228,13 @@ export class GitPOAPFactory {
     poapEventId: number,
     projectId: number,
     poapSecret: string,
+    type: GitPOAPType,
     poapApprovalStatus?: GitPOAPStatus,
     ongoing?: boolean,
     level?: number,
     threshold?: number,
     isEnabled?: boolean,
+    creatorAddressId?: number,
   ): Promise<GitPOAP> => {
     const data: Prisma.GitPOAPCreateInput = {
       name,
@@ -246,11 +248,17 @@ export class GitPOAPFactory {
       level,
       threshold,
       isEnabled,
+      type,
       project: {
         connect: {
           id: projectId,
         },
       },
+      creatorAddress: creatorAddressId
+        ? {
+            connect: { id: creatorAddressId },
+          }
+        : undefined,
     };
     const gitPOAP = await prisma.gitPOAP.create({ data });
     logger.debug(`Creating gitPOAP with id: ${gitPOAP.id}`);
@@ -266,6 +274,8 @@ export class GitPOAPFactory {
     level?: number,
     threshold?: number,
     isEnabled?: boolean,
+    type: GitPOAPType = GitPOAPType.ANNUAL,
+    creatorAddressId?: number,
   ): Promise<GitPOAP> => {
     return await GitPOAPFactory.create(
       event.name,
@@ -275,11 +285,13 @@ export class GitPOAPFactory {
       event.id,
       projectId,
       generatePOAPSecret(),
+      type,
       status,
       ongoing,
       level,
       threshold,
       isEnabled,
+      creatorAddressId,
     );
   };
 }

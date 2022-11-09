@@ -53,13 +53,17 @@ let eventsCache: Record<string, any> = {
   37428: events.event37428,
   37429: events.event37429,
   37430: events.event37430,
+  43356: events.event43356,
   71781: events.event71781,
   71783: events.event71783,
   71784: events.event71784,
   54112: events.event54112,
   54113: events.event54113,
   54114: events.event54114,
+  60695: events.event60695,
+  67501: events.event67501,
 };
+
 let nextEventId = 900000;
 
 let tokensCache: Record<string, any> = {
