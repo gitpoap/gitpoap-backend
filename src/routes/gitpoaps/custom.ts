@@ -24,7 +24,7 @@ import { parseJSON } from '../../lib/json';
 import { getAccessTokenPayload } from '../../types/authTokens';
 import { sendInternalGitPOAPRequestMessage } from '../../external/slack';
 import { convertContributorsFromSchema, createClaimsForContributors } from '../../lib/gitpoaps';
-import { deleteGitPOAPRequest, updateGitPOAPRequestStatus } from '../../lib/gitpoapRequests';
+import { updateGitPOAPRequestStatus } from '../../lib/gitpoapRequests';
 import { getRequestLogger } from '../../middleware/loggingAndTiming';
 import { GITPOAP_ISSUER_EMAIL } from '../../constants';
 import { upsertEmail } from '../../lib/emails';
@@ -290,8 +290,10 @@ customGitPOAPsRouter.put('/approve/:id', jwtWithAdminAddress(), async (req, res)
   }
   logger.info(`Created ${claimsCount} Claims for GitPOAP Request with ID: ${gitPOAPRequestId}`);
 
-  /* Delete the GitPOAPRequest */
+  /* TODO: reenable after POAP fixes their issues with dates
+  // Delete the GitPOAPRequest
   await deleteGitPOAPRequest(gitPOAPRequest.id);
+  */
 
   logger.debug(
     `Completed admin request to create GitPOAP from GitPOAPRequest ID ${gitPOAPRequestId}`,

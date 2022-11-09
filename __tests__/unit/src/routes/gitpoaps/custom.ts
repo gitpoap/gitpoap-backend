@@ -385,10 +385,12 @@ describe('PUT /gitpoaps/custom/approve/:id', () => {
       },
     });
 
+    /* TODO: reenable after POAP fixes their issues with dates
     expect(contextMock.prisma.gitPOAPRequest.delete).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.gitPOAPRequest.delete).toHaveBeenCalledWith({
       where: { id: gitPOAPRequestId },
     });
+    */
   });
 });
 
