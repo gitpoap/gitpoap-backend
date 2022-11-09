@@ -21,6 +21,7 @@ import {
   sendGitPOAPRequestConfirmationEmail,
   sendGitPOAPRequestRejectionEmail,
 } from '../../../../../src/external/postmark';
+import { createPOAPEvent } from '../../../../../src/external/poap';
 
 const authTokenId = 4;
 const authTokenGeneration = 1;
@@ -93,11 +94,9 @@ jest.mock('../../../../../src/lib/secrets', () => ({
   generatePOAPSecret: jest.fn().mockReturnValue('123423123'),
 }));
 
-jest.mock('../../../../../src/external/poap', () => ({
-  createPOAPEvent: jest
-    .fn()
-    .mockResolvedValue({ id: 1, image_url: 'https://poap.xyz', poapEventId: 1 }),
-}));
+jest.mock('../../../../../src/external/poap');
+
+const mockedCreatePOAPEvent = jest.mocked(createPOAPEvent, true);
 
 jest.mock('multer', () =>
   jest.fn().mockReturnValue(
@@ -242,6 +241,67 @@ describe('PUT /gitpoaps/custom/approve/:id', () => {
     });
   });
 
+  it('Resets the GitPOAPRequest to PENDING if POAP API creation fails', async () => {
+    mockedGetImageBufferFromS3URL.mockResolvedValue(Buffer.from(''));
+    mockJwtWithAddress();
+
+    contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue({
+      id: gitPOAPRequestId,
+      type: GitPOAPType.CUSTOM,
+      adminApprovalStatus: AdminApprovalStatus.PENDING,
+      description: 'foobar',
+      imageUrl: getS3URL('gitpoap-request-images-test', 'foobar-123456789.png'),
+      isEnabled: true,
+      isPRBased: false,
+      name: 'foobar',
+      ongoing: true,
+      year: 2021,
+      addressId,
+      creatorEmailId,
+    } as any);
+
+    contextMock.prisma.gitPOAPRequest.update.mockResolvedValue({
+      id: gitPOAPRequestId,
+      type: GitPOAPType.CUSTOM,
+      adminApprovalStatus: AdminApprovalStatus.APPROVED,
+    } as any);
+
+    mockedCreatePOAPEvent.mockResolvedValue(null);
+
+    const authTokens = genAuthTokens(ADMIN_ADDRESSES[0]);
+
+    const result = await request(await setupApp())
+      .put(`/gitpoaps/custom/approve/${gitPOAPRequestId}`)
+      .set('Authorization', `Bearer ${authTokens.accessToken}`)
+      .send();
+
+    expect(result.statusCode).toEqual(500);
+    expect(contextMock.prisma.authToken.findUnique).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.gitPOAPRequest.findUnique).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.gitPOAPRequest.findUnique).toHaveBeenCalledWith({
+      where: { id: gitPOAPRequestId },
+    });
+
+    expect(contextMock.prisma.gitPOAP.create).toHaveBeenCalledTimes(0);
+
+    /* Updates the GitPOAP Request record in the DB and resets it */
+    expect(contextMock.prisma.gitPOAPRequest.update).toHaveBeenCalledTimes(2);
+    expect(contextMock.prisma.gitPOAPRequest.update).toHaveBeenNthCalledWith(1, {
+      where: { id: gitPOAPRequestId },
+      data: {
+        adminApprovalStatus: AdminApprovalStatus.APPROVED,
+      },
+    });
+    expect(contextMock.prisma.gitPOAPRequest.update).toHaveBeenNthCalledWith(2, {
+      where: { id: gitPOAPRequestId },
+      data: {
+        adminApprovalStatus: AdminApprovalStatus.PENDING,
+      },
+    });
+
+    expect(mockedCreatePOAPEvent).toHaveBeenCalledTimes(1);
+  });
+
   it('Creates the POAP via the POAP API', async () => {
     mockedGetImageBufferFromS3URL.mockResolvedValue(Buffer.from(''));
     mockJwtWithAddress();
@@ -267,6 +327,8 @@ describe('PUT /gitpoaps/custom/approve/:id', () => {
       adminApprovalStatus: AdminApprovalStatus.APPROVED,
     } as any);
 
+    mockedCreatePOAPEvent.mockResolvedValue({ id: 1, image_url: 'https://poap.xyz' } as any);
+
     contextMock.prisma.gitPOAP.create.mockResolvedValue({
       id: gitPOAPId,
       gitPOAPRequestId,
@@ -286,6 +348,8 @@ describe('PUT /gitpoaps/custom/approve/:id', () => {
     expect(contextMock.prisma.gitPOAPRequest.findUnique).toHaveBeenCalledWith({
       where: { id: gitPOAPRequestId },
     });
+
+    expect(mockedCreatePOAPEvent).toHaveBeenCalledTimes(1);
 
     /* Creates a new GitPOAP record in the DB */
     expect(contextMock.prisma.gitPOAP.create).toHaveBeenCalledTimes(1);
