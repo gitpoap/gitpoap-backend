@@ -13,12 +13,8 @@ import {
   uploadMulterFile,
 } from '../../../../../src/external/s3';
 import { DateTime } from 'luxon';
-import { ADMIN_ADDRESSES } from '../../../../../src/constants';
-import {
-  ADDRESSES,
-  CUSTOM_GITPOAP_MINIMUM_CODES,
-  GH_HANDLES,
-} from '../../../../../prisma/constants';
+import { ADMIN_ADDRESSES, CUSTOM_GITPOAP_MINIMUM_CODES } from '../../../../../src/constants';
+import { ADDRESSES, GH_HANDLES } from '../../../../../prisma/constants';
 import { upsertEmail } from '../../../../../src/lib/emails';
 import {
   sendGitPOAPRequestEmail,
@@ -975,7 +971,24 @@ describe('PATCH /gitpoaps/custom/:gitPOAPRequestId', () => {
         data: { city, adminApprovalStatus: AdminApprovalStatus.PENDING },
       });
     }
+    {
+      const contributors = {};
+      const result = await request(await setupApp())
+        .patch(`/gitpoaps/custom/${gitPOAPRequestId}`)
+        .set('Authorization', `Bearer ${authTokens.accessToken}`)
+        .send({ data: { contributors } });
+      expect(result.statusCode).toEqual(200);
+      expect(contextMock.prisma.gitPOAPRequest.update).toHaveBeenCalledTimes(4);
+      expect(contextMock.prisma.gitPOAPRequest.update).toHaveBeenLastCalledWith({
+        where: { id: gitPOAPRequestId },
+        data: {
+          contributors,
+          numRequestedCodes: CUSTOM_GITPOAP_MINIMUM_CODES,
+          adminApprovalStatus: AdminApprovalStatus.PENDING,
+        },
+      });
+    }
 
-    expectFindUniqueCalls(3);
+    expectFindUniqueCalls(4);
   });
 });
