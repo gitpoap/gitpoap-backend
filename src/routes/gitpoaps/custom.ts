@@ -24,7 +24,7 @@ import { parseJSON } from '../../lib/json';
 import { getAccessTokenPayload } from '../../types/authTokens';
 import { sendInternalGitPOAPRequestMessage } from '../../external/slack';
 import { convertContributorsFromSchema, createClaimsForContributors } from '../../lib/gitpoaps';
-import { deleteGitPOAPRequest } from '../../lib/gitpoapRequests';
+import { deleteGitPOAPRequest, updateGitPOAPRequestStatus } from '../../lib/gitpoapRequests';
 import { getRequestLogger } from '../../middleware/loggingAndTiming';
 import { GITPOAP_ISSUER_EMAIL } from '../../constants';
 import { upsertEmail } from '../../lib/emails';
@@ -242,12 +242,10 @@ customGitPOAPsRouter.put('/approve/:id', jwtWithAdminAddress(), async (req, res)
   }
 
   /* Update the GitPOAPRequest to APPROVED */
-  const updatedGitPOAPRequest = await context.prisma.gitPOAPRequest.update({
-    where: { id: gitPOAPRequestId },
-    data: {
-      adminApprovalStatus: AdminApprovalStatus.APPROVED,
-    },
-  });
+  const updatedGitPOAPRequest = await updateGitPOAPRequestStatus(
+    gitPOAPRequestId,
+    AdminApprovalStatus.APPROVED,
+  );
 
   logger.info(`Marking GitPOAP Request with ID:${gitPOAPRequestId} as APPROVED.`);
 
@@ -270,6 +268,8 @@ customGitPOAPsRouter.put('/approve/:id', jwtWithAdminAddress(), async (req, res)
 
   if (poapInfo === null) {
     logger.error('Failed to create event via POAP API');
+    // Set back to pending so we can possibly re-approve
+    await updateGitPOAPRequestStatus(gitPOAPRequestId, AdminApprovalStatus.PENDING);
     return res.status(500).send({ msg: 'Failed to create POAP via API' });
   }
 
