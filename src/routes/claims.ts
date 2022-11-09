@@ -442,7 +442,7 @@ claimsRouter.post(
         }
       }
 
-      if (wasEarnedByMention) {
+      if (wasEarnedByMention && newClaims.length > 0) {
         void sendInternalClaimByMentionMessage(
           organization,
           repo,
@@ -512,7 +512,9 @@ claimsRouter.post(
         }
       }
 
-      void sendInternalClaimByMentionMessage(organization, repo, { issueNumber }, newClaims);
+      if (newClaims.length > 0) {
+        void sendInternalClaimByMentionMessage(organization, repo, { issueNumber }, newClaims);
+      }
 
       logger.debug(
         `Completed request to create claim for mention in Issue #${issueNumber} on "${organization}/${repo}"`,

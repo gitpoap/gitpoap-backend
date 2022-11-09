@@ -18,17 +18,23 @@ import { ADMIN_ADDRESSES } from '../../../../src/constants';
 import { ADDRESSES } from '../../../../prisma/constants';
 import { ClaimStatus, GitPOAPType } from '@prisma/client';
 import { ClaimData } from '../../../../src/types/claims';
+import { sendInternalClaimByMentionMessage } from '../../../../src/external/slack';
 
 jest.mock('../../../../src/logging');
 jest.mock('../../../../src/external/github');
 jest.mock('../../../../src/lib/bot');
 jest.mock('../../../../src/lib/claims');
+jest.mock('../../../../src/external/slack');
 
 const mockedGetGithubAuthenticatedApp = jest.mocked(getGithubAuthenticatedApp, true);
 const mockedCreateClaimsForPR = jest.mocked(createClaimsForPR, true);
 const mockedCreateClaimsForIssue = jest.mocked(createClaimsForIssue, true);
 const mockedRetrieveClaimsCreatedByPR = jest.mocked(retrieveClaimsCreatedByPR, true);
 const mockedRetrieveClaimsCreatedByMention = jest.mocked(retrieveClaimsCreatedByMention, true);
+const mockedSendInternalClaimByMentionMessage = jest.mocked(
+  sendInternalClaimByMentionMessage,
+  true,
+);
 
 const botJWTToken = 'foobar2';
 const contributorId = 2;
@@ -428,6 +434,14 @@ describe('POST /claims/gitpoap-bot/create', () => {
 
     expect(mockedRetrieveClaimsCreatedByMention).toHaveBeenCalledTimes(1);
     expect(mockedRetrieveClaimsCreatedByMention).toHaveBeenCalledWith(contributionId);
+
+    expect(mockedSendInternalClaimByMentionMessage).toHaveBeenCalledTimes(1);
+    expect(mockedSendInternalClaimByMentionMessage).toHaveBeenCalledWith(
+      issue.organization,
+      issue.repo,
+      { issueNumber: issue.issueNumber },
+      [claim],
+    );
   });
 
   it("Filters out non-mentioned user's claims", async () => {
