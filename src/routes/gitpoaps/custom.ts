@@ -24,7 +24,10 @@ import { parseJSON } from '../../lib/json';
 import { getAccessTokenPayload } from '../../types/authTokens';
 import { sendInternalGitPOAPRequestMessage } from '../../external/slack';
 import { convertContributorsFromSchema, createClaimsForContributors } from '../../lib/gitpoaps';
-import { updateGitPOAPRequestStatus } from '../../lib/gitpoapRequests';
+import {
+  chooseNumberOfRequestedCodes,
+  updateGitPOAPRequestStatus,
+} from '../../lib/gitpoapRequests';
 import { getRequestLogger } from '../../middleware/loggingAndTiming';
 import { GITPOAP_ISSUER_EMAIL } from '../../constants';
 import { upsertEmail } from '../../lib/emails';
@@ -159,6 +162,7 @@ customGitPOAPsRouter.post(
     const email = await upsertEmail(schemaResult.data.creatorEmail);
 
     const { addressId } = getAccessTokenPayload(req.user);
+
     const gitPOAPRequest = await context.prisma.gitPOAPRequest.create({
       data: {
         name: schemaResult.data.name,
@@ -170,7 +174,7 @@ customGitPOAPsRouter.post(
         endDate,
         expiryDate,
         eventUrl: schemaResult.data.eventUrl,
-        numRequestedCodes: parseInt(schemaResult.data.numRequestedCodes, 10),
+        numRequestedCodes: chooseNumberOfRequestedCodes(contributors),
         project: project ? { connect: { id: project?.id } } : undefined,
         organization: organization ? { connect: { id: organization?.id } } : undefined,
         ongoing: true,

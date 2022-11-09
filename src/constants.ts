@@ -68,3 +68,6 @@ export const PRODUCT_NAME = 'GitPOAP';
 export const GITPOAP_DOC_URL = 'https://docs.gitpoap.io';
 
 export const IS_PROD = NODE_ENV === 'production';
+
+export const CUSTOM_GITPOAP_MINIMUM_CODES = 20;
+export const CUSTOM_GITPOAP_CODE_BUFFER = 5;
