@@ -16,7 +16,7 @@ const server = createServer(async (req: IncomingMessage, res) => {
   if (req.url) {
     const route = parse(req.url).pathname;
 
-    if (route == '/metrics') {
+    if (route === '/metrics') {
       res.setHeader('Content-Type', register.contentType);
 
       res.end(await register.metrics());

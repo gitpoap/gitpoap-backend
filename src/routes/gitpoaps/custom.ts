@@ -265,7 +265,7 @@ customGitPOAPsRouter.put('/approve/:id', jwtWithAdminAddress(), async (req, res)
     num_requested_codes: gitPOAPRequest.numRequestedCodes,
   });
 
-  if (poapInfo == null) {
+  if (poapInfo === null) {
     logger.error('Failed to create event via POAP API');
     return res.status(500).send({ msg: 'Failed to create POAP via API' });
   }
