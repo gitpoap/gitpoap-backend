@@ -432,6 +432,7 @@ customGitPOAPsRouter.patch('/:gitPOAPRequestId', jwtWithAddress(), async (req, r
     endDate: maybeParseDate(schemaResult.data.data.endDate),
     expiryDate: maybeParseDate(schemaResult.data.data.expiryDate),
     contributors,
+    adminApprovalStatus: AdminApprovalStatus.PENDING,
   };
 
   await context.prisma.gitPOAPRequest.update({
