@@ -39,6 +39,7 @@
     "jest/valid-expect": "error",
     "jest/no-mocks-import": 0,
     "jest/expect-expect": ["error", { "assertFunctionNames": ["expect*"] }],
-    "object-shorthand": ["error", "always"]
+    "object-shorthand": ["error", "always"],
+    "eqeqeq": "error"
   }
 }
