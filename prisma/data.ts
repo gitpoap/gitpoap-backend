@@ -505,3 +505,56 @@ export const event54114: POAPEvent = {
   expiry_date: '01-Apr-2023',
   supply: 50,
 };
+
+/* Real POAP - Test Custom GitPOAP 1 - I Met Lefteris Devcon 2022*/
+export const event67501: POAPEvent = {
+  id: 67501,
+  fancy_id: 'i-met-lefteriseth-at-devcon-6-2022',
+  name: 'I met lefteris.eth at Devcon 6',
+  event_url: 'https://devcon.org/',
+  image_url: 'https://assets.poap.xyz/i-met-lefteriseth-at-devcon-6-2022-logo-1664211888764.png',
+  country: 'Colombia',
+  city: 'Bogotá',
+  description:
+    'This POAP proves that the bearer met lefteris.eth at Devcon 6 and scanned their ENS card.',
+  year: 2022,
+  start_date: '11-Oct-2022',
+  end_date: '14-Oct-2022',
+  expiry_date: '15-Oct-2022',
+  supply: 50,
+};
+
+/* Real POAP - Test Custom GitPOAP 2 - Ethereum RIO */
+export const event43356: POAPEvent = {
+  id: 43356,
+  fancy_id: 'ethereumrio-2022-main-event-2022',
+  name: 'Ethereum.Rio 2022 - Main Event',
+  event_url: 'https://www.ethereum.rio/',
+  image_url: 'https://assets.poap.xyz/ethereumrio-2022-main-event-2022-logo-1652026934119.png',
+  country: 'Brazil ',
+  city: 'Rio de Janeiro',
+  description:
+    'To celebrate the success of Ethereum Rio 2022 we created an exclusive collection of Official Ethereum.Rio POAPs for everyone who collaborated with the project.',
+  year: 2022,
+  start_date: '11-Mar-2022',
+  end_date: '11-Mar-2022',
+  expiry_date: '08-Jun-2022',
+  supply: 50,
+};
+
+/* Real POAP - Test Custom GitPOAP 3 - Devcon in Bogota */
+export const event60695: POAPEvent = {
+  id: 60695,
+  fancy_id: 'devcon-vi-in-bogota-2022',
+  name: 'Devcon VI in Bogotá',
+  event_url: 'https://devcon.org/en/',
+  image_url: 'https://assets.poap.xyz/devcon-vi-in-bogota-2022-logo-1663685440265.png',
+  country: 'Colombia',
+  city: 'Bogotá',
+  description: 'This POAP  proves you have attended Devcon VI, Bogotá, October 11-14, 2022.',
+  year: 2022,
+  start_date: '11-Oct-2022',
+  end_date: '14-Oct-2022',
+  expiry_date: '11-Nov-2022',
+  supply: 50,
+};
