@@ -33,6 +33,7 @@ import {
   sendGitPOAPRequestRejectionEmail,
 } from '../../external/postmark';
 import { GitPOAPRequestEmailForm } from '../../types/gitpoaps';
+import path from 'path';
 
 export const customGitPOAPsRouter = Router();
 
@@ -145,7 +146,9 @@ customGitPOAPsRouter.post(
     const bucket = s3configProfile.buckets.gitPOAPRequestImages;
 
     try {
-      imageKey = `${image.originalname}-${timestamp}`;
+      const extension = path.extname(image.originalname);
+      const originalName = path.basename(image.originalname, extension);
+      imageKey = `${originalName}-${timestamp}${extension}`;
       await uploadMulterFile(image, bucket, imageKey);
       logger.info(`Uploaded image with imageKey: ${imageKey} to S3 bucket ${bucket}`);
     } catch (err) {
