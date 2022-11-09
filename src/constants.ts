@@ -69,5 +69,11 @@ export const GITPOAP_DOC_URL = 'https://docs.gitpoap.io';
 
 export const IS_PROD = NODE_ENV === 'production';
 
+// The absolute minimum codes we will request for a Custom GitPOAP
 export const CUSTOM_GITPOAP_MINIMUM_CODES = 20;
+// The buffer of codes we will add to the count of
+// contributors for a Custom GitPOAP
 export const CUSTOM_GITPOAP_CODE_BUFFER = 5;
+// The maximum number of codes we will request to start
+// out with from POAP for a Custom GitPOAP
+export const CUSTOM_GITPOAP_MAX_STARTING_CODES = 100;
