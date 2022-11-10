@@ -739,10 +739,8 @@ describe('POST /gitpoaps/custom', () => {
 =======
       type: GitPOAPType.CUSTOM,
       adminApprovalStatus: AdminApprovalStatus.PENDING,
-      description: 'foobar',
       isEnabled: true,
       isPRBased: false,
-      name: 'foobar-name',
       ongoing: true,
       year: 2021,
       imageUrl: getS3URL('gitpoap-request-images-test', 'foobar.png-123456789'),
