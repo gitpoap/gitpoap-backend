@@ -841,6 +841,8 @@ input GitPOAPWhereInput {
   creatorAddress: AddressRelationFilter
   creatorEmailId: IntNullableFilter
   creatorEmail: EmailRelationFilter
+  gitPOAPRequestId: IntNullableFilter
+  gitPOAPRequest: GitPOAPRequestRelationFilter
 }
 
 input EnumGitPOAPTypeFilter {
@@ -1007,6 +1009,7 @@ input GitPOAPRequestWhereInput {
   adminApprovalStatus: EnumAdminApprovalStatusFilter
   addressId: IntFilter
   address: AddressRelationFilter
+  gitPOAP: GitPOAPListRelationFilter
 }
 
 input EventRelationFilter {
@@ -1236,6 +1239,11 @@ input GitPOAPRelationFilter {
   isNot: GitPOAPWhereInput
 }
 
+input GitPOAPRequestRelationFilter {
+  is: GitPOAPRequestWhereInput
+  isNot: GitPOAPRequestWhereInput
+}
+
 input ProfileRelationFilter {
   is: ProfileWhereInput
   isNot: ProfileWhereInput
@@ -1436,6 +1444,8 @@ input GitPOAPOrderByWithRelationInput {
   creatorAddress: AddressOrderByWithRelationInput
   creatorEmailId: SortOrder
   creatorEmail: EmailOrderByWithRelationInput
+  gitPOAPRequestId: SortOrder
+  gitPOAPRequest: GitPOAPRequestOrderByWithRelationInput
 }
 
 input ProjectOrderByWithRelationInput {
@@ -1486,6 +1496,40 @@ input EventOrderByWithRelationInput {
   siteUrl: SortOrder
   gitPOAPs: GitPOAPOrderByRelationAggregateInput
   gitPOAPRequests: GitPOAPRequestOrderByRelationAggregateInput
+}
+
+input GitPOAPRequestOrderByWithRelationInput {
+  id: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  type: SortOrder
+  startDate: SortOrder
+  endDate: SortOrder
+  expiryDate: SortOrder
+  eventUrl: SortOrder
+  creatorEmailId: SortOrder
+  creatorEmail: EmailOrderByWithRelationInput
+  name: SortOrder
+  numRequestedCodes: SortOrder
+  imageUrl: SortOrder
+  description: SortOrder
+  year: SortOrder
+  projectId: SortOrder
+  project: ProjectOrderByWithRelationInput
+  organizationId: SortOrder
+  organization: OrganizationOrderByWithRelationInput
+  ongoing: SortOrder
+  eventId: SortOrder
+  event: EventOrderByWithRelationInput
+  level: SortOrder
+  threshold: SortOrder
+  isPRBased: SortOrder
+  isEnabled: SortOrder
+  contributors: SortOrder
+  adminApprovalStatus: SortOrder
+  addressId: SortOrder
+  address: AddressOrderByWithRelationInput
+  gitPOAP: GitPOAPOrderByRelationAggregateInput
 }
 
 input GithubPullRequestOrderByWithRelationInput {
@@ -1646,6 +1690,7 @@ type GitPOAP {
   isEnabled: Boolean!
   creatorAddressId: Int
   creatorEmailId: Int
+  gitPOAPRequestId: Int
   _count: GitPOAPCount
   project: Project
   organization: Organization
@@ -1668,6 +1713,7 @@ type GitPOAP {
   event: Event
   creatorAddress: Address
   creatorEmail: Email
+  gitPOAPRequest: GitPOAPRequest
 }
 
 type GitPOAPCount {
@@ -1889,6 +1935,7 @@ enum GitPOAPScalarFieldEnum {
   isEnabled
   creatorAddressId
   creatorEmailId
+  gitPOAPRequestId
 }
 
 type GitPOAPRequest {
@@ -1917,11 +1964,24 @@ type GitPOAPRequest {
   contributors: JSON!
   adminApprovalStatus: AdminApprovalStatus!
   addressId: Int!
+  _count: GitPOAPRequestCount
   creatorEmail: Email!
   project: Project
   organization: Organization
   event: Event
   address: Address!
+  gitPOAP(
+    where: GitPOAPWhereInput
+    orderBy: [GitPOAPOrderByWithRelationInput!]
+    cursor: GitPOAPWhereUniqueInput
+    take: Int
+    skip: Int
+    distinct: [GitPOAPScalarFieldEnum!]
+  ): [GitPOAP!]!
+}
+
+type GitPOAPRequestCount {
+  gitPOAP: Int!
 }
 
 type Email {
@@ -1960,39 +2020,6 @@ type Event {
 type EventCount {
   gitPOAPs: Int!
   gitPOAPRequests: Int!
-}
-
-input GitPOAPRequestOrderByWithRelationInput {
-  id: SortOrder
-  createdAt: SortOrder
-  updatedAt: SortOrder
-  type: SortOrder
-  startDate: SortOrder
-  endDate: SortOrder
-  expiryDate: SortOrder
-  eventUrl: SortOrder
-  creatorEmailId: SortOrder
-  creatorEmail: EmailOrderByWithRelationInput
-  name: SortOrder
-  numRequestedCodes: SortOrder
-  imageUrl: SortOrder
-  description: SortOrder
-  year: SortOrder
-  projectId: SortOrder
-  project: ProjectOrderByWithRelationInput
-  organizationId: SortOrder
-  organization: OrganizationOrderByWithRelationInput
-  ongoing: SortOrder
-  eventId: SortOrder
-  event: EventOrderByWithRelationInput
-  level: SortOrder
-  threshold: SortOrder
-  isPRBased: SortOrder
-  isEnabled: SortOrder
-  contributors: SortOrder
-  adminApprovalStatus: SortOrder
-  addressId: SortOrder
-  address: AddressOrderByWithRelationInput
 }
 
 input GitPOAPRequestWhereUniqueInput {
@@ -2863,6 +2890,7 @@ type GitPOAPCountAggregate {
   isEnabled: Int!
   creatorAddressId: Int!
   creatorEmailId: Int!
+  gitPOAPRequestId: Int!
   _all: Int!
 }
 
@@ -2877,6 +2905,7 @@ type GitPOAPAvgAggregate {
   threshold: Float
   creatorAddressId: Float
   creatorEmailId: Float
+  gitPOAPRequestId: Float
 }
 
 type GitPOAPSumAggregate {
@@ -2890,6 +2919,7 @@ type GitPOAPSumAggregate {
   threshold: Int
   creatorAddressId: Int
   creatorEmailId: Int
+  gitPOAPRequestId: Int
 }
 
 type GitPOAPMinAggregate {
@@ -2914,6 +2944,7 @@ type GitPOAPMinAggregate {
   isEnabled: Boolean
   creatorAddressId: Int
   creatorEmailId: Int
+  gitPOAPRequestId: Int
 }
 
 type GitPOAPMaxAggregate {
@@ -2938,6 +2969,7 @@ type GitPOAPMaxAggregate {
   isEnabled: Boolean
   creatorAddressId: Int
   creatorEmailId: Int
+  gitPOAPRequestId: Int
 }
 
 type GitPOAPGroupBy {
@@ -2962,6 +2994,7 @@ type GitPOAPGroupBy {
   isEnabled: Boolean!
   creatorAddressId: Int
   creatorEmailId: Int
+  gitPOAPRequestId: Int
   _count: GitPOAPCountAggregate
   _avg: GitPOAPAvgAggregate
   _sum: GitPOAPSumAggregate
@@ -2990,6 +3023,7 @@ input GitPOAPOrderByWithAggregationInput {
   isEnabled: SortOrder
   creatorAddressId: SortOrder
   creatorEmailId: SortOrder
+  gitPOAPRequestId: SortOrder
   _count: GitPOAPCountOrderByAggregateInput
   _avg: GitPOAPAvgOrderByAggregateInput
   _max: GitPOAPMaxOrderByAggregateInput
@@ -3018,6 +3052,7 @@ input GitPOAPCountOrderByAggregateInput {
   isEnabled: SortOrder
   creatorAddressId: SortOrder
   creatorEmailId: SortOrder
+  gitPOAPRequestId: SortOrder
 }
 
 input GitPOAPAvgOrderByAggregateInput {
@@ -3031,6 +3066,7 @@ input GitPOAPAvgOrderByAggregateInput {
   threshold: SortOrder
   creatorAddressId: SortOrder
   creatorEmailId: SortOrder
+  gitPOAPRequestId: SortOrder
 }
 
 input GitPOAPMaxOrderByAggregateInput {
@@ -3054,6 +3090,7 @@ input GitPOAPMaxOrderByAggregateInput {
   isEnabled: SortOrder
   creatorAddressId: SortOrder
   creatorEmailId: SortOrder
+  gitPOAPRequestId: SortOrder
 }
 
 input GitPOAPMinOrderByAggregateInput {
@@ -3077,6 +3114,7 @@ input GitPOAPMinOrderByAggregateInput {
   isEnabled: SortOrder
   creatorAddressId: SortOrder
   creatorEmailId: SortOrder
+  gitPOAPRequestId: SortOrder
 }
 
 input GitPOAPSumOrderByAggregateInput {
@@ -3090,6 +3128,7 @@ input GitPOAPSumOrderByAggregateInput {
   threshold: SortOrder
   creatorAddressId: SortOrder
   creatorEmailId: SortOrder
+  gitPOAPRequestId: SortOrder
 }
 
 input GitPOAPScalarWhereWithAggregatesInput {
@@ -3116,6 +3155,7 @@ input GitPOAPScalarWhereWithAggregatesInput {
   isEnabled: BoolWithAggregatesFilter
   creatorAddressId: IntNullableWithAggregatesFilter
   creatorEmailId: IntNullableWithAggregatesFilter
+  gitPOAPRequestId: IntNullableWithAggregatesFilter
 }
 
 input EnumGitPOAPTypeWithAggregatesFilter {
