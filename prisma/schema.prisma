@@ -234,31 +234,18 @@ model GitPOAPRequest {
   id                  Int                 @id @default(autoincrement())
   createdAt           DateTime            @default(now())
   updatedAt           DateTime            @updatedAt
-  type                GitPOAPType         @default(ANNUAL)
   startDate           DateTime
   endDate             DateTime
-  expiryDate          DateTime
-  eventUrl            String              @db.VarChar(255)
   creatorEmailId      Int
   creatorEmail        Email               @relation(fields: [creatorEmailId], references: [id])
   name                String              @db.VarChar(255)
   numRequestedCodes   Int
   imageUrl            String
   description         String
-  year                Int
   projectId           Int?
   project             Project?            @relation(fields: [projectId], references: [id])
   organizationId      Int?
   organization        Organization?       @relation(fields: [organizationId], references: [id])
-  // If a GitPOAP is marked as ongoing then the backend will automatically
-  // request additional codes when we reach a minimum number remaining
-  ongoing             Boolean             @default(false)
-  eventId             Int?
-  event               Event?              @relation(fields: [eventId], references: [id])
-  level               Int                 @default(1)
-  threshold           Int                 @default(1)
-  isPRBased           Boolean             @default(true)
-  isEnabled           Boolean             @default(true)
   contributors        Json                @db.Json
   // Internal approval status for Custom GitPOAPs
   adminApprovalStatus AdminApprovalStatus @default(PENDING)
@@ -373,21 +360,20 @@ model GithubMention {
 }
 
 model Event {
-  id              Int              @id @default(autoincrement())
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  startDate       DateTime
-  endDate         DateTime
-  name            String           @db.VarChar(255)
-  organization    String           @db.VarChar(255)
-  description     String?
-  location        String           @db.VarChar(255)
-  imageUrl        String?          @db.VarChar(255)
-  githubHandle    String?          @db.VarChar(255)
-  twitterHandle   String?          @db.VarChar(255)
-  siteUrl         String?          @db.VarChar(255)
-  gitPOAPs        GitPOAP[]
-  gitPOAPRequests GitPOAPRequest[]
+  id            Int       @id @default(autoincrement())
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  startDate     DateTime
+  endDate       DateTime
+  name          String    @db.VarChar(255)
+  organization  String    @db.VarChar(255)
+  description   String?
+  location      String    @db.VarChar(255)
+  imageUrl      String?   @db.VarChar(255)
+  githubHandle  String?   @db.VarChar(255)
+  twitterHandle String?   @db.VarChar(255)
+  siteUrl       String?   @db.VarChar(255)
+  gitPOAPs      GitPOAP[]
 }
 
 enum GitPOAPStatus {
