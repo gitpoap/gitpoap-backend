@@ -290,7 +290,6 @@ export const seed = async () => {
     imageUrl: getS3URL('gitpoap-request-images-test', 'gitpoap-test-2.png-1666121850.987'),
     startDate: DateTime.fromISO('2022-01-01').toJSDate(),
     endDate: DateTime.fromISO('2022-01-30').toJSDate(),
-    expiryDate: DateTime.fromISO('2023-01-01').toJSDate(),
     adminApprovalStatus: AdminApprovalStatus.PENDING,
     contributors: {
       ensNames: ['peebeejay.eth'],
@@ -308,7 +307,6 @@ export const seed = async () => {
     imageUrl: getS3URL('gitpoap-request-images-test', 'gitpoap-test-1.png-1666121850.987'),
     startDate: DateTime.fromISO('2022-06-01').toJSDate(),
     endDate: DateTime.fromISO('2022-06-30').toJSDate(),
-    expiryDate: DateTime.fromISO('2023-03-01').toJSDate(),
     adminApprovalStatus: AdminApprovalStatus.PENDING,
     contributors: {
       ensNames: ['lamberti.eth'],

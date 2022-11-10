@@ -40,10 +40,6 @@ const baseGitPOAPRequest = {
   description: 'foobar-description',
   startDate: '2021-01-01',
   endDate: '2021-01-10',
-  expiryDate: '2023-01-01',
-  eventUrl: 'https://foobar.com',
-  ongoing: 'true',
-  isEnabled: 'true',
   image: {
     data: Buffer.from('foobar'),
     mimetype: 'image/png',
@@ -196,33 +192,10 @@ describe('PUT /gitpoaps/custom/approve/:id', () => {
     });
   });
 
-  it('Returns 400 if the GitPOAP Request is not of type CUSTOM', async () => {
-    mockJwtWithAddress();
-    contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue({
-      id: gitPOAPRequestId,
-      type: GitPOAPType.ANNUAL,
-      adminApprovalStatus: AdminApprovalStatus.PENDING,
-    } as any);
-    const authTokens = genAuthTokens(ADMIN_ADDRESSES[0]);
-
-    const result = await request(await setupApp())
-      .put(`/gitpoaps/custom/approve/${gitPOAPRequestId}`)
-      .set('Authorization', `Bearer ${authTokens.accessToken}`)
-      .send();
-
-    expect(result.statusCode).toEqual(400);
-    expect(contextMock.prisma.authToken.findUnique).toHaveBeenCalledTimes(1);
-    expect(contextMock.prisma.gitPOAPRequest.findUnique).toHaveBeenCalledTimes(1);
-    expect(contextMock.prisma.gitPOAPRequest.findUnique).toHaveBeenCalledWith({
-      where: { id: gitPOAPRequestId },
-    });
-  });
-
   it('Returns 200 if the GitPOAP Request is already approved', async () => {
     mockJwtWithAddress();
     contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue({
       id: gitPOAPRequestId,
-      type: GitPOAPType.CUSTOM,
       adminApprovalStatus: AdminApprovalStatus.APPROVED,
     } as any);
     const authTokens = genAuthTokens(ADMIN_ADDRESSES[0]);
@@ -246,22 +219,16 @@ describe('PUT /gitpoaps/custom/approve/:id', () => {
 
     contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue({
       id: gitPOAPRequestId,
-      type: GitPOAPType.CUSTOM,
       adminApprovalStatus: AdminApprovalStatus.PENDING,
       description: 'foobar',
       imageUrl: getS3URL('gitpoap-request-images-test', 'foobar-123456789.png'),
-      isEnabled: true,
-      isPRBased: false,
       name: 'foobar',
-      ongoing: true,
-      year: 2021,
       addressId,
       creatorEmailId,
     } as any);
 
     contextMock.prisma.gitPOAPRequest.update.mockResolvedValue({
       id: gitPOAPRequestId,
-      type: GitPOAPType.CUSTOM,
       adminApprovalStatus: AdminApprovalStatus.APPROVED,
     } as any);
 
@@ -307,22 +274,17 @@ describe('PUT /gitpoaps/custom/approve/:id', () => {
 
     contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue({
       id: gitPOAPRequestId,
-      type: GitPOAPType.CUSTOM,
       adminApprovalStatus: AdminApprovalStatus.PENDING,
       description: 'foobar',
       imageUrl: getS3URL('gitpoap-request-images-test', 'foobar-123456789.png'),
-      isEnabled: true,
-      isPRBased: false,
       name: 'foobar',
-      ongoing: true,
-      year: 2021,
       addressId,
       creatorEmailId,
+      startDate: DateTime.utc(2021, 2, 5).toJSDate(),
     } as any);
 
     contextMock.prisma.gitPOAPRequest.update.mockResolvedValue({
       id: gitPOAPRequestId,
-      type: GitPOAPType.CUSTOM,
       adminApprovalStatus: AdminApprovalStatus.APPROVED,
     } as any);
 
@@ -439,15 +401,10 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
     mockJwtWithAddress();
     contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue({
       id: gitPOAPRequestId,
-      type: GitPOAPType.CUSTOM,
       adminApprovalStatus: AdminApprovalStatus.APPROVED,
       description: 'foobar',
       imageUrl: getS3URL('gitpoap-request-images-test', 'foobar-123456789.png'),
-      isEnabled: true,
-      isPRBased: false,
       name: 'foobar',
-      ongoing: true,
-      year: 2021,
       creatorEmailId,
     } as any);
     const authTokens = genAuthTokens(ADMIN_ADDRESSES[0]);
@@ -469,15 +426,10 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
     mockJwtWithAddress();
     contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue({
       id: gitPOAPRequestId,
-      type: GitPOAPType.CUSTOM,
       adminApprovalStatus: AdminApprovalStatus.REJECTED,
       description: 'foobar',
       imageUrl: getS3URL('gitpoap-request-images-test', 'foobar-123456789.png'),
-      isEnabled: true,
-      isPRBased: false,
       name: 'foobar',
-      ongoing: true,
-      year: 2021,
     } as any);
 
     const authTokens = genAuthTokens(ADMIN_ADDRESSES[0]);
@@ -499,15 +451,10 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
     mockJwtWithAddress();
     contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue({
       id: gitPOAPRequestId,
-      type: GitPOAPType.CUSTOM,
       adminApprovalStatus: AdminApprovalStatus.PENDING,
       description: 'foobar',
       imageUrl: getS3URL('gitpoap-request-images-test', 'foobar-123456789.png'),
-      isEnabled: true,
-      isPRBased: false,
       name: 'foobar',
-      ongoing: true,
-      year: 2021,
     } as any);
 
     contextMock.prisma.gitPOAPRequest.update.mockResolvedValue({
@@ -563,16 +510,10 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
     mockJwtWithAddress();
     contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue({
       id: gitPOAPRequestId,
-      creatorEmail: 'test@gitpoap.io',
-      type: GitPOAPType.CUSTOM,
       adminApprovalStatus: AdminApprovalStatus.PENDING,
       description: 'foobar-description',
       imageUrl: getS3URL('gitpoap-request-images-test', 'foobar-123456789.png'),
-      isEnabled: true,
-      isPRBased: false,
       name: 'foobar',
-      ongoing: true,
-      year: 2021,
     } as any);
 
     contextMock.prisma.gitPOAPRequest.update.mockResolvedValue({
@@ -614,20 +555,13 @@ describe('POST /gitpoaps/custom', () => {
         name: 'foobar-name',
         description: 'foobar-description',
         imageUrl: getS3URL('gitpoap-request-images-test', 'foobar-123456789.png'),
-        type: GitPOAPType.CUSTOM,
-        year: 2021,
         startDate: DateTime.fromISO('2021-01-01').toJSDate(),
         endDate: DateTime.fromISO('2021-01-10').toJSDate(),
-        expiryDate: DateTime.fromISO('2023-01-01').toJSDate(),
-        eventUrl: 'https://foobar.com',
         creatorEmail: {
           connect: { id: creatorEmailId },
         },
         numRequestedCodes: CUSTOM_GITPOAP_MINIMUM_CODES,
         adminApprovalStatus: AdminApprovalStatus.PENDING,
-        isEnabled: true,
-        isPRBased: false, // They should never be PR-based
-        ongoing: true,
         contributors: {
           githubHandles: ['peebeejay'],
           ensNames: ['burz.eth'],
@@ -715,9 +649,7 @@ describe('POST /gitpoaps/custom', () => {
       });
 
     expect(result.statusCode).toEqual(500);
-    expect(result.body).toEqual({
-      msg: 'Failed to upload image to S3',
-    });
+    expect(result.body).toEqual({ msg: 'Failed to upload image' });
   });
 
   it('Successfully creates a new GitPOAP request with NO project or organization', async () => {
@@ -756,7 +688,6 @@ describe('POST /gitpoaps/custom', () => {
 
     contextMock.prisma.gitPOAPRequest.create.mockResolvedValue({
       id: gitPOAPRequestId,
-      type: GitPOAPType.CUSTOM,
       adminApprovalStatus: AdminApprovalStatus.PENDING,
     } as any);
 
@@ -800,15 +731,10 @@ describe('POST /gitpoaps/custom', () => {
     contextMock.prisma.gitPOAPRequest.create.mockResolvedValue({
       id: gitPOAPRequestId,
       creatorEmail: 'test@gitpoap.io',
-      type: GitPOAPType.CUSTOM,
       adminApprovalStatus: AdminApprovalStatus.PENDING,
       description: 'foobar',
       imageUrl: getS3URL('gitpoap-request-images-test', 'foobar-123456789.png'),
-      isEnabled: true,
-      isPRBased: false,
       name: 'foobar-name',
-      ongoing: true,
-      year: 2021,
     } as any);
 
     mockedUploadMulterFile.mockResolvedValue({
@@ -949,39 +875,13 @@ describe('PATCH /gitpoaps/custom/:gitPOAPRequestId', () => {
       });
     }
     {
-      const country = 'USA';
-      const result = await request(await setupApp())
-        .patch(`/gitpoaps/custom/${gitPOAPRequestId}`)
-        .set('Authorization', `Bearer ${authTokens.accessToken}`)
-        .send({ data: { country } });
-      expect(result.statusCode).toEqual(200);
-      expect(contextMock.prisma.gitPOAPRequest.update).toHaveBeenCalledTimes(2);
-      expect(contextMock.prisma.gitPOAPRequest.update).toHaveBeenLastCalledWith({
-        where: { id: gitPOAPRequestId },
-        data: { country, adminApprovalStatus: AdminApprovalStatus.PENDING },
-      });
-    }
-    {
-      const city = null;
-      const result = await request(await setupApp())
-        .patch(`/gitpoaps/custom/${gitPOAPRequestId}`)
-        .set('Authorization', `Bearer ${authTokens.accessToken}`)
-        .send({ data: { city } });
-      expect(result.statusCode).toEqual(200);
-      expect(contextMock.prisma.gitPOAPRequest.update).toHaveBeenCalledTimes(3);
-      expect(contextMock.prisma.gitPOAPRequest.update).toHaveBeenLastCalledWith({
-        where: { id: gitPOAPRequestId },
-        data: { city, adminApprovalStatus: AdminApprovalStatus.PENDING },
-      });
-    }
-    {
       const contributors = {};
       const result = await request(await setupApp())
         .patch(`/gitpoaps/custom/${gitPOAPRequestId}`)
         .set('Authorization', `Bearer ${authTokens.accessToken}`)
         .send({ data: { contributors } });
       expect(result.statusCode).toEqual(200);
-      expect(contextMock.prisma.gitPOAPRequest.update).toHaveBeenCalledTimes(4);
+      expect(contextMock.prisma.gitPOAPRequest.update).toHaveBeenCalledTimes(2);
       expect(contextMock.prisma.gitPOAPRequest.update).toHaveBeenLastCalledWith({
         where: { id: gitPOAPRequestId },
         data: {
@@ -992,6 +892,6 @@ describe('PATCH /gitpoaps/custom/:gitPOAPRequestId', () => {
       });
     }
 
-    expectFindUniqueCalls(4);
+    expectFindUniqueCalls(2);
   });
 });
