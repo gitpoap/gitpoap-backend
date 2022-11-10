@@ -25,6 +25,7 @@ import { prisma } from './seed';
 import { generatePOAPSecret } from '../src/lib/secrets';
 import { z } from 'zod';
 import { GitPOAPContributorsSchema } from '../src/schemas/gitpoaps';
+import { countContributors, convertContributorsFromSchema } from '../src/lib/gitpoaps';
 
 const logger = createScopedLogger('factories');
 
@@ -547,7 +548,6 @@ type CreateGitPOAPRequestParams = {
   contributors: z.infer<typeof GitPOAPContributorsSchema>;
   startDate: Date;
   endDate: Date;
-  expiryDate: Date;
   adminApprovalStatus: AdminApprovalStatus;
 };
 
@@ -561,20 +561,15 @@ export class GitPOAPRequestFactory {
     contributors,
     startDate,
     endDate,
-    expiryDate,
     adminApprovalStatus = AdminApprovalStatus.PENDING,
   }: CreateGitPOAPRequestParams): Promise<GitPOAPRequest> => {
     const data: Prisma.GitPOAPRequestCreateInput = {
       name,
       description,
       creatorEmail: { connect: { id: creatorEmailId } },
-      type: GitPOAPType.CUSTOM,
       startDate,
       endDate,
-      expiryDate,
-      eventUrl: 'https://gitpoap.io',
-      year: 2022,
-      numRequestedCodes: 50,
+      numRequestedCodes: countContributors(convertContributorsFromSchema(contributors)),
       address: { connect: { id: addressId } },
       imageUrl,
       contributors,

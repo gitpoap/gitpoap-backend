@@ -11,13 +11,12 @@ import { jwtWithAdminAddress, jwtWithAddress } from '../../middleware/auth';
 import multer from 'multer';
 import { generatePOAPSecret } from '../../lib/secrets';
 import { DateTime } from 'luxon';
-import { AdminApprovalStatus, GitPOAPType, Prisma } from '@prisma/client';
+import { AdminApprovalStatus, Prisma } from '@prisma/client';
 import {
   getImageBufferFromS3URL,
   getKeyFromS3URL,
   getS3URL,
   s3configProfile,
-  uploadMulterFile,
 } from '../../external/s3';
 import { convertGitPOAPRequestToGitPOAP } from '../../lib/gitpoaps';
 import { parseJSON } from '../../lib/json';
@@ -27,16 +26,16 @@ import { convertContributorsFromSchema, createClaimsForContributors } from '../.
 import {
   chooseNumberOfRequestedCodes,
   updateGitPOAPRequestStatus,
+  uploadGitPOAPRequestImage,
 } from '../../lib/gitpoapRequests';
 import { getRequestLogger } from '../../middleware/loggingAndTiming';
-import { GITPOAP_ISSUER_EMAIL } from '../../constants';
+import { GITPOAP_ISSUER_EMAIL, GITPOAP_ROOT_URL } from '../../constants';
 import { upsertEmail } from '../../lib/emails';
 import {
   sendGitPOAPRequestConfirmationEmail,
   sendGitPOAPRequestRejectionEmail,
 } from '../../external/postmark';
 import { GitPOAPRequestEmailForm } from '../../types/gitpoaps';
-import path from 'path';
 
 export const customGitPOAPsRouter = Router();
 
@@ -87,17 +86,9 @@ customGitPOAPsRouter.post(
     }
 
     /* Validate the date fields */
-    const year = DateTime.fromISO(schemaResult.data.startDate).year;
     const startDate = DateTime.fromISO(schemaResult.data.startDate).toJSDate();
     const endDate = DateTime.fromISO(schemaResult.data.endDate).toJSDate();
-    const expiryDate = DateTime.fromISO(schemaResult.data.expiryDate).toJSDate();
-
-    if (
-      !year ||
-      startDate.toString() === 'Invalid Date' ||
-      endDate.toString() === 'Invalid Date' ||
-      expiryDate.toString() === 'Invalid Date'
-    ) {
+    if (startDate.toString() === 'Invalid Date' || endDate.toString() === 'Invalid Date') {
       logger.error(`Invalid date in the Request`);
       return res.status(400).send({ msg: 'Invalid date in the Request' });
     }
@@ -142,21 +133,11 @@ customGitPOAPsRouter.post(
       }
     }
 
-    logger.info(`Uploading image to S3`);
-    const image = req.file;
-    let imageKey: string | null = null;
-    const timestamp = DateTime.now().toSeconds();
-    const bucket = s3configProfile.buckets.gitPOAPRequestImages;
+    const imageKey = await uploadGitPOAPRequestImage(req.file);
 
-    try {
-      const extension = path.extname(image.originalname);
-      const originalName = path.basename(image.originalname, extension);
-      imageKey = `${originalName}-${timestamp}${extension}`;
-      await uploadMulterFile(image, bucket, imageKey);
-      logger.info(`Uploaded image with imageKey: ${imageKey} to S3 bucket ${bucket}`);
-    } catch (err) {
-      logger.error(`Received error when uploading image to S3 - ${err}`);
-      return res.status(500).send({ msg: 'Failed to upload image to S3' });
+    if (imageKey === null) {
+      logger.error('Failed to upload GitPOAPRequest image to s3');
+      return res.status(500).send({ msg: 'Failed to upload image' });
     }
 
     const email = await upsertEmail(schemaResult.data.creatorEmail);
@@ -165,28 +146,21 @@ customGitPOAPsRouter.post(
 
     const gitPOAPRequest = await context.prisma.gitPOAPRequest.create({
       data: {
-        name: schemaResult.data.name,
-        type: GitPOAPType.CUSTOM,
-        imageUrl: getS3URL(bucket, imageKey),
-        description: schemaResult.data.description,
-        year,
         startDate,
         endDate,
-        expiryDate,
-        eventUrl: schemaResult.data.eventUrl,
-        numRequestedCodes: chooseNumberOfRequestedCodes(contributors),
-        project: project ? { connect: { id: project?.id } } : undefined,
-        organization: organization ? { connect: { id: organization?.id } } : undefined,
-        ongoing: true,
-        isEnabled: true,
-        adminApprovalStatus: AdminApprovalStatus.PENDING,
-        contributors: contributors as Prisma.JsonObject,
-        isPRBased: false,
-        address: {
-          connect: { id: addressId },
-        },
         creatorEmail: {
           connect: { id: email.id },
+        },
+        name: schemaResult.data.name,
+        numRequestedCodes: chooseNumberOfRequestedCodes(contributors),
+        imageUrl: getS3URL(s3configProfile.buckets.gitPOAPRequestImages, imageKey),
+        description: schemaResult.data.description,
+        project: project ? { connect: { id: project?.id } } : undefined,
+        organization: organization ? { connect: { id: organization?.id } } : undefined,
+        adminApprovalStatus: AdminApprovalStatus.PENDING,
+        contributors: contributors as Prisma.JsonObject,
+        address: {
+          connect: { id: addressId },
         },
       },
     });
@@ -230,14 +204,7 @@ customGitPOAPsRouter.put('/approve/:id', jwtWithAdminAddress(), async (req, res)
     return res.status(404).send({ msg });
   }
 
-  const isCustom = gitPOAPRequest.type === GitPOAPType.CUSTOM;
   const isApproved = gitPOAPRequest.adminApprovalStatus === AdminApprovalStatus.APPROVED;
-
-  if (!isCustom) {
-    const msg = `GitPOAP Request with ID:${gitPOAPRequestId} is not a custom GitPOAP Request`;
-    logger.warn(msg);
-    return res.status(400).send({ msg });
-  }
 
   if (isApproved) {
     const msg = `GitPOAP Request with ID:${gitPOAPRequestId} is already approved.`;
@@ -259,7 +226,6 @@ customGitPOAPsRouter.put('/approve/:id', jwtWithAdminAddress(), async (req, res)
   // their date issues
   const startDate = DateTime.now();
   const endDate = startDate.plus({ years: 1 });
-  const expiryDate = endDate.plus({ years: 1 });
 
   const secretCode = generatePOAPSecret();
   const poapInfo = await createPOAPEvent({
@@ -267,8 +233,8 @@ customGitPOAPsRouter.put('/approve/:id', jwtWithAdminAddress(), async (req, res)
     description: gitPOAPRequest.description,
     start_date: startDate.toFormat('yyyy-MM-dd'),
     end_date: endDate.toFormat('yyyy-MM-dd'),
-    expiry_date: expiryDate.toFormat('yyyy-MM-dd'),
-    event_url: gitPOAPRequest.eventUrl,
+    expiry_date: endDate.plus({ years: 1 }).toFormat('yyyy-MM-dd'),
+    event_url: GITPOAP_ROOT_URL,
     imageName: getKeyFromS3URL(gitPOAPRequest.imageUrl),
     imageBuffer,
     secret_code: secretCode,
@@ -442,7 +408,6 @@ customGitPOAPsRouter.patch('/:gitPOAPRequestId', jwtWithAddress(), async (req, r
     ...schemaResult.data.data,
     startDate: maybeParseDate(schemaResult.data.data.startDate),
     endDate: maybeParseDate(schemaResult.data.data.endDate),
-    expiryDate: maybeParseDate(schemaResult.data.data.expiryDate),
     contributors,
     numRequestedCodes,
     adminApprovalStatus: AdminApprovalStatus.PENDING,

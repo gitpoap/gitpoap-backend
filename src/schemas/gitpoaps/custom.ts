@@ -10,10 +10,6 @@ export const CreateCustomGitPOAPSchema = z.object({
   description: z.string().nonempty(),
   startDate: z.string().nonempty(),
   endDate: z.string().nonempty(),
-  expiryDate: z.string().nonempty(),
-  eventUrl: z.string().nonempty(),
-  city: z.string().optional(),
-  country: z.string().optional(),
   creatorEmail: z.string().email().nonempty(),
 });
 
@@ -23,10 +19,6 @@ const CustomGitPOAPData = z
     description: z.string().nonempty(),
     startDate: z.string().nonempty(),
     endDate: z.string().nonempty(),
-    expiryDate: z.string().nonempty(),
-    eventUrl: z.string().nonempty(),
-    city: z.nullable(z.string()),
-    country: z.nullable(z.string()),
     contributors: GitPOAPContributorsSchema,
   })
   .strict();
