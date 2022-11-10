@@ -392,11 +392,6 @@ for convenience):
   "description": "You contributed to Custom GitPOAPs in 2022!\nCongrats, you are a super cool person!",
   "startDate": "01-Jan-2022",
   "endDate": "31-Dec-2022",
-  "expiryDate": "31-Jan-2023",
-  "eventUrl": "https://github.com/gitpoap/gitpoap-backend",
-  "numRequestedCodes": 10,
-  "city": "London", // optional
-  "country": "UK", // optional
 }
 ```
 
@@ -449,11 +444,6 @@ Data:
     "description": "There",
     "startDate": "2022-11-04",
     "endDate": "2022-11-06",
-    "expiryDate": "2022-11-11",
-    "eventUrl": "https://gitpoap.io",
-    "numRequestedCodes": 2304,
-    "city": null,
-    "country": "Ukraine",
     "contributors": {
       "githubHandles": ["burz"],
       "emails": ["burz@gitpoap.io"],
