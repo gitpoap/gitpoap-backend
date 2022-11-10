@@ -49,6 +49,9 @@ export const convertGitPOAPRequestToGitPOAP = async (
       creatorEmail: {
         connect: { id: gitPOAPRequest.creatorEmailId },
       },
+      gitPOAPRequest: {
+        connect: { id: gitPOAPRequest.id },
+      },
     },
   });
 };
