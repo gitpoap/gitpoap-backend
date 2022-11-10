@@ -176,7 +176,7 @@ export async function requestPOAPCodes(
 
 type RetrievePOAPCodesResponse = { qr_hash: string; claimed: boolean }[];
 
-async function retrievePOAPCodes(
+export async function retrievePOAPCodes(
   event_id: number,
   secret_code: string,
 ): Promise<RetrievePOAPCodesResponse | null> {
