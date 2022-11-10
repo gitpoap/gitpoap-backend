@@ -17,7 +17,6 @@ import { ADMIN_ADDRESSES, CUSTOM_GITPOAP_MINIMUM_CODES } from '../../../../../sr
 import { ADDRESSES, GH_HANDLES } from '../../../../../prisma/constants';
 import { upsertEmail } from '../../../../../src/lib/emails';
 import {
-  sendGitPOAPRequestEmail,
   sendGitPOAPRequestConfirmationEmail,
   sendGitPOAPRequestRejectionEmail,
 } from '../../../../../src/external/postmark';
@@ -38,8 +37,12 @@ const creatorEmailId = 234233;
 const baseGitPOAPRequest = {
   name: 'foobar-name',
   description: 'foobar-description',
-  startDate: '2021-01-01',
-  endDate: '2021-01-10',
+  startDate: DateTime.fromISO('2021-01-01').toJSDate(),
+  endDate: DateTime.fromISO('2021-01-10').toJSDate(),
+  expiryDate: DateTime.fromISO('2023-01-01').toJSDate(),
+  eventUrl: 'https://foobar.com',
+  ongoing: 'true',
+  isEnabled: 'true',
   image: {
     data: Buffer.from('foobar'),
     mimetype: 'image/png',
@@ -125,7 +128,6 @@ jest.mock('../../../../../src/lib/emails');
 const mockedUpsertEmail = jest.mocked(upsertEmail, true);
 
 jest.mock('../../../../../src/external/postmark');
-jest.mocked(sendGitPOAPRequestEmail, true);
 jest.mocked(sendGitPOAPRequestConfirmationEmail, true);
 jest.mocked(sendGitPOAPRequestRejectionEmail, true);
 
@@ -536,13 +538,7 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
       .send();
 
     expect(sendGitPOAPRequestRejectionEmail).toHaveBeenCalledWith({
-      id: gitPOAPRequestId,
       email: 'test@gitpoap.io',
-      name: 'foobar',
-      description: 'foobar-description',
-      imageUrl: getS3URL('gitpoap-request-images-test', 'foobar-123456789.png'),
-      organizationId: 1,
-      organizationName: 'organization 1',
     });
   });
 });
@@ -656,6 +652,7 @@ describe('POST /gitpoaps/custom', () => {
     mockJwtWithAddress();
 
     contextMock.prisma.gitPOAPRequest.create.mockResolvedValue({
+      ...baseGitPOAPRequest,
       id: gitPOAPRequestId,
       type: GitPOAPType.CUSTOM,
       adminApprovalStatus: AdminApprovalStatus.PENDING,
@@ -687,8 +684,10 @@ describe('POST /gitpoaps/custom', () => {
     mockJwtWithAddress();
 
     contextMock.prisma.gitPOAPRequest.create.mockResolvedValue({
+      ...baseGitPOAPRequest,
       id: gitPOAPRequestId,
       adminApprovalStatus: AdminApprovalStatus.PENDING,
+      imageUrl: getS3URL('gitpoap-request-images-test', 'foobar.png-123456789'),
     } as any);
 
     mockedUploadMulterFile.mockResolvedValue({
@@ -729,12 +728,29 @@ describe('POST /gitpoaps/custom', () => {
     } as any);
 
     contextMock.prisma.gitPOAPRequest.create.mockResolvedValue({
+      ...baseGitPOAPRequest,
       id: gitPOAPRequestId,
+<<<<<<< HEAD
       creatorEmail: 'test@gitpoap.io',
       adminApprovalStatus: AdminApprovalStatus.PENDING,
       description: 'foobar',
       imageUrl: getS3URL('gitpoap-request-images-test', 'foobar-123456789.png'),
       name: 'foobar-name',
+=======
+      type: GitPOAPType.CUSTOM,
+      adminApprovalStatus: AdminApprovalStatus.PENDING,
+      description: 'foobar',
+      isEnabled: true,
+      isPRBased: false,
+      name: 'foobar-name',
+      ongoing: true,
+      year: 2021,
+      imageUrl: getS3URL('gitpoap-request-images-test', 'foobar.png-123456789'),
+      contributors: {
+        githubHandles: ['peebeejay'],
+        ensNames: ['burz.eth'],
+      },
+>>>>>>> feat: update email templates for CGs
     } as any);
 
     mockedUploadMulterFile.mockResolvedValue({
@@ -752,13 +768,20 @@ describe('POST /gitpoaps/custom', () => {
       });
 
     expect(sendGitPOAPRequestConfirmationEmail).toHaveBeenCalledWith({
-      id: gitPOAPRequestId,
       email: burzEmail,
       name: 'foobar-name',
-      description: 'foobar',
-      imageUrl: getS3URL('gitpoap-request-images-test', 'foobar-123456789.png'),
-      organizationId: 1,
-      organizationName: 'organization 1',
+      description: 'foobar-description',
+      imageUrl: getS3URL('gitpoap-request-images-test', 'foobar.png-123456789'),
+      startDate: DateTime.fromISO('2021-01-01').toString(),
+      endDate: DateTime.fromISO('2021-01-10').toString(),
+      contributors: [
+        {
+          value: 'peebeejay',
+        },
+        {
+          value: 'burz.eth',
+        },
+      ],
     });
   });
 });

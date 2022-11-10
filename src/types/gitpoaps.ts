@@ -5,14 +5,28 @@ export type GitPOAPContributors = {
   ensNames: string[];
 };
 
-export type GitPOAPRequestEmailForm = {
-  id: number;
+export type GitPOAPContributorType = {
+  value: string;
+};
+
+export type GitPOAPRequestConfirmationEmailForm = {
   email: string;
   name: string;
   description: string;
   imageUrl: string;
-  organizationName: string | null;
-  organizationId: number | null;
+  startDate: string;
+  endDate: string;
+  contributors: GitPOAPContributorType[];
+};
+
+export type GitPOAPRequestRejectionEmailForm = {
+  email: string;
+};
+
+export type GitPOAPRequestLiveEmailForm = {
+  id: number;
+  email: string;
+  imageUrl: string;
 };
 
 export enum GitPOAPRequestEmailAlias {
