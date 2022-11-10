@@ -372,6 +372,9 @@ describe('PUT /gitpoaps/custom/approve/:id', () => {
         creatorEmail: {
           connect: { id: creatorEmailId },
         },
+        gitPOAPRequest: {
+          connect: { id: gitPOAPRequestId },
+        },
       },
     });
 
