@@ -203,11 +203,7 @@ describe('checkGitPOAPForNewCodes', () => {
     expect(sendGitPOAPRequestLiveEmail).toHaveBeenCalledWith({
       id: 34,
       email: 'test@gitpoap.io',
-      name: 'foobar',
-      description: 'foobar-description',
       imageUrl: getS3URL('gitpoap-request-images-test', 'foobar.png-123456789'),
-      organizationId: 1,
-      organizationName: 'organization 1',
     });
 
     expect(contextMock.prisma.gitPOAP.update).toHaveBeenCalledWith({
