@@ -36,6 +36,7 @@ import {
 } from '../../external/postmark';
 import { GitPOAPRequestEmailForm } from '../../types/gitpoaps';
 import path from 'path';
+import { formatDateToString } from './utils';
 
 export const customGitPOAPsRouter = Router();
 
@@ -152,14 +153,14 @@ customGitPOAPsRouter.post(
     /* Send message to slack */
     void sendInternalGitPOAPRequestMessage(gitPOAPRequest);
     /* Send CG request submission confirmation email */
-    const emailForm: GitPOAPRequestConfirmationEmailForm = {
+    const emailForm: GitPOAPRequestEmailForm = {
+      id: gitPOAPRequest.id,
       email: schemaResult.data.creatorEmail,
       name: gitPOAPRequest.name,
       imageUrl: gitPOAPRequest.imageUrl,
       description: gitPOAPRequest.description,
-      startDate: DateTime.fromJSDate(gitPOAPRequest.startDate).toString(),
-      endDate: DateTime.fromJSDate(gitPOAPRequest.endDate).toString(),
-      contributors: genereateContributorsForEmail(gitPOAPRequest.contributors),
+      startDate: formatDateToString(gitPOAPRequest.startDate),
+      endDate: formatDateToString(gitPOAPRequest.endDate),
     };
     void sendGitPOAPRequestConfirmationEmail(emailForm);
 
@@ -312,8 +313,14 @@ customGitPOAPsRouter.put('/reject/:id', jwtWithAdminAddress(), async (req, res) 
   });
 
   /* Send CG request rejection email */
-  const emailForm: GitPOAPRequestRejectionEmailForm = {
+  const emailForm: GitPOAPRequestEmailForm = {
+    id: gitPOAPRequest.id,
     email: updatedGitPOAPRequest.creatorEmail.emailAddress,
+    name: gitPOAPRequest.name,
+    imageUrl: gitPOAPRequest.imageUrl,
+    description: gitPOAPRequest.description,
+    startDate: formatDateToString(gitPOAPRequest.startDate),
+    endDate: formatDateToString(gitPOAPRequest.endDate),
   };
   void sendGitPOAPRequestRejectionEmail(emailForm);
 
