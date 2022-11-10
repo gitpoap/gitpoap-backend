@@ -511,11 +511,11 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
   it('should send a rejection email', async () => {
     mockJwtWithAddress();
     contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue({
+      ...baseGitPOAPRequest,
       id: gitPOAPRequestId,
       adminApprovalStatus: AdminApprovalStatus.PENDING,
-      description: 'foobar-description',
-      imageUrl: getS3URL('gitpoap-request-images-test', 'foobar-123456789.png'),
-      name: 'foobar',
+      type: GitPOAPType.CUSTOM,
+      imageUrl: getS3URL('gitpoap-request-images-test', 'foobar.png-123456789'),
     } as any);
 
     contextMock.prisma.gitPOAPRequest.update.mockResolvedValue({
@@ -526,7 +526,7 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
         name: 'organization 1',
       },
       creatorEmail: {
-        emailAddress: 'test@gitpoap.io',
+        emailAddress: burzEmail,
       },
     } as any);
 
@@ -538,7 +538,13 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
       .send();
 
     expect(sendGitPOAPRequestRejectionEmail).toHaveBeenCalledWith({
-      email: 'test@gitpoap.io',
+      id: gitPOAPRequestId,
+      email: burzEmail,
+      name: 'foobar-name',
+      description: 'foobar-description',
+      imageUrl: getS3URL('gitpoap-request-images-test', 'foobar.png-123456789'),
+      startDate: DateTime.fromISO('2021-01-01').toString(),
+      endDate: DateTime.fromISO('2021-01-10').toString(),
     });
   });
 });
@@ -730,13 +736,6 @@ describe('POST /gitpoaps/custom', () => {
     contextMock.prisma.gitPOAPRequest.create.mockResolvedValue({
       ...baseGitPOAPRequest,
       id: gitPOAPRequestId,
-<<<<<<< HEAD
-      creatorEmail: 'test@gitpoap.io',
-      adminApprovalStatus: AdminApprovalStatus.PENDING,
-      description: 'foobar',
-      imageUrl: getS3URL('gitpoap-request-images-test', 'foobar-123456789.png'),
-      name: 'foobar-name',
-=======
       type: GitPOAPType.CUSTOM,
       adminApprovalStatus: AdminApprovalStatus.PENDING,
       isEnabled: true,
@@ -748,7 +747,6 @@ describe('POST /gitpoaps/custom', () => {
         githubHandles: ['peebeejay'],
         ensNames: ['burz.eth'],
       },
->>>>>>> feat: update email templates for CGs
     } as any);
 
     mockedUploadMulterFile.mockResolvedValue({
@@ -766,20 +764,13 @@ describe('POST /gitpoaps/custom', () => {
       });
 
     expect(sendGitPOAPRequestConfirmationEmail).toHaveBeenCalledWith({
+      id: gitPOAPRequestId,
       email: burzEmail,
       name: 'foobar-name',
       description: 'foobar-description',
       imageUrl: getS3URL('gitpoap-request-images-test', 'foobar.png-123456789'),
       startDate: DateTime.fromISO('2021-01-01').toString(),
       endDate: DateTime.fromISO('2021-01-10').toString(),
-      contributors: [
-        {
-          value: 'peebeejay',
-        },
-        {
-          value: 'burz.eth',
-        },
-      ],
     });
   });
 });
