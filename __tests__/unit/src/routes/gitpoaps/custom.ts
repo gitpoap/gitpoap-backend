@@ -543,8 +543,8 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
       name: 'foobar-name',
       description: 'foobar-description',
       imageUrl: getS3URL('gitpoap-request-images-test', 'foobar.png-123456789'),
-      startDate: DateTime.fromISO('2021-01-01').toString(),
-      endDate: DateTime.fromISO('2021-01-10').toString(),
+      startDate: DateTime.fromISO('2021-01-01').toFormat('yyyy LLL dd'),
+      endDate: DateTime.fromISO('2021-01-10').toFormat('yyyy LLL dd'),
     });
   });
 });
@@ -769,8 +769,8 @@ describe('POST /gitpoaps/custom', () => {
       name: 'foobar-name',
       description: 'foobar-description',
       imageUrl: getS3URL('gitpoap-request-images-test', 'foobar.png-123456789'),
-      startDate: DateTime.fromISO('2021-01-01').toString(),
-      endDate: DateTime.fromISO('2021-01-10').toString(),
+      startDate: DateTime.fromISO('2021-01-01').toFormat('yyyy LLL dd'),
+      endDate: DateTime.fromISO('2021-01-10').toFormat('yyyy LLL dd'),
     });
   });
 });
