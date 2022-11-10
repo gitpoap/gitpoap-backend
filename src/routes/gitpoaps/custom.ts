@@ -2,7 +2,6 @@ import {
   CreateCustomGitPOAPSchema,
   UpdateCustomGitPOAPSchema,
 } from '../../schemas/gitpoaps/custom';
-import { GitPOAPContributorsSchema } from '../../schemas/gitpoaps';
 import { Request, Router } from 'express';
 import { z } from 'zod';
 import { context } from '../../context';
@@ -19,7 +18,6 @@ import {
   s3configProfile,
 } from '../../external/s3';
 import { convertGitPOAPRequestToGitPOAP } from '../../lib/gitpoaps';
-import { parseJSON } from '../../lib/json';
 import { getAccessTokenPayload } from '../../types/authTokens';
 import { sendInternalGitPOAPRequestMessage } from '../../external/slack';
 import { convertContributorsFromSchema, createClaimsForContributors } from '../../lib/gitpoaps';
@@ -27,6 +25,7 @@ import {
   chooseNumberOfRequestedCodes,
   updateGitPOAPRequestStatus,
   uploadGitPOAPRequestImage,
+  validateContributorsString,
 } from '../../lib/gitpoapRequests';
 import { getRequestLogger } from '../../middleware/loggingAndTiming';
 import { GITPOAP_ISSUER_EMAIL, GITPOAP_ROOT_URL } from '../../constants';
@@ -63,26 +62,11 @@ customGitPOAPsRouter.post(
       return res.status(400).send({ msg });
     }
 
-    /* Validate the contributors object */
-    const contributors = parseJSON<z.infer<typeof GitPOAPContributorsSchema>>(
-      schemaResult.data.contributors,
-    );
-
+    const contributors = validateContributorsString(schemaResult.data.contributors);
     if (contributors === null) {
       const msg = 'Invalid "contributors" JSON in request';
       logger.warn(msg);
       return res.status(400).send({ msg });
-    }
-
-    const contributorsSchemaResult = GitPOAPContributorsSchema.safeParse(contributors);
-
-    if (!contributorsSchemaResult.success) {
-      logger.warn(
-        `Missing/invalid contributors fields in request: ${JSON.stringify(
-          contributorsSchemaResult.error.issues,
-        )}`,
-      );
-      return res.status(400).send({ issues: contributorsSchemaResult.error.issues });
     }
 
     /* Validate the date fields */
@@ -134,7 +118,6 @@ customGitPOAPsRouter.post(
     }
 
     const imageKey = await uploadGitPOAPRequestImage(req.file);
-
     if (imageKey === null) {
       logger.error('Failed to upload GitPOAPRequest image to s3');
       return res.status(500).send({ msg: 'Failed to upload image' });
@@ -346,79 +329,101 @@ customGitPOAPsRouter.put('/reject/:id', jwtWithAdminAddress(), async (req, res) 
   return res.status(200).send('REJECTED');
 });
 
-customGitPOAPsRouter.patch('/:gitPOAPRequestId', jwtWithAddress(), async (req, res) => {
-  const logger = getRequestLogger(req);
+customGitPOAPsRouter.patch(
+  '/:gitPOAPRequestId',
+  jwtWithAddress(),
+  multer().single('image'),
+  async function (req, res) {
+    const logger = getRequestLogger(req);
 
-  const gitPOAPRequestId = parseInt(req.params.gitPOAPRequestId, 10);
+    const gitPOAPRequestId = parseInt(req.params.gitPOAPRequestId, 10);
 
-  const schemaResult = UpdateCustomGitPOAPSchema.safeParse(req.body);
+    const schemaResult = UpdateCustomGitPOAPSchema.safeParse(req.body);
 
-  if (!schemaResult.success) {
-    logger.warn(
-      `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
-    );
-    return res.status(400).send({ issues: schemaResult.error.issues });
-  }
+    if (!schemaResult.success) {
+      logger.warn(
+        `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
+      );
+      return res.status(400).send({ issues: schemaResult.error.issues });
+    }
 
-  logger.info(`Request to update GitPOAPRequest ID ${gitPOAPRequestId}`);
+    logger.info(`Request to update GitPOAPRequest ID ${gitPOAPRequestId}`);
 
-  const gitPOAPRequest = await context.prisma.gitPOAPRequest.findUnique({
-    where: { id: gitPOAPRequestId },
-    select: {
-      addressId: true,
-      adminApprovalStatus: true,
-    },
-  });
+    const gitPOAPRequest = await context.prisma.gitPOAPRequest.findUnique({
+      where: { id: gitPOAPRequestId },
+      select: {
+        addressId: true,
+        adminApprovalStatus: true,
+      },
+    });
 
-  if (gitPOAPRequest === null) {
-    const msg = `GitPOAPRequest with ID ${gitPOAPRequestId} doesn't exist`;
-    logger.warn(msg);
-    return res.status(404).send({ msg });
-  }
+    if (gitPOAPRequest === null) {
+      const msg = `GitPOAPRequest with ID ${gitPOAPRequestId} doesn't exist`;
+      logger.warn(msg);
+      return res.status(404).send({ msg });
+    }
 
-  const { addressId } = getAccessTokenPayload(req.user);
+    const { addressId } = getAccessTokenPayload(req.user);
 
-  if (gitPOAPRequest.addressId !== addressId) {
-    logger.warn(
-      `User attempted to update a GitPOAPRequest (ID: ${gitPOAPRequestId}) that they do not own`,
-    );
-    return res.status(401).send({ msg: 'Not GitPOAPRequest creator' });
-  }
+    if (gitPOAPRequest.addressId !== addressId) {
+      logger.warn(
+        `User attempted to update a GitPOAPRequest (ID: ${gitPOAPRequestId}) that they do not own`,
+      );
+      return res.status(401).send({ msg: 'Not GitPOAPRequest creator' });
+    }
 
-  // This could happen if the admin approval request is put in around the same time
-  // that the creator is trying to add new contributors, i.e. that the conversion
-  // from GitPOAPRequest to GitPOAP hasn't completed yet.
-  if (gitPOAPRequest.adminApprovalStatus === AdminApprovalStatus.APPROVED) {
-    const msg = `GitPOAPRequest with ID ${gitPOAPRequestId} is already APPROVED`;
-    logger.warn(msg);
-    return res.status(400).send({ msg });
-  }
+    // This could happen if the admin approval request is put in around the same time
+    // that the creator is trying to add new contributors, i.e. that the conversion
+    // from GitPOAPRequest to GitPOAP hasn't completed yet.
+    if (gitPOAPRequest.adminApprovalStatus === AdminApprovalStatus.APPROVED) {
+      const msg = `GitPOAPRequest with ID ${gitPOAPRequestId} is already APPROVED`;
+      logger.warn(msg);
+      return res.status(400).send({ msg });
+    }
 
-  let contributors;
-  let numRequestedCodes;
-  if (schemaResult.data.data.contributors !== undefined) {
-    contributors = schemaResult.data.data.contributors as Prisma.JsonObject;
-    numRequestedCodes = chooseNumberOfRequestedCodes(schemaResult.data.data.contributors);
-  }
+    let contributors;
+    let numRequestedCodes;
+    if (schemaResult.data.contributors !== undefined) {
+      const contributorsResult = validateContributorsString(schemaResult.data.contributors);
+      if (contributorsResult === null) {
+        const msg = 'Invalid "contributors" JSON in request';
+        logger.warn(msg);
+        return res.status(400).send({ msg });
+      }
+      contributors = contributorsResult as Prisma.JsonObject;
+      numRequestedCodes = chooseNumberOfRequestedCodes(contributorsResult);
+    }
 
-  const maybeParseDate = (date?: string) => (date ? new Date(date) : undefined);
+    const maybeParseDate = (date?: string) => (date ? new Date(date) : undefined);
 
-  // Parse the dates if they are present
-  const data = {
-    ...schemaResult.data.data,
-    startDate: maybeParseDate(schemaResult.data.data.startDate),
-    endDate: maybeParseDate(schemaResult.data.data.endDate),
-    contributors,
-    numRequestedCodes,
-    adminApprovalStatus: AdminApprovalStatus.PENDING,
-  };
+    let imageUrl;
+    if (req.file) {
+      const imageKey = await uploadGitPOAPRequestImage(req.file);
+      if (imageKey === null) {
+        logger.error('Failed to upload GitPOAPRequest image to s3');
+        return res.status(500).send({ msg: 'Failed to upload image' });
+      }
+      imageUrl = getS3URL(s3configProfile.buckets.gitPOAPRequestImages, imageKey);
+    }
 
-  await context.prisma.gitPOAPRequest.update({
-    where: { id: gitPOAPRequestId },
-    data,
-  });
+    // Parse the dates if they are present
+    const data = {
+      ...schemaResult.data,
+      startDate: maybeParseDate(schemaResult.data.startDate),
+      endDate: maybeParseDate(schemaResult.data.endDate),
+      contributors,
+      numRequestedCodes,
+      adminApprovalStatus: AdminApprovalStatus.PENDING,
+      imageUrl,
+    };
 
-  logger.debug(`Competed request to update GitPOAPRequest ID ${gitPOAPRequestId}`);
+    await context.prisma.gitPOAPRequest.update({
+      where: { id: gitPOAPRequestId },
+      data,
+    });
 
-  return res.status(200).send('UPDATED');
-});
+    logger.debug(`Competed request to update GitPOAPRequest ID ${gitPOAPRequestId}`);
+
+    return res.status(200).send('UPDATED');
+  },
+);

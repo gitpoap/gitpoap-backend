@@ -12,6 +12,7 @@ import { s3configProfile, uploadMulterFile } from '../external/s3';
 import path from 'path';
 import { createScopedLogger } from '../logging';
 import { DateTime } from 'luxon';
+import { parseJSON } from './json';
 
 export async function deleteGitPOAPRequest(id: number) {
   await context.prisma.gitPOAPRequest.delete({
@@ -66,4 +67,27 @@ export async function uploadGitPOAPRequestImage(
     logger.error(`Received error when uploading image to S3: ${err}`);
     return null;
   }
+}
+
+export function validateContributorsString(contributorsString: string) {
+  const logger = createScopedLogger('validateContributorsString');
+
+  const contributors = parseJSON<z.infer<typeof GitPOAPContributorsSchema>>(contributorsString);
+
+  if (contributors === null) {
+    return null;
+  }
+
+  const contributorsSchemaResult = GitPOAPContributorsSchema.safeParse(contributors);
+
+  if (!contributorsSchemaResult.success) {
+    logger.warn(
+      `Missing/invalid contributors fields in request: ${JSON.stringify(
+        contributorsSchemaResult.error.issues,
+      )}`,
+    );
+    return null;
+  }
+
+  return contributors;
 }

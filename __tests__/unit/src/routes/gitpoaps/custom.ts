@@ -768,7 +768,7 @@ describe('PATCH /gitpoaps/custom/:gitPOAPRequestId', () => {
     contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue(null);
     const result = await request(await setupApp())
       .patch(`/gitpoaps/custom/${gitPOAPRequestId}`)
-      .send({ data: {} });
+      .send({});
 
     expect(result.statusCode).toEqual(400);
 
@@ -779,20 +779,12 @@ describe('PATCH /gitpoaps/custom/:gitPOAPRequestId', () => {
     mockJwtWithAddress();
     contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue(null);
     const authTokens = genAuthTokens();
-    {
-      const result = await request(await setupApp())
-        .patch(`/gitpoaps/custom/${gitPOAPRequestId}`)
-        .set('Authorization', `Bearer ${authTokens.accessToken}`)
-        .send({ foobar: 'lolz' });
-      expect(result.statusCode).toEqual(400);
-    }
-    {
-      const result = await request(await setupApp())
-        .patch(`/gitpoaps/custom/${gitPOAPRequestId}`)
-        .set('Authorization', `Bearer ${authTokens.accessToken}`)
-        .send({ data: { foobar: '' } });
-      expect(result.statusCode).toEqual(400);
-    }
+    const result = await request(await setupApp())
+      .patch(`/gitpoaps/custom/${gitPOAPRequestId}`)
+      .set('Authorization', `Bearer ${authTokens.accessToken}`)
+      .send({ foobar: 'lolz' });
+
+    expect(result.statusCode).toEqual(400);
 
     expect(contextMock.prisma.gitPOAPRequest.findUnique).toHaveBeenCalledTimes(0);
   });
@@ -815,7 +807,7 @@ describe('PATCH /gitpoaps/custom/:gitPOAPRequestId', () => {
     const result = await request(await setupApp())
       .patch(`/gitpoaps/custom/${gitPOAPRequestId}`)
       .set('Authorization', `Bearer ${authTokens.accessToken}`)
-      .send({ data: {} });
+      .send({});
 
     expect(result.statusCode).toEqual(404);
 
@@ -832,7 +824,7 @@ describe('PATCH /gitpoaps/custom/:gitPOAPRequestId', () => {
     const result = await request(await setupApp())
       .patch(`/gitpoaps/custom/${gitPOAPRequestId}`)
       .set('Authorization', `Bearer ${authTokens.accessToken}`)
-      .send({ data: {} });
+      .send({});
 
     expect(result.statusCode).toEqual(401);
 
@@ -849,14 +841,14 @@ describe('PATCH /gitpoaps/custom/:gitPOAPRequestId', () => {
     const result = await request(await setupApp())
       .patch(`/gitpoaps/custom/${gitPOAPRequestId}`)
       .set('Authorization', `Bearer ${authTokens.accessToken}`)
-      .send({ data: {} });
+      .send({});
 
     expect(result.statusCode).toEqual(400);
 
     expectFindUniqueCalls();
   });
 
-  it('Updates the GitPOAPRequest on success', async () => {
+  it('Updates the GitPOAPRequest with an image on success', async () => {
     mockJwtWithAddress();
     contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue(gitPOAPRequest as any);
     const authTokens = genAuthTokens();
@@ -866,12 +858,21 @@ describe('PATCH /gitpoaps/custom/:gitPOAPRequestId', () => {
       const result = await request(await setupApp())
         .patch(`/gitpoaps/custom/${gitPOAPRequestId}`)
         .set('Authorization', `Bearer ${authTokens.accessToken}`)
-        .send({ data: { name, description } });
+        .send({ name, description });
       expect(result.statusCode).toEqual(200);
       expect(contextMock.prisma.gitPOAPRequest.update).toHaveBeenCalledTimes(1);
       expect(contextMock.prisma.gitPOAPRequest.update).toHaveBeenCalledWith({
         where: { id: gitPOAPRequestId },
-        data: { name, description, adminApprovalStatus: AdminApprovalStatus.PENDING },
+        data: {
+          name,
+          description,
+          imageUrl: getS3URL('gitpoap-request-images-test', 'foobar-123456789.png'),
+          startDate: undefined,
+          endDate: undefined,
+          contributors: undefined,
+          numRequestedCodes: undefined,
+          adminApprovalStatus: AdminApprovalStatus.PENDING,
+        },
       });
     }
     {
@@ -879,12 +880,17 @@ describe('PATCH /gitpoaps/custom/:gitPOAPRequestId', () => {
       const result = await request(await setupApp())
         .patch(`/gitpoaps/custom/${gitPOAPRequestId}`)
         .set('Authorization', `Bearer ${authTokens.accessToken}`)
-        .send({ data: { contributors } });
+        .send({ contributors: JSON.stringify(contributors) });
       expect(result.statusCode).toEqual(200);
       expect(contextMock.prisma.gitPOAPRequest.update).toHaveBeenCalledTimes(2);
       expect(contextMock.prisma.gitPOAPRequest.update).toHaveBeenLastCalledWith({
         where: { id: gitPOAPRequestId },
         data: {
+          name: undefined,
+          description: undefined,
+          imageUrl: getS3URL('gitpoap-request-images-test', 'foobar-123456789.png'),
+          startDate: undefined,
+          endDate: undefined,
           contributors,
           numRequestedCodes: CUSTOM_GITPOAP_MINIMUM_CODES,
           adminApprovalStatus: AdminApprovalStatus.PENDING,
@@ -893,5 +899,17 @@ describe('PATCH /gitpoaps/custom/:gitPOAPRequestId', () => {
     }
 
     expectFindUniqueCalls(2);
+
+    /* Expect that the image was uploaded to S3 */
+    expect(mockedUploadMulterFile).toHaveBeenCalledTimes(2);
+    expect(mockedUploadMulterFile).toHaveBeenCalledWith(
+      {
+        buffer: Buffer.from('foobar'),
+        mimetype: 'image/png',
+        originalname: 'foobar.png',
+      },
+      'gitpoap-request-images-test',
+      'foobar-123456789.png',
+    );
   });
 });

@@ -6,6 +6,7 @@ import { setupApp } from '../../../../../__mocks__/src/app';
 import { generateAuthTokens } from '../../../../../src/lib/authTokens';
 import request from 'supertest';
 import { uploadMulterFile } from '../../../../../src/external/s3';
+import { AdminApprovalStatus } from '@prisma/client';
 
 const authTokenId = 4;
 const authTokenGeneration = 1;
@@ -101,5 +102,52 @@ describe('POST /gitpoaps/custom', () => {
 
     /* Expect that the image was not uploaded to S3 */
     expect(mockedUploadMulterFile).toHaveBeenCalledTimes(0);
+  });
+});
+
+describe('PATCH /gitpoaps/custom/:gitPOAPRequestId', () => {
+  it('Allows updates of other fields when no image is uploaded', async () => {
+    mockJwtWithAddress();
+    const gitPOAPRequestId = 213;
+    contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue({
+      addressId,
+      adminApprovalStatus: AdminApprovalStatus.PENDING,
+    } as any);
+    const authTokens = genAuthTokens();
+
+    const name = 'YOLO';
+    const description = "Let's yeet ourselves into 2023";
+    const result = await request(await setupApp())
+      .patch(`/gitpoaps/custom/${gitPOAPRequestId}`)
+      .set('Authorization', `Bearer ${authTokens.accessToken}`)
+      .send({ name, description });
+
+    expect(result.statusCode).toEqual(200);
+
+    expect(contextMock.prisma.gitPOAPRequest.findUnique).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.gitPOAPRequest.findUnique).toHaveBeenCalledWith({
+      where: { id: gitPOAPRequestId },
+      select: {
+        addressId: true,
+        adminApprovalStatus: true,
+      },
+    });
+
+    expect(mockedUploadMulterFile).toHaveBeenCalledTimes(0);
+
+    expect(contextMock.prisma.gitPOAPRequest.update).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.gitPOAPRequest.update).toHaveBeenCalledWith({
+      where: { id: gitPOAPRequestId },
+      data: {
+        name,
+        description,
+        imageUrl: undefined,
+        startDate: undefined,
+        endDate: undefined,
+        contributors: undefined,
+        numRequestedCodes: undefined,
+        adminApprovalStatus: AdminApprovalStatus.PENDING,
+      },
+    });
   });
 });

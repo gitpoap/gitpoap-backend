@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { GitPOAPContributorsSchema } from './';
 
 // Everything is a string since it came from multipart
 export const CreateCustomGitPOAPSchema = z.object({
@@ -13,16 +12,13 @@ export const CreateCustomGitPOAPSchema = z.object({
   creatorEmail: z.string().email().nonempty(),
 });
 
-const CustomGitPOAPData = z
+// Everything is a string since it came from multipart
+export const UpdateCustomGitPOAPSchema = z
   .object({
-    name: z.string().nonempty(),
-    description: z.string().nonempty(),
-    startDate: z.string().nonempty(),
-    endDate: z.string().nonempty(),
-    contributors: GitPOAPContributorsSchema,
+    name: z.string().nonempty().optional(),
+    description: z.string().nonempty().optional(),
+    startDate: z.string().nonempty().optional(),
+    endDate: z.string().nonempty().optional(),
+    contributors: z.string().nonempty().optional(),
   })
   .strict();
-
-export const UpdateCustomGitPOAPSchema = z.object({
-  data: CustomGitPOAPData.partial(), // Allows the field to be undefined in the request
-});
