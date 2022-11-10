@@ -433,28 +433,30 @@ Note that the Claim can only be deleted if it is still `UNCLAIMED`.
 
 `PATCH /gitpoaps/custom/:gitPOAPRequestId`
 
-This endpoint allows the creator of a GitPOAPRequest to update (non-contributor) fields while the GitPOAPRequest is *not yet*
-`APPROVED`.
+This endpoint allows the creator of a GitPOAPRequest to update (non-contributor) fields while the
+GitPOAPRequest is *not yet* `APPROVED`. It should receive the data as `multipart/form-data` with fields like
+the following (shown in JSON for convenience):
 
 Data:
 ```json
 {
-  "data": {
-    "name": "Hi",
-    "description": "There",
-    "startDate": "2022-11-04",
-    "endDate": "2022-11-06",
-    "contributors": {
-      "githubHandles": ["burz"],
-      "emails": ["burz@gitpoap.io"],
-      "ethAddresses": ["0xAe95f7e7fb2FCF86148ef832FAeD2752Ae5A358a"],
-      "ensNames": ["burz.eth"]
-    }
-  }
+  "name": "Hi",
+  "description": "There",
+  "startDate": "2022-11-04",
+  "endDate": "2022-11-06",
+  "contributors": {
+    "githubHandles": ["burz"],
+    "emails": ["burz@gitpoap.io"],
+    "ethAddresses": ["0xAe95f7e7fb2FCF86148ef832FAeD2752Ae5A358a"],
+    "ensNames": ["burz.eth"]
+  } // As a JSON string
 }
 ```
 
-Note that all the fields within `"data"` are optional.
+Note that all the fields above are optional.
+
+In addition, there can be part of the `multipart/form-data` named `"image"` that contains an uploaded
+image that the GitPOAPRequest should update to use.
 
 ## [gitpoap-bot] Create a Claim
 
