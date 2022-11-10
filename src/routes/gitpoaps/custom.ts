@@ -255,13 +255,19 @@ customGitPOAPsRouter.put('/approve/:id', jwtWithAdminAddress(), async (req, res)
 
   const imageBuffer = await getImageBufferFromS3URL(gitPOAPRequest.imageUrl);
 
+  // TODO: switch to using the actual dates from GitPOAPRequest after POAP fixes
+  // their date issues
+  const startDate = DateTime.now();
+  const endDate = startDate.plus({ years: 1 });
+  const expiryDate = endDate.plus({ years: 1 });
+
   const secretCode = generatePOAPSecret();
   const poapInfo = await createPOAPEvent({
     name: gitPOAPRequest.name,
     description: gitPOAPRequest.description,
-    start_date: DateTime.fromJSDate(gitPOAPRequest.startDate).toFormat('yyyy-MM-dd'),
-    end_date: DateTime.fromJSDate(gitPOAPRequest.endDate).toFormat('yyyy-MM-dd'),
-    expiry_date: DateTime.fromJSDate(gitPOAPRequest.expiryDate).toFormat('yyyy-MM-dd'),
+    start_date: startDate.toFormat('yyyy-MM-dd'),
+    end_date: endDate.toFormat('yyyy-MM-dd'),
+    expiry_date: expiryDate.toFormat('yyyy-MM-dd'),
     event_url: gitPOAPRequest.eventUrl,
     imageName: getKeyFromS3URL(gitPOAPRequest.imageUrl),
     imageBuffer,
