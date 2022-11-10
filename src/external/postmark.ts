@@ -4,14 +4,8 @@ import { IntakeFormReposSchema } from '../schemas/onboarding';
 import { z } from 'zod';
 import { formatRepos } from '../routes/onboarding/utils';
 import { IntakeForm } from '../routes/onboarding/types';
-import {
-  GitPOAPRequestConfirmationEmailForm,
-  GitPOAPRequestRejectionEmailForm,
-  GitPOAPRequestLiveEmailForm,
-  GitPOAPRequestEmailAlias,
-  GitPOAPContributorType,
-} from '../types/gitpoaps';
-import { generateGitPOAPRequestLink } from '../routes/gitpoaps/utils';
+import { GitPOAPRequestEmailForm, GitPOAPRequestEmailAlias } from '../types/gitpoaps';
+import { generateGitPOAPRequestLink, generateGitPOAPLink } from '../routes/gitpoaps/utils';
 import { createScopedLogger } from '../logging';
 import {
   GITPOAP_ROOT_URL,
@@ -42,9 +36,7 @@ type SendEmailWithTemplateArgs<T> = {
   alias: string;
   templateModel: T;
 };
-const sendEmailWithTemplateHandler = async <
-  T extends Record<string, string | number | GitPOAPContributorType[] | undefined>,
->({
+const sendEmailWithTemplateHandler = async <T extends Record<string, string | number | undefined>>({
   to,
   from,
   alias,
@@ -157,45 +149,43 @@ export const sendInternalConfirmationEmail = async (
   });
 };
 
-export const sendGitPOAPRequestConfirmationEmail = async (
-  formData: GitPOAPRequestConfirmationEmailForm,
+export const sendGitPOAPRequestConfirmationEmail = async (formData: GitPOAPRequestEmailForm) =>
+  await sendGitPOAPRequestEmail(
+    GitPOAPRequestEmailAlias.RECEIVED,
+    formData,
+    generateGitPOAPRequestLink(formData.id),
+  );
+
+export const sendGitPOAPRequestRejectionEmail = async (formData: GitPOAPRequestEmailForm) =>
+  await sendGitPOAPRequestEmail(
+    GitPOAPRequestEmailAlias.REJECTED,
+    formData,
+    generateGitPOAPRequestLink(formData.id),
+  );
+
+export const sendGitPOAPRequestLiveEmail = async (formData: GitPOAPRequestEmailForm) =>
+  await sendGitPOAPRequestEmail(
+    GitPOAPRequestEmailAlias.LIVE,
+    formData,
+    generateGitPOAPLink(formData.id),
+  );
+
+export const sendGitPOAPRequestEmail = async (
+  alias: GitPOAPRequestEmailAlias,
+  formData: GitPOAPRequestEmailForm,
+  link: string,
 ) =>
   await sendEmailWithTemplateHandler({
     to: formData.email,
     from: TEAM_EMAIL,
-    alias: GitPOAPRequestEmailAlias.RECEIVED,
+    alias,
     templateModel: {
       ...baseTemplate,
       gitpoap_name: formData.name,
       gitpoap_image: formData.imageUrl,
       gitpoap_description: formData.description,
+      gitpoap_link: link,
       gitpoap_start_date: formData.startDate,
       gitpoap_end_date: formData.startDate,
-      gitpoap_contributors: formData.contributors,
-      user_email: formData.email,
-    },
-  });
-
-export const sendGitPOAPRequestRejectionEmail = async (
-  formData: GitPOAPRequestRejectionEmailForm,
-) =>
-  await sendEmailWithTemplateHandler({
-    to: formData.email,
-    from: TEAM_EMAIL,
-    alias: GitPOAPRequestEmailAlias.REJECTED,
-    templateModel: {
-      ...baseTemplate,
-    },
-  });
-
-export const sendGitPOAPRequestLiveEmail = async (formData: GitPOAPRequestLiveEmailForm) =>
-  await sendEmailWithTemplateHandler({
-    to: formData.email,
-    from: TEAM_EMAIL,
-    alias: GitPOAPRequestEmailAlias.LIVE,
-    templateModel: {
-      ...baseTemplate,
-      gitpoap_link: generateGitPOAPRequestLink(formData.id),
-      gitpoap_image: formData.imageUrl,
     },
   });

@@ -6,7 +6,7 @@ import { retrieveUnusedPOAPCodes } from '../external/poap';
 import { DateTime } from 'luxon';
 import { lookupLastRun, updateLastRun } from './batchProcessing';
 import { backloadGithubPullRequestData } from './pullRequests';
-import { GitPOAPRequestLiveEmailForm } from '../types/gitpoaps';
+import { GitPOAPRequestEmailForm } from '../types/gitpoaps';
 import { sendGitPOAPRequestLiveEmail } from '../external/postmark';
 
 // The name of the row in the BatchTiming table used for checking for new codes
@@ -137,10 +137,14 @@ export async function checkGitPOAPForNewCodes(gitPOAP: GitPOAPWithSecret): Promi
         const email =
           gitPOAP.creatorEmail?.emailAddress ?? gitPOAP.creatorAddress?.email?.emailAddress;
         if (email) {
-          const emailForm: GitPOAPRequestLiveEmailForm = {
+          const emailForm: GitPOAPRequestEmailForm = {
             id: gitPOAP.id,
+            name: gitPOAP.name,
             email,
             imageUrl: gitPOAP.imageUrl,
+            description: gitPOAP.description,
+            startDate: '',
+            endDate: '',
           };
           void sendGitPOAPRequestLiveEmail(emailForm);
         } else {
