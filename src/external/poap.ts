@@ -421,7 +421,7 @@ async function retrievePagedPOAPsForEvent(
   const offset = perPage * page;
 
   const poapResponse = await makePOAPRequest(
-    `${POAP_API_URL}/event/${poapEventId}/poaps?page=${page}&offset=${offset}`,
+    `${POAP_API_URL}/event/${poapEventId}/poaps?limit=${perPage}&offset=${offset}`,
     'GET',
     null,
   );
