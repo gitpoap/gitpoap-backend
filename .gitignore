@@ -5,3 +5,4 @@ dist/
 notes
 prisma/dbml
 *.csv
+*.txt
