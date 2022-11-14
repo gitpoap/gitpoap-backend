@@ -6,6 +6,7 @@ import { retrieveUnusedPOAPCodes } from '../../../../src/external/poap';
 import { checkGitPOAPForNewCodes, GitPOAPWithSecret } from '../../../../src/lib/codes';
 import { sendGitPOAPRequestLiveEmail } from '../../../../src/external/postmark';
 import { getS3URL } from '../../../../src/external/s3';
+import { DateTime } from 'luxon';
 
 jest.mock('../../../../src/logging');
 jest.mock('../../../../src/external/poap');
@@ -44,6 +45,10 @@ const gitPOAP: GitPOAPWithSecret = {
   imageUrl: getS3URL('gitpoap-request-images-test', 'foobar.png-123456789'),
   creatorEmail: {
     emailAddress: 'test@gitpoap.io',
+  },
+  gitPOAPRequest: {
+    startDate: DateTime.fromISO('2021-01-01').toJSDate(),
+    endDate: DateTime.fromISO('2021-01-10').toJSDate(),
   },
 } as any;
 
@@ -202,8 +207,12 @@ describe('checkGitPOAPForNewCodes', () => {
 
     expect(sendGitPOAPRequestLiveEmail).toHaveBeenCalledWith({
       id: 34,
+      name: 'foobar',
       email: 'test@gitpoap.io',
       imageUrl: getS3URL('gitpoap-request-images-test', 'foobar.png-123456789'),
+      description: 'foobar-description',
+      startDate: DateTime.fromISO('2021-01-01').toFormat('yyyy LLL dd'),
+      endDate: DateTime.fromISO('2021-01-10').toFormat('yyyy LLL dd'),
     });
 
     expect(contextMock.prisma.gitPOAP.update).toHaveBeenCalledWith({
