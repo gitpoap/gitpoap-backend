@@ -87,11 +87,24 @@ export const sendInternalGitPOAPRequestMessage = async ({
   await sendGitPOAPRequestMessage(msg);
 };
 
-export const sendInternalOnboardingMessage = async (githubHandle: string, formData: IntakeForm) => {
-  const msg = `📬 Received request to onboard a new project to GitPOAP! Use DynaList to view details.
+function getGithubRepoLink(fullRepoName: string) {
+  return `<https://github.com/${fullRepoName}|${fullRepoName}>`;
+}
+
+export const sendInternalOnboardingMessage = async (
+  githubHandle: string,
+  formData: IntakeForm,
+  fullRepoNames: string[],
+) => {
+  let msg = `📬 Received request to onboard a new project to GitPOAP! Use DynaList for additional details.
 * GitHub handle: ${githubHandle}
 * Name: ${formData.name}
-* Email: ${formData.email}`;
+* Email: ${formData.email}
+* Requested repos:`;
+
+  for (const fullRepoName of fullRepoNames) {
+    msg += `\n  * ${getGithubRepoLink(fullRepoName)}`;
+  }
 
   await sendOnboardingMessage(msg);
 };
