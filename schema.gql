@@ -998,7 +998,8 @@ input GitPOAPRequestWhereInput {
   adminApprovalStatus: EnumAdminApprovalStatusFilter
   addressId: IntFilter
   address: AddressRelationFilter
-  gitPOAP: GitPOAPListRelationFilter
+  gitPOAPId: IntNullableFilter
+  GitPOAP: GitPOAPRelationFilter
 }
 
 input JsonFilter {
@@ -1041,6 +1042,11 @@ input NestedEnumAdminApprovalStatusFilter {
   in: [AdminApprovalStatus!]
   notIn: [AdminApprovalStatus!]
   not: NestedEnumAdminApprovalStatusFilter
+}
+
+input GitPOAPRelationFilter {
+  is: GitPOAPWhereInput
+  isNot: GitPOAPWhereInput
 }
 
 input GithubPullRequestListRelationFilter {
@@ -1195,11 +1201,6 @@ input RedeemCodeWhereInput {
   gitPOAPId: IntFilter
   gitPOAP: GitPOAPRelationFilter
   code: StringFilter
-}
-
-input GitPOAPRelationFilter {
-  is: GitPOAPWhereInput
-  isNot: GitPOAPWhereInput
 }
 
 input EventRelationFilter {
@@ -1505,7 +1506,8 @@ input GitPOAPRequestOrderByWithRelationInput {
   adminApprovalStatus: SortOrder
   addressId: SortOrder
   address: AddressOrderByWithRelationInput
-  gitPOAP: GitPOAPOrderByRelationAggregateInput
+  gitPOAPId: SortOrder
+  GitPOAP: GitPOAPOrderByWithRelationInput
 }
 
 input GithubPullRequestOrderByWithRelationInput {
@@ -1887,6 +1889,7 @@ enum OrganizationMembershipScalarFieldEnum {
 input GitPOAPWhereUniqueInput {
   id: Int
   poapEventId: Int
+  gitPOAPRequestId: Int
 }
 
 enum GitPOAPScalarFieldEnum {
@@ -1930,23 +1933,12 @@ type GitPOAPRequest {
   contributors: JSON!
   adminApprovalStatus: AdminApprovalStatus!
   addressId: Int!
-  _count: GitPOAPRequestCount
+  gitPOAPId: Int
   creatorEmail: Email!
   project: Project
   organization: Organization
   address: Address!
-  gitPOAP(
-    where: GitPOAPWhereInput
-    orderBy: [GitPOAPOrderByWithRelationInput!]
-    cursor: GitPOAPWhereUniqueInput
-    take: Int
-    skip: Int
-    distinct: [GitPOAPScalarFieldEnum!]
-  ): [GitPOAP!]!
-}
-
-type GitPOAPRequestCount {
-  gitPOAP: Int!
+  GitPOAP: GitPOAP
 }
 
 type Email {
@@ -1967,6 +1959,7 @@ type EmailCount {
 
 input GitPOAPRequestWhereUniqueInput {
   id: Int
+  gitPOAPId: Int
 }
 
 enum GitPOAPRequestScalarFieldEnum {
@@ -1985,6 +1978,7 @@ enum GitPOAPRequestScalarFieldEnum {
   contributors
   adminApprovalStatus
   addressId
+  gitPOAPId
 }
 
 type GithubPullRequest {
@@ -3176,6 +3170,7 @@ type GitPOAPRequestCountAggregate {
   contributors: Int!
   adminApprovalStatus: Int!
   addressId: Int!
+  gitPOAPId: Int!
   _all: Int!
 }
 
@@ -3186,6 +3181,7 @@ type GitPOAPRequestAvgAggregate {
   projectId: Float
   organizationId: Float
   addressId: Float
+  gitPOAPId: Float
 }
 
 type GitPOAPRequestSumAggregate {
@@ -3195,6 +3191,7 @@ type GitPOAPRequestSumAggregate {
   projectId: Int
   organizationId: Int
   addressId: Int
+  gitPOAPId: Int
 }
 
 type GitPOAPRequestMinAggregate {
@@ -3212,6 +3209,7 @@ type GitPOAPRequestMinAggregate {
   organizationId: Int
   adminApprovalStatus: AdminApprovalStatus
   addressId: Int
+  gitPOAPId: Int
 }
 
 type GitPOAPRequestMaxAggregate {
@@ -3229,6 +3227,7 @@ type GitPOAPRequestMaxAggregate {
   organizationId: Int
   adminApprovalStatus: AdminApprovalStatus
   addressId: Int
+  gitPOAPId: Int
 }
 
 type GitPOAPRequestGroupBy {
@@ -3247,6 +3246,7 @@ type GitPOAPRequestGroupBy {
   contributors: JSON!
   adminApprovalStatus: AdminApprovalStatus!
   addressId: Int!
+  gitPOAPId: Int
   _count: GitPOAPRequestCountAggregate
   _avg: GitPOAPRequestAvgAggregate
   _sum: GitPOAPRequestSumAggregate
@@ -3270,6 +3270,7 @@ input GitPOAPRequestOrderByWithAggregationInput {
   contributors: SortOrder
   adminApprovalStatus: SortOrder
   addressId: SortOrder
+  gitPOAPId: SortOrder
   _count: GitPOAPRequestCountOrderByAggregateInput
   _avg: GitPOAPRequestAvgOrderByAggregateInput
   _max: GitPOAPRequestMaxOrderByAggregateInput
@@ -3293,6 +3294,7 @@ input GitPOAPRequestCountOrderByAggregateInput {
   contributors: SortOrder
   adminApprovalStatus: SortOrder
   addressId: SortOrder
+  gitPOAPId: SortOrder
 }
 
 input GitPOAPRequestAvgOrderByAggregateInput {
@@ -3302,6 +3304,7 @@ input GitPOAPRequestAvgOrderByAggregateInput {
   projectId: SortOrder
   organizationId: SortOrder
   addressId: SortOrder
+  gitPOAPId: SortOrder
 }
 
 input GitPOAPRequestMaxOrderByAggregateInput {
@@ -3319,6 +3322,7 @@ input GitPOAPRequestMaxOrderByAggregateInput {
   organizationId: SortOrder
   adminApprovalStatus: SortOrder
   addressId: SortOrder
+  gitPOAPId: SortOrder
 }
 
 input GitPOAPRequestMinOrderByAggregateInput {
@@ -3336,6 +3340,7 @@ input GitPOAPRequestMinOrderByAggregateInput {
   organizationId: SortOrder
   adminApprovalStatus: SortOrder
   addressId: SortOrder
+  gitPOAPId: SortOrder
 }
 
 input GitPOAPRequestSumOrderByAggregateInput {
@@ -3345,6 +3350,7 @@ input GitPOAPRequestSumOrderByAggregateInput {
   projectId: SortOrder
   organizationId: SortOrder
   addressId: SortOrder
+  gitPOAPId: SortOrder
 }
 
 input GitPOAPRequestScalarWhereWithAggregatesInput {
@@ -3366,6 +3372,7 @@ input GitPOAPRequestScalarWhereWithAggregatesInput {
   contributors: JsonWithAggregatesFilter
   adminApprovalStatus: EnumAdminApprovalStatusWithAggregatesFilter
   addressId: IntWithAggregatesFilter
+  gitPOAPId: IntNullableWithAggregatesFilter
 }
 
 input JsonWithAggregatesFilter {
