@@ -1,5 +1,5 @@
 import { context } from '../context';
-import { GitPOAPType, Email } from '@prisma/client';
+import { GitPOAPType, Email, GitPOAPRequest } from '@prisma/client';
 import { GitPOAPStatus, RedeemCode, Organization, Address } from '@generated/type-graphql';
 import { createScopedLogger } from '../logging';
 import { retrieveUnusedPOAPCodes } from '../external/poap';
@@ -8,6 +8,7 @@ import { lookupLastRun, updateLastRun } from './batchProcessing';
 import { backloadGithubPullRequestData } from './pullRequests';
 import { GitPOAPRequestEmailForm } from '../types/gitpoaps';
 import { sendGitPOAPRequestLiveEmail } from '../external/postmark';
+import { formatDateToString } from '../../src/routes/gitpoaps/utils';
 
 // The name of the row in the BatchTiming table used for checking for new codes
 const CHECK_FOR_CODES_BATCH_TIMING_KEY = 'check-for-codes';
@@ -53,6 +54,7 @@ export type GitPOAPWithSecret = {
   creatorAddress: Address | null;
   imageUrl: string;
   creatorEmail: Email | null;
+  gitPOAPRequest: GitPOAPRequest | null;
 };
 
 async function lookupRepoIds(gitPOAPId: number): Promise<number[]> {
@@ -143,8 +145,12 @@ export async function checkGitPOAPForNewCodes(gitPOAP: GitPOAPWithSecret): Promi
             email,
             imageUrl: gitPOAP.imageUrl,
             description: gitPOAP.description,
-            startDate: '',
-            endDate: '',
+            startDate: gitPOAP.gitPOAPRequest?.startDate
+              ? formatDateToString(gitPOAP.gitPOAPRequest?.startDate)
+              : '',
+            endDate: gitPOAP.gitPOAPRequest?.endDate
+              ? formatDateToString(gitPOAP.gitPOAPRequest?.endDate)
+              : '',
           };
           void sendGitPOAPRequestLiveEmail(emailForm);
         } else {
@@ -184,6 +190,7 @@ export async function checkForNewPOAPCodes() {
       creatorAddress: true,
       imageUrl: true,
       creatorEmail: true,
+      gitPOAPRequest: true,
     },
   });
 

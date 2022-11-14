@@ -35,7 +35,6 @@ import {
   sendGitPOAPRequestRejectionEmail,
 } from '../../external/postmark';
 import { GitPOAPRequestEmailForm } from '../../types/gitpoaps';
-import path from 'path';
 import { formatDateToString } from './utils';
 
 export const customGitPOAPsRouter = Router();
