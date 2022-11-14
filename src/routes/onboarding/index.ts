@@ -153,7 +153,11 @@ onboardingRouter.post<'/intake-form', any, any, IntakeForm>(
     }
 
     /* Send message to slack */
-    void sendInternalOnboardingMessage(githubHandle, req.body);
+    void sendInternalOnboardingMessage(
+      githubHandle,
+      req.body,
+      reposSchemaResult.data.map(repoData => repoData.full_name),
+    );
 
     logger.info(
       `Successfully submitted intake form for GitHub user - ${githubHandle} and email - ${req.body.email}`,
