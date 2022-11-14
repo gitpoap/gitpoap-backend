@@ -225,7 +225,7 @@ model GitPOAP {
   creatorEmailId     Int?
   creatorEmail       Email?          @relation(fields: [creatorEmailId], references: [id])
   // TODO: remove these two after POAP fixes their issues with dates
-  gitPOAPRequestId   Int?
+  gitPOAPRequestId   Int?            @unique
   gitPOAPRequest     GitPOAPRequest? @relation(fields: [gitPOAPRequestId], references: [id])
 }
 
@@ -252,7 +252,8 @@ model GitPOAPRequest {
   addressId           Int
   address             Address             @relation(fields: [addressId], references: [id])
   // TODO: remove after POAP fixes their issues with dates
-  gitPOAP             GitPOAP[]
+  gitPOAPId           Int?                @unique
+  GitPOAP             GitPOAP?
 }
 
 model AuthToken {
