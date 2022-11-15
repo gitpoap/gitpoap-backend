@@ -42,6 +42,7 @@
     "validate-codes": "APP_NAME=validate-codes ts-node-dev ./scripts/validate-codes.ts"
   },
   "devDependencies": {
+    "@faker-js/faker": "^7.6.0",
     "@types/badgen": "^2.7.1",
     "@types/cors": "^2.8.12",
     "@types/data-urls": "^3.0.0",

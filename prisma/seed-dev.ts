@@ -7,6 +7,7 @@
 
 import 'reflect-metadata';
 import { ClaimStatus, GitPOAPStatus } from '@generated/type-graphql';
+import { faker } from '@faker-js/faker';
 import {
   AddressFactory,
   ClaimFactory,
@@ -28,6 +29,7 @@ import { TEAM_EMAIL } from '../src/constants';
 import * as data from './data';
 import { AdminApprovalStatus, GitPOAPType } from '@prisma/client';
 import { getS3URL } from '../src/external/s3';
+import { context } from '../src/context';
 
 export const seed = async () => {
   console.log('Starting DB seeding...');
@@ -172,11 +174,11 @@ export const seed = async () => {
   );
 
   /* Add codes */
-  await RedeemCodeFactory.addRedeemCodes(['6j8wda', 'tqaq9y', 'd4tdh0', 'o9uorf', 'eeyewe', '09wqld', 'tsl7wt', 'i52wvt', 'mshofb', 'v9cbcd'], gitpoap7.id);
-  await RedeemCodeFactory.addRedeemCodes(['7s4dn3', 'q9237f', 'd0e21q', 'qzaj5c', 'ozy2c9', 'p7yqjo', 'cgsevm', 'hou5kq', 'j6sxom', '058qv8'], gitpoap8.id);
-  await RedeemCodeFactory.addRedeemCodes(['plw7uf', 'rea9f5', '1etkax', 'l4uulx', '8hnrqa', '2mfo3x', 'me3qfx', 's8znfh', 'gelwgm', 'ebafk6'], gitpoap9.id);
-  await RedeemCodeFactory.addRedeemCodes(['492wr5', 'zzxoaa', 'fnc0cn', 'hrir8p', 'v1258v', 'i7lt58', 'erxgdb', 'za5od3', 'v8a1wg', 'uazjii'], gitpoap10.id);
-  await RedeemCodeFactory.addRedeemCodes(['hh3zf2', 'ivnnil', 'wylm9j', 'c8i5qj', '8inyd8', 'xyrepl', 'q4564p', 'aienlq', 'ohgtbi', 'qtr3ju'], gitpoap11.id);
+  const allGitPOAPs = await context.prisma.gitPOAP.findMany();
+  for (const gitpoap of allGitPOAPs) {
+    const codes = Array.from({ length: 20 }).map(() => faker.datatype.string(6));
+    await RedeemCodeFactory.addRedeemCodes(codes, gitpoap.id);
+  }
 
   /* Create Claims */
   // GitPOAP 1
