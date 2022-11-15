@@ -112,8 +112,8 @@ class Holder {
   @Field(() => String, { nullable: true })
   ensAvatarImageUrl: string | null;
 
-  @Field()
-  githubHandle: string;
+  @Field(() => String, { nullable: true })
+  githubHandle: string | null;
 
   @Field()
   gitPOAPCount: number;
@@ -631,71 +631,29 @@ export class CustomGitPOAPResolver {
       return null;
     }
 
-    type ResultType = Profile &
-      Pick<Address, 'ethAddress' | 'ensName' | 'ensAvatarImageUrl'> & {
-        githubHandle: string;
-        claimsCount: number;
-      };
+    const statusChoicesSql = Prisma.sql`(${ClaimStatus.MINTING}::"ClaimStatus", ${ClaimStatus.CLAIMED}::"ClaimStatus")`;
 
     const claimStatusSelect = Prisma.sql`
       SELECT COUNT(c2.id)::INTEGER FROM "Claim" AS c2
       INNER JOIN "GitPOAP" AS g ON g.id = c2."gitPOAPId"
       WHERE p."addressId" = c2."mintedAddressId"
-        AND c2.status IN (
-          ${ClaimStatus.MINTING}::"ClaimStatus",
-          ${ClaimStatus.CLAIMED}::"ClaimStatus"
-        )
+        AND c2.status IN ${statusChoicesSql}
     `;
 
-    let results: ResultType[];
+    let pageChoiceSql = Prisma.empty;
+    if (page !== null) {
+      pageChoiceSql = Prisma.sql`LIMIT ${<number>perPage} OFFSET ${
+        (<number>page - 1) * <number>perPage
+      }`;
+    }
+
+    let orderBySql;
     switch (sort) {
       case 'claim-date':
-        if (page !== null) {
-          results = await prisma.$queryRaw`
-            SELECT p.*, a.*, u."githubHandle", (${claimStatusSelect}) AS "claimsCount"
-            FROM "Claim" AS c
-            INNER JOIN "Profile" AS p ON c."mintedAddressId" = p."addressId"
-            INNER JOIN "Address" AS a ON c."mintedAddressId" = a."id"
-            INNER JOIN "GithubUser" AS u ON u.id = c."githubUserId"
-            WHERE c."gitPOAPId" = ${gitPOAPId} AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
-            ORDER BY c."updatedAt" DESC
-            LIMIT ${<number>perPage} OFFSET ${(<number>page - 1) * <number>perPage}
-          `;
-        } else {
-          results = await prisma.$queryRaw`
-            SELECT p.*, a.*, u."githubHandle", (${claimStatusSelect}) AS "claimsCount"
-            FROM "Claim" AS c
-            JOIN "Profile" AS p ON c."mintedAddressId" = p."addressId"
-            JOIN "Address" AS a ON c."mintedAddressId" = a."id"
-            JOIN "GithubUser" AS u ON u.id = c."githubUserId"
-            WHERE c."gitPOAPId" = ${gitPOAPId} AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
-            ORDER BY c."updatedAt" DESC
-          `;
-        }
+        orderBySql = Prisma.sql`ORDER BY c."updatedAt" DESC`;
         break;
       case 'claim-count':
-        if (page !== null) {
-          results = await prisma.$queryRaw`
-            SELECT p.*, a.*, u."githubHandle", (${claimStatusSelect}) AS "claimsCount"
-            FROM "Claim" AS c
-            JOIN "Profile" AS p ON c."mintedAddressId" = p."addressId"
-            JOIN "Address" AS a ON c."mintedAddressId" = a."id"
-            JOIN "GithubUser" AS u ON u.id = c."githubUserId"
-            WHERE c."gitPOAPId" = ${gitPOAPId} AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
-            ORDER BY "claimsCount" DESC
-            LIMIT ${<number>perPage} OFFSET ${(<number>page - 1) * <number>perPage}
-          `;
-        } else {
-          results = await prisma.$queryRaw`
-            SELECT p.*, a.*, u."githubHandle", (${claimStatusSelect}) AS "claimsCount"
-            FROM "Claim" AS c
-            JOIN "Profile" AS p ON c."mintedAddressId" = p."addressId"
-            JOIN "Address" AS a ON c."mintedAddressId" = a."id"
-            JOIN "GithubUser" AS u ON u.id = c."githubUserId"
-            WHERE c."gitPOAPId" = ${gitPOAPId} AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
-            ORDER BY "claimsCount" DESC
-          `;
-        }
+        orderBySql = Prisma.sql`ORDER BY "claimsCount" DESC`;
         break;
       default:
         logger.warn(`Unknown value provided for sort: ${sort}`);
@@ -703,31 +661,45 @@ export class CustomGitPOAPResolver {
         return null;
     }
 
-    const totalHolders = await prisma.claim.count({
-      where: {
-        gitPOAPId,
-        status: ClaimStatus.CLAIMED,
-      },
-    });
+    type HolderResultType = Profile &
+      Pick<Address, 'ethAddress' | 'ensName' | 'ensAvatarImageUrl'> & {
+        githubHandle: string | null;
+        claimsCount: number;
+      };
+
+    const results = await Promise.all([
+      prisma.claim.count({
+        where: {
+          gitPOAPId,
+          status: { in: [ClaimStatus.MINTING, ClaimStatus.CLAIMED] },
+        },
+      }),
+      prisma.$queryRaw<HolderResultType[]>`
+        SELECT a.*, p.*, (${claimStatusSelect}) AS "claimsCount",
+          COALESCE(u."githubHandle", p."githubHandle") AS "githubHandle"
+        FROM "Claim" AS c
+        INNER JOIN "Address" AS a ON c."mintedAddressId" = a.id
+        INNER JOIN "Profile" AS p ON p."addressId" = a.id
+        LEFT JOIN "GithubUser" AS u ON u.id = a."githubUserId"
+        WHERE c."gitPOAPId" = ${gitPOAPId} AND c.status IN ${statusChoicesSql}
+        ${orderBySql} ${pageChoiceSql}
+      `,
+    ]);
 
     const holders = {
-      totalHolders,
-      holders: results.map(r => {
-        const holder: Holder = {
-          profileId: r.id,
-          address: r.ethAddress,
-          bio: r.bio ?? null,
-          profileImageUrl: r.profileImageUrl ?? null,
-          twitterHandle: r.twitterHandle ?? null,
-          personalSiteUrl: r.personalSiteUrl ?? null,
-          githubHandle: r.githubHandle,
-          gitPOAPCount: r.claimsCount,
-          ensName: r.ensName,
-          ensAvatarImageUrl: r.ensAvatarImageUrl,
-        };
-
-        return holder;
-      }),
+      totalHolders: results[0],
+      holders: results[1].map(r => ({
+        profileId: r.id,
+        address: r.ethAddress,
+        bio: r.bio ?? null,
+        profileImageUrl: r.profileImageUrl ?? null,
+        twitterHandle: r.twitterHandle ?? null,
+        personalSiteUrl: r.personalSiteUrl ?? null,
+        githubHandle: r.githubHandle,
+        gitPOAPCount: r.claimsCount,
+        ensName: r.ensName,
+        ensAvatarImageUrl: r.ensAvatarImageUrl,
+      })),
     };
 
     logger.debug(

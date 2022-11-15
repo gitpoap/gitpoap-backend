@@ -263,8 +263,16 @@ export const seed = async () => {
   const claim49a = await ClaimFactory.create(gitpoap26.id, kayleen.id, ClaimStatus.UNCLAIMED);
   const claim49b = await ClaimFactory.create(gitpoap26.id, tyler.id, ClaimStatus.UNCLAIMED);
   const claim49c = await ClaimFactory.create(gitpoap26.id, colfax.id, ClaimStatus.UNCLAIMED);
-  const claim49e = await ClaimFactory.create(gitpoap26.id, jay.id, ClaimStatus.UNCLAIMED);
-  const claim49d = await ClaimFactory.createForEthAddress(gitpoap26.id, addressColfax.id, ClaimStatus.UNCLAIMED);
+  const claim49d = await ClaimFactory.create(gitpoap26.id, jay.id, ClaimStatus.UNCLAIMED);
+  const claim49e = await ClaimFactory.createForEthAddress(gitpoap26.id, addressColfax.id, ClaimStatus.UNCLAIMED);
+  const claim49f = await ClaimFactory.createForEthAddress(
+    gitpoap26.id,
+    addressTyler.id,
+    ClaimStatus.CLAIMED,
+    addressTyler.id,
+    '1023',
+    DateTime.utc(2022, 11, 5).toJSDate(),
+  );
 
   // GitPOAP 27
   const claim50 = await ClaimFactory.create(gitpoap27.id, burz.id, ClaimStatus.CLAIMED, addressBurz.id, '106', DateTime.utc(2022, 4, 5).toJSDate());
@@ -282,6 +290,7 @@ export const seed = async () => {
   const profile5 = await ProfileFactory.create(addressBurz2.id, 'I am not real');
   const profile6 = await ProfileFactory.create(addressVitalik.id, 'I like unicorns');
   const profile7 = await ProfileFactory.create(addressAldo.id, 'I like surfing', 'Aldo Lamberti', 'aldolamberti');
+  const profile8 = await ProfileFactory.create(addressTyler.id, 'yo');
 
   /* Create Featured POAPs */
   const featured1 = await FeaturedPOAPFactory.create(claim14.poapTokenId!, profileJay.id); // Featured GitPOAP
