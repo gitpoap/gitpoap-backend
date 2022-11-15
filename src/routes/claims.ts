@@ -100,6 +100,16 @@ claimsRouter.post('/', jwtWithGitHubOAuth(), async function (req, res) {
 
   const { addressId, address, githubId, githubHandle } = getAccessTokenPayloadWithOAuth(req.user);
 
+  const addressRecord = await context.prisma.address.findUnique({
+    where: {
+      id: addressId,
+    },
+    include: {
+      githubUser: true,
+      email: true,
+    },
+  });
+
   logger.info(`Request claiming IDs ${req.body.claimIds} for address ${address}`);
 
   const foundClaims: FoundClaim[] = [];
@@ -143,15 +153,18 @@ claimsRouter.post('/', jwtWithGitHubOAuth(), async function (req, res) {
       continue;
     }
 
-    // Ensure the githubUser is the owner of the claim
-    if (claim.githubUser?.githubId !== githubId) {
+    // Check that the user owns the claim
+    if (
+      claim.githubUser?.githubId !== githubId &&
+      claim.issuedAddressId !== addressId &&
+      claim.emailId !== addressRecord?.email?.id
+    ) {
       invalidClaims.push({
         claimId,
         reason: 'User does not own claim',
       });
       continue;
     }
-
     const redeemCode = await context.prisma.redeemCode.findFirst({
       where: {
         gitPOAPId: claim.gitPOAP.id,
