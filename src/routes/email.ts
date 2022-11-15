@@ -42,13 +42,31 @@ emailRouter.post('/', jwtWithAddress(), async function (req, res) {
     logger.warn(
       `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
     );
-    return res.status(400).send({ issues: schemaResult.error.issues });
+    return res.status(400).send({ msg: 'ERROR' });
   }
 
   const { address: ethAddress, addressId } = getAccessTokenPayload(req.user);
   const { emailAddress } = req.body;
 
   logger.info(`Request from ${ethAddress} to connect email: ${emailAddress}`);
+
+  const email = await context.prisma.email.findUnique({
+    where: { emailAddress },
+    select: {
+      id: true,
+      isValidated: true,
+      tokenExpiresAt: true,
+    },
+  });
+
+  const isEmailPending =
+    email?.tokenExpiresAt && DateTime.fromJSDate(email.tokenExpiresAt) > DateTime.now();
+  const isEmailTaken = email?.isValidated || isEmailPending;
+
+  if (isEmailTaken) {
+    logger.warn('User attempted to connect emailAddress that is already in use');
+    return res.status(400).send({ msg: 'TAKEN' });
+  }
 
   // Generate a new token
   const activeToken = await generateUniqueEmailToken();
@@ -79,12 +97,12 @@ emailRouter.post('/', jwtWithAddress(), async function (req, res) {
   } catch (err) {
     /* Log error, but don't return error to user. Sending the email is secondary to storing the form data */
     logger.error(`Received error when sending confirmation email to ${emailAddress} - ${err} `);
-    return res.status(500).send({ msg: 'Email failed to send' });
+    return res.status(500).send({ msg: 'ERROR' });
   }
 
   logger.debug(`Completed request from ${ethAddress} to connect email: ${emailAddress}`);
 
-  return res.status(200).send('ADDED');
+  return res.status(200).send({ msg: 'SUBMITTED' });
 });
 
 emailRouter.delete('/', jwtWithAddress(), async function (req, res) {
@@ -95,9 +113,13 @@ emailRouter.delete('/', jwtWithAddress(), async function (req, res) {
   logger.info(`Received request from ${ethAddress} to remove email connection`);
 
   try {
-    await context.prisma.email.delete({
+    await context.prisma.email.update({
       where: {
         addressId,
+      },
+      data: {
+        addressId: null,
+        isValidated: false,
       },
     });
   } catch (err) {
@@ -131,6 +153,7 @@ emailRouter.post('/verify/:activeToken', jwtWithAddress(), async function (req, 
     return res.status(404).send({ msg: 'INVALID' });
   }
 
+  // This really shouldn't ever happen, but we can leave it just in case
   if (!email.tokenExpiresAt) {
     logger.error(`Email validation token has no expiration date: ${activeToken}`);
     return res.status(400).send({ msg: 'INVALID' });
@@ -144,9 +167,12 @@ emailRouter.post('/verify/:activeToken', jwtWithAddress(), async function (req, 
   if (DateTime.fromJSDate(email.tokenExpiresAt) < DateTime.now()) {
     logger.warn(`User attempted to use expired token: ${activeToken}`);
 
-    await context.prisma.email.delete({
+    await context.prisma.email.update({
       where: {
         id: email.id,
+      },
+      data: {
+        addressId: null,
       },
     });
 
