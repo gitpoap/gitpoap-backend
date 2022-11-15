@@ -42,7 +42,7 @@ emailRouter.post('/', jwtWithAddress(), async function (req, res) {
     logger.warn(
       `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
     );
-    return res.status(400).send({ msg: 'ERROR' });
+    return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
   const { address: ethAddress, addressId } = getAccessTokenPayload(req.user);
@@ -97,7 +97,7 @@ emailRouter.post('/', jwtWithAddress(), async function (req, res) {
   } catch (err) {
     /* Log error, but don't return error to user. Sending the email is secondary to storing the form data */
     logger.error(`Received error when sending confirmation email to ${emailAddress} - ${err} `);
-    return res.status(500).send({ msg: 'ERROR' });
+    return res.status(500).send({ msg: 'Email failed to send' });
   }
 
   logger.debug(`Completed request from ${ethAddress} to connect email: ${emailAddress}`);
