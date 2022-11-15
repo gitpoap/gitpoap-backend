@@ -53,6 +53,10 @@ export const seed = async () => {
   const addressKayleen = await AddressFactory.create(ADDRESSES.kayleen, kayleen.id);
   const addressRandom1 = await AddressFactory.create(ADDRESSES.random);
 
+  /* Create email addresses */
+  const teamEmail = await EmailFactory.create(TEAM_EMAIL);
+  const jayEmail = await EmailFactory.create('jay@gitpoap.io');
+
   /* Create Projects */
   const frontendProject = await ProjectFactory.create();
   const backendProject = await ProjectFactory.create();
@@ -250,11 +254,11 @@ export const seed = async () => {
 
   // GitPOAP 26
   const claim47 = await ClaimFactory.create(gitpoap26.id, burz.id, ClaimStatus.CLAIMED, addressBurz.id, '103', DateTime.utc(2022, 4, 5).toJSDate());
-  const claim48 = await ClaimFactory.create(gitpoap26.id, jay.id, ClaimStatus.CLAIMED, addressJay.id, '104', DateTime.utc(2020, 1, 5).toJSDate());
   const claim49 = await ClaimFactory.create(gitpoap26.id, aldo.id, ClaimStatus.CLAIMED, addressAldo.id, '105', DateTime.utc().minus({ days: 2 }).toJSDate());
   const claim49a = await ClaimFactory.create(gitpoap26.id, kayleen.id, ClaimStatus.UNCLAIMED);
   const claim49b = await ClaimFactory.create(gitpoap26.id, tyler.id, ClaimStatus.UNCLAIMED);
   const claim49c = await ClaimFactory.create(gitpoap26.id, colfax.id, ClaimStatus.UNCLAIMED);
+  const claim49d = await ClaimFactory.createForEmail(gitpoap26.id, jayEmail.id, ClaimStatus.UNCLAIMED);
 
   // GitPOAP 27
   const claim50 = await ClaimFactory.create(gitpoap27.id, burz.id, ClaimStatus.CLAIMED, addressBurz.id, '106', DateTime.utc(2022, 4, 5).toJSDate());
@@ -277,9 +281,6 @@ export const seed = async () => {
   const featured1 = await FeaturedPOAPFactory.create(claim14.poapTokenId!, profileJay.id); // Featured GitPOAP
   const featured2 = await FeaturedPOAPFactory.create(claim9.poapTokenId!, profileJay.id); // Featured GitPOAP
   const featured3 = await FeaturedPOAPFactory.create('3976027', profileJay.id); // Featured Classic POAP - Bangia Night
-
-  /* Create email addresses */
-  const teamEmail = await EmailFactory.create(TEAM_EMAIL);
 
   /* Create GitPOAP Requests */
   const request1 = await GitPOAPRequestFactory.create({
