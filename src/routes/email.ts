@@ -95,6 +95,80 @@ emailRouter.post('/', jwtWithAddress(), async function (req, res) {
   return res.status(200).send({ msg: 'SUBMITTED' });
 });
 
+emailRouter.post('/resend', jwtWithAddress(), async function (req, res) {
+  const logger = getRequestLogger(req);
+
+  const { address: ethAddress, addressId } = getAccessTokenPayload(req.user);
+
+  logger.info(`Request from ${ethAddress} to resend verification email`);
+
+  const email = await context.prisma.email.findUnique({
+    where: { addressId },
+    select: {
+      emailAddress: true,
+      isValidated: true,
+      tokenExpiresAt: true,
+    },
+  });
+
+  if (!email) {
+    logger.warn(
+      "User attempted to resend a verification email for an emailAddress that doesn't exist",
+    );
+    return res.status(500).send({ status: 'INVALID' });
+  }
+
+  const { emailAddress, isValidated, tokenExpiresAt } = email;
+
+  if (isValidated) {
+    logger.warn(
+      'User attempted to resend a verification email for an emailAddress that is already validated',
+    );
+    return res.status(400).send({ status: 'VALIDATED' });
+  }
+
+  if (tokenExpiresAt && DateTime.fromJSDate(tokenExpiresAt) < DateTime.now()) {
+    logger.warn(
+      'User attempted to resend a verification email for an emailAddress that has an expired token',
+    );
+    return res.status(400).send({ status: 'EXPIRED' });
+  }
+
+  // Generate a new token
+  const newActiveToken = await generateUniqueEmailToken();
+
+  // Created expiration date 24hrs in advance
+  const newTokenExpiresAt = DateTime.now().plus({ day: 1 }).toJSDate();
+
+  const result = await context.prisma.email.update({
+    where: { addressId },
+    data: {
+      activeToken: newActiveToken,
+      tokenExpiresAt: newTokenExpiresAt,
+    },
+  });
+
+  if (result === null) {
+    logger.error(`Failed to update unverified Email "${emailAddress}" for Address ID ${addressId}`);
+    return res.status(500).send({ msg: 'Failed to update email address' });
+  }
+
+  try {
+    await sendVerificationEmail(emailAddress, newActiveToken);
+    logger.info(`Sent confirmation email to ${emailAddress}`);
+  } catch (err) {
+    /* Log error, but don't return error to user. Sending the email is secondary to storing the form data */
+    logger.error(`Received error when sending confirmation email to ${emailAddress} - ${err} `);
+    return res.status(500).send({ msg: 'Email failed to send' });
+  }
+
+  logger.debug(
+    `Completed request from ${ethAddress} to resend verification email to: ${emailAddress}`,
+  );
+
+  return res.status(200).send({ status: 'SENT' });
+});
+
 emailRouter.delete('/', jwtWithAddress(), async function (req, res) {
   const logger = getRequestLogger(req);
 
