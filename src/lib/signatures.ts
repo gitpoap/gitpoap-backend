@@ -4,7 +4,6 @@ import { SIGNATURE_TTL_MINUTES } from '../constants';
 import { createScopedLogger } from '../logging';
 import { SignatureDataSchema } from '../schemas/signatures';
 import { z } from 'zod';
-import { shortenAddress } from './addresses';
 
 type SignatureData = {
   message: string;
@@ -29,7 +28,7 @@ export function isSignatureValid(
     const recoveredAddress = utils.verifyMessage(signatureData.message, signature);
     return recoveredAddress.toLowerCase() === address.toLowerCase();
   } catch (err) {
-    logger.warn(`Rejected invalid signature related to address: ${shortenAddress(address)}`);
+    logger.warn(`Rejected invalid signature related to address: ${address}`);
     return false;
   }
 }
