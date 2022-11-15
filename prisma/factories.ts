@@ -89,7 +89,12 @@ export class ClaimFactory {
     gitPOAPId: number,
     addressId: number,
     status?: ClaimStatus,
+    mintedAddressId?: number,
+    poapTokenId?: string,
+    mintedAt?: Date,
   ): Promise<Claim> => {
+    const mintedAddress = mintedAddressId ? { connect: { id: mintedAddressId } } : undefined;
+
     const data: Prisma.ClaimCreateInput = {
       gitPOAP: {
         connect: { id: gitPOAPId },
@@ -98,6 +103,8 @@ export class ClaimFactory {
         connect: { id: addressId },
       },
       status,
+      mintedAddress,
+      mintedAt,
     };
     const claim = await prisma.claim.create({ data });
     logger.debug(`Creating claim with id: ${claim.id}`);
