@@ -60,13 +60,17 @@ function createGitPOAPLinkForClaim(gitPOAPId: number, gitPOAPName: string) {
 /** -- Use-case specific slack messages -- **/
 export const sendInternalClaimMessage = async (
   claims: FoundClaim[],
-  githubHandle: string,
   address: string,
+  githubHandle: string | null,
 ) => {
   const profileLink = `<${GITPOAP_URL}/p/${address}|GitPOAP Profile>`;
   const etherscanLink = `<https://etherscan.io/address/${address}|${shortenAddress(address)}>`;
-  const githubLink = createGithubUserLink(githubHandle);
-  let msg = `💸 [${profileLink}]: GitHub user ${githubLink} with address ${etherscanLink} claimed new GitPOAP(s)! 🥳`;
+  let msg = githubHandle
+    ? `💸 [${profileLink}]: GitHub user ${createGithubUserLink(
+        githubHandle,
+      )} with address ${etherscanLink} claimed new GitPOAP(s)! 🥳`
+    : `💸 [${profileLink}]: Address ${etherscanLink} claimed new GitPOAP(s)! 🥳`;
+
   for (const claim of claims) {
     msg += `\n* ${createGitPOAPLinkForClaim(claim.gitPOAPId, claim.gitPOAPName)}`;
   }

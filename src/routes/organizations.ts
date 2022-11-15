@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { jwtWithAddress } from '../middleware/auth';
+import { jwtWithGitHubOAuth } from '../middleware/auth';
 import { getGithubOrganizationAdmins } from '../external/github';
 import { UpdateOrganizationSchema } from '../schemas/organizations';
 import { context } from '../context';
@@ -8,7 +8,7 @@ import { getRequestLogger } from '../middleware/loggingAndTiming';
 
 export const organizationsRouter = Router();
 
-organizationsRouter.post('/', jwtWithAddress(), async function (req, res) {
+organizationsRouter.post('/', jwtWithGitHubOAuth(), async function (req, res) {
   const logger = getRequestLogger(req);
 
   const schemaResult = UpdateOrganizationSchema.safeParse(req.body);
