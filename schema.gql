@@ -1291,6 +1291,8 @@ input AddressOrderByWithRelationInput {
   updatedAt: SortOrder
   githubUserId: SortOrder
   githubUser: GithubUserOrderByWithRelationInput
+  discordUserId: SortOrder
+  discordUser: DiscordUserOrderByWithRelationInput
   ensAvatarImageUrl: SortOrder
   ensName: SortOrder
   memberships: OrganizationMembershipOrderByRelationAggregateInput
@@ -1358,6 +1360,16 @@ input GithubMentionOrderByRelationAggregateInput {
 
 input AddressOrderByRelationAggregateInput {
   _count: SortOrder
+}
+
+input DiscordUserOrderByWithRelationInput {
+  id: SortOrder
+  discordId: SortOrder
+  discordHandle: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  claims: ClaimOrderByRelationAggregateInput
+  addresses: AddressOrderByRelationAggregateInput
 }
 
 input OrganizationMembershipOrderByRelationAggregateInput {
@@ -1538,6 +1550,7 @@ type Claim {
   githubUserId: Int
   emailId: Int
   issuedAddressId: Int
+  discordUserId: Int
   pullRequestEarnedId: Int
   mentionEarnedId: Int
   needsRevalidation: Boolean!
@@ -1546,6 +1559,7 @@ type Claim {
   githubUser: GithubUser
   email: Email
   issuedAddress: Address
+  discordUser: DiscordUser
   pullRequestEarned: GithubPullRequest
   mentionEarned: GithubMention
 }
@@ -2143,6 +2157,7 @@ enum ClaimScalarFieldEnum {
   githubUserId
   emailId
   issuedAddressId
+  discordUserId
   pullRequestEarnedId
   mentionEarnedId
   needsRevalidation
@@ -2740,6 +2755,7 @@ type ClaimGroupBy {
   githubUserId: Int
   emailId: Int
   issuedAddressId: Int
+  discordUserId: Int
   pullRequestEarnedId: Int
   mentionEarnedId: Int
   needsRevalidation: Boolean!
@@ -2762,6 +2778,7 @@ input ClaimOrderByWithAggregationInput {
   githubUserId: SortOrder
   emailId: SortOrder
   issuedAddressId: SortOrder
+  discordUserId: SortOrder
   pullRequestEarnedId: SortOrder
   mentionEarnedId: SortOrder
   needsRevalidation: SortOrder
@@ -2784,6 +2801,7 @@ input ClaimCountOrderByAggregateInput {
   githubUserId: SortOrder
   emailId: SortOrder
   issuedAddressId: SortOrder
+  discordUserId: SortOrder
   pullRequestEarnedId: SortOrder
   mentionEarnedId: SortOrder
   needsRevalidation: SortOrder
@@ -2796,6 +2814,7 @@ input ClaimAvgOrderByAggregateInput {
   githubUserId: SortOrder
   emailId: SortOrder
   issuedAddressId: SortOrder
+  discordUserId: SortOrder
   pullRequestEarnedId: SortOrder
   mentionEarnedId: SortOrder
 }
@@ -2812,6 +2831,7 @@ input ClaimMaxOrderByAggregateInput {
   githubUserId: SortOrder
   emailId: SortOrder
   issuedAddressId: SortOrder
+  discordUserId: SortOrder
   pullRequestEarnedId: SortOrder
   mentionEarnedId: SortOrder
   needsRevalidation: SortOrder
@@ -2829,6 +2849,7 @@ input ClaimMinOrderByAggregateInput {
   githubUserId: SortOrder
   emailId: SortOrder
   issuedAddressId: SortOrder
+  discordUserId: SortOrder
   pullRequestEarnedId: SortOrder
   mentionEarnedId: SortOrder
   needsRevalidation: SortOrder
@@ -2841,6 +2862,7 @@ input ClaimSumOrderByAggregateInput {
   githubUserId: SortOrder
   emailId: SortOrder
   issuedAddressId: SortOrder
+  discordUserId: SortOrder
   pullRequestEarnedId: SortOrder
   mentionEarnedId: SortOrder
 }
@@ -2860,6 +2882,7 @@ input ClaimScalarWhereWithAggregatesInput {
   githubUserId: IntNullableWithAggregatesFilter
   emailId: IntNullableWithAggregatesFilter
   issuedAddressId: IntNullableWithAggregatesFilter
+  discordUserId: IntNullableWithAggregatesFilter
   pullRequestEarnedId: IntNullableWithAggregatesFilter
   mentionEarnedId: IntNullableWithAggregatesFilter
   needsRevalidation: BoolWithAggregatesFilter
