@@ -144,10 +144,20 @@ emailRouter.post('/verify/:activeToken', jwtWithAddress(), async function (req, 
     return res.status(404).send({ msg: 'INVALID' });
   }
 
-  // This really shouldn't ever happen, but we can leave it just in case
+  // This really shouldn't ever happen, but just in case
   if (!email.tokenExpiresAt) {
     logger.error(`Email validation token has no expiration date: ${activeToken}`);
-    return res.status(400).send({ msg: 'INVALID' });
+    await context.prisma.email.update({
+      where: {
+        id: email.id,
+      },
+      data: {
+        activeToken: null,
+        addressId: null,
+        tokenExpiresAt: null,
+      },
+    });
+    return res.status(500).send({ msg: 'INVALID' });
   }
 
   if (email.isValidated) {
