@@ -262,11 +262,11 @@ export const seed = async () => {
 
   // GitPOAP 27
   const claim50 = await ClaimFactory.create(gitpoap27.id, burz.id, ClaimStatus.CLAIMED, addressBurz.id, '106', DateTime.utc(2022, 4, 5).toJSDate());
-  const claim51 = await ClaimFactory.create(gitpoap27.id, jay.id, ClaimStatus.CLAIMED, addressJay.id, '107', DateTime.utc(2020, 1, 5).toJSDate());
   const claim52 = await ClaimFactory.create(gitpoap27.id, aldo.id, ClaimStatus.CLAIMED, addressAldo.id, '108', DateTime.utc().minus({ days: 2 }).toJSDate());
   const claim52a = await ClaimFactory.create(gitpoap27.id, kayleen.id, ClaimStatus.UNCLAIMED);
   const claim52b = await ClaimFactory.create(gitpoap27.id, tyler.id, ClaimStatus.UNCLAIMED);
   const claim52c = await ClaimFactory.create(gitpoap27.id, colfax.id, ClaimStatus.UNCLAIMED);
+  const claim52d = await ClaimFactory.createForEthAddress(gitpoap27.id, addressJay.id, ClaimStatus.UNCLAIMED);
 
   /* Create Profiles */
   const profile1 = await ProfileFactory.create(addressColfax.id, 'I like brisket.');
