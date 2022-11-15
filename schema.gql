@@ -387,7 +387,7 @@ type Query {
   ): [RepoGroupBy!]!
   totalClaims: Float!
   lastMonthClaims: Float!
-  userClaims(githubId: Float!): [FullClaimData!]
+  userClaims(address: String!): [FullClaimData!]
   totalGitPOAPs: Float!
   lastMonthGitPOAPs: Float!
   gitPOAPEvent(id: Float!): FullGitPOAPEventData
