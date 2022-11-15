@@ -105,8 +105,6 @@ claimsRouter.post('/', jwtWithAddress(), async function (req, res) {
     },
   });
 
-  console.log('i am here');
-
   logger.info(`Request claiming IDs ${req.body.claimIds} for address ${address}`);
 
   const foundClaims: FoundClaim[] = [];
