@@ -20,9 +20,12 @@ import {
   ProjectFactory,
   RedeemCodeFactory,
   RepoFactory,
+  EmailFactory,
+  GitPOAPRequestFactory,
 } from './factories';
 import { DateTime } from 'luxon';
 import { ADDRESSES, GH_HANDLES, GH_IDS } from './constants';
+import { TEAM_EMAIL } from '../src/constants';
 import {
   event1,
   event2,
@@ -43,6 +46,8 @@ import {
   event37429,
   event37430,
 } from './data';
+import { getS3URL } from '../src/external/s3';
+import { AdminApprovalStatus } from '@prisma/client';
 
 export const seed = async () => {
   console.log('Starting DB seeding...');
@@ -67,6 +72,13 @@ export const seed = async () => {
   const addressTyler = await AddressFactory.create(ADDRESSES.tyler, tyler.id);
   const addressKayleen = await AddressFactory.create(ADDRESSES.kayleen, kayleen.id);
   const addressRandom1 = await AddressFactory.create(ADDRESSES.random);
+
+  /* Create email addresses */
+  const teamEmail = await EmailFactory.create(TEAM_EMAIL);
+  const jayEmail = await EmailFactory.create('jay@gitpoap.io');
+  const unvalidatedEmail = await EmailFactory.create('unvalidated@gitpoap.io', undefined, 'testtoken1', false, DateTime.now().plus({ day: 1 }).toJSDate());
+  const expiredEmail = await EmailFactory.create('expired@gitpoap.io', undefined, 'testtoken2', false, DateTime.now().minus({ day: 1 }).toJSDate());
+  const validatedEmail = await EmailFactory.create('validated@gitpoap.io', undefined, 'testtoken3', true, DateTime.now().minus({ day: 1 }).toJSDate());
 
   /* Create Projects */
   const frontendProject = await ProjectFactory.create();
@@ -277,6 +289,41 @@ export const seed = async () => {
   const featured1 = await FeaturedPOAPFactory.create(claim14.poapTokenId!, profileJay.id); // Featured GitPOAP
   const featured2 = await FeaturedPOAPFactory.create(claim9.poapTokenId!, profileJay.id); // Featured GitPOAP
   const featured3 = await FeaturedPOAPFactory.create('3976027', profileJay.id); // Featured Classic POAP - Bangia Night
+
+  /* Create GitPOAP Requests */
+  const request1 = await GitPOAPRequestFactory.create({
+    name: 'Custom GitPOAPs Feature Release Contributor!',
+    description: 'You contributed heavily to the release of the Custom GitPOAPs feature!',
+    creatorEmailId: teamEmail.id,
+    addressId: addressJay.id,
+    imageUrl: getS3URL('gitpoap-request-images-test', 'gitpoap-test-2.png-1666121850.987'),
+    startDate: DateTime.fromISO('2022-01-01').toJSDate(),
+    endDate: DateTime.fromISO('2022-01-30').toJSDate(),
+    adminApprovalStatus: AdminApprovalStatus.PENDING,
+    contributors: {
+      ensNames: ['peebeejay.eth'],
+      githubHandles: ['peebeejay'],
+      ethAddresses: ['0xpeebeejay'],
+      emails: ['team@gitpoap.io'],
+    },
+  });
+
+  const request2 = await GitPOAPRequestFactory.create({
+    name: 'Onboarding Form Contributor!',
+    description: 'The onboarding form was an absolutely massive effort, & you are most deserving of recognition for this fine achievement!',
+    creatorEmailId: teamEmail.id,
+    addressId: addressJay.id,
+    imageUrl: getS3URL('gitpoap-request-images-test', 'gitpoap-test-1.png-1666121850.987'),
+    startDate: DateTime.fromISO('2022-06-01').toJSDate(),
+    endDate: DateTime.fromISO('2022-06-30').toJSDate(),
+    adminApprovalStatus: AdminApprovalStatus.PENDING,
+    contributors: {
+      ensNames: ['lamberti.eth'],
+      githubHandles: ['aldolamb'],
+      ethAddresses: ['0xpeebeejay'],
+      emails: ['aldo@gitpoap.io', 'burz@gitpoap.io', 'jay@gitpoap.io'],
+    },
+  });
 
   console.log('DB Seeding complete. ');
 };

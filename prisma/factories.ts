@@ -436,12 +436,14 @@ export class EmailFactory {
     emailAddress: string,
     address?: Prisma.EmailCreateInput['address'],
     activeToken?: string,
-    tokenExpiresAt?: string,
+    isValidated?: boolean,
+    tokenExpiresAt?: Date,
   ): Promise<Email> => {
     const data: Prisma.EmailCreateInput = {
       emailAddress,
       activeToken,
       address,
+      isValidated,
       tokenExpiresAt,
     };
     const emailObj = await prisma.email.create({ data });
