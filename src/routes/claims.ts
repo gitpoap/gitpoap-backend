@@ -6,12 +6,7 @@ import {
 import { Router, Request } from 'express';
 import { context } from '../context';
 import { ClaimStatus, GitPOAPStatus, GitPOAPType } from '@prisma/client';
-import {
-  gitpoapBotAuth,
-  jwtWithAddress,
-  jwtWithAdminOAuth,
-  jwtWithGitHubOAuth,
-} from '../middleware/auth';
+import { gitpoapBotAuth, jwtWithAddress, jwtWithAdminOAuth } from '../middleware/auth';
 import { getAccessTokenPayloadWithOAuth } from '../types/authTokens';
 import { redeemPOAP, retrieveClaimInfo } from '../external/poap';
 import { getGithubUserById } from '../external/github';
@@ -87,7 +82,7 @@ async function runClaimsPostProcessing(claimIds: number[], qrHashes: string[]) {
   logger.info('Finished claims post processing');
 }
 
-claimsRouter.post('/', jwtWithGitHubOAuth(), async function (req, res) {
+claimsRouter.post('/', jwtWithAddress(), async function (req, res) {
   const logger = getRequestLogger(req);
 
   const schemaResult = ClaimGitPOAPSchema.safeParse(req.body);
@@ -109,6 +104,8 @@ claimsRouter.post('/', jwtWithGitHubOAuth(), async function (req, res) {
       email: true,
     },
   });
+
+  console.log('i am here');
 
   logger.info(`Request claiming IDs ${req.body.claimIds} for address ${address}`);
 
@@ -538,7 +535,7 @@ claimsRouter.post(
   },
 );
 
-claimsRouter.post('/revalidate', jwtWithGitHubOAuth(), async (req, res) => {
+claimsRouter.post('/revalidate', jwtWithAddress(), async (req, res) => {
   const logger = getRequestLogger(req);
 
   // We have the same body requirements here as in the claim endpoint
