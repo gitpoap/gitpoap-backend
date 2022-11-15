@@ -121,6 +121,7 @@ export class CustomClaimResolver {
         gitPOAP: {
           select: {
             poapEventId: true,
+            redeemCodes: true,
           },
         },
       },
@@ -137,6 +138,11 @@ export class CustomClaimResolver {
         logger.error(`Failed to query event ${gitPOAP.poapEventId} data from POAP API`);
         endTimer({ success: 0 });
         return null;
+      }
+
+      if (claim.gitPOAP.redeemCodes.length === 0) {
+        logger.error(`Claim ${claim.id} has no redeem codes`);
+        continue;
       }
 
       results.push({
