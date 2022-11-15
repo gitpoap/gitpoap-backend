@@ -29,6 +29,7 @@ import { getAccessTokenPayload } from '../types/authTokens';
 import { ensureRedeemCodeThreshold } from '../lib/claims';
 import { ClaimData, FoundClaim } from '../types/claims';
 import { getRequestLogger } from '../middleware/loggingAndTiming';
+import { shortenAddress } from '../lib/addresses';
 
 export const claimsRouter = Router();
 
@@ -93,7 +94,7 @@ claimsRouter.post('/', jwtWithAddress(), async function (req, res) {
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
-  const { addressId, address, githubId, githubHandle } = getAccessTokenPayloadWithOAuth(req.user);
+  const { addressId, address, githubId, githubHandle } = getAccessTokenPayload(req.user);
 
   const addressRecord = await context.prisma.address.findUnique({
     where: {
@@ -131,7 +132,11 @@ claimsRouter.post('/', jwtWithAddress(), async function (req, res) {
     }
 
     if (!claim.gitPOAP.isEnabled) {
-      logger.warn(`GitHub user ${githubHandle} attempted to claim a non-enabled GitPOAP`);
+      logger.warn(
+        `User with address: ${shortenAddress(
+          address,
+        )} (ID: ${addressId}) attempted to claim a non-enabled GitPOAP`,
+      );
       invalidClaims.push({
         claimId,
         reason: `GitPOAP ID ${claim.gitPOAP.id} is not enabled`,
@@ -246,7 +251,7 @@ claimsRouter.post('/', jwtWithAddress(), async function (req, res) {
     }
   }
 
-  void sendInternalClaimMessage(foundClaims, githubHandle, address);
+  void sendInternalClaimMessage(foundClaims, address, githubHandle);
 
   logger.debug(`Completed request claiming IDs ${req.body.claimIds} for address ${address}`);
 
@@ -545,7 +550,7 @@ claimsRouter.post('/revalidate', jwtWithAddress(), async (req, res) => {
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
-  const { address, githubId, githubHandle } = getAccessTokenPayloadWithOAuth(req.user);
+  const { address, githubId, githubHandle } = getAccessTokenPayload(req.user);
 
   logger.info(
     `Request to revalidate GitPOAP IDs ${req.body.claimIds} by GitHub user ${githubHandle}`,
