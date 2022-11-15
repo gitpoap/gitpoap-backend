@@ -414,12 +414,21 @@ describe('POST /email/verify/:activeToken', () => {
       .set('Authorization', `Bearer ${authTokens.accessToken}`)
       .send();
 
-    expect(result.statusCode).toEqual(400);
+    expect(result.statusCode).toEqual(500);
 
     expect(contextMock.prisma.email.findUnique).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.email.findUnique).toHaveBeenCalledWith({
       where: { activeToken: testActiveToken },
       select: { id: true, isValidated: true, tokenExpiresAt: true },
+    });
+    expect(contextMock.prisma.email.update).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.email.update).toHaveBeenCalledWith({
+      where: { id: 1 },
+      data: {
+        activeToken: null,
+        addressId: null,
+        tokenExpiresAt: null,
+      },
     });
   });
 
