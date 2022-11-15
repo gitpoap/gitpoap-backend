@@ -67,33 +67,55 @@ export class CustomClaimResolver {
   @Query(() => [FullClaimData], { nullable: true })
   async userClaims(
     @Ctx() { prisma }: Context,
-    @Arg('githubId') githubId: number,
+    @Arg('address') address: string,
   ): Promise<FullClaimData[] | null> {
     const logger = createScopedLogger('GQL userClaims');
 
-    logger.info(`Request for the claims for githubId: ${githubId}`);
+    logger.info(`Request for the claims for address: ${address}`);
 
     const endTimer = gqlRequestDurationSeconds.startTimer('userClaims');
 
+    const addressRecord = await prisma.address.findUnique({
+      where: {
+        ethAddress: address.toLowerCase(),
+      },
+      select: {
+        ethAddress: true,
+        ensName: true,
+        githubUser: true,
+        email: true,
+      },
+    });
+
+    const ethAddress = addressRecord?.ethAddress;
+    const githubId = addressRecord?.githubUser?.githubId;
+    const ensName = addressRecord?.ensName;
+    const emailAddress = addressRecord?.email?.emailAddress;
+
     const claims = await prisma.claim.findMany({
       where: {
-        githubUser: {
-          githubId,
-        },
-        OR: [
+        AND: [
           {
-            status: {
-              in: [ClaimStatus.UNCLAIMED, ClaimStatus.PENDING, ClaimStatus.MINTING],
-            },
+            OR: [
+              { issuedAddress: { ethAddress } },
+              { issuedAddress: { ensName } },
+              { email: { emailAddress } },
+              { githubUser: { githubId } },
+            ],
           },
           {
-            mintedAt: { gt: getLastMonthStartDatetime() },
-            status: ClaimStatus.CLAIMED,
+            OR: [
+              {
+                status: { in: [ClaimStatus.UNCLAIMED, ClaimStatus.PENDING, ClaimStatus.MINTING] },
+              },
+              {
+                mintedAt: { gt: getLastMonthStartDatetime() },
+                status: ClaimStatus.CLAIMED,
+              },
+            ],
           },
         ],
-        gitPOAP: {
-          isEnabled: true,
-        },
+        gitPOAP: { isEnabled: true },
       },
       include: {
         gitPOAP: {
