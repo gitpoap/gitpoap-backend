@@ -345,8 +345,10 @@ describe('DELETE /email', () => {
     expect(contextMock.prisma.email.update).toHaveBeenCalledWith({
       where: { addressId: addressRecord.id },
       data: {
+        activeToken: null,
         addressId: null,
         isValidated: false,
+        tokenExpiresAt: null,
       },
     });
   });
@@ -472,7 +474,9 @@ describe('POST /email/verify/:activeToken', () => {
     expect(contextMock.prisma.email.update).toHaveBeenCalledWith({
       where: { id: 1 },
       data: {
+        activeToken: null,
         addressId: null,
+        tokenExpiresAt: null,
       },
     });
   });
