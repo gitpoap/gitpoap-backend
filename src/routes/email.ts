@@ -2,12 +2,11 @@ import { Router } from 'express';
 import { DateTime } from 'luxon';
 import { context } from '../context';
 import { sendVerificationEmail } from '../external/postmark';
-import { generateUniqueEmailToken } from '../lib/email';
 import { jwtWithAddress } from '../middleware/auth';
 import { AddEmailSchema } from '../schemas/email';
 import { getAccessTokenPayload } from '../types/authTokens';
 import { getRequestLogger } from '../middleware/loggingAndTiming';
-import { upsertUnverifiedEmail } from '../lib/emails';
+import { generateUniqueEmailToken, upsertUnverifiedEmail } from '../lib/emails';
 
 export const emailRouter = Router();
 
