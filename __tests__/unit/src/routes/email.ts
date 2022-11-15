@@ -5,14 +5,17 @@ import { setupApp } from '../../../../__mocks__/src/app';
 import { sendVerificationEmail } from '../../../../src/external/postmark';
 import { generateAuthTokens } from '../../../../src/lib/authTokens';
 import { DateTime } from 'luxon';
+import { upsertUnverifiedEmail } from '../../../../src/lib/emails';
 
 jest.mock('../../../../src/lib/ens');
-jest.mock('../../../../src/lib/email', () => ({
+jest.mock('../../../../src/lib/emails', () => ({
   generateUniqueEmailToken: jest.fn().mockResolvedValue('1q2w3e4r5t6y7u8i9o0p'),
+  upsertUnverifiedEmail: jest.fn(),
 }));
 jest.mock('../../../../src/logging');
 jest.mock('../../../../src/external/postmark');
 
+const mockedUpsertUnverifiedEmail = jest.mocked(upsertUnverifiedEmail, true);
 const mockedSendVerificationEmail = jest.mocked(sendVerificationEmail, true);
 
 const authTokenId = 123;
@@ -210,11 +213,46 @@ describe('POST /email', () => {
     });
   });
 
+  it('Returns 500 if the email upsert fails', async () => {
+    mockJwtWithAddress();
+
+    contextMock.prisma.email.findUnique.mockResolvedValue({} as any);
+    mockedUpsertUnverifiedEmail.mockResolvedValue(null);
+
+    const authTokens = genAuthTokens();
+
+    const result = await request(await setupApp())
+      .post('/email')
+      .set('Authorization', `Bearer ${authTokens.accessToken}`)
+      .send({ emailAddress: testEmailAddress });
+
+    expect(result.statusCode).toEqual(500);
+    expect(result.body).toEqual({ msg: 'Failed to setup email address' });
+
+    expect(contextMock.prisma.email.findUnique).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.email.findUnique).toHaveBeenCalledWith({
+      where: { emailAddress: testEmailAddress },
+      select: {
+        id: true,
+        isValidated: true,
+        tokenExpiresAt: true,
+      },
+    });
+
+    expect(mockedUpsertUnverifiedEmail).toHaveBeenCalledTimes(1);
+    expect(mockedUpsertUnverifiedEmail).toHaveBeenCalledWith(
+      testEmailAddress,
+      testActiveToken,
+      expect.any(Date),
+      addressRecord.id,
+    );
+  });
+
   it('returns 500 if the verification email fails to send.', async () => {
     mockJwtWithAddress();
 
     contextMock.prisma.email.findUnique.mockResolvedValue({} as any);
-    contextMock.prisma.email.upsert.mockResolvedValue({} as any);
+    mockedUpsertUnverifiedEmail.mockResolvedValue({} as any);
     mockedSendVerificationEmail.mockImplementation(() => {
       throw new Error('Failed to send email');
     });
@@ -238,25 +276,13 @@ describe('POST /email', () => {
       },
     });
 
-    expect(contextMock.prisma.email.upsert).toHaveBeenCalledTimes(1);
-    expect(contextMock.prisma.email.upsert).toHaveBeenCalledWith({
-      where: { emailAddress: testEmailAddress },
-      update: {
-        address: {
-          connect: { id: addressRecord.id },
-        },
-        activeToken: testActiveToken,
-        tokenExpiresAt: expect.any(Date),
-      },
-      create: {
-        address: {
-          connect: { id: addressRecord.id },
-        },
-        emailAddress: testEmailAddress,
-        activeToken: testActiveToken,
-        tokenExpiresAt: expect.any(Date),
-      },
-    });
+    expect(mockedUpsertUnverifiedEmail).toHaveBeenCalledTimes(1);
+    expect(mockedUpsertUnverifiedEmail).toHaveBeenCalledWith(
+      testEmailAddress,
+      testActiveToken,
+      expect.any(Date),
+      addressRecord.id,
+    );
 
     expect(mockedSendVerificationEmail).toHaveBeenCalledTimes(1);
     expect(mockedSendVerificationEmail).toHaveBeenCalledWith(testEmailAddress, testActiveToken);
@@ -266,7 +292,7 @@ describe('POST /email', () => {
     mockJwtWithAddress();
 
     contextMock.prisma.email.findUnique.mockResolvedValue({} as any);
-    contextMock.prisma.email.upsert.mockResolvedValue({} as any);
+    mockedUpsertUnverifiedEmail.mockResolvedValue({} as any);
     mockedSendVerificationEmail.mockResolvedValue({} as any);
 
     const authTokens = genAuthTokens();
@@ -288,21 +314,13 @@ describe('POST /email', () => {
       },
     });
 
-    expect(contextMock.prisma.email.upsert).toHaveBeenCalledTimes(1);
-    expect(contextMock.prisma.email.upsert).toHaveBeenCalledWith({
-      where: { emailAddress: testEmailAddress },
-      update: {
-        address: { connect: { id: addressRecord.id } },
-        activeToken: testActiveToken,
-        tokenExpiresAt: expect.any(Date),
-      },
-      create: {
-        address: { connect: { id: addressRecord.id } },
-        emailAddress: testEmailAddress,
-        activeToken: testActiveToken,
-        tokenExpiresAt: expect.any(Date),
-      },
-    });
+    expect(mockedUpsertUnverifiedEmail).toHaveBeenCalledTimes(1);
+    expect(mockedUpsertUnverifiedEmail).toHaveBeenCalledWith(
+      testEmailAddress,
+      testActiveToken,
+      expect.any(Date),
+      addressRecord.id,
+    );
 
     expect(mockedSendVerificationEmail).toHaveBeenCalledTimes(1);
     expect(mockedSendVerificationEmail).toHaveBeenCalledWith(testEmailAddress, testActiveToken);
