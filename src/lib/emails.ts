@@ -1,5 +1,7 @@
 import { context } from '../context';
 import crypto from 'crypto';
+import { Email } from '@prisma/client';
+import { createScopedLogger } from '../logging';
 
 const DEFAULT_BYTE_LENGTH = 20;
 const DEFAULT_STRING_BASE = 'hex';
@@ -39,12 +41,22 @@ export const generateUniqueEmailToken = async (
   return activeToken;
 };
 
-export async function upsertEmail(emailAddress: string) {
-  return await context.prisma.email.upsert({
-    where: { emailAddress },
-    update: {},
-    create: { emailAddress },
-  });
+export async function upsertEmail(emailAddress: string): Promise<Email | null> {
+  const logger = createScopedLogger('upsertEmail');
+
+  try {
+    return await context.prisma.email.upsert({
+      where: { emailAddress },
+      update: {},
+      create: { emailAddress },
+    });
+  } catch (err) {
+    logger.warn(`Caught exception while trying to upsert Email: ${err}`);
+
+    return await context.prisma.email.findUnique({
+      where: { emailAddress },
+    });
+  }
 }
 
 export async function upsertUnverifiedEmail(
@@ -52,23 +64,51 @@ export async function upsertUnverifiedEmail(
   activeToken: string,
   tokenExpiresAt: Date,
   addressId: number,
-) {
-  return await context.prisma.email.upsert({
-    where: { emailAddress },
-    update: {
-      address: {
-        connect: { id: addressId },
+): Promise<Email | null> {
+  const logger = createScopedLogger('upsertUnverifiedEmail');
+
+  try {
+    return await context.prisma.email.upsert({
+      where: { emailAddress },
+      update: {
+        address: {
+          connect: { id: addressId },
+        },
+        activeToken,
+        tokenExpiresAt,
       },
-      activeToken,
-      tokenExpiresAt,
-    },
-    create: {
-      address: {
-        connect: { id: addressId },
+      create: {
+        address: {
+          connect: { id: addressId },
+        },
+        emailAddress,
+        activeToken,
+        tokenExpiresAt,
       },
-      emailAddress,
-      activeToken,
-      tokenExpiresAt,
-    },
-  });
+    });
+  } catch (err) {
+    logger.warn(
+      `Failed to upsert Address ID ${addressId} with verification info for "${emailAddress}": ${err}`,
+    );
+  }
+
+  try {
+    // Attempt to update the record (which we now assume to exist)
+    return await context.prisma.email.update({
+      where: { emailAddress },
+      data: {
+        address: {
+          connect: { id: addressId },
+        },
+        activeToken,
+        tokenExpiresAt,
+      },
+    });
+  } catch (err) {
+    logger.error(
+      `Failed to update Address ID ${addressId} with verification info for "${emailAddress}" after failed upsert: ${err}`,
+    );
+
+    return null;
+  }
 }

@@ -126,6 +126,13 @@ customGitPOAPsRouter.post(
 
     const email = await upsertEmail(schemaResult.data.creatorEmail);
 
+    if (email === null) {
+      logger.error(
+        `Failed to upsert email "${schemaResult.data.creatorEmail}" during creation of GitPOAPRequest`,
+      );
+      return res.status(500).send({ msg: 'Failed to setup email address' });
+    }
+
     const { addressId } = getAccessTokenPayload(req.user);
 
     const gitPOAPRequest = await context.prisma.gitPOAPRequest.create({

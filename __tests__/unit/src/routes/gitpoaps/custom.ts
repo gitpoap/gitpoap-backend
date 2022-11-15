@@ -654,6 +654,32 @@ describe('POST /gitpoaps/custom', () => {
     expect(result.body).toEqual({ msg: 'Failed to upload image' });
   });
 
+  it('Fails when email upsert fails', async () => {
+    mockJwtWithAddress();
+
+    contextMock.prisma.gitPOAPRequest.create.mockResolvedValue({
+      ...baseGitPOAPRequest,
+      id: gitPOAPRequestId,
+      type: GitPOAPType.CUSTOM,
+      adminApprovalStatus: AdminApprovalStatus.PENDING,
+    } as any);
+
+    mockedUploadMulterFile.mockResolvedValue({
+      filename: 'foobar_imgKey',
+    } as any);
+
+    mockedUpsertEmail.mockResolvedValue(null);
+
+    const authTokens = genAuthTokens();
+    const result = await request(await setupApp())
+      .post('/gitpoaps/custom')
+      .set('Authorization', `Bearer ${authTokens.accessToken}`)
+      .send({ ...baseGitPOAPRequest });
+
+    expect(result.statusCode).toEqual(500);
+    expect(result.body).toEqual({ msg: 'Failed to setup email address' });
+  });
+
   it('Successfully creates a new GitPOAP request with NO project or organization', async () => {
     mockJwtWithAddress();
 

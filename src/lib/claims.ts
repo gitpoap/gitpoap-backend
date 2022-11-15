@@ -444,6 +444,11 @@ export const createClaimForEmail = async (emailAddress: string, gitPOAPId: numbe
 
   const email = await upsertEmail(emailAddress);
 
+  if (email === null) {
+    logger.error(`Failed to a claim for GitPOAP ID ${gitPOAPId} for email "${emailAddress}"`);
+    return;
+  }
+
   const gitPOAP = await context.prisma.gitPOAP.findUnique({
     where: { id: gitPOAPId },
     select: { id: true },
