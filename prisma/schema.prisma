@@ -34,6 +34,21 @@ model GithubUser {
   addresses          Address[]
 }
 
+model DiscordUser {
+  id                Int         @id @default(autoincrement())
+  discordHandle     String      @db.VarChar(255)
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  claims            Claim[]
+  // Hide discordUser.authTokens from generated resolvers
+  /// @TypeGraphQL.omit(output: true, input: true)
+  authTokens        AuthToken[]
+  // Hide discordUser.discordOAuthToken from generated resolvers
+  /// @TypeGraphQL.omit(output: true, input: true)
+  discordOAuthToken String?
+  addresses         Address[]
+}
+
 model Profile {
   id                     Int            @id @default(autoincrement())
   addressId              Int            @unique
@@ -59,6 +74,8 @@ model Address {
   updatedAt         DateTime                 @updatedAt
   githubUserId      Int?
   githubUser        GithubUser?              @relation(fields: [githubUserId], references: [id])
+  discordUserId     Int?
+  discordUser       DiscordUser?             @relation(fields: [discordUserId], references: [id])
   ensAvatarImageUrl String?
   ensName           String?                  @db.VarChar(255)
   memberships       OrganizationMembership[]
@@ -171,6 +188,8 @@ model Claim {
   email               Email?             @relation(fields: [emailId], references: [id])
   issuedAddressId     Int?
   issuedAddress       Address?           @relation("issuedClaims", fields: [issuedAddressId], references: [id])
+  discordUserId       Int?
+  discordUser         DiscordUser?       @relation(fields: [discordUserId], references: [id])
   // End: Issuance fields
   // Note that not all Claims have pull request they were earned in (e.g. Hackathon GitPOAPs)
   pullRequestEarnedId Int?
@@ -255,12 +274,14 @@ model GitPOAPRequest {
 }
 
 model AuthToken {
-  id         Int      @id @default(autoincrement())
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  generation Int      @default(0)
-  addressId  Int
-  address    Address  @relation(fields: [addressId], references: [id])
+  id            Int          @id @default(autoincrement())
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  generation    Int          @default(0)
+  addressId     Int
+  address       Address      @relation(fields: [addressId], references: [id])
+  DiscordUser   DiscordUser? @relation(fields: [discordUserId], references: [id])
+  discordUserId Int?
 }
 
 model FeaturedPOAP {
