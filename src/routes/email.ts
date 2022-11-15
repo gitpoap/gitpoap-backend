@@ -74,7 +74,11 @@ emailRouter.post('/', jwtWithAddress(), async function (req, res) {
   // Created expiration date 24hrs in advance
   const tokenExpiresAt = DateTime.now().plus({ day: 1 }).toJSDate();
 
-  await upsertUnverifiedEmail(emailAddress, activeToken, tokenExpiresAt, addressId);
+  const result = await upsertUnverifiedEmail(emailAddress, activeToken, tokenExpiresAt, addressId);
+  if (result === null) {
+    logger.error(`Failed to upsert unverified Email "${emailAddress}" for Address ID ${addressId}`);
+    return res.status(500).send({ msg: 'Failed to setup email address' });
+  }
 
   try {
     await sendVerificationEmail(emailAddress, activeToken);
