@@ -7,6 +7,7 @@ import { jwtWithAddress } from '../middleware/auth';
 import { AddEmailSchema } from '../schemas/email';
 import { getAccessTokenPayload } from '../types/authTokens';
 import { getRequestLogger } from '../middleware/loggingAndTiming';
+import { upsertUnverifiedEmail } from '../lib/emails';
 
 export const emailRouter = Router();
 
@@ -74,22 +75,7 @@ emailRouter.post('/', jwtWithAddress(), async function (req, res) {
   // Created expiration date 24hrs in advance
   const tokenExpiresAt = DateTime.now().plus({ day: 1 }).toJSDate();
 
-  await context.prisma.email.upsert({
-    where: {
-      addressId,
-    },
-    update: {},
-    create: {
-      address: {
-        connect: {
-          id: addressId,
-        },
-      },
-      emailAddress,
-      activeToken,
-      tokenExpiresAt,
-    },
-  });
+  await upsertUnverifiedEmail(emailAddress, activeToken, tokenExpiresAt, addressId);
 
   try {
     await sendVerificationEmail(emailAddress, activeToken);
