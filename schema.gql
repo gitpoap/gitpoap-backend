@@ -4727,7 +4727,7 @@ type Holder {
   personalSiteUrl: String
   ensName: String
   ensAvatarImageUrl: String
-  githubHandle: String!
+  githubHandle: String
   gitPOAPCount: Float!
 }
 
