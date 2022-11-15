@@ -240,13 +240,17 @@ describe('POST /email', () => {
 
     expect(contextMock.prisma.email.upsert).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.email.upsert).toHaveBeenCalledWith({
-      where: { addressId: addressRecord.id },
-      update: {},
+      where: { emailAddress: testEmailAddress },
+      update: {
+        address: {
+          connect: { id: addressRecord.id },
+        },
+        activeToken: testActiveToken,
+        tokenExpiresAt: expect.any(Date),
+      },
       create: {
         address: {
-          connect: {
-            id: addressRecord.id,
-          },
+          connect: { id: addressRecord.id },
         },
         emailAddress: testEmailAddress,
         activeToken: testActiveToken,
@@ -286,14 +290,14 @@ describe('POST /email', () => {
 
     expect(contextMock.prisma.email.upsert).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.email.upsert).toHaveBeenCalledWith({
-      where: { addressId: addressRecord.id },
-      update: {},
+      where: { emailAddress: testEmailAddress },
+      update: {
+        address: { connect: { id: addressRecord.id } },
+        activeToken: testActiveToken,
+        tokenExpiresAt: expect.any(Date),
+      },
       create: {
-        address: {
-          connect: {
-            id: addressRecord.id,
-          },
-        },
+        address: { connect: { id: addressRecord.id } },
         emailAddress: testEmailAddress,
         activeToken: testActiveToken,
         tokenExpiresAt: expect.any(Date),
