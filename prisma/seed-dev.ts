@@ -260,7 +260,8 @@ export const seed = async () => {
   const claim49a = await ClaimFactory.create(gitpoap26.id, kayleen.id, ClaimStatus.UNCLAIMED);
   const claim49b = await ClaimFactory.create(gitpoap26.id, tyler.id, ClaimStatus.UNCLAIMED);
   const claim49c = await ClaimFactory.create(gitpoap26.id, colfax.id, ClaimStatus.UNCLAIMED);
-  const claim49d = await ClaimFactory.createForEmail(gitpoap26.id, jayEmail.id, ClaimStatus.UNCLAIMED);
+  const claim49e = await ClaimFactory.create(gitpoap26.id, jay.id, ClaimStatus.UNCLAIMED);
+  const claim49d = await ClaimFactory.createForEthAddress(gitpoap26.id, addressColfax.id, ClaimStatus.UNCLAIMED);
 
   // GitPOAP 27
   const claim50 = await ClaimFactory.create(gitpoap27.id, burz.id, ClaimStatus.CLAIMED, addressBurz.id, '106', DateTime.utc(2022, 4, 5).toJSDate());
