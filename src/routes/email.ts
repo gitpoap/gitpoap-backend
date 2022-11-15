@@ -118,8 +118,10 @@ emailRouter.delete('/', jwtWithAddress(), async function (req, res) {
         addressId,
       },
       data: {
+        activeToken: null,
         addressId: null,
         isValidated: false,
+        tokenExpiresAt: null,
       },
     });
   } catch (err) {
@@ -172,7 +174,9 @@ emailRouter.post('/verify/:activeToken', jwtWithAddress(), async function (req, 
         id: email.id,
       },
       data: {
+        activeToken: null,
         addressId: null,
+        tokenExpiresAt: null,
       },
     });
 
