@@ -72,14 +72,30 @@ export class ClaimFactory {
   ): Promise<Claim> => {
     const data: Prisma.ClaimCreateInput = {
       gitPOAP: {
-        connect: {
-          id: gitPOAPId,
-        },
+        connect: { id: gitPOAPId },
       },
       email: {
-        connect: {
-          id: emailId,
-        },
+        connect: { id: emailId },
+      },
+      status,
+    };
+    const claim = await prisma.claim.create({ data });
+    logger.debug(`Creating claim with id: ${claim.id}`);
+
+    return claim;
+  };
+
+  static createForEthAddress = async (
+    gitPOAPId: number,
+    addressId: number,
+    status?: ClaimStatus,
+  ): Promise<Claim> => {
+    const data: Prisma.ClaimCreateInput = {
+      gitPOAP: {
+        connect: { id: gitPOAPId },
+      },
+      issuedAddress: {
+        connect: { id: addressId },
       },
       status,
     };
