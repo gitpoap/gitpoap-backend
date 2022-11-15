@@ -87,22 +87,29 @@ export class CustomClaimResolver {
       },
     });
 
-    const ethAddress = addressRecord?.ethAddress;
-    const githubId = addressRecord?.githubUser?.githubId;
-    const ensName = addressRecord?.ensName;
-    const emailAddress = addressRecord?.email?.emailAddress;
+    const possibleMatches = [];
+
+    const ethAddress = addressRecord?.ethAddress ?? null;
+    if (ethAddress !== null) {
+      possibleMatches.push({ issuedAddress: { ethAddress } });
+    }
+    const githubId = addressRecord?.githubUser?.githubId ?? null;
+    if (githubId !== null) {
+      possibleMatches.push({ githubUser: { githubId } });
+    }
+    const ensName = addressRecord?.ensName ?? null;
+    if (ensName !== null) {
+      possibleMatches.push({ issuedAddress: { ensName } });
+    }
+    const emailAddress = addressRecord?.email?.emailAddress ?? null;
+    if (emailAddress !== null) {
+      possibleMatches.push({ email: { emailAddress } });
+    }
 
     const claims = await prisma.claim.findMany({
       where: {
         AND: [
-          {
-            OR: [
-              { issuedAddress: { ethAddress } },
-              { issuedAddress: { ensName } },
-              { email: { emailAddress } },
-              { githubUser: { githubId } },
-            ],
-          },
+          { OR: possibleMatches },
           {
             OR: [
               {
@@ -121,7 +128,9 @@ export class CustomClaimResolver {
         gitPOAP: {
           select: {
             poapEventId: true,
-            redeemCodes: true,
+            _count: {
+              select: { redeemCodes: true },
+            },
           },
         },
       },
@@ -140,7 +149,7 @@ export class CustomClaimResolver {
         return null;
       }
 
-      if (claim.gitPOAP.redeemCodes.length === 0) {
+      if (claim.gitPOAP._count.redeemCodes === 0) {
         logger.error(`Claim ${claim.id} has no redeem codes`);
         continue;
       }
