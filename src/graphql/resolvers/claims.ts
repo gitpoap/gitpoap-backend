@@ -113,7 +113,9 @@ export class CustomClaimResolver {
           {
             OR: [
               {
-                status: { in: [ClaimStatus.UNCLAIMED, ClaimStatus.PENDING, ClaimStatus.MINTING] },
+                status: {
+                  in: [ClaimStatus.UNCLAIMED, ClaimStatus.PENDING, ClaimStatus.MINTING],
+                },
               },
               {
                 mintedAt: { gt: getLastMonthStartDatetime() },
