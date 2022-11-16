@@ -8,6 +8,7 @@ import { getAccessTokenPayload } from '../types/authTokens';
 import { upsertGithubUser } from '../lib/githubUsers';
 import { addGithubLoginForAddress, removeGithubLoginForAddress } from '../lib/addresses';
 import { getRequestLogger } from '../middleware/loggingAndTiming';
+import { isEmailValidated } from '../lib/emails';
 
 export const githubRouter = Router();
 
@@ -91,7 +92,7 @@ githubRouter.post('/', jwtWithAddress(), async function (req, res) {
     ensAvatarImageUrl,
     githubInfo.id,
     githubInfo.login,
-    emailId,
+    (await isEmailValidated(emailId)) ? emailId : null,
   );
 
   logger.debug(`Completed a GitHub login request for address ${address}`);
@@ -145,7 +146,7 @@ githubRouter.delete('/', jwtWithAddress(), async function (req, res) {
     ensAvatarImageUrl,
     null,
     null,
-    emailId,
+    (await isEmailValidated(emailId)) ? emailId : null,
   );
 
   logger.debug(`Completed Github disconnect request for address ${address}`);
