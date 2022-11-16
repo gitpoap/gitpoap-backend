@@ -31,7 +31,5 @@ export const SENTRY_DSN = env.get('SENTRY_DSN').asString();
 export const POSTMARK_SERVER_TOKEN = env.get('POSTMARK_SERVER_TOKEN').required().asString();
 export const SLACK_TOKEN = env.get('SLACK_TOKEN').required().asString();
 
-export const DISCORD_URL = env.get('DISCORD_URL').asString();
-export const DISCORD_REDIRECT_URL = env.get('DISCORD_REDIRECT_URL').asString();
-export const DISCORD_CLIENT_ID = env.get('DISCORD_CLIENT_ID').asString();
-export const DISCORD_CLIENT_SECRET = env.get('DISCORD_CLIENT_SECRET').asString();
+export const DISCORD_CLIENT_ID = env.get('DISCORD_CLIENT_ID').required().asString();
+export const DISCORD_CLIENT_SECRET = env.get('DISCORD_CLIENT_SECRET').required().asString();
