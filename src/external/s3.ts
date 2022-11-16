@@ -10,6 +10,7 @@ import { fromIni } from '@aws-sdk/credential-provider-ini';
 import { AWS_PROFILE, NODE_ENV } from '../environment';
 import fetch from 'cross-fetch';
 import { createScopedLogger } from '../logging';
+import { captureException } from '../lib/sentry';
 
 export type Buckets = 'intakeForm' | 'ensAvatarCache' | 'gitPOAPRequestImages';
 
@@ -115,8 +116,7 @@ export const uploadFileFromURL = async (
  * @returns the-key-here
  */
 export const getKeyFromS3URL = (imageUrl: string) => {
-  const url = new URL(imageUrl);
-  return url.pathname.split('/')[1];
+  return imageUrl.split('amazonaws.com/').pop() ?? '';
 };
 
 /**
@@ -138,6 +138,12 @@ export const getObjectFromS3 = async (bucket: string, key: string) => {
     );
   } catch (e) {
     console.warn(e);
+    captureException(e, {
+      service: 's3',
+      function: 'getObjectFromS3',
+      bucket,
+      key,
+    });
     return null;
   }
 };
