@@ -77,3 +77,8 @@ export const CUSTOM_GITPOAP_CODE_BUFFER = 5;
 // The maximum number of codes we will request to start
 // out with from POAP for a Custom GitPOAP
 export const CUSTOM_GITPOAP_MAX_STARTING_CODES = 100;
+
+export const DISCORD_URL = 'https://discord.com';
+export const DISCORD_REDIRECT_URL = 'http://localhost:3001/discord';
+export const DISCORD_AUTH_GRANT_TYPE = 'authorization_code';
+export const DISCORD_AUTH_SCOPE = 'identify';
