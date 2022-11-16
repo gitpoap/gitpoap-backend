@@ -3,7 +3,8 @@ import { ADDRESSES, GH_HANDLES } from '../../../../../prisma/constants';
 import cheerio from 'cheerio';
 import { event2, event3, event29009, event36571, event36576 } from '../../../../../prisma/data';
 import { MILLISECONDS_PER_SECOND } from '../../../../../src/constants';
-import { GitPOAPType } from '@prisma/client';
+import { GitPOAPStatus, GitPOAPType } from '@prisma/client';
+import { context } from '../../../../../src/context';
 
 const PUBLIC_API_URL = 'http://public-api-server:3122';
 
@@ -180,6 +181,29 @@ describe('public-api/v1/github/user/:githubHandle/gitpoaps', () => {
       const data = await response.json();
       const todayStart = new Date();
       todayStart.setHours(0, 0, 0, 0);
+      expect(data).toHaveLength(0);
+    });
+
+    it("Doesn't return UNAPPROVED GitPOAP Claims when status equals 'unclaimed'", async () => {
+      // Temporarily mark GitPOAP ID 18 as UNAPPROVED
+      await context.prisma.gitPOAP.update({
+        where: { id: 18 },
+        data: { poapApprovalStatus: GitPOAPStatus.UNAPPROVED },
+      });
+
+      const response = await fetch(
+        `${PUBLIC_API_URL}/v1/github/user/${GH_HANDLES.kayleen}/gitpoaps?status=unclaimed`,
+      );
+
+      await context.prisma.gitPOAP.update({
+        where: { id: 18 },
+        data: { poapApprovalStatus: GitPOAPStatus.DEPRECATED },
+      });
+
+      expect(response.status).toBeLessThan(400);
+
+      const data = await response.json();
+
       expect(data).toHaveLength(0);
     });
   });

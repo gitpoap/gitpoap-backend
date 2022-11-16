@@ -6,7 +6,7 @@ import { retrievePOAPEventInfo } from '../../external/poap';
 import { createScopedLogger } from '../../logging';
 import { gqlRequestDurationSeconds } from '../../metrics';
 import { getLastMonthStartDatetime } from './util';
-import { ClaimStatus, Prisma } from '@prisma/client';
+import { ClaimStatus, GitPOAPStatus, Prisma } from '@prisma/client';
 
 @ObjectType()
 class FullClaimData {
@@ -126,7 +126,12 @@ export class CustomClaimResolver {
             ],
           },
         ],
-        gitPOAP: { isEnabled: true },
+        gitPOAP: {
+          NOT: {
+            poapApprovalStatus: GitPOAPStatus.UNAPPROVED,
+          },
+          isEnabled: true,
+        },
       },
       include: {
         gitPOAP: {
