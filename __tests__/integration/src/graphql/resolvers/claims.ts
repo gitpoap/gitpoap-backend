@@ -1,5 +1,5 @@
 import { GraphQLClient, gql } from 'graphql-request';
-import { GH_IDS } from '../../../../../prisma/constants';
+import { ADDRESSES } from '../../../../../prisma/constants';
 
 describe('CustomClaimResolver', () => {
   const client = new GraphQLClient('http://server:3001/graphql');
@@ -27,7 +27,7 @@ describe('CustomClaimResolver', () => {
   it('userClaims', async () => {
     const data = await client.request(gql`
       {
-        userClaims(githubId: ${GH_IDS.jay}) {
+        userClaims(address: "${ADDRESSES.jay}") {
           claim {
             id
           }
@@ -38,6 +38,8 @@ describe('CustomClaimResolver', () => {
       }
     `);
 
-    expect(data.userClaims).toHaveLength(6);
+    // GitPOAP ID 5 doesn't have any claim codes or else this would be 6
+    // and include Claim ID 18
+    expect(data.userClaims).toHaveLength(5);
   });
 });
