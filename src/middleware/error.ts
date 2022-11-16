@@ -12,6 +12,6 @@ export const errorHandler: ErrorRequestHandler = (err, req, res) => {
     logger.error(`Caught unknown error: ${JSON.stringify(err)}`);
     captureException(err, { service: 'unknownException', function: 'errorHandler' });
     // Don't send users the actual error!
-    res.status(500).send('An error occured on the server');
+    res.status(500).send('An error occurred on the server');
   }
 };
