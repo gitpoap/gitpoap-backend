@@ -10,13 +10,13 @@ import { getRequestLogger } from '../middleware/loggingAndTiming';
 
 export const discordRouter = Router();
 
-discordRouter.get('/:code', jwtWithAddress(), async function (req, res) {
+discordRouter.post('/', jwtWithAddress(), async function (req, res) {
   const logger = getRequestLogger(req);
 
   const { authTokenId, addressId, address, ensName, ensAvatarImageUrl } = getAccessTokenPayload(
     req.user,
   );
-  const code = req.params.code;
+  const { code } = req.params;
 
   logger.info(`Received a Discord login request from address ${address}`);
 
