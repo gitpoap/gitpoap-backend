@@ -57,6 +57,7 @@ function genAuthTokens(hasGithub = false) {
     ensAvatarImageUrl,
     hasGithub ? githubId : null,
     hasGithub ? githubHandle : null,
+    null,
   );
 }
 

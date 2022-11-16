@@ -4,19 +4,7 @@ import { sign } from 'jsonwebtoken';
 import { JWT_SECRET } from '../environment';
 import { AccessTokenPayload, RefreshTokenPayload, UserAuthTokens } from '../types/authTokens';
 
-async function createAuthToken(
-  addressId: number,
-  githubId: number | null,
-): Promise<{ id: number; generation: number }> {
-  let githubUser = undefined;
-  if (githubId !== null) {
-    githubUser = {
-      connect: {
-        githubId,
-      },
-    };
-  }
-
+async function createAuthToken(addressId: number): Promise<{ id: number; generation: number }> {
   return await context.prisma.authToken.create({
     data: {
       address: {
@@ -24,7 +12,6 @@ async function createAuthToken(
           id: addressId,
         },
       },
-      githubUser,
     },
     select: {
       id: true,
@@ -52,6 +39,7 @@ export function generateAuthTokens(
   ensAvatarImageUrl: string | null,
   githubId: number | null,
   githubHandle: string | null,
+  emailId: number | null,
 ): UserAuthTokens {
   const accessTokenPayload: AccessTokenPayload = {
     authTokenId,
@@ -61,6 +49,7 @@ export function generateAuthTokens(
     ensAvatarImageUrl,
     githubId,
     githubHandle,
+    emailId,
   };
   const refreshTokenPayload: RefreshTokenPayload = {
     authTokenId,
@@ -81,8 +70,9 @@ export async function generateNewAuthTokens(
   ensAvatarImageUrl: string | null,
   githubId: number | null,
   githubHandle: string | null,
+  emailId: number | null,
 ): Promise<UserAuthTokens> {
-  const authToken = await createAuthToken(addressId, githubId);
+  const authToken = await createAuthToken(addressId);
 
   return generateAuthTokens(
     authToken.id,
@@ -93,6 +83,7 @@ export async function generateNewAuthTokens(
     ensAvatarImageUrl,
     githubId,
     githubHandle,
+    emailId,
   );
 }
 

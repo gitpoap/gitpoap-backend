@@ -33,6 +33,7 @@ function isAccessTokenPayloadBase(payload: any): boolean {
 export type AccessTokenPayload = AccessTokenPayloadBase & {
   githubId: number | null;
   githubHandle: string | null;
+  emailId: number | null;
 };
 
 function isAccessTokenPayload(payload: any): payload is AccessTokenPayload {
@@ -41,7 +42,9 @@ function isAccessTokenPayload(payload: any): payload is AccessTokenPayload {
     'githubId' in payload &&
     isNumberOrNull(payload.githubId) &&
     'githubHandle' in payload &&
-    isStringOrNull(payload.githubHandle)
+    isStringOrNull(payload.githubHandle) &&
+    'emailId' in payload &&
+    isNumberOrNull(payload.emailId)
   );
 }
 
@@ -57,6 +60,7 @@ export type AccessTokenPayloadWithOAuth = AccessTokenPayloadBase & {
   githubId: number;
   githubHandle: string;
   githubOAuthToken: string;
+  emailId: number | null;
 };
 
 function isAccessTokenPayloadWithOAuth(payload: any): payload is AccessTokenPayloadWithOAuth {
@@ -67,7 +71,9 @@ function isAccessTokenPayloadWithOAuth(payload: any): payload is AccessTokenPayl
     'githubHandle' in payload &&
     typeof payload.githubHandle === 'string' &&
     'githubOAuthToken' in payload &&
-    typeof payload.githubOAuthToken === 'string'
+    typeof payload.githubOAuthToken === 'string' &&
+    'emailId' in payload &&
+    isNumberOrNull(payload.emailId)
   );
 }
 
@@ -77,6 +83,32 @@ export function getAccessTokenPayloadWithOAuth(payload: any): AccessTokenPayload
   }
 
   throw Error('Tried to convert payload to AccessTokenPayloadWithOAuth but it is not!');
+}
+
+export type AccessTokenPayloadWithEmail = AccessTokenPayloadBase & {
+  githubId: number | null;
+  githubHandle: string | null;
+  emailId: number;
+};
+
+function isAccessTokenPayloadWithEmail(payload: any): payload is AccessTokenPayloadWithEmail {
+  return (
+    isAccessTokenPayloadBase(payload) &&
+    'githubId' in payload &&
+    isNumberOrNull(payload.githubId) &&
+    'githubHandle' in payload &&
+    isStringOrNull(payload.githubHandle) &&
+    'emailId' in payload &&
+    typeof payload.emailId === 'number'
+  );
+}
+
+export function getAccessTokenPayloadWithEmail(payload: any): AccessTokenPayloadWithEmail {
+  if (isAccessTokenPayloadWithEmail(payload)) {
+    return payload;
+  }
+
+  throw Error('Tried to convert payload to AccessTokenPayload but it is not!');
 }
 
 export type RefreshTokenPayload = {
