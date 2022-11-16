@@ -76,7 +76,7 @@ export const addDiscordLoginForAddress = async (addressId: number, discordUserId
       id: addressId,
     },
     data: {
-      githubUser: {
+      discordUser: {
         connect: {
           id: discordUserId,
         },
