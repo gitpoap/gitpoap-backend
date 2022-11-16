@@ -14,6 +14,7 @@ import { claimsRouter } from './routes/claims';
 import { emailRouter } from './routes/email';
 import { featuredRouter } from './routes/featured';
 import { githubRouter } from './routes/github';
+import { discordRouter } from './routes/discord';
 import { gitPOAPsRouter } from './routes/gitpoaps';
 import { profilesRouter } from './routes/profiles';
 import { projectsRouter } from './routes/projects';
@@ -73,6 +74,7 @@ export async function setupAppWithMiddleware(middleware: RequestHandler[]) {
   /* Endpoints */
   app.use('/auth', authRouter);
   app.use('/github', githubRouter);
+  app.use('/discord', discordRouter);
   app.use('/jwt', jwtRouter);
   app.use('/subscribe', subscribeRouter);
   app.use('/suggest', suggestRouter);
