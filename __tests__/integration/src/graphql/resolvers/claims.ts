@@ -24,22 +24,44 @@ describe('CustomClaimResolver', () => {
     expect(data.lastMonthClaims).toEqual(1);
   });
 
-  it('userClaims', async () => {
+  it('userClaims - githubHandle', async () => {
     const data = await client.request(gql`
-      {
-        userClaims(address: "${ADDRESSES.jay}") {
-          claim {
-            id
-          }
-          event {
-            name
-          }
-        }
-      }
+      { userClaims(address: "${ADDRESSES.jay}") { claim { id } } }
     `);
 
     // GitPOAP ID 5 doesn't have any claim codes or else this would be 6
     // and include Claim ID 18
     expect(data.userClaims).toHaveLength(5);
+    expect(data.userClaims).toContainEqual({ claim: { id: 22 } });
+    expect(data.userClaims).toContainEqual({ claim: { id: 26 } });
+    expect(data.userClaims).toContainEqual({ claim: { id: 30 } });
+    expect(data.userClaims).toContainEqual({ claim: { id: 34 } });
+    expect(data.userClaims).toContainEqual({ claim: { id: 38 } });
+  });
+
+  it('userClaims - email', async () => {
+    const data = await client.request(gql`
+      { userClaims(address: "${ADDRESSES.random}") { claim { id } } }
+    `);
+
+    expect(data.userClaims).toHaveLength(1);
+    expect(data.userClaims).toContainEqual({ claim: { id: 44 } });
+  });
+
+  it('userClaims - address', async () => {
+    const data = await client.request(gql`
+      { userClaims(address: "${ADDRESSES.random2}") { claim { id } } }
+    `);
+
+    expect(data.userClaims).toHaveLength(1);
+    expect(data.userClaims).toContainEqual({ claim: { id: 45 } });
+  });
+
+  it('userClaims - unknown address', async () => {
+    const data = await client.request(gql`
+      { userClaims(address: "${'0x4' + ADDRESSES.random2.substr(3)}") { claim { id } } }
+    `);
+
+    expect(data.userClaims).toHaveLength(0);
   });
 });
