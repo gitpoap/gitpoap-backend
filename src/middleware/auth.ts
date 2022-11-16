@@ -39,7 +39,10 @@ export function jwtWithAddress() {
                 },
               },
               email: {
-                select: { id: true },
+                select: {
+                  id: true,
+                  isValidated: true,
+                },
               },
             },
           },
@@ -50,12 +53,17 @@ export function jwtWithAddress() {
         return;
       }
 
+      let emailId: number | null = null;
+      if (tokenInfo.address.email !== null) {
+        emailId = tokenInfo.address.email.isValidated ? tokenInfo.address.email.id : null;
+      }
+
       // Update the nullable fields in case they've updated in the DB
       set(req, 'user.ensName', tokenInfo.address.ensName);
       set(req, 'user.ensAvatarImageUrl', tokenInfo.address.ensAvatarImageUrl);
       set(req, 'user.githubId', tokenInfo.address.githubUser?.githubId ?? null);
       set(req, 'user.githubHandle', tokenInfo.address.githubUser?.githubHandle ?? null);
-      set(req, 'user.emailId', tokenInfo.address.email?.id ?? null);
+      set(req, 'user.emailId', emailId);
 
       next();
     };
@@ -121,7 +129,10 @@ export function jwtWithGitHubOAuth() {
                 },
               },
               email: {
-                select: { id: true },
+                select: {
+                  id: true,
+                  isValidated: true,
+                },
               },
             },
           },
@@ -143,10 +154,15 @@ export function jwtWithGitHubOAuth() {
       set(req, 'user.githubHandle', tokenInfo.address.githubUser.githubHandle);
       set(req, 'user.githubOAuthToken', tokenInfo.address.githubUser.githubOAuthToken);
 
+      let emailId: number | null = null;
+      if (tokenInfo.address.email !== null) {
+        emailId = tokenInfo.address.email.isValidated ? tokenInfo.address.email.id : null;
+      }
+
       // Update the nullable values in case they've updated in the DB
       set(req, 'user.ensName', tokenInfo.address.ensName);
       set(req, 'user.ensAvatarImageUrl', tokenInfo.address.ensAvatarImageUrl);
-      set(req, 'user.emailId', tokenInfo.address.email?.id ?? null);
+      set(req, 'user.emailId', emailId);
 
       next();
     };
