@@ -424,15 +424,23 @@ export class RedeemCodeFactory {
 }
 
 export class AddressFactory {
-  static create = async (address: string, githubUserId?: number): Promise<Address> => {
-    const data: Prisma.AddressUncheckedCreateInput = {
-      ethAddress: address,
-      githubUserId,
+  static create = async (
+    ethAddress: string,
+    githubUserId?: number,
+    emailId?: number,
+    ensName?: string,
+  ): Promise<Address> => {
+    const githubUser = githubUserId ? { connect: { id: githubUserId } } : undefined;
+    const email = emailId ? { connect: { id: emailId } } : undefined;
+
+    const data: Prisma.AddressCreateInput = {
+      ethAddress,
+      githubUser,
+      email,
+      ensName,
     };
     const addressResult = await prisma.address.create({ data });
-    logger.debug(
-      `Creating address with id: ${addressResult.id} & ethAddress: ${addressResult.ethAddress}`,
-    );
+    logger.debug(`Creating address with id: ${addressResult.id} & ethAddress: ${ethAddress}`);
 
     return addressResult;
   };
