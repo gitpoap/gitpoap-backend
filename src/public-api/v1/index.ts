@@ -135,6 +135,7 @@ v1Router.get('/github/user/:githubHandle/gitpoaps', async function (req, res) {
       githubUser: {
         githubHandle: {
           equals: req.params.githubHandle,
+          mode: 'insensitive',
         },
       },
       status,
