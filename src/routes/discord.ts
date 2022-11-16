@@ -72,7 +72,7 @@ discordRouter.get('/:code', jwtWithAddress(), async function (req, res) {
     );
     return res.status(401).send({ msg: 'Not logged in with address' });
   }
-  // TODO; need to separate this from github
+  // NOTE; we will need discordId and discordHandle into token if we need those in the future
   const userAuthTokens = generateAuthTokens(
     authTokenId,
     newGeneration,
@@ -80,8 +80,8 @@ discordRouter.get('/:code', jwtWithAddress(), async function (req, res) {
     address,
     ensName,
     ensAvatarImageUrl,
-    discordInfo.id,
-    discordInfo.username,
+    null,
+    null,
   );
 
   logger.debug(`Completed a Discord login request for address ${address}`);
@@ -93,17 +93,11 @@ discordRouter.get('/:code', jwtWithAddress(), async function (req, res) {
 discordRouter.delete('/', jwtWithAddress(), async function (req, res) {
   const logger = getRequestLogger(req);
 
-  const { authTokenId, addressId, address, ensName, ensAvatarImageUrl, githubHandle, githubId } =
-    getAccessTokenPayload(req.user);
+  const { authTokenId, addressId, address, ensName, ensAvatarImageUrl } = getAccessTokenPayload(
+    req.user,
+  );
 
   logger.info(`Received a Discord disconnect request from address ${address}`);
-
-  if (githubHandle === null || githubId === null) {
-    logger.warn('No Discord login found for address');
-    return res.status(400).send({
-      msg: 'No Discord login found for address',
-    });
-  }
 
   /* Remove the Discord login from the address record */
   await removeDiscordLoginForAddress(addressId);
