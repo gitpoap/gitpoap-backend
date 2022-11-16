@@ -13,6 +13,10 @@ export async function countContributionsForClaim(
   repos: { id: number }[],
   gitPOAP: { year: number; isPRBased: boolean },
 ): Promise<number> {
+  if (repos.length === 0) {
+    return 0;
+  }
+
   const repoIds: number[] = repos.map(r => r.id);
 
   const dateRange = {
