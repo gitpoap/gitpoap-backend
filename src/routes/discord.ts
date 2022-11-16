@@ -3,6 +3,7 @@ import { context } from '../context';
 import { requestDiscordOAuthToken, getDiscordCurrentUserInfo } from '../external/discord';
 import { generateAuthTokens } from '../lib/authTokens';
 import { jwtWithAddress } from '../middleware/auth';
+import { RequestAccessTokenSchema } from '../schemas/discord';
 import { getAccessTokenPayload } from '../types/authTokens';
 import { upsertDiscordUser } from '../lib/discordUsers';
 import { addDiscordLoginForAddress, removeDiscordLoginForAddress } from '../lib/addresses';
@@ -13,10 +14,18 @@ export const discordRouter = Router();
 discordRouter.post('/', jwtWithAddress(), async function (req, res) {
   const logger = getRequestLogger(req);
 
+  const schemaResult = RequestAccessTokenSchema.safeParse(req.body);
+  if (!schemaResult.success) {
+    logger.warn(
+      `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
+    );
+    return res.status(400).send({ issues: schemaResult.error.issues });
+  }
+
   const { authTokenId, addressId, address, ensName, ensAvatarImageUrl } = getAccessTokenPayload(
     req.user,
   );
-  const { code } = req.params;
+  const { code } = req.body;
 
   logger.info(`Received a Discord login request from address ${address}`);
 

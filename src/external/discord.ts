@@ -1,10 +1,11 @@
 import fetch from 'cross-fetch';
+import { DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET } from '../environment';
 import {
-  DISCORD_CLIENT_ID,
-  DISCORD_CLIENT_SECRET,
   DISCORD_URL,
   DISCORD_REDIRECT_URL,
-} from '../environment';
+  DISCORD_AUTH_GRANT_TYPE,
+  DISCORD_AUTH_SCOPE,
+} from '../constants';
 import { createScopedLogger } from '../logging';
 import { REST, Routes } from 'discord.js';
 
@@ -37,16 +38,18 @@ export async function requestDiscordOAuthToken(code: string) {
     client_id: DISCORD_CLIENT_ID,
     client_secret: DISCORD_CLIENT_SECRET,
     code,
+    grant_type: DISCORD_AUTH_GRANT_TYPE,
     redirect_uri: DISCORD_REDIRECT_URL,
+    scope: DISCORD_AUTH_SCOPE,
   };
 
   const tokenResponse = await fetch(`${DISCORD_URL}/api/oauth2/token`, {
     method: 'POST',
     headers: {
       Accept: 'application/json',
-      'Content-Type': 'application/json',
+      'Content-Type': 'application/x-www-form-urlencoded',
     },
-    body: JSON.stringify(body),
+    body: new URLSearchParams(body).toString(),
   });
 
   const tokenJson = await tokenResponse.json();
