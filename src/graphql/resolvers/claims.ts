@@ -1,11 +1,12 @@
 import { Arg, Ctx, Field, ObjectType, Resolver, Query } from 'type-graphql';
-import { Claim, ClaimStatus } from '@generated/type-graphql';
+import { Claim } from '@generated/type-graphql';
 import { Context } from '../../context';
 import { POAPEvent } from '../../types/poap';
 import { retrievePOAPEventInfo } from '../../external/poap';
 import { createScopedLogger } from '../../logging';
 import { gqlRequestDurationSeconds } from '../../metrics';
 import { getLastMonthStartDatetime } from './util';
+import { ClaimStatus, Prisma } from '@prisma/client';
 
 @ObjectType()
 class FullClaimData {
@@ -80,28 +81,29 @@ export class CustomClaimResolver {
         ethAddress: address.toLowerCase(),
       },
       select: {
+        id: true,
         ethAddress: true,
-        ensName: true,
         githubUser: true,
         email: true,
       },
     });
 
-    const possibleMatches = [];
-
-    const ethAddress = addressRecord?.ethAddress ?? null;
-    if (ethAddress !== null) {
-      possibleMatches.push({ issuedAddress: { ethAddress } });
+    if (addressRecord === null) {
+      logger.debug(`Completed request for the claims for address: ${address}`);
+      endTimer({ success: 1 });
+      return [];
     }
-    const githubId = addressRecord?.githubUser?.githubId ?? null;
+
+    const possibleMatches: Prisma.Enumerable<Prisma.ClaimWhereInput[]> = [
+      // Note that this covers both the ethAddress and the ensName
+      { issuedAddressId: addressRecord.id },
+    ];
+
+    const githubId = addressRecord.githubUser?.githubId ?? null;
     if (githubId !== null) {
       possibleMatches.push({ githubUser: { githubId } });
     }
-    const ensName = addressRecord?.ensName ?? null;
-    if (ensName !== null) {
-      possibleMatches.push({ issuedAddress: { ensName } });
-    }
-    const emailAddress = addressRecord?.email?.emailAddress ?? null;
+    const emailAddress = addressRecord.email?.emailAddress ?? null;
     if (emailAddress !== null) {
       possibleMatches.push({ email: { emailAddress } });
     }
@@ -162,7 +164,7 @@ export class CustomClaimResolver {
       });
     }
 
-    logger.debug(`Completed request for the claims for githubId: ${githubId}`);
+    logger.debug(`Completed request for the claims for address: ${address}`);
 
     endTimer({ success: 1 });
 
