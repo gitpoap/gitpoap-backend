@@ -59,6 +59,7 @@ function genAuthTokens(someGithubId?: number, githubHandle?: string) {
     ensAvatarImageUrl,
     someGithubId ?? null,
     githubHandle ?? null,
+    null,
   );
 }
 

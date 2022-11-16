@@ -91,6 +91,7 @@ function genAuthTokens(someAddress?: string) {
     ensAvatarImageUrl,
     null,
     null,
+    null,
   );
 }
 

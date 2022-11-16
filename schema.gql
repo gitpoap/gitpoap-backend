@@ -2069,7 +2069,6 @@ type GithubUser {
 
 type GithubUserCount {
   claims: Int!
-  authTokens: Int!
   githubPullRequests: Int!
   githubIssues: Int!
   githubMentions: Int!

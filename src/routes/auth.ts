@@ -47,8 +47,8 @@ async function getTokenDataWithGithubCheck(
   };
 }
 
-async function upsertAddressAndSelectGithubUser(address: string) {
-  const logger = createScopedLogger('upsertAddressAndSelectGithubUser');
+async function upsertAddressAndSelectExtraData(address: string) {
+  const logger = createScopedLogger('upsertAddressAndSelectExtraData');
 
   const addressLower = address.toLowerCase();
 
@@ -73,6 +73,9 @@ async function upsertAddressAndSelectGithubUser(address: string) {
             githubOAuthToken: true,
           },
         },
+        email: {
+          select: { id: true },
+        },
       },
     });
   } catch (err) {
@@ -94,6 +97,9 @@ async function upsertAddressAndSelectGithubUser(address: string) {
             githubHandle: true,
             githubOAuthToken: true,
           },
+        },
+        email: {
+          select: { id: true },
         },
       },
     });
@@ -129,7 +135,7 @@ authRouter.post('/', async function (req, res) {
 
   // If the resolveAddress promise found an Address or new ENS name
   // this will already exist
-  const dbAddress = await upsertAddressAndSelectGithubUser(address);
+  const dbAddress = await upsertAddressAndSelectExtraData(address);
 
   if (dbAddress === null) {
     logger.error(`Failed to upsert address ${address} during login`);
@@ -154,6 +160,7 @@ authRouter.post('/', async function (req, res) {
     dbAddress.ensAvatarImageUrl,
     githubTokenData.githubId,
     githubTokenData.githubHandle,
+    dbAddress.email?.id ?? null,
   );
 
   logger.debug(`Completed request to create AuthToken for address ${address}`);
@@ -197,14 +204,17 @@ authRouter.post('/refresh', async function (req, res) {
           ethAddress: true,
           ensName: true,
           ensAvatarImageUrl: true,
-        },
-      },
-      githubUser: {
-        select: {
-          id: true,
-          githubId: true,
-          githubHandle: true,
-          githubOAuthToken: true,
+          githubUser: {
+            select: {
+              id: true,
+              githubId: true,
+              githubHandle: true,
+              githubOAuthToken: true,
+            },
+          },
+          email: {
+            select: { id: true },
+          },
         },
       },
     },
@@ -249,13 +259,13 @@ authRouter.post('/refresh', async function (req, res) {
   });
 
   let githubTokenData: GithubTokenData = { githubId: null, githubHandle: null };
-  if (authToken.githubUser !== null) {
+  if (authToken.address.githubUser !== null) {
     githubTokenData = await getTokenDataWithGithubCheck(
       authToken.address.id,
-      authToken.githubUser.id,
-      authToken.githubUser.githubId,
-      authToken.githubUser.githubHandle,
-      authToken.githubUser.githubOAuthToken,
+      authToken.address.githubUser.id,
+      authToken.address.githubUser.githubId,
+      authToken.address.githubUser.githubHandle,
+      authToken.address.githubUser.githubOAuthToken,
     );
   }
 
@@ -268,6 +278,7 @@ authRouter.post('/refresh', async function (req, res) {
     authToken.address.ensAvatarImageUrl,
     githubTokenData.githubId,
     githubTokenData.githubHandle,
+    authToken.address.email?.id ?? null,
   );
 
   logger.debug('Completed request to refresh AuthToken');
