@@ -112,7 +112,7 @@ jest.mock('multer', () =>
         return (req: any, res: any, next: any) => {
           req.files = [
             {
-              originalname: 'foobar.png',
+              originalname: 'f-oo b@r.png',
               mimetype: 'image/png',
               buffer: Buffer.from('foobar'),
             },
@@ -131,7 +131,7 @@ jest.mock('../../../../../src/external/postmark');
 jest.mocked(sendGitPOAPRequestConfirmationEmail, true);
 jest.mocked(sendGitPOAPRequestRejectionEmail, true);
 
-jest.spyOn(DateTime, 'now').mockReturnValue(DateTime.fromSeconds(123456789));
+jest.spyOn(DateTime, 'now').mockReturnValue(DateTime.fromMillis(123456789));
 const mockedGetImageBufferFromS3URL = jest.mocked(getImageBufferFromS3URL, true);
 const mockedUploadMulterFile = jest.mocked(uploadMulterFile, true);
 
@@ -515,7 +515,7 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
       id: gitPOAPRequestId,
       adminApprovalStatus: AdminApprovalStatus.PENDING,
       type: GitPOAPType.CUSTOM,
-      imageUrl: getS3URL('gitpoap-request-images-test', 'foobar.png-123456789'),
+      imageUrl: getS3URL('gitpoap-request-images-test', 'foobar.png-123456789000'),
     } as any);
 
     contextMock.prisma.gitPOAPRequest.update.mockResolvedValue({
@@ -542,7 +542,7 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
       email: burzEmail,
       name: 'foobar-name',
       description: 'foobar-description',
-      imageUrl: getS3URL('gitpoap-request-images-test', 'foobar.png-123456789'),
+      imageUrl: getS3URL('gitpoap-request-images-test', 'foobar.png-123456789000'),
       startDate: DateTime.fromISO('2021-01-01').toFormat('yyyy LLL dd'),
       endDate: DateTime.fromISO('2021-01-10').toFormat('yyyy LLL dd'),
     });
@@ -719,7 +719,7 @@ describe('POST /gitpoaps/custom', () => {
       ...baseGitPOAPRequest,
       id: gitPOAPRequestId,
       adminApprovalStatus: AdminApprovalStatus.PENDING,
-      imageUrl: getS3URL('gitpoap-request-images-test', 'foobar.png-123456789'),
+      imageUrl: getS3URL('gitpoap-request-images-test', 'foobar.png-123456789000'),
     } as any);
 
     mockedUploadMulterFile.mockResolvedValue({
@@ -768,7 +768,7 @@ describe('POST /gitpoaps/custom', () => {
       isPRBased: false,
       ongoing: true,
       year: 2021,
-      imageUrl: getS3URL('gitpoap-request-images-test', 'foobar.png-123456789'),
+      imageUrl: getS3URL('gitpoap-request-images-test', 'foobar.png-123456789000'),
       contributors: {
         githubHandles: ['peebeejay'],
         ensNames: ['burz.eth'],
@@ -794,7 +794,7 @@ describe('POST /gitpoaps/custom', () => {
       email: burzEmail,
       name: 'foobar-name',
       description: 'foobar-description',
-      imageUrl: getS3URL('gitpoap-request-images-test', 'foobar.png-123456789'),
+      imageUrl: getS3URL('gitpoap-request-images-test', 'foobar.png-123456789000'),
       startDate: DateTime.fromISO('2021-01-01').toFormat('yyyy LLL dd'),
       endDate: DateTime.fromISO('2021-01-10').toFormat('yyyy LLL dd'),
     });
