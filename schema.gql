@@ -1242,6 +1242,24 @@ input GithubMentionRelationFilter {
   isNot: GithubMentionWhereInput
 }
 
+input DiscordUserRelationFilter {
+  is: DiscordUserWhereInput
+  isNot: DiscordUserWhereInput
+}
+
+input DiscordUserWhereInput {
+  AND: [DiscordUserWhereInput!]
+  OR: [DiscordUserWhereInput!]
+  NOT: [DiscordUserWhereInput!]
+  id: IntFilter
+  discordId: IntFilter
+  discordHandle: StringFilter
+  createdAt: DateTimeFilter
+  updatedAt: DateTimeFilter
+  claims: ClaimListRelationFilter
+  addresses: AddressListRelationFilter
+}
+
 input ProfileRelationFilter {
   is: ProfileWhereInput
   isNot: ProfileWhereInput
@@ -2328,6 +2346,15 @@ enum AddressScalarFieldEnum {
   githubUserId
   ensAvatarImageUrl
   ensName
+}
+
+type DiscordUser {
+  id: Int!
+  discordId: Int!
+  discordHandle: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  _count: DiscordUserCount
 }
 
 type Profile {
