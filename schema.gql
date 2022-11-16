@@ -1252,7 +1252,7 @@ input DiscordUserWhereInput {
   OR: [DiscordUserWhereInput!]
   NOT: [DiscordUserWhereInput!]
   id: IntFilter
-  discordId: IntFilter
+  discordId: StringFilter
   discordHandle: StringFilter
   createdAt: DateTimeFilter
   updatedAt: DateTimeFilter
@@ -2350,7 +2350,7 @@ enum AddressScalarFieldEnum {
 
 type DiscordUser {
   id: Int!
-  discordId: Int!
+  discordId: String!
   discordHandle: String!
   createdAt: DateTime!
   updatedAt: DateTime!
