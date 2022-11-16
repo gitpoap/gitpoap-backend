@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { context } from '../../context';
 import { resolveENS } from '../../lib/ens';
-import { ClaimStatus } from '@generated/type-graphql';
+import { ClaimStatus, GitPOAPStatus } from '@prisma/client';
 import { badgen } from 'badgen';
 import { GitPOAPMiniLogo } from './constants';
 import { mapClaimsToGitPOAPResults } from './helpers';
@@ -140,6 +140,9 @@ v1Router.get('/github/user/:githubHandle/gitpoaps', async function (req, res) {
       },
       status,
       gitPOAP: {
+        NOT: {
+          poapApprovalStatus: GitPOAPStatus.UNAPPROVED,
+        },
         isEnabled: true,
       },
     },

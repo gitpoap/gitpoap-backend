@@ -74,6 +74,9 @@ gitpoapsRouter.get('/events', async (req, res) => {
 
   logger.info('Request for all GitPOAP events');
 
+  // Note that we don't need to restrict to [APPROVED, REDEEM_REQUEST_PENDING], since
+  // UNAPPROVED just means that the codes haven't been approved yet, the event still exists.
+  // Presumably we will never run into a case where they don't approve our codes request
   const gitPOAPs = await context.prisma.gitPOAP.findMany({
     where: {
       isEnabled: true,
