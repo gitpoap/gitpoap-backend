@@ -1,6 +1,10 @@
 import { Router } from 'express';
 import { context } from '../context';
-import { requestDiscordOAuthToken, getDiscordCurrentUserInfo } from '../external/discord';
+import {
+  requestDiscordOAuthToken,
+  getDiscordCurrentUserInfo,
+  DiscordOAuthToken,
+} from '../external/discord';
 import { generateAuthTokens } from '../lib/authTokens';
 import { jwtWithAddress } from '../middleware/auth';
 import { RequestAccessTokenSchema } from '../schemas/discord';
@@ -29,7 +33,7 @@ discordRouter.post('/', jwtWithAddress(), async function (req, res) {
 
   logger.info(`Received a Discord login request from address ${address}`);
 
-  let discordToken: string;
+  let discordToken: DiscordOAuthToken;
   try {
     discordToken = await requestDiscordOAuthToken(code);
   } catch (err) {
@@ -38,6 +42,8 @@ discordRouter.post('/', jwtWithAddress(), async function (req, res) {
       msg: 'A server error has occurred - Discord access token exchange',
     });
   }
+
+  logger.info(`discord token: ${JSON.stringify(discordToken)}`);
 
   const discordInfo = await getDiscordCurrentUserInfo(discordToken);
   if (discordInfo === null) {
@@ -48,7 +54,11 @@ discordRouter.post('/', jwtWithAddress(), async function (req, res) {
   }
 
   // Update User with new OAuth token
-  const discordUser = await upsertDiscordUser(discordInfo.id, discordInfo.username, discordToken);
+  const discordUser = await upsertDiscordUser(
+    discordInfo.id,
+    discordInfo.username,
+    discordToken.access_token,
+  );
 
   /* Add the discord login to the address record */
   await addDiscordLoginForAddress(addressId, discordUser.id);

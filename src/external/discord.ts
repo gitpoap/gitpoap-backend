@@ -7,10 +7,9 @@ import {
   DISCORD_AUTH_SCOPE,
 } from '../constants';
 import { createScopedLogger } from '../logging';
-import { REST, Routes } from 'discord.js';
 
 export type DiscordUser = {
-  id: number;
+  id: string;
   username: string;
   discriminator: string;
   bot?: boolean;
@@ -18,17 +17,10 @@ export type DiscordUser = {
   email?: string | null;
 };
 
-async function responseHandler<T>(responsePromise: Promise<any>): Promise<T | null> {
-  const logger = createScopedLogger('responseHandler');
-
-  try {
-    return (await responsePromise).data;
-  } catch (err) {
-    logger.error(`Received bad response from octokit: ${err}`);
-
-    return null;
-  }
-}
+export type DiscordOAuthToken = {
+  token_type: string;
+  access_token: string;
+};
 
 export async function requestDiscordOAuthToken(code: string) {
   const logger = createScopedLogger('requestDiscordOAuthToken');
@@ -46,7 +38,6 @@ export async function requestDiscordOAuthToken(code: string) {
   const tokenResponse = await fetch(`${DISCORD_URL}/api/oauth2/token`, {
     method: 'POST',
     headers: {
-      Accept: 'application/json',
       'Content-Type': 'application/x-www-form-urlencoded',
     },
     body: new URLSearchParams(body).toString(),
@@ -59,15 +50,26 @@ export async function requestDiscordOAuthToken(code: string) {
     throw JSON.stringify(tokenJson);
   }
 
-  return tokenJson.access_token;
-}
-
-function getOAuthDiscordRest(discordOAuthToken: string) {
-  return new REST({ version: '10' }).setToken(discordOAuthToken);
+  return tokenJson;
 }
 
 /** -- External Functions -- **/
-export async function getDiscordCurrentUserInfo(discordToken: string) {
-  const rest = getOAuthDiscordRest(discordToken);
-  return await responseHandler<DiscordUser>(rest.get(Routes.user()));
+export async function getDiscordCurrentUserInfo(discordToken: DiscordOAuthToken) {
+  const logger = createScopedLogger('getDiscordCurrentUserInfo');
+
+  const userResult = await fetch(`${DISCORD_URL}/api/users/@me`, {
+    headers: {
+      authorization: `${discordToken.token_type} ${discordToken.access_token}`,
+    },
+  });
+
+  const userInfoJson = await userResult.json();
+
+  logger.debug(`Token JSON: ${userInfoJson}`);
+  if (userInfoJson?.error) {
+    /* don't use JSON.stringify long term here */
+    throw JSON.stringify(userInfoJson);
+  }
+
+  return userInfoJson;
 }
