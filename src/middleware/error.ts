@@ -18,7 +18,13 @@ function circularReplacer() {
   };
 }
 
-export const errorHandler: ErrorRequestHandler = (err, req, res) => {
+export const errorHandler: ErrorRequestHandler = (
+  err,
+  req,
+  res,
+  // See: https://stackoverflow.com/a/68803103/18750275
+  next, // eslint-disable-line @typescript-eslint/no-unused-vars
+) => {
   const logger = createScopedLogger('errorHandler');
 
   if ('status' in err) {
