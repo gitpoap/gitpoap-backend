@@ -22,9 +22,8 @@ githubRouter.post('/', jwtWithAddress(), async function (req, res) {
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
-  const { authTokenId, addressId, address, ensName, ensAvatarImageUrl } = getAccessTokenPayload(
-    req.user,
-  );
+  const { authTokenId, addressId, address, ensName, ensAvatarImageUrl, emailId } =
+    getAccessTokenPayload(req.user);
   let { code } = req.body;
 
   logger.info(`Received a GitHub login request from address ${address}`);
@@ -70,11 +69,6 @@ githubRouter.post('/', jwtWithAddress(), async function (req, res) {
         },
         data: {
           generation: { increment: 1 },
-          githubUser: {
-            connect: {
-              id: githubUser.id,
-            },
-          },
         },
         select: {
           generation: true,
@@ -97,6 +91,7 @@ githubRouter.post('/', jwtWithAddress(), async function (req, res) {
     ensAvatarImageUrl,
     githubInfo.id,
     githubInfo.login,
+    emailId,
   );
 
   logger.debug(`Completed a GitHub login request for address ${address}`);
@@ -108,8 +103,16 @@ githubRouter.post('/', jwtWithAddress(), async function (req, res) {
 githubRouter.delete('/', jwtWithAddress(), async function (req, res) {
   const logger = getRequestLogger(req);
 
-  const { authTokenId, addressId, address, ensName, ensAvatarImageUrl, githubHandle, githubId } =
-    getAccessTokenPayload(req.user);
+  const {
+    authTokenId,
+    addressId,
+    address,
+    ensName,
+    ensAvatarImageUrl,
+    githubHandle,
+    githubId,
+    emailId,
+  } = getAccessTokenPayload(req.user);
 
   logger.info(`Received a GitHub disconnect request from address ${address}`);
 
@@ -129,7 +132,6 @@ githubRouter.delete('/', jwtWithAddress(), async function (req, res) {
     where: { id: authTokenId },
     data: {
       generation: { increment: 1 },
-      githubUser: { disconnect: true },
     },
     select: { generation: true },
   });
@@ -143,6 +145,7 @@ githubRouter.delete('/', jwtWithAddress(), async function (req, res) {
     ensAvatarImageUrl,
     null,
     null,
+    emailId,
   );
 
   logger.debug(`Completed Github disconnect request for address ${address}`);
