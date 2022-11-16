@@ -45,6 +45,7 @@ function genAuthTokens() {
     ensAvatarImageUrl,
     null,
     null,
+    null,
   );
 }
 

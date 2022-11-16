@@ -25,9 +25,6 @@ model GithubUser {
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
   claims             Claim[]
-  // Hide githubUser.authTokens from generated resolvers
-  /// @TypeGraphQL.omit(output: true, input: true)
-  authTokens         AuthToken[]
   // Hide githubUser.githubOAuthToken from generated resolvers
   /// @TypeGraphQL.omit(output: true, input: true)
   githubOAuthToken   String?
@@ -257,14 +254,12 @@ model GitPOAPRequest {
 }
 
 model AuthToken {
-  id         Int         @id @default(autoincrement())
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
-  generation Int         @default(0)
+  id         Int      @id @default(autoincrement())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  generation Int      @default(0)
   addressId  Int
-  address    Address     @relation(fields: [addressId], references: [id])
-  githubId   Int?
-  githubUser GithubUser? @relation(fields: [githubId], references: [githubId])
+  address    Address  @relation(fields: [addressId], references: [id])
 }
 
 model FeaturedPOAP {

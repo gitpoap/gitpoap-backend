@@ -298,6 +298,7 @@ function genRefreshToken() {
     ensAvatarImageUrl,
     null,
     null,
+    null,
   ).refreshToken;
 }
 

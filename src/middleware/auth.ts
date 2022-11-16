@@ -32,6 +32,15 @@ export function jwtWithAddress() {
             select: {
               ensName: true,
               ensAvatarImageUrl: true,
+              githubUser: {
+                select: {
+                  githubId: true,
+                  githubHandle: true,
+                },
+              },
+              email: {
+                select: { id: true },
+              },
             },
           },
         },
@@ -41,9 +50,12 @@ export function jwtWithAddress() {
         return;
       }
 
-      // Update the ensName and ensAvatarImageUrl in case they've updated
+      // Update the nullable fields in case they've updated in the DB
       set(req, 'user.ensName', tokenInfo.address.ensName);
       set(req, 'user.ensAvatarImageUrl', tokenInfo.address.ensAvatarImageUrl);
+      set(req, 'user.githubId', tokenInfo.address.githubUser?.githubId ?? null);
+      set(req, 'user.githubHandle', tokenInfo.address.githubUser?.githubHandle ?? null);
+      set(req, 'user.emailId', tokenInfo.address.email?.id ?? null);
 
       next();
     };
@@ -101,11 +113,16 @@ export function jwtWithGitHubOAuth() {
             select: {
               ensName: true,
               ensAvatarImageUrl: true,
-            },
-          },
-          githubUser: {
-            select: {
-              githubOAuthToken: true,
+              githubUser: {
+                select: {
+                  githubId: true,
+                  githubHandle: true,
+                  githubOAuthToken: true,
+                },
+              },
+              email: {
+                select: { id: true },
+              },
             },
           },
         },
@@ -114,16 +131,22 @@ export function jwtWithGitHubOAuth() {
         next({ status: 401, msg: 'Not logged in with address' });
         return;
       }
-      if (tokenInfo.githubUser === null || tokenInfo.githubUser.githubOAuthToken === null) {
+      if (
+        tokenInfo.address.githubUser === null ||
+        tokenInfo.address.githubUser.githubOAuthToken === null
+      ) {
         next({ status: 401, msg: 'Not logged into GitHub' });
         return;
       }
 
-      set(req, 'user.githubOAuthToken', tokenInfo.githubUser.githubOAuthToken);
+      set(req, 'user.githubId', tokenInfo.address.githubUser.githubId);
+      set(req, 'user.githubHandle', tokenInfo.address.githubUser.githubHandle);
+      set(req, 'user.githubOAuthToken', tokenInfo.address.githubUser.githubOAuthToken);
 
-      // Update the ensName and ensAvatarImageUrl in case they've updated
+      // Update the nullable values in case they've updated in the DB
       set(req, 'user.ensName', tokenInfo.address.ensName);
       set(req, 'user.ensAvatarImageUrl', tokenInfo.address.ensAvatarImageUrl);
+      set(req, 'user.emailId', tokenInfo.address.email?.id ?? null);
 
       next();
     };
