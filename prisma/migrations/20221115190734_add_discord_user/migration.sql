@@ -28,7 +28,7 @@ ALTER TABLE "Claim" ADD CONSTRAINT "Claim_discordUserId_fkey" FOREIGN KEY ("disc
 ALTER TABLE "AuthToken" ADD CONSTRAINT "AuthToken_discordUserId_fkey" FOREIGN KEY ("discordUserId") REFERENCES "DiscordUser"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AlterTable
-ALTER TABLE "DiscordUser" ADD COLUMN     "discordId" INTEGER NOT NULL;
+ALTER TABLE "DiscordUser" ADD COLUMN     "discordId" TEXT NOT NULL;
 
 -- CreateIndex
 CREATE UNIQUE INDEX "DiscordUser_discordId_key" ON "DiscordUser"("discordId");

@@ -2,7 +2,7 @@ import { context } from '../context';
 import { createScopedLogger } from '../logging';
 
 export async function upsertDiscordUser(
-  discordId: number,
+  discordId: string,
   discordHandle: string,
   discordOAuthToken?: string,
 ) {
