@@ -1,5 +1,7 @@
 import { GraphQLClient, gql } from 'graphql-request';
 import { ADDRESSES } from '../../../../../prisma/constants';
+import { context } from '../../../../../src/context';
+import { GitPOAPStatus } from '@prisma/client';
 
 describe('CustomClaimResolver', () => {
   const client = new GraphQLClient('http://server:3001/graphql');
@@ -61,6 +63,25 @@ describe('CustomClaimResolver', () => {
     const data = await client.request(gql`
       { userClaims(address: "${'0x4' + ADDRESSES.random2.substr(3)}") { claim { id } } }
     `);
+
+    expect(data.userClaims).toHaveLength(0);
+  });
+
+  it('userClaims - UNAPPROVED GitPOAP', async () => {
+    // Temporarily mark GitPOAP ID 9 as UNAPPROVED
+    await context.prisma.gitPOAP.update({
+      where: { id: 9 },
+      data: { poapApprovalStatus: GitPOAPStatus.UNAPPROVED },
+    });
+
+    const data = await client.request(gql`
+      { userClaims(address: "${ADDRESSES.random2}") { claim { id } } }
+    `);
+
+    await context.prisma.gitPOAP.update({
+      where: { id: 9 },
+      data: { poapApprovalStatus: GitPOAPStatus.APPROVED },
+    });
 
     expect(data.userClaims).toHaveLength(0);
   });
