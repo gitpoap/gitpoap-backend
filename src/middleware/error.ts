@@ -6,7 +6,7 @@ import { captureException } from '../lib/sentry';
 function circularReplacer() {
   const objectsAlreadyVisited = new WeakSet();
 
-  return (key, value) => {
+  return (key: any, value: any) => {
     if (typeof value === 'object' && value !== null) {
       if (objectsAlreadyVisited.has(value)) {
         return '[Circular]';
