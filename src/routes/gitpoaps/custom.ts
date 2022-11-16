@@ -213,6 +213,12 @@ customGitPOAPsRouter.put('/approve/:id', jwtWithAdminAddress(), async (req, res)
 
   const imageBuffer = await getImageBufferFromS3URL(gitPOAPRequest.imageUrl);
 
+  if (imageBuffer === null) {
+    const msg = `Image for GitPOAP Request with ID:${gitPOAPRequestId} was unable to be uploaded.`;
+    logger.warn(msg);
+    return res.status(400).send({ msg });
+  }
+
   // TODO: switch to using the actual dates from GitPOAPRequest after POAP fixes
   // their date issues
   const startDate = DateTime.now();
