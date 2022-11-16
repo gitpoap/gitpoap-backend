@@ -8,6 +8,7 @@ export const ADDRESSES = {
   tyler: '0x8404DDF7ed9Cce1EFDC14f3Af4c8eD0015d28937'.toLowerCase(),
   kayleen: '0x04c0cD38B8c203b14ef2b7B8d736D69B938AFF71'.toLowerCase(),
   random: '0x89dab21047e6de0e77deee5f4f286d72be50b942'.toLowerCase(),
+  random2: '0x99dab21047e6de0e77defe5f4f286d72be50b942'.toLowerCase(),
 };
 
 export const GH_HANDLES = {
