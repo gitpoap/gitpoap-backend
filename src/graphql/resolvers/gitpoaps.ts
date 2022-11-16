@@ -1,7 +1,7 @@
 import { Arg, Ctx, Field, ObjectType, Resolver, Query } from 'type-graphql';
-import { Claim, ClaimStatus, GitPOAPStatus, GitPOAP, Profile } from '@generated/type-graphql';
+import { Claim, GitPOAP } from '@generated/type-graphql';
 import { getLastMonthStartDatetime } from './util';
-import { context, Context } from '../../context';
+import { Context } from '../../context';
 import { POAPEvent, POAPToken } from '../../types/poap';
 import { resolveENS } from '../../lib/ens';
 import { retrievePOAPEventInfo, retrievePOAPTokenInfo } from '../../external/poap';
@@ -9,7 +9,7 @@ import { createScopedLogger } from '../../logging';
 import { gqlRequestDurationSeconds } from '../../metrics';
 import { GitPOAPReturnData, splitUsersPOAPs } from '../../lib/poaps';
 import { countContributionsForClaim } from '../../lib/contributions';
-import { Address, Prisma } from '@prisma/client';
+import { Address, ClaimStatus, GitPOAPStatus, GitPOAPType, Prisma, Profile } from '@prisma/client';
 
 @ObjectType()
 class FullGitPOAPEventData {
@@ -129,32 +129,28 @@ class Holders {
 }
 
 export async function addPRCountData(
-  userGitPOAPData: GitPOAPReturnData[],
+  gitPOAPReturnData: GitPOAPReturnData[],
 ): Promise<UserGitPOAPData[]> {
   const results: UserGitPOAPData[] = [];
 
-  if (userGitPOAPData.length === 0) {
+  if (gitPOAPReturnData.length === 0) {
     return results;
   }
 
-  const profile = await context.prisma.profile.findFirst({
-    where: {
-      address: {
-        ethAddress: userGitPOAPData[0].claim.mintedAddress?.ethAddress,
-      },
-    },
-  });
-
-  /* Here we assume that all user gitpoaps here belong to the same address */
-  if (!profile || !profile.githubHandle) {
-    return userGitPOAPData.map(gitPOAPData => ({
-      ...gitPOAPData,
-      contributionCount: 0,
-    }));
-  }
-
-  for (const gitPOAPData of userGitPOAPData) {
-    if (gitPOAPData.claim.githubUser) {
+  for (const gitPOAPData of gitPOAPReturnData) {
+    // Short circuit if:
+    // * The GitPOAP is CUSTOM
+    // * It has no associated GithubUser
+    // In both cases there cannot be any associated contribution counts
+    if (
+      gitPOAPData.claim.gitPOAP.type === GitPOAPType.CUSTOM ||
+      gitPOAPData.claim.githubUser === null
+    ) {
+      results.push({
+        ...gitPOAPData,
+        contributionCount: 0,
+      });
+    } else {
       results.push({
         ...gitPOAPData,
         contributionCount: await countContributionsForClaim(
