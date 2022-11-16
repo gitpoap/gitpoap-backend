@@ -14,6 +14,7 @@ import { removeGithubLoginForAddress } from '../lib/addresses';
 import { LOGIN_EXP_TIME_MONTHS } from '../constants';
 import { DateTime } from 'luxon';
 import { getRequestLogger } from '../middleware/loggingAndTiming';
+import { isEmailValidated } from '../lib/emails';
 
 export const authRouter = Router();
 
@@ -45,6 +46,21 @@ async function getTokenDataWithGithubCheck(
     githubId: null,
     githubHandle: null,
   };
+}
+
+async function getTokenDataWithEmailCheck(
+  addressId: number,
+  emailId: number | null,
+): Promise<number | null> {
+  const logger = createScopedLogger('getTokenDataWithEmailCheck');
+
+  if (await isEmailValidated(emailId)) {
+    return emailId;
+  }
+
+  logger.info(`Removing invalid emailId in AuthToken for Address ${addressId}`);
+
+  return null;
 }
 
 async function upsertAddressAndSelectExtraData(address: string) {
@@ -152,6 +168,7 @@ authRouter.post('/', async function (req, res) {
       dbAddress.githubUser.githubOAuthToken,
     );
   }
+  const emailId = await getTokenDataWithEmailCheck(dbAddress.id, dbAddress.email?.id ?? null);
 
   const userAuthTokens = await generateNewAuthTokens(
     dbAddress.id,
@@ -160,7 +177,7 @@ authRouter.post('/', async function (req, res) {
     dbAddress.ensAvatarImageUrl,
     githubTokenData.githubId,
     githubTokenData.githubHandle,
-    dbAddress.email?.id ?? null,
+    emailId,
   );
 
   logger.debug(`Completed request to create AuthToken for address ${address}`);
@@ -268,6 +285,10 @@ authRouter.post('/refresh', async function (req, res) {
       authToken.address.githubUser.githubOAuthToken,
     );
   }
+  const emailId = await getTokenDataWithEmailCheck(
+    authToken.address.id,
+    authToken.address.email?.id ?? null,
+  );
 
   const userAuthTokens = generateAuthTokens(
     payload.authTokenId,
@@ -278,7 +299,7 @@ authRouter.post('/refresh', async function (req, res) {
     authToken.address.ensAvatarImageUrl,
     githubTokenData.githubId,
     githubTokenData.githubHandle,
-    authToken.address.email?.id ?? null,
+    emailId,
   );
 
   logger.debug('Completed request to refresh AuthToken');

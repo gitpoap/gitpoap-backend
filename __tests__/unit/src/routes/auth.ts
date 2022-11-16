@@ -48,12 +48,14 @@ const githubUserId = 3233;
 const githubId = 23422222;
 const githubHandle = 'john-wayne-gacy';
 const githubOAuthToken = 'im_super_spooky';
+const emailId = 9884;
 
 function validatePayloads(
   payload: string,
   expectedGithubId: number | null,
   expectedGithubHandle: string | null,
   expectedGeneration: number,
+  expectedEmailId: number | null = null,
 ) {
   const { accessToken, refreshToken } = <UserAuthTokens>JSON.parse(payload);
 
@@ -66,6 +68,7 @@ function validatePayloads(
       ensAvatarImageUrl,
       githubId: expectedGithubId,
       githubHandle: expectedGithubHandle,
+      emailId: expectedEmailId,
     }),
   );
 
@@ -122,6 +125,9 @@ describe('POST /auth', () => {
             githubOAuthToken: true,
           },
         },
+        email: {
+          select: { id: true },
+        },
       },
     });
   };
@@ -133,6 +139,7 @@ describe('POST /auth', () => {
       ensName,
       ensAvatarImageUrl,
       githubUser: null,
+      email: null,
     } as any);
     contextMock.prisma.authToken.create.mockResolvedValue({
       id: authTokenId,
@@ -162,7 +169,6 @@ describe('POST /auth', () => {
             id: addressId,
           },
         },
-        githubUser: undefined,
       },
       select: {
         id: true,
@@ -183,6 +189,7 @@ describe('POST /auth', () => {
         githubHandle,
         githubOAuthToken,
       },
+      email: null,
     } as any);
     mockedIsGithubTokenValidForUser.mockResolvedValue(true);
     contextMock.prisma.authToken.create.mockResolvedValue({
@@ -216,11 +223,6 @@ describe('POST /auth', () => {
             id: addressId,
           },
         },
-        githubUser: {
-          connect: {
-            githubId,
-          },
-        },
       },
       select: {
         id: true,
@@ -241,6 +243,7 @@ describe('POST /auth', () => {
         githubHandle,
         githubOAuthToken,
       },
+      email: null,
     } as any);
     mockedIsGithubTokenValidForUser.mockResolvedValue(false);
     contextMock.prisma.authToken.create.mockResolvedValue({
@@ -278,7 +281,6 @@ describe('POST /auth', () => {
             id: addressId,
           },
         },
-        githubUser: undefined,
       },
       select: {
         id: true,
@@ -348,14 +350,17 @@ describe('POST /auth/refresh', () => {
             ethAddress: true,
             ensName: true,
             ensAvatarImageUrl: true,
-          },
-        },
-        githubUser: {
-          select: {
-            id: true,
-            githubId: true,
-            githubHandle: true,
-            githubOAuthToken: true,
+            githubUser: {
+              select: {
+                id: true,
+                githubId: true,
+                githubHandle: true,
+                githubOAuthToken: true,
+              },
+            },
+            email: {
+              select: { id: true },
+            },
           },
         },
       },
@@ -376,15 +381,28 @@ describe('POST /auth/refresh', () => {
     expectAuthTokenLookup();
   });
 
-  const mockAuthTokenLookup = (createdAt: Date, generation: number, hasUser = false) => {
+  type MockAuthTokenExtras = {
+    hasGithubUser?: boolean;
+    hasEmail?: boolean;
+  };
+
+  const mockAuthTokenLookup = (
+    createdAt: Date,
+    generation: number,
+    extras?: MockAuthTokenExtras,
+  ) => {
     let githubUser = null;
-    if (hasUser) {
+    if (extras?.hasGithubUser) {
       githubUser = {
         id: githubUserId,
         githubId,
         githubHandle,
         githubOAuthToken,
       };
+    }
+    let email = null;
+    if (extras?.hasEmail) {
+      email = { id: emailId };
     }
 
     contextMock.prisma.authToken.findUnique.mockResolvedValue({
@@ -395,8 +413,9 @@ describe('POST /auth/refresh', () => {
         ethAddress: addressLower,
         ensName,
         ensAvatarImageUrl,
+        githubUser,
+        email,
       },
-      githubUser,
     } as any);
   };
 
@@ -463,7 +482,7 @@ describe('POST /auth/refresh', () => {
   };
 
   it("Doesn't check GitHub login info when AuthToken isn't associated with a User", async () => {
-    mockAuthTokenLookup(DateTime.utc().toJSDate(), authTokenGeneration, false);
+    mockAuthTokenLookup(DateTime.utc().toJSDate(), authTokenGeneration);
     const nextGeneration = authTokenGeneration + 1;
     contextMock.prisma.authToken.update.mockResolvedValue({
       generation: nextGeneration,
@@ -489,7 +508,7 @@ describe('POST /auth/refresh', () => {
   });
 
   it("Returns GitHub login info when user's login is still valid", async () => {
-    mockAuthTokenLookup(DateTime.utc().toJSDate(), authTokenGeneration, true);
+    mockAuthTokenLookup(DateTime.utc().toJSDate(), authTokenGeneration, { hasGithubUser: true });
     mockedIsGithubTokenValidForUser.mockResolvedValue(true);
     const nextGeneration = authTokenGeneration + 1;
     contextMock.prisma.authToken.update.mockResolvedValue({
@@ -518,8 +537,36 @@ describe('POST /auth/refresh', () => {
     expect(mockedRemoveGithubUsersGithubOAuthToken).toHaveBeenCalledTimes(0);
   });
 
+  it('Returns emailId when user has connected email', async () => {
+    mockAuthTokenLookup(DateTime.utc().toJSDate(), authTokenGeneration, { hasEmail: true });
+    const nextGeneration = authTokenGeneration + 1;
+    contextMock.prisma.authToken.update.mockResolvedValue({
+      generation: nextGeneration,
+    } as any);
+
+    const token = genRefreshToken();
+
+    const result = await request(await setupApp())
+      .post('/auth/refresh')
+      .send({ token });
+
+    expect(result.statusCode).toEqual(200);
+
+    validatePayloads(result.text, null, null, nextGeneration, emailId);
+
+    expectAuthTokenLookup();
+
+    expect(contextMock.prisma.authToken.delete).toHaveBeenCalledTimes(0);
+
+    expectAuthTokenUpdate();
+
+    expect(mockedIsGithubTokenValidForUser).toHaveBeenCalledTimes(0);
+
+    expect(mockedRemoveGithubUsersGithubOAuthToken).toHaveBeenCalledTimes(0);
+  });
+
   it("Removes GitHub login info when user's login is invalid", async () => {
-    mockAuthTokenLookup(DateTime.utc().toJSDate(), authTokenGeneration, true);
+    mockAuthTokenLookup(DateTime.utc().toJSDate(), authTokenGeneration, { hasGithubUser: true });
     mockedIsGithubTokenValidForUser.mockResolvedValue(false);
     const nextGeneration = authTokenGeneration + 1;
     contextMock.prisma.authToken.update.mockResolvedValue({
