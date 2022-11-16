@@ -129,16 +129,25 @@ export const getBucketFromS3URL = (imageUrl: string) => {
 };
 
 export const getObjectFromS3 = async (bucket: string, key: string) => {
-  return await s3.send(
-    new GetObjectCommand({
-      Bucket: bucket,
-      Key: key,
-    }),
-  );
+  try {
+    return await s3.send(
+      new GetObjectCommand({
+        Bucket: bucket,
+        Key: key,
+      }),
+    );
+  } catch (e) {
+    console.warn(e);
+    return null;
+  }
 };
 
 export const getImageBufferFromS3 = async (bucket: string, key: string) => {
   const res = await getObjectFromS3(bucket, key);
+
+  if (res === null) {
+    return null;
+  }
 
   const chunks: Uint8Array[] = [];
   for await (const chunk of res.Body as any) {
