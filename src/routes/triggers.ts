@@ -6,7 +6,7 @@ import { getRequestLogger } from '../middleware/loggingAndTiming';
 
 export const triggersRouter = Router();
 
-triggersRouter.get('/ongoing-issuance', jwtWithAdminAddress(), async (req, res) => {
+triggersRouter.post('/ongoing-issuance', jwtWithAdminAddress(), async (req, res) => {
   const logger = getRequestLogger(req);
 
   logger.info('Admin request to start ongoing issuance now');
@@ -23,7 +23,7 @@ triggersRouter.get('/ongoing-issuance', jwtWithAdminAddress(), async (req, res) 
   return res.status(200).send('STARTED');
 });
 
-triggersRouter.get('/check-for-codes', jwtWithAdminAddress(), async (req, res) => {
+triggersRouter.post('/check-for-codes', jwtWithAdminAddress(), async (req, res) => {
   const logger = getRequestLogger(req);
 
   logger.info('Admin request to check for new POAP codes now');
