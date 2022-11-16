@@ -57,7 +57,8 @@ export async function uploadGitPOAPRequestImage(
   try {
     const extension = path.extname(image.originalname);
     const originalName = path.basename(image.originalname, extension);
-    const imageKey = `${originalName}-${DateTime.now().toSeconds()}${extension}`;
+    const name = originalName.replace(/[^a-zA-Z0-9]/g, '');
+    const imageKey = `${name}-${DateTime.now().toMillis()}${extension}`;
     await uploadMulterFile(image, s3configProfile.buckets.gitPOAPRequestImages, imageKey);
     logger.info(
       `Uploaded image with imageKey: ${imageKey} to S3 bucket ${s3configProfile.buckets.gitPOAPRequestImages}`,
