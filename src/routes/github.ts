@@ -2,13 +2,12 @@ import { Router } from 'express';
 import { context } from '../context';
 import { RequestAccessTokenSchema } from '../schemas/github';
 import { requestGithubOAuthToken, getGithubCurrentUserInfo } from '../external/github';
-import { generateAuthTokens } from '../lib/authTokens';
+import { generateAuthTokensWithChecks } from '../lib/authTokens';
 import { jwtWithAddress } from '../middleware/auth';
 import { getAccessTokenPayload } from '../types/authTokens';
 import { upsertGithubUser } from '../lib/githubUsers';
 import { addGithubLoginForAddress, removeGithubLoginForAddress } from '../lib/addresses';
 import { getRequestLogger } from '../middleware/loggingAndTiming';
-import { isEmailValidated } from '../lib/emails';
 
 export const githubRouter = Router();
 
@@ -23,11 +22,10 @@ githubRouter.post('/', jwtWithAddress(), async function (req, res) {
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
-  const { authTokenId, addressId, address, ensName, ensAvatarImageUrl, emailId } =
-    getAccessTokenPayload(req.user);
+  const { authTokenId, addressId, address: ethAddress } = getAccessTokenPayload(req.user);
   let { code } = req.body;
 
-  logger.info(`Received a GitHub login request from address ${address}`);
+  logger.info(`Received a GitHub login request from address ${ethAddress}`);
 
   // Remove state string if it exists
   const andIndex = code.indexOf('&');
@@ -61,21 +59,31 @@ githubRouter.post('/', jwtWithAddress(), async function (req, res) {
 
   // Update the generation of the AuthToken (this should exist
   // since it was looked up within the middleware)
-  let newGeneration: number;
+  let dbAuthToken;
   try {
-    newGeneration = (
-      await context.prisma.authToken.update({
-        where: {
-          id: authTokenId,
+    dbAuthToken = await context.prisma.authToken.update({
+      where: {
+        id: authTokenId,
+      },
+      data: {
+        generation: { increment: 1 },
+      },
+      select: {
+        generation: true,
+        address: {
+          select: {
+            ensName: true,
+            ensAvatarImageUrl: true,
+            email: {
+              select: {
+                id: true,
+                isValidated: true,
+              },
+            },
+          },
         },
-        data: {
-          generation: { increment: 1 },
-        },
-        select: {
-          generation: true,
-        },
-      })
-    ).generation;
+      },
+    });
   } catch (err) {
     logger.warn(
       `GithubUser ID ${githubUser.id}'s AuthToken was invalidated during GitHub login process`,
@@ -83,19 +91,14 @@ githubRouter.post('/', jwtWithAddress(), async function (req, res) {
     return res.status(401).send({ msg: 'Not logged in with address' });
   }
 
-  const userAuthTokens = generateAuthTokens(
-    authTokenId,
-    newGeneration,
-    addressId,
-    address,
-    ensName,
-    ensAvatarImageUrl,
-    githubInfo.id,
-    githubInfo.login,
-    (await isEmailValidated(emailId)) ? emailId : null,
-  );
+  const userAuthTokens = generateAuthTokensWithChecks(authTokenId, dbAuthToken.generation, {
+    ...dbAuthToken.address,
+    id: addressId,
+    ethAddress,
+    githubUser,
+  });
 
-  logger.debug(`Completed a GitHub login request for address ${address}`);
+  logger.debug(`Completed a GitHub login request for address ${ethAddress}`);
 
   return res.status(200).send(userAuthTokens);
 });
@@ -107,15 +110,12 @@ githubRouter.delete('/', jwtWithAddress(), async function (req, res) {
   const {
     authTokenId,
     addressId,
-    address,
-    ensName,
-    ensAvatarImageUrl,
+    address: ethAddress,
     githubHandle,
     githubId,
-    emailId,
   } = getAccessTokenPayload(req.user);
 
-  logger.info(`Received a GitHub disconnect request from address ${address}`);
+  logger.info(`Received a GitHub disconnect request from address ${ethAddress}`);
 
   if (githubHandle === null || githubId === null) {
     logger.warn('No GitHub login found for address');
@@ -134,22 +134,31 @@ githubRouter.delete('/', jwtWithAddress(), async function (req, res) {
     data: {
       generation: { increment: 1 },
     },
-    select: { generation: true },
+    select: {
+      generation: true,
+      address: {
+        select: {
+          ensName: true,
+          ensAvatarImageUrl: true,
+          email: {
+            select: {
+              id: true,
+              isValidated: true,
+            },
+          },
+        },
+      },
+    },
   });
 
-  const userAuthTokens = generateAuthTokens(
-    authTokenId,
-    dbAuthToken.generation,
-    addressId,
-    address,
-    ensName,
-    ensAvatarImageUrl,
-    null,
-    null,
-    (await isEmailValidated(emailId)) ? emailId : null,
-  );
+  const userAuthTokens = generateAuthTokensWithChecks(authTokenId, dbAuthToken.generation, {
+    ...dbAuthToken.address,
+    id: addressId,
+    ethAddress,
+    githubUser: null,
+  });
 
-  logger.debug(`Completed Github disconnect request for address ${address}`);
+  logger.debug(`Completed Github disconnect request for address ${ethAddress}`);
 
   return res.status(200).send(userAuthTokens);
 });
