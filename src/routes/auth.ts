@@ -1,126 +1,22 @@
 import { Router } from 'express';
-import { createScopedLogger } from '../logging';
 import { RefreshTokenPayload, getRefreshTokenPayload } from '../types/authTokens';
 import { verify } from 'jsonwebtoken';
 import { JWT_SECRET } from '../environment';
 import { context } from '../context';
 import { CreateAccessTokenSchema, RefreshAccessTokenSchema } from '../schemas/auth';
-import { deleteAuthToken, generateAuthTokens, generateNewAuthTokens } from '../lib/authTokens';
+import {
+  deleteAuthToken,
+  generateAuthTokensWithChecks,
+  generateNewAuthTokens,
+} from '../lib/authTokens';
 import { resolveAddress } from '../lib/ens';
 import { isAuthSignatureDataValid } from '../lib/signatures';
-import { isGithubTokenValidForUser } from '../external/github';
-import { removeGithubUsersGithubOAuthToken } from '../lib/githubUsers';
-import { removeGithubLoginForAddress } from '../lib/addresses';
+import { upsertAddress } from '../lib/addresses';
 import { LOGIN_EXP_TIME_MONTHS } from '../constants';
 import { DateTime } from 'luxon';
 import { getRequestLogger } from '../middleware/loggingAndTiming';
-import { isEmailValidated } from '../lib/emails';
 
 export const authRouter = Router();
-
-type GithubTokenData = {
-  githubId: number | null;
-  githubHandle: string | null;
-};
-
-async function getTokenDataWithGithubCheck(
-  addressId: number,
-  githubUserId: number,
-  githubId: number,
-  githubHandle: string,
-  githubOAuthToken: string | null,
-): Promise<GithubTokenData> {
-  const logger = createScopedLogger('getTokenDataWithGithubCheck');
-
-  if (await isGithubTokenValidForUser(githubOAuthToken, githubId)) {
-    return { githubId, githubHandle };
-  }
-
-  logger.info(`Removing invalid GitHub OAuth token for User ID ${githubUserId}`);
-
-  await removeGithubUsersGithubOAuthToken(githubUserId);
-
-  await removeGithubLoginForAddress(addressId);
-
-  return {
-    githubId: null,
-    githubHandle: null,
-  };
-}
-
-async function getTokenDataWithEmailCheck(
-  addressId: number,
-  emailId: number | null,
-): Promise<number | null> {
-  const logger = createScopedLogger('getTokenDataWithEmailCheck');
-
-  if (await isEmailValidated(emailId)) {
-    return emailId;
-  }
-
-  logger.info(`Removing invalid emailId in AuthToken for Address ${addressId}`);
-
-  return null;
-}
-
-async function upsertAddressAndSelectExtraData(address: string) {
-  const logger = createScopedLogger('upsertAddressAndSelectExtraData');
-
-  const addressLower = address.toLowerCase();
-
-  try {
-    return await context.prisma.address.upsert({
-      where: {
-        ethAddress: addressLower,
-      },
-      update: {},
-      create: {
-        ethAddress: addressLower,
-      },
-      select: {
-        id: true,
-        ensName: true,
-        ensAvatarImageUrl: true,
-        githubUser: {
-          select: {
-            id: true,
-            githubId: true,
-            githubHandle: true,
-            githubOAuthToken: true,
-          },
-        },
-        email: {
-          select: { id: true },
-        },
-      },
-    });
-  } catch (err) {
-    logger.warn(`Caught error while trying to upsert address ${address}: ${err}`);
-
-    // Return the record (which we assume to exist) if the upsert fails
-    return await context.prisma.address.findUnique({
-      where: {
-        ethAddress: addressLower,
-      },
-      select: {
-        id: true,
-        ensName: true,
-        ensAvatarImageUrl: true,
-        githubUser: {
-          select: {
-            id: true,
-            githubId: true,
-            githubHandle: true,
-            githubOAuthToken: true,
-          },
-        },
-        email: {
-          select: { id: true },
-        },
-      },
-    });
-  }
-}
 
 authRouter.post('/', async function (req, res) {
   const logger = getRequestLogger(req);
@@ -133,16 +29,16 @@ authRouter.post('/', async function (req, res) {
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
-  const { address, signatureData } = schemaResult.data;
+  const { address: ethAddress, signatureData } = schemaResult.data;
 
-  logger.info(`Request to create AuthToken for address ${address}`);
+  logger.info(`Request to create AuthToken for address ${ethAddress}`);
 
   // Pre-fetch ENS info if it doesn't already exist
-  const ensPromise = resolveAddress(address, { synchronous: true });
+  const ensPromise = resolveAddress(ethAddress, { synchronous: true });
 
   // Validate signature
-  if (!isAuthSignatureDataValid(address, signatureData)) {
-    logger.warn(`Request signature is invalid for address ${address}`);
+  if (!isAuthSignatureDataValid(ethAddress, signatureData)) {
+    logger.warn(`Request signature is invalid for address ${ethAddress}`);
     return res.status(401).send({ msg: 'The signature is not valid for this address' });
   }
 
@@ -151,39 +47,53 @@ authRouter.post('/', async function (req, res) {
 
   // If the resolveAddress promise found an Address or new ENS name
   // this will already exist
-  const dbAddress = await upsertAddressAndSelectExtraData(address);
+  const address = await upsertAddress(ethAddress);
 
-  if (dbAddress === null) {
-    logger.error(`Failed to upsert address ${address} during login`);
+  if (address === null) {
+    logger.error(`Failed to upsert address ${ethAddress} during login`);
     return res.status(500).send({ msg: 'Login failed, please retry' });
   }
 
-  let githubTokenData: GithubTokenData = { githubId: null, githubHandle: null };
-  if (dbAddress.githubUser !== null) {
-    githubTokenData = await getTokenDataWithGithubCheck(
-      dbAddress.id,
-      dbAddress.githubUser.id,
-      dbAddress.githubUser.githubId,
-      dbAddress.githubUser.githubHandle,
-      dbAddress.githubUser.githubOAuthToken,
-    );
-  }
-  const emailId = await getTokenDataWithEmailCheck(dbAddress.id, dbAddress.email?.id ?? null);
+  const userAuthTokens = await generateNewAuthTokens(address.id);
 
-  const userAuthTokens = await generateNewAuthTokens(
-    dbAddress.id,
-    address.toLowerCase(),
-    dbAddress.ensName,
-    dbAddress.ensAvatarImageUrl,
-    githubTokenData.githubId,
-    githubTokenData.githubHandle,
-    emailId,
-  );
-
-  logger.debug(`Completed request to create AuthToken for address ${address}`);
+  logger.debug(`Completed request to create AuthToken for address ${ethAddress}`);
 
   return res.status(200).send(userAuthTokens);
 });
+
+async function updateAuthTokenGeneration(authTokenId: number) {
+  return await context.prisma.authToken.update({
+    where: { id: authTokenId },
+    data: {
+      generation: { increment: 1 },
+    },
+    select: {
+      generation: true,
+      address: {
+        select: {
+          id: true,
+          ethAddress: true,
+          ensName: true,
+          ensAvatarImageUrl: true,
+          githubUser: {
+            select: {
+              id: true,
+              githubId: true,
+              githubHandle: true,
+              githubOAuthToken: true,
+            },
+          },
+          email: {
+            select: {
+              id: true,
+              isValidated: true,
+            },
+          },
+        },
+      },
+    },
+  });
+}
 
 authRouter.post('/refresh', async function (req, res) {
   const logger = getRequestLogger(req);
@@ -219,19 +129,6 @@ authRouter.post('/refresh', async function (req, res) {
         select: {
           id: true,
           ethAddress: true,
-          ensName: true,
-          ensAvatarImageUrl: true,
-          githubUser: {
-            select: {
-              id: true,
-              githubId: true,
-              githubHandle: true,
-              githubOAuthToken: true,
-            },
-          },
-          email: {
-            select: { id: true },
-          },
         },
       },
     },
@@ -263,43 +160,12 @@ authRouter.post('/refresh', async function (req, res) {
     return res.status(401).send({ msg: "User's login has expired" });
   }
 
-  const newAuthToken = await context.prisma.authToken.update({
-    where: {
-      id: payload.authTokenId,
-    },
-    data: {
-      generation: { increment: 1 },
-    },
-    select: {
-      generation: true,
-    },
-  });
+  const newAuthToken = await updateAuthTokenGeneration(payload.authTokenId);
 
-  let githubTokenData: GithubTokenData = { githubId: null, githubHandle: null };
-  if (authToken.address.githubUser !== null) {
-    githubTokenData = await getTokenDataWithGithubCheck(
-      authToken.address.id,
-      authToken.address.githubUser.id,
-      authToken.address.githubUser.githubId,
-      authToken.address.githubUser.githubHandle,
-      authToken.address.githubUser.githubOAuthToken,
-    );
-  }
-  const emailId = await getTokenDataWithEmailCheck(
-    authToken.address.id,
-    authToken.address.email?.id ?? null,
-  );
-
-  const userAuthTokens = generateAuthTokens(
+  const userAuthTokens = await generateAuthTokensWithChecks(
     payload.authTokenId,
     newAuthToken.generation,
-    authToken.address.id,
-    authToken.address.ethAddress,
-    authToken.address.ensName,
-    authToken.address.ensAvatarImageUrl,
-    githubTokenData.githubId,
-    githubTokenData.githubHandle,
-    emailId,
+    newAuthToken.address,
   );
 
   logger.debug('Completed request to refresh AuthToken');
