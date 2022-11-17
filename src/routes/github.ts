@@ -91,7 +91,7 @@ githubRouter.post('/', jwtWithAddress(), async function (req, res) {
     return res.status(401).send({ msg: 'Not logged in with address' });
   }
 
-  const userAuthTokens = generateAuthTokensWithChecks(authTokenId, dbAuthToken.generation, {
+  const userAuthTokens = await generateAuthTokensWithChecks(authTokenId, dbAuthToken.generation, {
     ...dbAuthToken.address,
     id: addressId,
     ethAddress,
@@ -151,7 +151,7 @@ githubRouter.delete('/', jwtWithAddress(), async function (req, res) {
     },
   });
 
-  const userAuthTokens = generateAuthTokensWithChecks(authTokenId, dbAuthToken.generation, {
+  const userAuthTokens = await generateAuthTokensWithChecks(authTokenId, dbAuthToken.generation, {
     ...dbAuthToken.address,
     id: addressId,
     ethAddress,
