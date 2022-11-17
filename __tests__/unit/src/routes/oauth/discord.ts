@@ -1,29 +1,29 @@
-import '../../../../__mocks__/src/logging';
-import { contextMock } from '../../../../__mocks__/src/context';
+import '../../../../../__mocks__/src/logging';
+import { contextMock } from '../../../../../__mocks__/src/context';
 import request from 'supertest';
-import { setupApp } from '../../../../__mocks__/src/app';
+import { setupApp } from '../../../../../__mocks__/src/app';
 import {
   requestDiscordOAuthToken,
   getDiscordCurrentUserInfo,
-} from '../../../../src/external/discord';
+} from '../../../../../src/external/discord';
 import {
   addDiscordLoginForAddress,
   removeDiscordLoginForAddress,
-} from '../../../../src/lib/addresses';
-import { upsertDiscordUser } from '../../../../src/lib/discordUsers';
-import { generateAuthTokens } from '../../../../src/lib/authTokens';
+} from '../../../../../src/lib/addresses';
+import { upsertDiscordUser } from '../../../../../src/lib/discordUsers';
+import { generateAuthTokens } from '../../../../../src/lib/authTokens';
 import { verify } from 'jsonwebtoken';
-import { JWT_SECRET } from '../../../../src/environment';
+import { JWT_SECRET } from '../../../../../src/environment';
 import {
   UserAuthTokens,
   getAccessTokenPayload,
   getRefreshTokenPayload,
-} from '../../../../src/types/authTokens';
+} from '../../../../../src/types/authTokens';
 
-jest.mock('../../../../src/logging');
-jest.mock('../../../../src/external/discord');
-jest.mock('../../../../src/lib/discordUsers');
-jest.mock('../../../../src/lib/addresses');
+jest.mock('../../../../../src/logging');
+jest.mock('../../../../../src/external/discord');
+jest.mock('../../../../../src/lib/discordUsers');
+jest.mock('../../../../../src/lib/addresses');
 
 const mockedRequestDiscordOAuthToken = jest.mocked(requestDiscordOAuthToken, true);
 const mockedGetDiscordCurrentUserInfo = jest.mocked(getDiscordCurrentUserInfo, true);

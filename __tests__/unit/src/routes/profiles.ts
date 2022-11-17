@@ -26,6 +26,7 @@ const addressRecord = {
   updatedAt: new Date(),
   githubUserId: null,
   emailId: null,
+  discordUserId: null,
 };
 
 function mockJwtWithAddress() {
