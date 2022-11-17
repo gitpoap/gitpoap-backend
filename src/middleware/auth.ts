@@ -8,7 +8,7 @@ import { createScopedLogger } from '../logging';
 import { GITPOAP_BOT_APP_ID } from '../constants';
 import { getGithubAuthenticatedApp } from '../external/github';
 import { captureException } from '../lib/sentry';
-import { isAddressAnAdmin, isGithubIdAnAdmin } from '../lib/admins';
+import { isAddressAnAdmin } from '../lib/admins';
 
 export const jwtMiddleware = jwt({ secret: JWT_SECRET as string, algorithms: ['HS256'] });
 
@@ -186,9 +186,9 @@ export function jwtWithAdminOAuth() {
         return;
       }
 
-      const { githubId, githubHandle } = getAccessTokenPayloadWithOAuth(req.user);
+      const { address, githubHandle } = getAccessTokenPayloadWithOAuth(req.user);
 
-      if (!isGithubIdAnAdmin(githubId)) {
+      if (!isAddressAnAdmin(address)) {
         logger.warn(
           `Non-admin user (GitHub handle: ${githubHandle}) attempted to use admin-only routes`,
         );

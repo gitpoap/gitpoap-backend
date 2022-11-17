@@ -126,8 +126,28 @@ describe('POST /auth', () => {
           },
         },
         email: {
-          select: { id: true },
+          select: {
+            id: true,
+            isValidated: true,
+          },
         },
+      },
+    });
+  };
+
+  const expectAuthTokenCreate = () => {
+    expect(contextMock.prisma.authToken.create).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.authToken.create).toHaveBeenCalledWith({
+      data: {
+        address: {
+          connect: {
+            id: addressId,
+          },
+        },
+      },
+      select: {
+        id: true,
+        generation: true,
       },
     });
   };
@@ -144,6 +164,10 @@ describe('POST /auth', () => {
     contextMock.prisma.authToken.create.mockResolvedValue({
       id: authTokenId,
       generation: authTokenGeneration,
+      ensName: true,
+      ensAvatarImageUrl: true,
+      githubUser: { githubId, githubHandle },
+      email: { emailId, isValidated: true },
     } as any);
 
     const result = await request(await setupApp())
@@ -161,20 +185,7 @@ describe('POST /auth', () => {
 
     expect(mockedIsGithubTokenValidForUser).toHaveBeenCalledTimes(0);
 
-    expect(contextMock.prisma.authToken.create).toHaveBeenCalledTimes(1);
-    expect(contextMock.prisma.authToken.create).toHaveBeenCalledWith({
-      data: {
-        address: {
-          connect: {
-            id: addressId,
-          },
-        },
-      },
-      select: {
-        id: true,
-        generation: true,
-      },
-    });
+    expectAuthTokenCreate();
   });
 
   it("Returns GitHub login info when user's login is still valid", async () => {
@@ -215,20 +226,7 @@ describe('POST /auth', () => {
 
     expect(mockedRemoveGithubUsersGithubOAuthToken).toHaveBeenCalledTimes(0);
 
-    expect(contextMock.prisma.authToken.create).toHaveBeenCalledTimes(1);
-    expect(contextMock.prisma.authToken.create).toHaveBeenCalledWith({
-      data: {
-        address: {
-          connect: {
-            id: addressId,
-          },
-        },
-      },
-      select: {
-        id: true,
-        generation: true,
-      },
-    });
+    expectAuthTokenCreate();
   });
 
   it("Removes GitHub login info when user's login is invalid", async () => {
@@ -273,20 +271,7 @@ describe('POST /auth', () => {
     expect(mockedRemoveGithubLoginForAddress).toHaveBeenCalledTimes(1);
     expect(mockedRemoveGithubLoginForAddress).toHaveBeenCalledWith(addressId);
 
-    expect(contextMock.prisma.authToken.create).toHaveBeenCalledTimes(1);
-    expect(contextMock.prisma.authToken.create).toHaveBeenCalledWith({
-      data: {
-        address: {
-          connect: {
-            id: addressId,
-          },
-        },
-      },
-      select: {
-        id: true,
-        generation: true,
-      },
-    });
+    expectAuthTokenCreate();
   });
 });
 
@@ -348,19 +333,6 @@ describe('POST /auth/refresh', () => {
           select: {
             id: true,
             ethAddress: true,
-            ensName: true,
-            ensAvatarImageUrl: true,
-            githubUser: {
-              select: {
-                id: true,
-                githubId: true,
-                githubHandle: true,
-                githubOAuthToken: true,
-              },
-            },
-            email: {
-              select: { id: true },
-            },
           },
         },
       },
@@ -394,7 +366,6 @@ describe('POST /auth/refresh', () => {
     let githubUser = null;
     if (extras?.hasGithubUser) {
       githubUser = {
-        id: githubUserId,
         githubId,
         githubHandle,
         githubOAuthToken,
@@ -402,7 +373,10 @@ describe('POST /auth/refresh', () => {
     }
     let email = null;
     if (extras?.hasEmail) {
-      email = { id: emailId };
+      email = {
+        id: emailId,
+        isValidated: true,
+      };
     }
 
     contextMock.prisma.authToken.findUnique.mockResolvedValue({
@@ -466,6 +440,38 @@ describe('POST /auth/refresh', () => {
     });
   });
 
+  type MockAuthTokenUpdateExtras = {
+    hasGithubUser?: boolean;
+    hasEmail?: boolean;
+  };
+
+  const mockAuthTokenUpdate = (nextGeneration: number, extras?: MockAuthTokenUpdateExtras) => {
+    let githubUser = null;
+    if (extras?.hasGithubUser) {
+      githubUser = {
+        githubId,
+        githubHandle,
+        githubOAuthToken,
+      };
+    }
+    let email = null;
+    if (extras?.hasEmail) {
+      email = {
+        id: emailId,
+        isValidated: true,
+      };
+    }
+    contextMock.prisma.authToken.update.mockResolvedValue({
+      generation: nextGeneration,
+      address: {
+        ensName,
+        ensAvatarImageUrl,
+        githubUser,
+        email,
+      },
+    } as any);
+  };
+
   const expectAuthTokenUpdate = () => {
     expect(contextMock.prisma.authToken.update).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.authToken.update).toHaveBeenCalledWith({
@@ -477,6 +483,26 @@ describe('POST /auth/refresh', () => {
       },
       select: {
         generation: true,
+        address: {
+          select: {
+            ensName: true,
+            ensAvatarImageUrl: true,
+            githubUser: {
+              select: {
+                id: true,
+                githubId: true,
+                githubHandle: true,
+                githubOAuthToken: true,
+              },
+            },
+            email: {
+              select: {
+                id: true,
+                isValidated: true,
+              },
+            },
+          },
+        },
       },
     });
   };
@@ -484,9 +510,7 @@ describe('POST /auth/refresh', () => {
   it("Doesn't check GitHub login info when AuthToken isn't associated with a User", async () => {
     mockAuthTokenLookup(DateTime.utc().toJSDate(), authTokenGeneration);
     const nextGeneration = authTokenGeneration + 1;
-    contextMock.prisma.authToken.update.mockResolvedValue({
-      generation: nextGeneration,
-    } as any);
+    mockAuthTokenUpdate(nextGeneration);
 
     const token = genRefreshToken();
 
@@ -508,12 +532,10 @@ describe('POST /auth/refresh', () => {
   });
 
   it("Returns GitHub login info when user's login is still valid", async () => {
-    mockAuthTokenLookup(DateTime.utc().toJSDate(), authTokenGeneration, { hasGithubUser: true });
+    mockAuthTokenLookup(DateTime.utc().toJSDate(), authTokenGeneration);
     mockedIsGithubTokenValidForUser.mockResolvedValue(true);
     const nextGeneration = authTokenGeneration + 1;
-    contextMock.prisma.authToken.update.mockResolvedValue({
-      generation: nextGeneration,
-    } as any);
+    mockAuthTokenUpdate(nextGeneration, { hasGithubUser: true });
 
     const token = genRefreshToken();
 
@@ -538,11 +560,9 @@ describe('POST /auth/refresh', () => {
   });
 
   it('Returns emailId when user has connected email', async () => {
-    mockAuthTokenLookup(DateTime.utc().toJSDate(), authTokenGeneration, { hasEmail: true });
+    mockAuthTokenLookup(DateTime.utc().toJSDate(), authTokenGeneration);
     const nextGeneration = authTokenGeneration + 1;
-    contextMock.prisma.authToken.update.mockResolvedValue({
-      generation: nextGeneration,
-    } as any);
+    mockAuthTokenUpdate(nextGeneration, { hasEmail: true });
 
     const token = genRefreshToken();
 
@@ -569,9 +589,7 @@ describe('POST /auth/refresh', () => {
     mockAuthTokenLookup(DateTime.utc().toJSDate(), authTokenGeneration, { hasGithubUser: true });
     mockedIsGithubTokenValidForUser.mockResolvedValue(false);
     const nextGeneration = authTokenGeneration + 1;
-    contextMock.prisma.authToken.update.mockResolvedValue({
-      generation: nextGeneration,
-    } as any);
+    mockAuthTokenUpdate(nextGeneration, { hasGithubUser: true });
 
     const token = genRefreshToken();
 
