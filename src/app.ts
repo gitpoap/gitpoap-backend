@@ -14,7 +14,7 @@ import { claimsRouter } from './routes/claims';
 import { emailRouter } from './routes/email';
 import { featuredRouter } from './routes/featured';
 import { githubRouter } from './routes/github';
-import { discordRouter } from './routes/discord';
+import { discordRouter } from './routes/oauth/discord';
 import { gitPOAPsRouter } from './routes/gitpoaps';
 import { profilesRouter } from './routes/profiles';
 import { projectsRouter } from './routes/projects';
