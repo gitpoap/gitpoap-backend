@@ -151,8 +151,11 @@ function genAuthTokens(someAddress?: string) {
 
 function mockJwtWithAddress() {
   contextMock.prisma.authToken.findUnique.mockResolvedValue({
-    id: authTokenId,
-    address: { ensName, ensAvatarImageUrl },
+    address: {
+      ensName,
+      ensAvatarImageUrl,
+      email: null,
+    },
   } as any);
 }
 

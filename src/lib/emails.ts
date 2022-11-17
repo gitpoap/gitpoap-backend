@@ -112,15 +112,3 @@ export async function upsertUnverifiedEmail(
     return null;
   }
 }
-
-export async function isEmailValidated(emailId: number | null) {
-  if (emailId === null) return false;
-
-  return (
-    (
-      await context.prisma.email.findUnique({
-        where: { id: emailId },
-      })
-    )?.isValidated ?? false
-  );
-}

@@ -29,15 +29,26 @@ const ensAvatarImageUrl = 'https://foobar.com/a.jpg';
 
 function mockJwtWithAddress() {
   contextMock.prisma.authToken.findUnique.mockResolvedValue({
-    id: authTokenId,
-    address: { ensName, ensAvatarImageUrl },
+    address: {
+      ensName,
+      ensAvatarImageUrl,
+      email: null,
+    },
   } as any);
 }
 
 function mockJwtWithOAuth() {
   contextMock.prisma.authToken.findUnique.mockResolvedValue({
-    address: { ensName, ensAvatarImageUrl },
-    githubUser: { githubOAuthToken },
+    address: {
+      ensName,
+      ensAvatarImageUrl,
+      email: null,
+      githubUser: {
+        githubId: 23,
+        githubHandle: 'yo',
+        githubOAuthToken,
+      },
+    },
   } as any);
 }
 
@@ -67,7 +78,7 @@ describe('POST /projects/add-repos', () => {
   it('Fails with non-admin OAuth Access Token provided', async () => {
     mockJwtWithOAuth();
 
-    const authTokens = genAuthTokens(ADMIN_ADDRESSES[0], githubId, githubHandle);
+    const authTokens = genAuthTokens(address, githubId, githubHandle);
 
     const result = await request(await setupApp())
       .post('/projects/add-repos')
