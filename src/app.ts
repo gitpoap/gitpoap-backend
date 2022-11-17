@@ -55,6 +55,9 @@ export async function setupAppWithMiddleware(middleware: RequestHandler[]) {
 
   app.use(cors());
   app.use(express.json());
+  app.use('/favicon.ico', (req, res) => {
+    res.sendFile('favicon.ico', { root: __dirname + '/public' });
+  });
 
   app.use(
     '/graphql',
