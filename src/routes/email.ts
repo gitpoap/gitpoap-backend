@@ -153,12 +153,9 @@ emailRouter.post('/resend', jwtWithAddress(), async function (req, res) {
     return res.status(500).send({ msg: 'Failed to update email address' });
   }
 
-  try {
-    await sendVerificationEmail(emailAddress, newActiveToken);
-    logger.info(`Sent confirmation email to ${emailAddress}`);
-  } catch (err) {
-    /* Log error, but don't return error to user. Sending the email is secondary to storing the form data */
-    logger.error(`Received error when sending confirmation email to ${emailAddress} - ${err} `);
+  const emailResult = await sendVerificationEmail(emailAddress, newActiveToken);
+
+  if (emailResult === null) {
     return res.status(500).send({ msg: 'Email failed to send' });
   }
 
