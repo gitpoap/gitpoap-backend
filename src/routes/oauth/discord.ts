@@ -1,17 +1,17 @@
 import { Router } from 'express';
-import { context } from '../context';
+import { context } from '../../context';
 import {
   requestDiscordOAuthToken,
   getDiscordCurrentUserInfo,
   DiscordOAuthToken,
-} from '../external/discord';
-import { generateAuthTokens } from '../lib/authTokens';
-import { jwtWithAddress } from '../middleware/auth';
-import { RequestAccessTokenSchema } from '../schemas/discord';
-import { getAccessTokenPayload } from '../types/authTokens';
-import { upsertDiscordUser } from '../lib/discordUsers';
-import { addDiscordLoginForAddress, removeDiscordLoginForAddress } from '../lib/addresses';
-import { getRequestLogger } from '../middleware/loggingAndTiming';
+} from '../../external/discord';
+import { generateAuthTokens } from '../../lib/authTokens';
+import { jwtWithAddress } from '../../middleware/auth';
+import { RequestAccessTokenSchema } from '../../schemas/discord';
+import { getAccessTokenPayload } from '../../types/authTokens';
+import { upsertDiscordUser } from '../../lib/discordUsers';
+import { addDiscordLoginForAddress, removeDiscordLoginForAddress } from '../../lib/addresses';
+import { getRequestLogger } from '../../middleware/loggingAndTiming';
 
 export const discordRouter = Router();
 
