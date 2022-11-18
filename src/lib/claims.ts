@@ -10,6 +10,8 @@ import { upsertAddress } from './addresses';
 import { MINIMUM_REMAINING_REDEEM_CODES, REDEEM_CODE_STEP_SIZE } from '../constants';
 import { requestPOAPCodes } from '../external/poap';
 import { upsertEmail } from './emails';
+import { sleep } from '../lib/sleep';
+import { retrieveClaimInfo } from '../external/poap';
 
 type GitPOAPs = {
   id: number;
@@ -633,4 +635,54 @@ export async function ensureRedeemCodeThreshold(gitPOAP: MinimalGitPOAPForRedeem
       return;
     }
   }
+}
+
+export async function runClaimsPostProcessing(claimIds: number[], qrHashes: string[]) {
+  const logger = createScopedLogger('runClaimsPostProcessing');
+
+  while (claimIds.length > 0) {
+    logger.info(`Waiting for ${claimIds.length} claim transactions to process`);
+
+    // Wait for 5 seconds
+    await sleep(5);
+
+    // Helper function to remove a claim from postprocessing
+    const removeAtIndex = (i: number) => {
+      claimIds.splice(i, 1);
+      qrHashes.splice(i, 1);
+    };
+
+    for (let i = 0; i < claimIds.length; ++i) {
+      const poapData = await retrieveClaimInfo(qrHashes[i]);
+      if (poapData === null) {
+        logger.error(`Failed to retrieve claim info for Claim ID: ${claimIds[i]}`);
+        removeAtIndex(i);
+        break;
+      }
+
+      if (poapData.tx_status === 'passed') {
+        if (!('token' in poapData.result)) {
+          logger.error("No 'token' field in POAP response for Claim after tx_status='passed'");
+          removeAtIndex(i);
+          break;
+        }
+
+        // Set the new poapTokenId now that the TX is finalized
+        await context.prisma.claim.update({
+          where: {
+            id: claimIds[i],
+          },
+          data: {
+            status: ClaimStatus.CLAIMED,
+            poapTokenId: poapData.result.token.toString(),
+            mintedAt: new Date(),
+          },
+        });
+
+        removeAtIndex(i);
+      }
+    }
+  }
+
+  logger.info('Finished claims post processing');
 }
