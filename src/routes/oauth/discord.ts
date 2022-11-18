@@ -29,7 +29,7 @@ discordRouter.post('/', jwtWithAddress(), async function (req, res) {
   const { authTokenId, addressId, address, ensName, ensAvatarImageUrl } = getAccessTokenPayload(
     req.user,
   );
-  const { code } = req.body;
+  const { code } = schemaResult.data;
 
   logger.info(`Received a Discord login request from address ${address}`);
 
@@ -42,8 +42,6 @@ discordRouter.post('/', jwtWithAddress(), async function (req, res) {
       msg: 'A server error has occurred - Discord access token exchange',
     });
   }
-
-  logger.info(`discord token: ${JSON.stringify(discordToken)}`);
 
   const discordInfo = await getDiscordCurrentUserInfo(discordToken);
   if (discordInfo === null) {

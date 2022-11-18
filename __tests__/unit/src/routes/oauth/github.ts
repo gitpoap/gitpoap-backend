@@ -1,21 +1,24 @@
-import '../../../../__mocks__/src/logging';
-import { contextMock } from '../../../../__mocks__/src/context';
+import '../../../../../__mocks__/src/logging';
+import { contextMock } from '../../../../../__mocks__/src/context';
 import request from 'supertest';
-import { setupApp } from '../../../../__mocks__/src/app';
-import { requestGithubOAuthToken, getGithubCurrentUserInfo } from '../../../../src/external/github';
+import { setupApp } from '../../../../../__mocks__/src/app';
+import {
+  requestGithubOAuthToken,
+  getGithubCurrentUserInfo,
+} from '../../../../../src/external/github';
 import {
   addGithubLoginForAddress,
   removeGithubLoginForAddress,
-} from '../../../../src/lib/addresses';
-import { upsertGithubUser } from '../../../../src/lib/githubUsers';
-import { generateAuthTokensWithChecks } from '../../../../src/lib/authTokens';
-import { setupGenAuthTokens } from '../../../../__mocks__/src/lib/authTokens';
+} from '../../../../../src/lib/addresses';
+import { upsertGithubUser } from '../../../../../src/lib/githubUsers';
+import { generateAuthTokensWithChecks } from '../../../../../src/lib/authTokens';
+import { setupGenAuthTokens } from '../../../../../__mocks__/src/lib/authTokens';
 
-jest.mock('../../../../src/logging');
-jest.mock('../../../../src/external/github');
-jest.mock('../../../../src/lib/githubUsers');
-jest.mock('../../../../src/lib/addresses');
-jest.mock('../../../../src/lib/authTokens');
+jest.mock('../../../../../src/logging');
+jest.mock('../../../../../src/external/github');
+jest.mock('../../../../../src/lib/githubUsers');
+jest.mock('../../../../../src/lib/addresses');
+jest.mock('../../../../../src/lib/authTokens');
 
 const mockedRequestGithubOAuthToken = jest.mocked(requestGithubOAuthToken, true);
 const mockedGetGithubCurrentUserInfo = jest.mocked(getGithubCurrentUserInfo, true);
@@ -61,7 +64,7 @@ const genAuthTokens = setupGenAuthTokens({
 describe('POST /github', () => {
   it('Fails with no access token provided', async () => {
     const result = await request(await setupApp())
-      .post('/github')
+      .post('/oauth/github')
       .send({ code });
 
     expect(result.statusCode).toEqual(400);
@@ -73,7 +76,7 @@ describe('POST /github', () => {
     const authTokens = genAuthTokens();
 
     const result = await request(await setupApp())
-      .post('/github')
+      .post('/oauth/github')
       .set('Authorization', `Bearer ${authTokens.accessToken}`)
       .send({ foobar: 'yeet' });
 
@@ -87,7 +90,7 @@ describe('POST /github', () => {
     const authTokens = genAuthTokens();
 
     const result = await request(await setupApp())
-      .post('/github')
+      .post('/oauth/github')
       .set('Authorization', `Bearer ${authTokens.accessToken}`)
       .send({ code });
 
@@ -105,7 +108,7 @@ describe('POST /github', () => {
     const authTokens = genAuthTokens();
 
     const result = await request(await setupApp())
-      .post('/github')
+      .post('/oauth/github')
       .set('Authorization', `Bearer ${authTokens.accessToken}`)
       .send({ code });
 
@@ -140,7 +143,7 @@ describe('POST /github', () => {
     const authTokens = genAuthTokens();
 
     const result = await request(await setupApp())
-      .post('/github')
+      .post('/oauth/github')
       .set('Authorization', `Bearer ${authTokens.accessToken}`)
       .send({ code });
 
@@ -194,14 +197,14 @@ describe('POST /github', () => {
 
 describe('DELETE /github', () => {
   it('Fails with no access token provided', async () => {
-    const result = await request(await setupApp()).delete('/github');
+    const result = await request(await setupApp()).delete('/oauth/github');
 
     expect(result.statusCode).toEqual(400);
   });
 
   it('Fails with invalid access token', async () => {
     const result = await request(await setupApp())
-      .delete('/github')
+      .delete('/oauth/github')
       .set('Authorization', `Bearer foo`);
 
     expect(result.statusCode).toEqual(400);
@@ -249,7 +252,7 @@ describe('DELETE /github', () => {
     const authTokens = genAuthTokens({ hasGithub: false });
 
     const result = await request(await setupApp())
-      .delete('/github')
+      .delete('/oauth/github')
       .set('Authorization', `Bearer ${authTokens.accessToken}`);
 
     expect(result.statusCode).toEqual(400);
@@ -283,7 +286,7 @@ describe('DELETE /github', () => {
     const authTokens = genAuthTokens({ hasGithub: true });
 
     const result = await request(await setupApp())
-      .delete('/github')
+      .delete('/oauth/github')
       .set('Authorization', `Bearer ${authTokens.accessToken}`);
 
     expect(result.statusCode).toEqual(200);
