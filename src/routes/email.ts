@@ -7,6 +7,7 @@ import { AddEmailSchema } from '../schemas/email';
 import { getAccessTokenPayload } from '../types/authTokens';
 import { getRequestLogger } from '../middleware/loggingAndTiming';
 import { generateUniqueEmailToken, upsertUnverifiedEmail } from '../lib/emails';
+import { generateAuthTokensWithChecks, updateAuthTokenGeneration } from '../lib/authTokens';
 
 export const emailRouter = Router();
 
@@ -97,7 +98,7 @@ emailRouter.post('/', jwtWithAddress(), async function (req, res) {
 emailRouter.delete('/', jwtWithAddress(), async function (req, res) {
   const logger = getRequestLogger(req);
 
-  const { address: ethAddress, addressId } = getAccessTokenPayload(req.user);
+  const { address: ethAddress, addressId, authTokenId } = getAccessTokenPayload(req.user);
 
   logger.info(`Received request from ${ethAddress} to remove email connection`);
 
@@ -118,15 +119,26 @@ emailRouter.delete('/', jwtWithAddress(), async function (req, res) {
     return res.status(404).send({ msg: `No email connection present` });
   }
 
+  const dbAuthToken = await updateAuthTokenGeneration(authTokenId);
+
+  const tokens = await generateAuthTokensWithChecks(
+    authTokenId,
+    dbAuthToken.generation,
+    dbAuthToken.address,
+  );
+
   logger.debug(`Completed request from ${ethAddress} to remove email connection`);
 
-  return res.status(200).send('DELETED');
+  return res.status(200).send({
+    msg: 'DELETED',
+    tokens,
+  });
 });
 
 emailRouter.post('/verify/:activeToken', jwtWithAddress(), async function (req, res) {
   const logger = getRequestLogger(req);
 
-  const { address: ethAddress } = getAccessTokenPayload(req.user);
+  const { address: ethAddress, authTokenId } = getAccessTokenPayload(req.user);
   const activeToken = req.params.activeToken;
 
   logger.info(`Received request from ${ethAddress} to verify token: ${activeToken}`);
@@ -191,7 +203,18 @@ emailRouter.post('/verify/:activeToken', jwtWithAddress(), async function (req, 
     },
   });
 
+  const dbAuthToken = await updateAuthTokenGeneration(authTokenId);
+
+  const tokens = await generateAuthTokensWithChecks(
+    authTokenId,
+    dbAuthToken.generation,
+    dbAuthToken.address,
+  );
+
   logger.debug(`Completed request from ${ethAddress} to verify token: ${activeToken}`);
 
-  return res.status(200).send({ msg: 'VALID' });
+  return res.status(200).send({
+    msg: 'VALID',
+    tokens,
+  });
 });

@@ -11,6 +11,7 @@ import {
   deleteAuthToken,
   generateAuthTokensWithChecks,
   generateNewAuthTokens,
+  updateAuthTokenGeneration,
 } from '../../../../src/lib/authTokens';
 import { DateTime } from 'luxon';
 import { LOGIN_EXP_TIME_MONTHS } from '../../../../src/constants';
@@ -26,6 +27,7 @@ const mockedUpsertAddress = jest.mocked(upsertAddress, true);
 const mockedGenerateAuthTokensWithChecks = jest.mocked(generateAuthTokensWithChecks, true);
 const mockedGenerateNewAuthTokens = jest.mocked(generateNewAuthTokens, true);
 const mockedDeleteAuthToken = jest.mocked(deleteAuthToken, true);
+const mockedUpdateAuthTokenGeneration = jest.mocked(updateAuthTokenGeneration, true);
 
 const authTokenId = 905;
 const authTokenGeneration = 82;
@@ -209,56 +211,14 @@ describe('POST /auth/refresh', () => {
     expect(mockedDeleteAuthToken).toHaveBeenCalledWith(authTokenId);
   });
 
-  const mockAuthTokenUpdate = (nextGeneration: number) => {
-    contextMock.prisma.authToken.update.mockResolvedValue({
-      generation: nextGeneration,
-      address: {
-        id: addressId,
-      },
-    } as any);
-  };
-
-  const expectAuthTokenUpdate = () => {
-    expect(contextMock.prisma.authToken.update).toHaveBeenCalledTimes(1);
-    expect(contextMock.prisma.authToken.update).toHaveBeenCalledWith({
-      where: {
-        id: authTokenId,
-      },
-      data: {
-        generation: { increment: 1 },
-      },
-      select: {
-        generation: true,
-        address: {
-          select: {
-            id: true,
-            ethAddress: true,
-            ensName: true,
-            ensAvatarImageUrl: true,
-            githubUser: {
-              select: {
-                id: true,
-                githubId: true,
-                githubHandle: true,
-                githubOAuthToken: true,
-              },
-            },
-            email: {
-              select: {
-                id: true,
-                isValidated: true,
-              },
-            },
-          },
-        },
-      },
-    });
-  };
-
   it("Succeeds when token isn't expired", async () => {
     mockAuthTokenLookup(DateTime.utc().toJSDate(), authTokenGeneration);
     const nextGeneration = authTokenGeneration + 1;
-    mockAuthTokenUpdate(nextGeneration);
+    const fakeAddress = { yeet: 'yesssir' };
+    mockedUpdateAuthTokenGeneration.mockResolvedValue({
+      generation: nextGeneration,
+      address: fakeAddress,
+    } as any);
     mockedGenerateAuthTokensWithChecks.mockResolvedValue(authTokens);
 
     const token = genRefreshToken();
@@ -274,11 +234,14 @@ describe('POST /auth/refresh', () => {
 
     expect(mockedDeleteAuthToken).toHaveBeenCalledTimes(0);
 
-    expectAuthTokenUpdate();
+    expect(mockedUpdateAuthTokenGeneration).toHaveBeenCalledTimes(1);
+    expect(mockedUpdateAuthTokenGeneration).toHaveBeenCalledWith(authTokenId);
 
     expect(mockedGenerateAuthTokensWithChecks).toHaveBeenCalledTimes(1);
-    expect(mockedGenerateAuthTokensWithChecks).toHaveBeenCalledWith(authTokenId, nextGeneration, {
-      id: addressId,
-    });
+    expect(mockedGenerateAuthTokensWithChecks).toHaveBeenCalledWith(
+      authTokenId,
+      nextGeneration,
+      fakeAddress,
+    );
   });
 });
