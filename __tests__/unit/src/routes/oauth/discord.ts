@@ -69,7 +69,7 @@ function genAuthTokens(hasDiscord = false) {
 describe('POST /discord', () => {
   it('Fails with no access token provided', async () => {
     const result = await request(await setupApp())
-      .post('/discord')
+      .post('/oauth/discord')
       .send({ code });
 
     expect(result.statusCode).toEqual(400);
@@ -81,7 +81,7 @@ describe('POST /discord', () => {
     const authTokens = genAuthTokens();
 
     const result = await request(await setupApp())
-      .post('/discord')
+      .post('/oauth/discord')
       .set('Authorization', `Bearer ${authTokens.accessToken}`)
       .send({ foobar: 'yeet' });
 
@@ -95,7 +95,7 @@ describe('POST /discord', () => {
     const authTokens = genAuthTokens();
 
     const result = await request(await setupApp())
-      .post('/discord')
+      .post('/oauth/discord')
       .set('Authorization', `Bearer ${authTokens.accessToken}`)
       .send({ code });
 
@@ -113,7 +113,7 @@ describe('POST /discord', () => {
     const authTokens = genAuthTokens();
 
     const result = await request(await setupApp())
-      .post('/discord')
+      .post('/oauth/discord')
       .set('Authorization', `Bearer ${authTokens.accessToken}`)
       .send({ code });
 
@@ -142,7 +142,7 @@ describe('POST /discord', () => {
     const authTokens = genAuthTokens();
 
     const result = await request(await setupApp())
-      .post('/discord')
+      .post('/oauth/discord')
       .set('Authorization', `Bearer ${authTokens.accessToken}`)
       .send({ code });
 
@@ -198,14 +198,14 @@ describe('POST /discord', () => {
 
 describe('DELETE /discord', () => {
   it('Fails with no access token provided', async () => {
-    const result = await request(await setupApp()).delete('/discord');
+    const result = await request(await setupApp()).delete('/oauth/discord');
 
     expect(result.statusCode).toEqual(400);
   });
 
   it('Fails with invalid access token', async () => {
     const result = await request(await setupApp())
-      .delete('/discord')
+      .delete('/oauth/discord')
       .set('Authorization', `Bearer foo`);
 
     expect(result.statusCode).toEqual(400);
@@ -222,7 +222,7 @@ describe('DELETE /discord', () => {
     const authTokens = genAuthTokens(true);
 
     const result = await request(await setupApp())
-      .delete('/discord')
+      .delete('/oauth/discord')
       .set('Authorization', `Bearer ${authTokens.accessToken}`);
 
     expect(result.statusCode).toEqual(200);

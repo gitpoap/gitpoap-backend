@@ -1,13 +1,13 @@
 import { Router } from 'express';
-import { context } from '../context';
-import { RequestAccessTokenSchema } from '../schemas/github';
-import { requestGithubOAuthToken, getGithubCurrentUserInfo } from '../external/github';
-import { generateAuthTokensWithChecks } from '../lib/authTokens';
-import { jwtWithAddress } from '../middleware/auth';
-import { getAccessTokenPayload } from '../types/authTokens';
-import { upsertGithubUser } from '../lib/githubUsers';
-import { addGithubLoginForAddress, removeGithubLoginForAddress } from '../lib/addresses';
-import { getRequestLogger } from '../middleware/loggingAndTiming';
+import { context } from '../../context';
+import { RequestAccessTokenSchema } from '../../schemas/github';
+import { requestGithubOAuthToken, getGithubCurrentUserInfo } from '../../external/github';
+import { generateAuthTokensWithChecks } from '../../lib/authTokens';
+import { jwtWithAddress } from '../../middleware/auth';
+import { getAccessTokenPayload } from '../../types/authTokens';
+import { upsertGithubUser } from '../../lib/githubUsers';
+import { addGithubLoginForAddress, removeGithubLoginForAddress } from '../../lib/addresses';
+import { getRequestLogger } from '../../middleware/loggingAndTiming';
 
 export const githubRouter = Router();
 
