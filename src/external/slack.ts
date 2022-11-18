@@ -6,6 +6,7 @@ import { ClaimData, FoundClaim } from '../types/claims';
 import { IntakeForm } from '../routes/onboarding/types';
 import { shortenAddress } from '../lib/addresses';
 import { GITPOAP_ROOT_URL, GITPOAP_DEV_ROOT_URL, IS_PROD } from '../constants';
+import { context } from '../context';
 
 const slackClient = new WebClient(SLACK_TOKEN);
 
@@ -57,23 +58,61 @@ function createGitPOAPLinkForClaim(gitPOAPId: number, gitPOAPName: string) {
   return `<${GITPOAP_URL}/gp/${gitPOAPId}|[GitPOAP ID ${gitPOAPId}]: ${gitPOAPName}>`;
 }
 
-/** -- Use-case specific slack messages -- **/
-export const sendInternalClaimMessage = async (
-  claims: FoundClaim[],
-  address: string,
-  githubHandle: string | null,
-) => {
-  const profileLink = `<${GITPOAP_URL}/p/${address}|GitPOAP Profile>`;
-  const etherscanLink = `<https://etherscan.io/address/${address}|${shortenAddress(address)}>`;
-  let msg = githubHandle
-    ? `💸 [${profileLink}]: GitHub user ${createGithubUserLink(
-        githubHandle,
-      )} with address ${etherscanLink} claimed new GitPOAP(s)! 🥳`
-    : `💸 [${profileLink}]: Address ${etherscanLink} claimed new GitPOAP(s)! 🥳`;
+type EmailAddressCache = Record<string, string>;
 
+async function lookupEmailAddress(
+  emailAddressCache: EmailAddressCache,
+  emailId: number,
+): Promise<string | null> {
+  const idString = emailId.toString();
+
+  if (idString in emailAddressCache) {
+    return emailAddressCache[idString];
+  }
+
+  const emailData = await context.prisma.email.findUnique({
+    where: { id: emailId },
+    select: { emailAddress: true },
+  });
+
+  if (emailData === null) {
+    return null;
+  } else {
+    emailAddressCache[idString] = emailData.emailAddress;
+
+    return emailData.emailAddress;
+  }
+}
+
+/** -- Use-case specific slack messages -- **/
+export const sendInternalClaimMessage = async (claims: FoundClaim[], ethAddress: string) => {
+  const logger = createScopedLogger('sendInternalClaimMessage');
+
+  const profileLink = `<${GITPOAP_URL}/p/${ethAddress}|GitPOAP Profile>`;
+  const etherscanLink = `<https://etherscan.io/address/${ethAddress}|${shortenAddress(
+    ethAddress,
+  )}>`;
+
+  let msg = `💸 [${profileLink}]: Address ${etherscanLink} claimed new GitPOAP(s)! 🥳`;
+
+  const emailAddressCache: EmailAddressCache = {};
   for (const claim of claims) {
     msg += `\n* ${createGitPOAPLinkForClaim(claim.gitPOAPId, claim.gitPOAPName)}`;
+
+    if (claim.githubHandle !== null) {
+      msg += ` issued to GitHub User ${createGithubUserLink(claim.githubHandle)}`;
+    } else if (claim.emailId !== null) {
+      const emailAddress = lookupEmailAddress(emailAddressCache, claim.emailId);
+      if (emailAddress === null) {
+        logger.error(`Failed to look up Email ID ${claim.emailId} on Claim ID ${claim.claimId}`);
+      } else {
+        msg += ` issued to ${emailAddress}`;
+      }
+    } else {
+      msg += ' issued to the above address';
+    }
   }
+
   await sendInternalMessage(msg);
 };
 

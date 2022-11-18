@@ -2,9 +2,8 @@ export type FoundClaim = {
   claimId: number;
   gitPOAPId: number;
   gitPOAPName: string;
-  githubUser: {
-    githubHandle: string;
-  } | null;
+  githubHandle: string | null;
+  emailId: number | null;
 };
 
 export type ClaimData = {
