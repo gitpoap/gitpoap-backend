@@ -46,6 +46,7 @@ export async function requestDiscordOAuthToken(code: string) {
   const tokenJson = await tokenResponse.json();
   logger.debug(`Token JSON: ${tokenJson}`);
   if (tokenJson?.error) {
+    logger.error(`Received bad response from discord: ${tokenJson?.error}`);
     throw new Error(tokenJson);
   }
 
@@ -66,7 +67,8 @@ export async function getDiscordCurrentUserInfo(discordToken: DiscordOAuthToken)
 
   logger.debug(`Token JSON: ${userInfoJson}`);
   if (userInfoJson?.error) {
-    throw new Error(userInfoJson);
+    logger.error(`Received bad response from discord: ${userInfoJson?.error}`);
+    return null;
   }
 
   return userInfoJson;
