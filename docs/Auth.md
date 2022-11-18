@@ -30,6 +30,7 @@ type AccessTokenPayload = {
   ensAvatarImageUrl: string | null;
   githubId: number | null;
   githubHandle: string | null;
+  emailId: string | null;
 };
 ```
 
@@ -48,6 +49,7 @@ Note that:
   logged into GitHub.
 - The `githubHandle` field is GitHub's current login handle for the user. Note that
   this will always be `null` if `githubId === null`.
+- The `emailId` field is the ID of the Email for the user if it has been verified.
 
 The inclusion of these fields allows the REST server to skip having to look up the user
 or to validate that the token is still valid (there are scenarios where we may invalidate
