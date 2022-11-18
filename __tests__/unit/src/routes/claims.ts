@@ -10,21 +10,29 @@ import {
   createClaimsForPR,
 } from '../../../../src/lib/bot';
 import {
-  retrieveClaimsCreatedByPR,
+  ensureRedeemCodeThreshold,
   retrieveClaimsCreatedByMention,
+  retrieveClaimsCreatedByPR,
+  runClaimsPostProcessing,
+  updateClaimStatusById,
 } from '../../../../src/lib/claims';
 import { generateAuthTokens } from '../../../../src/lib/authTokens';
 import { ADMIN_ADDRESSES } from '../../../../src/constants';
 import { ADDRESSES } from '../../../../prisma/constants';
 import { ClaimStatus, GitPOAPType } from '@prisma/client';
 import { ClaimData } from '../../../../src/types/claims';
-import { sendInternalClaimByMentionMessage } from '../../../../src/external/slack';
+import {
+  sendInternalClaimByMentionMessage,
+  sendInternalClaimMessage,
+} from '../../../../src/external/slack';
+import { redeemPOAP } from '../../../../src/external/poap';
 
 jest.mock('../../../../src/logging');
 jest.mock('../../../../src/external/github');
 jest.mock('../../../../src/lib/bot');
 jest.mock('../../../../src/lib/claims');
 jest.mock('../../../../src/external/slack');
+jest.mock('../../../../src/external/poap');
 
 const mockedGetGithubAuthenticatedApp = jest.mocked(getGithubAuthenticatedApp, true);
 const mockedCreateClaimsForPR = jest.mocked(createClaimsForPR, true);
@@ -35,6 +43,11 @@ const mockedSendInternalClaimByMentionMessage = jest.mocked(
   sendInternalClaimByMentionMessage,
   true,
 );
+const mockedSendInternalClaimMessage = jest.mocked(sendInternalClaimMessage, true);
+const mockedRedeemPOAP = jest.mocked(redeemPOAP, true);
+const mockedUpdateClaimStatusById = jest.mocked(updateClaimStatusById, true);
+const mockedEnsureRedeemCodeThreshold = jest.mocked(ensureRedeemCodeThreshold, true);
+const mockedRunClaimsPostProcessing = jest.mocked(runClaimsPostProcessing, true);
 
 const botJWTToken = 'foobar2';
 const contributorId = 2;
@@ -53,6 +66,8 @@ const issue = {
   wasEarnedByMention: true,
 };
 const claimId = 234;
+const gitPOAPId = 744;
+const gitPOAPName = 'Wow you arrrrr great';
 const claim: ClaimData = {
   id: claimId,
   githubUser: {
@@ -60,8 +75,8 @@ const claim: ClaimData = {
     githubHandle: 'batman',
   },
   gitPOAP: {
-    id: 234,
-    name: 'Wow you arrrrr great',
+    id: gitPOAPId,
+    name: gitPOAPName,
     imageUrl: 'https://example.com/image.png',
     description: 'You are clearly a rockstar',
     threshold: 1,
@@ -73,11 +88,27 @@ const authTokenId = 2;
 const authTokenGeneration = 32;
 const ensName = null;
 const ensAvatarImageUrl = null;
+const githubId = 3333;
+const githubHandle = 'burzadillo';
+const emailId = 2342;
+const redeemCodeId = 942;
+const redeemCode = '4433';
 
 function mockJwtWithAddress() {
   contextMock.prisma.authToken.findUnique.mockResolvedValue({
     id: authTokenId,
-    address: { ensName, ensAvatarImageUrl, email: null },
+    address: {
+      ensName,
+      ensAvatarImageUrl,
+      githubUser: {
+        githubId,
+        githubHandle,
+      },
+      email: {
+        id: emailId,
+        isValidated: true,
+      },
+    },
   } as any);
 }
 
@@ -89,9 +120,9 @@ function genAuthTokens(someAddress?: string) {
     someAddress ?? address,
     ensName,
     ensAvatarImageUrl,
-    null,
-    null,
-    null,
+    githubId,
+    githubHandle,
+    emailId,
   );
 }
 
@@ -662,5 +693,460 @@ describe('DELETE /claims/:id', () => {
     }
 
     expectFindUniqueCalls(2);
+  });
+});
+
+describe('POST /claims', () => {
+  it('Fails with no Access Token provided', async () => {
+    const result = await request(await setupApp())
+      .post(`/claims`)
+      .send({ claimIds: [] });
+
+    expect(result.statusCode).toEqual(400);
+
+    expect(contextMock.prisma.claim.findUnique).toHaveBeenCalledTimes(0);
+  });
+
+  it('Fails with invalid request body', async () => {
+    mockJwtWithAddress();
+
+    const authTokens = genAuthTokens();
+    const result = await request(await setupApp())
+      .post(`/claims`)
+      .set('Authorization', `Bearer ${authTokens.accessToken}`)
+      .send({ claims: [] });
+
+    expect(result.statusCode).toEqual(400);
+
+    expect(contextMock.prisma.claim.findUnique).toHaveBeenCalledTimes(0);
+  });
+
+  const expectFindUniqueClaims = (claimIds: number[]) => {
+    expect(contextMock.prisma.claim.findUnique).toHaveBeenCalledTimes(claimIds.length);
+    for (let i = 0; i < claimIds.length; ++i) {
+      expect(contextMock.prisma.claim.findUnique).toHaveBeenNthCalledWith(i + 1, {
+        where: {
+          id: claimIds[i],
+        },
+        include: {
+          githubUser: {
+            select: {
+              githubId: true,
+              githubHandle: true,
+            },
+          },
+          gitPOAP: true,
+        },
+      });
+    }
+  };
+
+  it('Fails when Claim not found', async () => {
+    mockJwtWithAddress();
+    contextMock.prisma.claim.findUnique.mockResolvedValue(null);
+
+    const authTokens = genAuthTokens();
+    const claimIds = [claimId];
+    const result = await request(await setupApp())
+      .post(`/claims`)
+      .set('Authorization', `Bearer ${authTokens.accessToken}`)
+      .send({ claimIds });
+
+    expect(result.statusCode).toEqual(400);
+    expect(result.body).toEqual({
+      claimed: [],
+      invalid: [
+        {
+          claimId,
+          reason: `Claim doesn't exist`,
+        },
+      ],
+    });
+
+    expectFindUniqueClaims(claimIds);
+  });
+
+  it('Fails when GitPOAP is not enabled', async () => {
+    mockJwtWithAddress();
+    contextMock.prisma.claim.findUnique.mockResolvedValue({
+      gitPOAP: {
+        id: gitPOAPId,
+        isEnabled: false,
+      },
+    } as any);
+
+    const authTokens = genAuthTokens();
+    const claimIds = [claimId];
+    const result = await request(await setupApp())
+      .post(`/claims`)
+      .set('Authorization', `Bearer ${authTokens.accessToken}`)
+      .send({ claimIds });
+
+    expect(result.statusCode).toEqual(400);
+    expect(result.body).toEqual({
+      claimed: [],
+      invalid: [
+        {
+          claimId,
+          reason: `GitPOAP ID ${gitPOAPId} is not enabled`,
+        },
+      ],
+    });
+
+    expectFindUniqueClaims(claimIds);
+  });
+
+  it('Fails when GitPOAP is not UNCLAIMED', async () => {
+    mockJwtWithAddress();
+    const authTokens = genAuthTokens();
+
+    const runTestOnStatus = async (status: ClaimStatus) => {
+      contextMock.prisma.claim.findUnique.mockResolvedValueOnce({
+        status,
+        gitPOAP: {
+          id: gitPOAPId,
+          isEnabled: true,
+        },
+      } as any);
+
+      const result = await request(await setupApp())
+        .post(`/claims`)
+        .set('Authorization', `Bearer ${authTokens.accessToken}`)
+        .send({ claimIds: [claimId] });
+
+      expect(result.statusCode).toEqual(400);
+      expect(result.body).toEqual({
+        claimed: [],
+        invalid: [
+          {
+            claimId,
+            reason: `Claim has status '${status}'`,
+          },
+        ],
+      });
+    };
+
+    await runTestOnStatus(ClaimStatus.PENDING);
+    await runTestOnStatus(ClaimStatus.MINTING);
+    await runTestOnStatus(ClaimStatus.CLAIMED);
+
+    expectFindUniqueClaims([claimId, claimId, claimId]);
+  });
+
+  it("Fails when user doesn't own claim", async () => {
+    mockJwtWithAddress();
+    const authTokens = genAuthTokens();
+
+    const runTest = async () => {
+      const result = await request(await setupApp())
+        .post(`/claims`)
+        .set('Authorization', `Bearer ${authTokens.accessToken}`)
+        .send({ claimIds: [claimId] });
+
+      expect(result.statusCode).toEqual(400);
+      expect(result.body).toEqual({
+        claimed: [],
+        invalid: [
+          {
+            claimId,
+            reason: "User doesn't own Claim",
+          },
+        ],
+      });
+    };
+
+    const claimBase = {
+      status: ClaimStatus.UNCLAIMED,
+      gitPOAP: {
+        id: gitPOAPId,
+        isEnabled: true,
+      },
+    };
+
+    contextMock.prisma.claim.findUnique.mockResolvedValueOnce({
+      ...claimBase,
+      githubUser: { githubId: githubId + 1 },
+    } as any);
+    await runTest();
+
+    contextMock.prisma.claim.findUnique.mockResolvedValueOnce({
+      ...claimBase,
+      issuedAddressId: addressId + 1,
+    } as any);
+    await runTest();
+
+    contextMock.prisma.claim.findUnique.mockResolvedValueOnce({
+      ...claimBase,
+      emailId: emailId + 1,
+    } as any);
+    await runTest();
+
+    expectFindUniqueClaims([claimId, claimId, claimId]);
+  });
+
+  it('Fails when there are no more RedeemCodes', async () => {
+    mockJwtWithAddress();
+    contextMock.prisma.claim.findUnique.mockResolvedValue({
+      status: ClaimStatus.UNCLAIMED,
+      gitPOAP: {
+        id: gitPOAPId,
+        isEnabled: true,
+      },
+      emailId,
+    } as any);
+    contextMock.prisma.redeemCode.findFirst.mockResolvedValue(null);
+
+    const authTokens = genAuthTokens();
+    const claimIds = [claimId];
+    const result = await request(await setupApp())
+      .post(`/claims`)
+      .set('Authorization', `Bearer ${authTokens.accessToken}`)
+      .send({ claimIds });
+
+    expect(result.statusCode).toEqual(400);
+    expect(result.body).toEqual({
+      claimed: [],
+      invalid: [
+        {
+          claimId,
+          reason: `GitPOAP ID ${gitPOAPId} has no more redeem codes`,
+        },
+      ],
+    });
+
+    expectFindUniqueClaims(claimIds);
+  });
+
+  it('Fails when POAP API redeem call fails', async () => {
+    mockJwtWithAddress();
+    contextMock.prisma.claim.findUnique.mockResolvedValue({
+      status: ClaimStatus.UNCLAIMED,
+      gitPOAP: {
+        id: gitPOAPId,
+        isEnabled: true,
+      },
+      emailId,
+    } as any);
+    contextMock.prisma.redeemCode.findFirst.mockResolvedValue({
+      id: redeemCodeId,
+      code: redeemCode,
+    } as any);
+    mockedRedeemPOAP.mockResolvedValue(null);
+
+    const authTokens = genAuthTokens();
+    const claimIds = [claimId];
+    const result = await request(await setupApp())
+      .post(`/claims`)
+      .set('Authorization', `Bearer ${authTokens.accessToken}`)
+      .send({ claimIds });
+
+    expect(result.statusCode).toEqual(400);
+    expect(result.body).toEqual({
+      claimed: [],
+      invalid: [
+        {
+          claimId,
+          reason: `Failed to claim via POAP API`,
+        },
+      ],
+    });
+
+    expectFindUniqueClaims(claimIds);
+
+    expect(contextMock.prisma.redeemCode.delete).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.redeemCode.delete).toHaveBeenCalledWith({
+      where: { id: redeemCodeId },
+    });
+
+    expect(mockedUpdateClaimStatusById).toHaveBeenCalledTimes(2);
+    expect(mockedUpdateClaimStatusById).toHaveBeenNthCalledWith(
+      1,
+      claimId,
+      ClaimStatus.PENDING,
+      addressId,
+    );
+
+    expect(mockedRedeemPOAP).toHaveBeenCalledTimes(1);
+    expect(mockedRedeemPOAP).toHaveBeenCalledWith(address, redeemCode);
+
+    expect(contextMock.prisma.redeemCode.create).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.redeemCode.create).toHaveBeenCalledWith({
+      data: {
+        gitPOAP: {
+          connect: { id: gitPOAPId },
+        },
+        code: redeemCode,
+      },
+    });
+
+    expect(mockedUpdateClaimStatusById).toHaveBeenNthCalledWith(
+      2,
+      claimId,
+      ClaimStatus.UNCLAIMED,
+      null,
+    );
+  });
+
+  it('Succeeds when POAP API redeem call completes', async () => {
+    mockJwtWithAddress();
+    const gitPOAP = {
+      id: gitPOAPId,
+      name: gitPOAPName,
+      isEnabled: true,
+    };
+    contextMock.prisma.claim.findUnique.mockResolvedValue({
+      status: ClaimStatus.UNCLAIMED,
+      gitPOAP,
+      emailId,
+    } as any);
+    contextMock.prisma.redeemCode.findFirst.mockResolvedValue({
+      id: redeemCodeId,
+      code: redeemCode,
+    } as any);
+    mockedRedeemPOAP.mockResolvedValue({ qr_hash: redeemCode } as any);
+
+    const authTokens = genAuthTokens();
+    const claimIds = [claimId];
+    const result = await request(await setupApp())
+      .post(`/claims`)
+      .set('Authorization', `Bearer ${authTokens.accessToken}`)
+      .send({ claimIds });
+
+    expect(result.statusCode).toEqual(200);
+    expect(result.body).toEqual({ claimed: claimIds, invalid: [] });
+
+    expectFindUniqueClaims(claimIds);
+
+    expect(contextMock.prisma.redeemCode.delete).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.redeemCode.delete).toHaveBeenCalledWith({
+      where: { id: redeemCodeId },
+    });
+
+    expect(mockedUpdateClaimStatusById).toHaveBeenCalledTimes(1);
+    expect(mockedUpdateClaimStatusById).toHaveBeenCalledWith(
+      claimId,
+      ClaimStatus.PENDING,
+      addressId,
+    );
+
+    expect(mockedRedeemPOAP).toHaveBeenCalledTimes(1);
+    expect(mockedRedeemPOAP).toHaveBeenCalledWith(address, redeemCode);
+
+    expect(contextMock.prisma.claim.update).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.claim.update).toHaveBeenCalledWith({
+      where: {
+        id: claimId,
+      },
+      data: {
+        status: ClaimStatus.MINTING,
+        qrHash: redeemCode,
+      },
+    });
+
+    expect(mockedEnsureRedeemCodeThreshold).toHaveBeenCalledTimes(1);
+    expect(mockedEnsureRedeemCodeThreshold).toHaveBeenCalledWith(gitPOAP);
+
+    expect(mockedSendInternalClaimMessage).toHaveBeenCalledTimes(1);
+    expect(mockedSendInternalClaimMessage).toHaveBeenCalledWith(
+      [
+        {
+          claimId,
+          gitPOAPId,
+          gitPOAPName,
+          githubHandle: null,
+          emailId,
+        },
+      ],
+      address,
+    );
+
+    expect(mockedRunClaimsPostProcessing).toHaveBeenCalledTimes(1);
+    expect(mockedRunClaimsPostProcessing).toHaveBeenCalledWith(claimIds, [redeemCode]);
+  });
+
+  it('Succeeds on multiple claims when one fails', async () => {
+    mockJwtWithAddress();
+    const gitPOAP = {
+      id: gitPOAPId,
+      name: gitPOAPName,
+      isEnabled: true,
+    };
+    contextMock.prisma.claim.findUnique.mockResolvedValueOnce(null);
+    contextMock.prisma.claim.findUnique.mockResolvedValueOnce({
+      status: ClaimStatus.UNCLAIMED,
+      gitPOAP,
+      emailId,
+    } as any);
+    contextMock.prisma.redeemCode.findFirst.mockResolvedValue({
+      id: redeemCodeId,
+      code: redeemCode,
+    } as any);
+    mockedRedeemPOAP.mockResolvedValue({ qr_hash: redeemCode } as any);
+
+    const authTokens = genAuthTokens();
+    const claimIds = [claimId - 1, claimId];
+    const result = await request(await setupApp())
+      .post(`/claims`)
+      .set('Authorization', `Bearer ${authTokens.accessToken}`)
+      .send({ claimIds });
+
+    expect(result.statusCode).toEqual(200);
+    expect(result.body).toEqual({
+      claimed: [claimId],
+      invalid: [
+        {
+          claimId: claimId - 1,
+          reason: "Claim doesn't exist",
+        },
+      ],
+    });
+
+    expectFindUniqueClaims(claimIds);
+
+    expect(contextMock.prisma.redeemCode.delete).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.redeemCode.delete).toHaveBeenCalledWith({
+      where: { id: redeemCodeId },
+    });
+
+    expect(mockedUpdateClaimStatusById).toHaveBeenCalledTimes(1);
+    expect(mockedUpdateClaimStatusById).toHaveBeenCalledWith(
+      claimId,
+      ClaimStatus.PENDING,
+      addressId,
+    );
+
+    expect(mockedRedeemPOAP).toHaveBeenCalledTimes(1);
+    expect(mockedRedeemPOAP).toHaveBeenCalledWith(address, redeemCode);
+
+    expect(contextMock.prisma.claim.update).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.claim.update).toHaveBeenCalledWith({
+      where: {
+        id: claimId,
+      },
+      data: {
+        status: ClaimStatus.MINTING,
+        qrHash: redeemCode,
+      },
+    });
+
+    expect(mockedEnsureRedeemCodeThreshold).toHaveBeenCalledTimes(1);
+    expect(mockedEnsureRedeemCodeThreshold).toHaveBeenCalledWith(gitPOAP);
+
+    expect(mockedSendInternalClaimMessage).toHaveBeenCalledTimes(1);
+    expect(mockedSendInternalClaimMessage).toHaveBeenCalledWith(
+      [
+        {
+          claimId,
+          gitPOAPId,
+          gitPOAPName,
+          githubHandle: null,
+          emailId,
+        },
+      ],
+      address,
+    );
+
+    expect(mockedRunClaimsPostProcessing).toHaveBeenCalledTimes(1);
+    expect(mockedRunClaimsPostProcessing).toHaveBeenCalledWith([claimId], [redeemCode]);
   });
 });

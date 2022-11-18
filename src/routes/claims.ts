@@ -8,10 +8,8 @@ import { context } from '../context';
 import { ClaimStatus, GitPOAPStatus, GitPOAPType } from '@prisma/client';
 import { gitpoapBotAuth, jwtWithAddress, jwtWithAdminOAuth } from '../middleware/auth';
 import { getAccessTokenPayloadWithOAuth } from '../types/authTokens';
-import { redeemPOAP, retrieveClaimInfo } from '../external/poap';
+import { redeemPOAP } from '../external/poap';
 import { getGithubUserById } from '../external/github';
-import { createScopedLogger } from '../logging';
-import { sleep } from '../lib/sleep';
 import { backloadGithubPullRequestData } from '../lib/pullRequests';
 import { upsertGithubUser } from '../lib/githubUsers';
 import {
@@ -26,62 +24,12 @@ import { RestrictedContribution } from '../lib/contributions';
 import { sendInternalClaimMessage, sendInternalClaimByMentionMessage } from '../external/slack';
 import { isAddressAnAdmin } from '../lib/admins';
 import { getAccessTokenPayload } from '../types/authTokens';
-import { ensureRedeemCodeThreshold } from '../lib/claims';
+import { ensureRedeemCodeThreshold, runClaimsPostProcessing } from '../lib/claims';
 import { ClaimData, FoundClaim } from '../types/claims';
 import { getRequestLogger } from '../middleware/loggingAndTiming';
 import { shortenAddress } from '../lib/addresses';
 
 export const claimsRouter = Router();
-
-async function runClaimsPostProcessing(claimIds: number[], qrHashes: string[]) {
-  const logger = createScopedLogger('runClaimsPostProcessing');
-
-  while (claimIds.length > 0) {
-    logger.info(`Waiting for ${claimIds.length} claim transactions to process`);
-
-    // Wait for 5 seconds
-    await sleep(5);
-
-    // Helper function to remove a claim from postprocessing
-    const removeAtIndex = (i: number) => {
-      claimIds.splice(i, 1);
-      qrHashes.splice(i, 1);
-    };
-
-    for (let i = 0; i < claimIds.length; ++i) {
-      const poapData = await retrieveClaimInfo(qrHashes[i]);
-      if (poapData === null) {
-        logger.error(`Failed to retrieve claim info for Claim ID: ${claimIds[i]}`);
-        removeAtIndex(i);
-        break;
-      }
-
-      if (poapData.tx_status === 'passed') {
-        if (!('token' in poapData.result)) {
-          logger.error("No 'token' field in POAP response for Claim after tx_status='passed'");
-          removeAtIndex(i);
-          break;
-        }
-
-        // Set the new poapTokenId now that the TX is finalized
-        await context.prisma.claim.update({
-          where: {
-            id: claimIds[i],
-          },
-          data: {
-            status: ClaimStatus.CLAIMED,
-            poapTokenId: poapData.result.token.toString(),
-            mintedAt: new Date(),
-          },
-        });
-
-        removeAtIndex(i);
-      }
-    }
-  }
-
-  logger.info('Finished claims post processing');
-}
 
 claimsRouter.post('/', jwtWithAddress(), async function (req, res) {
   const logger = getRequestLogger(req);
@@ -95,20 +43,26 @@ claimsRouter.post('/', jwtWithAddress(), async function (req, res) {
   }
 
   const { addressId, address: ethAddress, emailId, githubId } = getAccessTokenPayload(req.user);
+  const { claimIds } = schemaResult.data;
 
-  logger.info(`Request claiming IDs ${req.body.claimIds} for address ${ethAddress}`);
+  logger.info(`Request claiming IDs ${claimIds} for address ${ethAddress}`);
 
   const foundClaims: FoundClaim[] = [];
   const qrHashes: string[] = [];
   const invalidClaims: { claimId: number; reason: string }[] = [];
 
-  for (const claimId of req.body.claimIds) {
+  for (const claimId of claimIds) {
     const claim = await context.prisma.claim.findUnique({
       where: {
         id: claimId,
       },
       include: {
-        githubUser: true,
+        githubUser: {
+          select: {
+            githubId: true,
+            githubHandle: true,
+          },
+        },
         gitPOAP: true,
       },
     });
@@ -116,7 +70,7 @@ claimsRouter.post('/', jwtWithAddress(), async function (req, res) {
     if (!claim) {
       invalidClaims.push({
         claimId,
-        reason: "Claim ID doesn't exist",
+        reason: `Claim doesn't exist`,
       });
       continue;
     }
@@ -151,7 +105,7 @@ claimsRouter.post('/', jwtWithAddress(), async function (req, res) {
     ) {
       invalidClaims.push({
         claimId,
-        reason: 'User does not own claim',
+        reason: "User doesn't own Claim",
       });
       continue;
     }
@@ -168,9 +122,7 @@ claimsRouter.post('/', jwtWithAddress(), async function (req, res) {
     }
     try {
       await context.prisma.redeemCode.delete({
-        where: {
-          id: redeemCode.id,
-        },
+        where: { id: redeemCode.id },
       });
     } catch (err) {
       logger.error(`Tried to delete a RedeemCode that was already deleted: ${err}`);
@@ -191,9 +143,7 @@ claimsRouter.post('/', jwtWithAddress(), async function (req, res) {
       await context.prisma.redeemCode.create({
         data: {
           gitPOAP: {
-            connect: {
-              id: claim.gitPOAP.id,
-            },
+            connect: { id: claim.gitPOAP.id },
           },
           code: redeemCode.code,
         },
@@ -244,11 +194,11 @@ claimsRouter.post('/', jwtWithAddress(), async function (req, res) {
 
   void sendInternalClaimMessage(foundClaims, ethAddress);
 
-  logger.debug(`Completed request claiming IDs ${req.body.claimIds} for address ${ethAddress}`);
+  logger.debug(`Completed request claiming IDs ${claimIds} for address ${ethAddress}`);
 
   res.status(200).send({
     claimed: claimedIds,
-    invalid: [],
+    invalid: invalidClaims,
   });
 
   await runClaimsPostProcessing(claimedIds, qrHashes);
