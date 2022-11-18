@@ -46,8 +46,7 @@ export async function requestDiscordOAuthToken(code: string) {
   const tokenJson = await tokenResponse.json();
   logger.debug(`Token JSON: ${tokenJson}`);
   if (tokenJson?.error) {
-    /* don't use JSON.stringify long term here */
-    throw JSON.stringify(tokenJson);
+    throw new Error(tokenJson);
   }
 
   return tokenJson;
@@ -67,8 +66,7 @@ export async function getDiscordCurrentUserInfo(discordToken: DiscordOAuthToken)
 
   logger.debug(`Token JSON: ${userInfoJson}`);
   if (userInfoJson?.error) {
-    /* don't use JSON.stringify long term here */
-    throw JSON.stringify(userInfoJson);
+    throw new Error(userInfoJson);
   }
 
   return userInfoJson;
