@@ -185,3 +185,37 @@ export async function deleteAuthToken(authTokenId: number) {
     },
   });
 }
+
+export async function updateAuthTokenGeneration(authTokenId: number) {
+  return await context.prisma.authToken.update({
+    where: { id: authTokenId },
+    data: {
+      generation: { increment: 1 },
+    },
+    select: {
+      generation: true,
+      address: {
+        select: {
+          id: true,
+          ethAddress: true,
+          ensName: true,
+          ensAvatarImageUrl: true,
+          githubUser: {
+            select: {
+              id: true,
+              githubId: true,
+              githubHandle: true,
+              githubOAuthToken: true,
+            },
+          },
+          email: {
+            select: {
+              id: true,
+              isValidated: true,
+            },
+          },
+        },
+      },
+    },
+  });
+}

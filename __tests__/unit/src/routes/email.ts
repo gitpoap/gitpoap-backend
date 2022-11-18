@@ -3,9 +3,13 @@ import '../../../../__mocks__/src/logging';
 import request from 'supertest';
 import { setupApp } from '../../../../__mocks__/src/app';
 import { sendVerificationEmail } from '../../../../src/external/postmark';
-import { generateAuthTokens } from '../../../../src/lib/authTokens';
+import {
+  generateAuthTokensWithChecks,
+  updateAuthTokenGeneration,
+} from '../../../../src/lib/authTokens';
 import { DateTime } from 'luxon';
 import { upsertUnverifiedEmail } from '../../../../src/lib/emails';
+import { setupGenAuthTokens } from '../../../../__mocks__/src/lib/authTokens';
 
 jest.mock('../../../../src/lib/ens');
 jest.mock('../../../../src/lib/emails', () => ({
@@ -14,9 +18,12 @@ jest.mock('../../../../src/lib/emails', () => ({
 }));
 jest.mock('../../../../src/logging');
 jest.mock('../../../../src/external/postmark');
+jest.mock('../../../../src/lib/authTokens');
 
 const mockedUpsertUnverifiedEmail = jest.mocked(upsertUnverifiedEmail, true);
 const mockedSendVerificationEmail = jest.mocked(sendVerificationEmail, true);
+const mockedGenerateAuthTokensWithChecks = jest.mocked(generateAuthTokensWithChecks, true);
+const mockedUpdateAuthTokenGeneration = jest.mocked(updateAuthTokenGeneration, true);
 
 const authTokenId = 123;
 const authTokenGeneration = 456;
@@ -49,19 +56,17 @@ function mockJwtWithAddress() {
   } as any);
 }
 
-function genAuthTokens() {
-  return generateAuthTokens(
-    authTokenId,
-    authTokenGeneration,
-    addressId,
-    address,
-    ensName,
-    ensAvatarImageUrl,
-    null,
-    null,
-    null,
-  );
-}
+const genAuthTokens = setupGenAuthTokens({
+  authTokenId,
+  generation: authTokenGeneration,
+  addressId,
+  address,
+  ensName,
+  ensAvatarImageUrl,
+  githubId: null,
+  githubHandle: null,
+  emailId: null,
+});
 
 describe('GET /email', () => {
   it('Fails with no Access Token provided', async () => {
@@ -355,8 +360,13 @@ describe('DELETE /email', () => {
 
   it('successfully deletes an email record', async () => {
     mockJwtWithAddress();
-
     contextMock.prisma.email.delete.mockResolvedValue({} as any);
+    const nextGeneration = authTokenGeneration + 1;
+    const fakeAddress = { fooBar: 'yolo' };
+    mockedUpdateAuthTokenGeneration.mockResolvedValue({
+      generation: nextGeneration,
+      address: fakeAddress,
+    } as any);
 
     const authTokens = genAuthTokens();
 
@@ -377,6 +387,16 @@ describe('DELETE /email', () => {
         tokenExpiresAt: null,
       },
     });
+
+    expect(mockedUpdateAuthTokenGeneration).toHaveBeenCalledTimes(1);
+    expect(mockedUpdateAuthTokenGeneration).toHaveBeenCalledWith(authTokenId);
+
+    expect(mockedGenerateAuthTokensWithChecks).toHaveBeenCalledTimes(1);
+    expect(mockedGenerateAuthTokensWithChecks).toHaveBeenCalledWith(
+      authTokenId,
+      nextGeneration,
+      fakeAddress,
+    );
   });
 });
 
@@ -518,11 +538,16 @@ describe('POST /email/verify/:activeToken', () => {
 
   it('Successfully verifies an email', async () => {
     mockJwtWithAddress();
-
     contextMock.prisma.email.findUnique.mockResolvedValue({
       id: 1,
       isValidated: false,
       tokenExpiresAt: DateTime.now().plus({ day: 1 }).toJSDate(),
+    } as any);
+    const nextGeneration = authTokenGeneration + 1;
+    const fakeAddress = { yeet: 'swag yo' };
+    mockedUpdateAuthTokenGeneration.mockResolvedValue({
+      generation: nextGeneration,
+      address: fakeAddress,
     } as any);
 
     const authTokens = genAuthTokens();
@@ -544,5 +569,15 @@ describe('POST /email/verify/:activeToken', () => {
       where: { id: 1 },
       data: { isValidated: true },
     });
+
+    expect(mockedUpdateAuthTokenGeneration).toHaveBeenCalledTimes(1);
+    expect(mockedUpdateAuthTokenGeneration).toHaveBeenCalledWith(authTokenId);
+
+    expect(mockedGenerateAuthTokensWithChecks).toHaveBeenCalledTimes(1);
+    expect(mockedGenerateAuthTokensWithChecks).toHaveBeenCalledWith(
+      authTokenId,
+      nextGeneration,
+      fakeAddress,
+    );
   });
 });
