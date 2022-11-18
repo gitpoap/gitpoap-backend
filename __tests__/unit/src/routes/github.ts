@@ -9,10 +9,7 @@ import {
 } from '../../../../src/lib/addresses';
 import { upsertGithubUser } from '../../../../src/lib/githubUsers';
 import { generateAuthTokensWithChecks } from '../../../../src/lib/authTokens';
-import { sign } from 'jsonwebtoken';
-import { JWT_SECRET } from '../../../../src/environment';
-import { AccessTokenPayload, RefreshTokenPayload } from '../../../../src/types/authTokens';
-import { JWT_EXP_TIME_SECONDS } from '../../../../src/constants';
+import { setupGenAuthTokens } from '../../../../__mocks__/src/lib/authTokens';
 
 jest.mock('../../../../src/logging');
 jest.mock('../../../../src/external/github');
@@ -49,28 +46,17 @@ function mockJwtWithAddress() {
   } as any);
 }
 
-function genAuthTokens(hasGithub = false) {
-  const accessTokenPayload: AccessTokenPayload = {
-    authTokenId,
-    addressId,
-    address,
-    ensName,
-    ensAvatarImageUrl,
-    githubId: hasGithub ? githubId : null,
-    githubHandle: hasGithub ? githubHandle : null,
-    emailId: null,
-  };
-  const refreshTokenPayload: RefreshTokenPayload = {
-    authTokenId,
-    addressId,
-    generation: authTokenGeneration,
-  };
-
-  return {
-    accessToken: sign(accessTokenPayload, JWT_SECRET, { expiresIn: JWT_EXP_TIME_SECONDS }),
-    refreshToken: sign(refreshTokenPayload, JWT_SECRET),
-  };
-}
+const genAuthTokens = setupGenAuthTokens({
+  authTokenId,
+  generation: authTokenGeneration,
+  addressId,
+  address,
+  ensName,
+  ensAvatarImageUrl,
+  githubId,
+  githubHandle,
+  emailId: null,
+});
 
 describe('POST /github', () => {
   it('Fails with no access token provided', async () => {
@@ -260,7 +246,7 @@ describe('DELETE /github', () => {
       },
     } as any);
 
-    const authTokens = genAuthTokens(false);
+    const authTokens = genAuthTokens({ hasGithub: false });
 
     const result = await request(await setupApp())
       .delete('/github')
@@ -294,7 +280,7 @@ describe('DELETE /github', () => {
     const fakeAuthTokens = { accessToken: 'yeet', refreshToken: 'yolo' };
     mockedGenerateAuthTokensWithChecks.mockResolvedValue(fakeAuthTokens);
 
-    const authTokens = genAuthTokens(true);
+    const authTokens = genAuthTokens({ hasGithub: true });
 
     const result = await request(await setupApp())
       .delete('/github')

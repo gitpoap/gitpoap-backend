@@ -8,6 +8,7 @@ import {
   deleteAuthToken,
   generateAuthTokensWithChecks,
   generateNewAuthTokens,
+  updateAuthTokenGeneration,
 } from '../lib/authTokens';
 import { resolveAddress } from '../lib/ens';
 import { isAuthSignatureDataValid } from '../lib/signatures';
@@ -60,40 +61,6 @@ authRouter.post('/', async function (req, res) {
 
   return res.status(200).send(userAuthTokens);
 });
-
-async function updateAuthTokenGeneration(authTokenId: number) {
-  return await context.prisma.authToken.update({
-    where: { id: authTokenId },
-    data: {
-      generation: { increment: 1 },
-    },
-    select: {
-      generation: true,
-      address: {
-        select: {
-          id: true,
-          ethAddress: true,
-          ensName: true,
-          ensAvatarImageUrl: true,
-          githubUser: {
-            select: {
-              id: true,
-              githubId: true,
-              githubHandle: true,
-              githubOAuthToken: true,
-            },
-          },
-          email: {
-            select: {
-              id: true,
-              isValidated: true,
-            },
-          },
-        },
-      },
-    },
-  });
-}
 
 authRouter.post('/refresh', async function (req, res) {
   const logger = getRequestLogger(req);
