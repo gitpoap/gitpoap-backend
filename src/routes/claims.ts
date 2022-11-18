@@ -94,19 +94,9 @@ claimsRouter.post('/', jwtWithAddress(), async function (req, res) {
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
-  const { addressId, address, githubId, githubHandle } = getAccessTokenPayload(req.user);
+  const { addressId, address: ethAddress, emailId, githubId } = getAccessTokenPayload(req.user);
 
-  const addressRecord = await context.prisma.address.findUnique({
-    where: {
-      id: addressId,
-    },
-    include: {
-      githubUser: true,
-      email: true,
-    },
-  });
-
-  logger.info(`Request claiming IDs ${req.body.claimIds} for address ${address}`);
+  logger.info(`Request claiming IDs ${req.body.claimIds} for address ${ethAddress}`);
 
   const foundClaims: FoundClaim[] = [];
   const qrHashes: string[] = [];
@@ -134,7 +124,7 @@ claimsRouter.post('/', jwtWithAddress(), async function (req, res) {
     if (!claim.gitPOAP.isEnabled) {
       logger.warn(
         `User with address: ${shortenAddress(
-          address,
+          ethAddress,
         )} (ID: ${addressId}) attempted to claim a non-enabled GitPOAP`,
       );
       invalidClaims.push({
@@ -157,7 +147,7 @@ claimsRouter.post('/', jwtWithAddress(), async function (req, res) {
     if (
       claim.githubUser?.githubId !== githubId &&
       claim.issuedAddressId !== addressId &&
-      claim.emailId !== addressRecord?.email?.id
+      claim.emailId !== emailId
     ) {
       invalidClaims.push({
         claimId,
@@ -188,7 +178,7 @@ claimsRouter.post('/', jwtWithAddress(), async function (req, res) {
 
     await updateClaimStatusById(claimId, ClaimStatus.PENDING, addressId);
 
-    const poapData = await redeemPOAP(address, redeemCode.code);
+    const poapData = await redeemPOAP(ethAddress, redeemCode.code);
     // If minting the POAP failed we need to revert
     if (poapData === null) {
       logger.error(`Failed to mint claim ${claimId} via the POAP API`);
@@ -216,7 +206,8 @@ claimsRouter.post('/', jwtWithAddress(), async function (req, res) {
       claimId,
       gitPOAPId: claim.gitPOAP.id,
       gitPOAPName: claim.gitPOAP.name,
-      githubUser: claim.githubUser,
+      githubHandle: claim.githubUser?.githubHandle ?? null,
+      emailId: claim.emailId,
     });
     qrHashes.push(poapData.qr_hash);
 
@@ -251,9 +242,9 @@ claimsRouter.post('/', jwtWithAddress(), async function (req, res) {
     }
   }
 
-  void sendInternalClaimMessage(foundClaims, address, githubHandle);
+  void sendInternalClaimMessage(foundClaims, ethAddress);
 
-  logger.debug(`Completed request claiming IDs ${req.body.claimIds} for address ${address}`);
+  logger.debug(`Completed request claiming IDs ${req.body.claimIds} for address ${ethAddress}`);
 
   res.status(200).send({
     claimed: claimedIds,
