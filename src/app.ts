@@ -24,6 +24,7 @@ import { vitalsRouter } from './routes/vitals';
 import { NODE_ENV, SENTRY_DSN } from './environment';
 import { authRouter } from './routes/auth';
 import { loggingAndTimingMiddleware } from './middleware/loggingAndTiming';
+import { routeNotFoundHandler } from './middleware/routeNotFound';
 
 const initializeSentry = (app: Express) => {
   if (SENTRY_DSN) {
@@ -87,6 +88,8 @@ export async function setupAppWithMiddleware(middleware: RequestHandler[]) {
   app.use('/organizations', organizationsRouter);
   app.use('/triggers', triggersRouter);
   app.use('/vitals', vitalsRouter);
+
+  app.use(routeNotFoundHandler);
 
   app.use(errorHandler);
 
