@@ -15,6 +15,8 @@ import {
   GithubPullRequestRelationsResolver,
   ProjectRelationsResolver,
   GitPOAPRequestRelationsResolver,
+  AddressRelationsResolver,
+  EmailRelationsResolver,
   /* Auto-generated GitPOAP Resolvers */
   FindUniqueGitPOAPResolver,
   FindFirstGitPOAPResolver,
@@ -87,6 +89,18 @@ import {
   FindManyGitPOAPRequestResolver,
   GroupByGitPOAPRequestResolver,
   AggregateGitPOAPRequestResolver,
+  /* Auto-generated Address Resolvers */
+  FindUniqueAddressResolver,
+  FindFirstAddressResolver,
+  FindManyAddressResolver,
+  GroupByAddressResolver,
+  AggregateAddressResolver,
+  /* Auto-generated Email Resolvers */
+  FindUniqueEmailResolver,
+  FindFirstEmailResolver,
+  FindManyEmailResolver,
+  GroupByEmailResolver,
+  AggregateEmailResolver,
 } from '@generated/type-graphql';
 import { CustomClaimResolver } from './resolvers/claims';
 import { CustomGitPOAPResolver } from './resolvers/gitpoaps';
@@ -109,6 +123,8 @@ const allResolvers: NonEmptyArray<ResolverClass> = [
   GithubPullRequestRelationsResolver,
   ProjectRelationsResolver,
   GitPOAPRequestRelationsResolver,
+  AddressRelationsResolver,
+  EmailRelationsResolver,
   /* Auto-generated GitPOAP READ Resolvers */
   FindUniqueGitPOAPResolver,
   FindFirstGitPOAPResolver,
@@ -181,6 +197,18 @@ const allResolvers: NonEmptyArray<ResolverClass> = [
   FindManyGitPOAPRequestResolver,
   GroupByGitPOAPRequestResolver,
   AggregateGitPOAPRequestResolver,
+  /* Auto-generated Address Resolvers */
+  FindUniqueAddressResolver,
+  FindFirstAddressResolver,
+  FindManyAddressResolver,
+  GroupByAddressResolver,
+  AggregateAddressResolver,
+  /* Auto-generated Email Resolvers */
+  FindUniqueEmailResolver,
+  FindFirstEmailResolver,
+  FindManyEmailResolver,
+  GroupByEmailResolver,
+  AggregateEmailResolver,
   /* ~~ Custom resolvers ~~ */
   CustomClaimResolver,
   CustomGitPOAPResolver,
