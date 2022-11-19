@@ -1,4 +1,36 @@
 type Query {
+  aggregateAddress(
+    where: AddressWhereInput
+    orderBy: [AddressOrderByWithRelationInput!]
+    cursor: AddressWhereUniqueInput
+    take: Int
+    skip: Int
+  ): AggregateAddress!
+  findFirstAddress(
+    where: AddressWhereInput
+    orderBy: [AddressOrderByWithRelationInput!]
+    cursor: AddressWhereUniqueInput
+    take: Int
+    skip: Int
+    distinct: [AddressScalarFieldEnum!]
+  ): Address
+  addresses(
+    where: AddressWhereInput
+    orderBy: [AddressOrderByWithRelationInput!]
+    cursor: AddressWhereUniqueInput
+    take: Int
+    skip: Int
+    distinct: [AddressScalarFieldEnum!]
+  ): [Address!]!
+  address(where: AddressWhereUniqueInput!): Address
+  groupByAddress(
+    where: AddressWhereInput
+    orderBy: [AddressOrderByWithAggregationInput!]
+    by: [AddressScalarFieldEnum!]!
+    having: AddressScalarWhereWithAggregatesInput
+    take: Int
+    skip: Int
+  ): [AddressGroupBy!]!
   aggregateClaim(
     where: ClaimWhereInput
     orderBy: [ClaimOrderByWithRelationInput!]
@@ -31,6 +63,38 @@ type Query {
     take: Int
     skip: Int
   ): [ClaimGroupBy!]!
+  aggregateEmail(
+    where: EmailWhereInput
+    orderBy: [EmailOrderByWithRelationInput!]
+    cursor: EmailWhereUniqueInput
+    take: Int
+    skip: Int
+  ): AggregateEmail!
+  findFirstEmail(
+    where: EmailWhereInput
+    orderBy: [EmailOrderByWithRelationInput!]
+    cursor: EmailWhereUniqueInput
+    take: Int
+    skip: Int
+    distinct: [EmailScalarFieldEnum!]
+  ): Email
+  emails(
+    where: EmailWhereInput
+    orderBy: [EmailOrderByWithRelationInput!]
+    cursor: EmailWhereUniqueInput
+    take: Int
+    skip: Int
+    distinct: [EmailScalarFieldEnum!]
+  ): [Email!]!
+  email(where: EmailWhereUniqueInput!): Email
+  groupByEmail(
+    where: EmailWhereInput
+    orderBy: [EmailOrderByWithAggregationInput!]
+    by: [EmailScalarFieldEnum!]!
+    having: EmailScalarWhereWithAggregatesInput
+    take: Int
+    skip: Int
+  ): [EmailGroupBy!]!
   aggregateFeaturedPOAP(
     where: FeaturedPOAPWhereInput
     orderBy: [FeaturedPOAPOrderByWithRelationInput!]
@@ -454,126 +518,77 @@ type Query {
   search(text: String!): SearchResults!
 }
 
-type AggregateClaim {
-  _count: ClaimCountAggregate
-  _avg: ClaimAvgAggregate
-  _sum: ClaimSumAggregate
-  _min: ClaimMinAggregate
-  _max: ClaimMaxAggregate
+type AggregateAddress {
+  _count: AddressCountAggregate
+  _avg: AddressAvgAggregate
+  _sum: AddressSumAggregate
+  _min: AddressMinAggregate
+  _max: AddressMaxAggregate
 }
 
-type ClaimCountAggregate {
+type AddressCountAggregate {
   id: Int!
+  ethAddress: Int!
   createdAt: Int!
   updatedAt: Int!
-  mintedAt: Int!
-  status: Int!
-  qrHash: Int!
-  poapTokenId: Int!
-  mintedAddressId: Int!
-  gitPOAPId: Int!
   githubUserId: Int!
-  emailId: Int!
-  issuedAddressId: Int!
-  pullRequestEarnedId: Int!
-  mentionEarnedId: Int!
-  needsRevalidation: Int!
+  ensAvatarImageUrl: Int!
+  ensName: Int!
   _all: Int!
 }
 
-type ClaimAvgAggregate {
+type AddressAvgAggregate {
   id: Float
-  mintedAddressId: Float
-  gitPOAPId: Float
   githubUserId: Float
-  emailId: Float
-  issuedAddressId: Float
-  pullRequestEarnedId: Float
-  mentionEarnedId: Float
 }
 
-type ClaimSumAggregate {
+type AddressSumAggregate {
   id: Int
-  mintedAddressId: Int
-  gitPOAPId: Int
   githubUserId: Int
-  emailId: Int
-  issuedAddressId: Int
-  pullRequestEarnedId: Int
-  mentionEarnedId: Int
 }
 
-type ClaimMinAggregate {
+type AddressMinAggregate {
   id: Int
+  ethAddress: String
   createdAt: DateTime
   updatedAt: DateTime
-  mintedAt: DateTime
-  status: ClaimStatus
-  qrHash: String
-  poapTokenId: String
-  mintedAddressId: Int
-  gitPOAPId: Int
   githubUserId: Int
-  emailId: Int
-  issuedAddressId: Int
-  pullRequestEarnedId: Int
-  mentionEarnedId: Int
-  needsRevalidation: Boolean
+  ensAvatarImageUrl: String
+  ensName: String
 }
 
 # The javascript `Date` as string. Type represents date and time as the ISO Date string.
 scalar DateTime
 
-enum ClaimStatus {
-  UNCLAIMED
-  PENDING
-  MINTING
-  CLAIMED
-}
-
-type ClaimMaxAggregate {
+type AddressMaxAggregate {
   id: Int
+  ethAddress: String
   createdAt: DateTime
   updatedAt: DateTime
-  mintedAt: DateTime
-  status: ClaimStatus
-  qrHash: String
-  poapTokenId: String
-  mintedAddressId: Int
-  gitPOAPId: Int
   githubUserId: Int
-  emailId: Int
-  issuedAddressId: Int
-  pullRequestEarnedId: Int
-  mentionEarnedId: Int
-  needsRevalidation: Boolean
+  ensAvatarImageUrl: String
+  ensName: String
 }
 
-input ClaimWhereInput {
-  AND: [ClaimWhereInput!]
-  OR: [ClaimWhereInput!]
-  NOT: [ClaimWhereInput!]
+input AddressWhereInput {
+  AND: [AddressWhereInput!]
+  OR: [AddressWhereInput!]
+  NOT: [AddressWhereInput!]
   id: IntFilter
+  ethAddress: StringFilter
+  email: EmailRelationFilter
   createdAt: DateTimeFilter
   updatedAt: DateTimeFilter
-  mintedAt: DateTimeNullableFilter
-  status: EnumClaimStatusFilter
-  poapTokenId: StringNullableFilter
-  mintedAddressId: IntNullableFilter
-  mintedAddress: AddressRelationFilter
-  gitPOAPId: IntFilter
-  gitPOAP: GitPOAPRelationFilter
   githubUserId: IntNullableFilter
   githubUser: GithubUserRelationFilter
-  emailId: IntNullableFilter
-  email: EmailRelationFilter
-  issuedAddressId: IntNullableFilter
-  issuedAddress: AddressRelationFilter
-  pullRequestEarnedId: IntNullableFilter
-  pullRequestEarned: GithubPullRequestRelationFilter
-  mentionEarnedId: IntNullableFilter
-  mentionEarned: GithubMentionRelationFilter
-  needsRevalidation: BoolFilter
+  ensAvatarImageUrl: StringNullableFilter
+  ensName: StringNullableFilter
+  memberships: OrganizationMembershipListRelationFilter
+  profile: ProfileRelationFilter
+  issuedClaims: ClaimListRelationFilter
+  mintedClaims: ClaimListRelationFilter
+  gitPOAPRequests: GitPOAPRequestListRelationFilter
+  createdGitPOAPs: GitPOAPListRelationFilter
 }
 
 input IntFilter {
@@ -598,146 +613,6 @@ input NestedIntFilter {
   not: NestedIntFilter
 }
 
-input DateTimeFilter {
-  equals: DateTime
-  in: [DateTime!]
-  notIn: [DateTime!]
-  lt: DateTime
-  lte: DateTime
-  gt: DateTime
-  gte: DateTime
-  not: NestedDateTimeFilter
-}
-
-input NestedDateTimeFilter {
-  equals: DateTime
-  in: [DateTime!]
-  notIn: [DateTime!]
-  lt: DateTime
-  lte: DateTime
-  gt: DateTime
-  gte: DateTime
-  not: NestedDateTimeFilter
-}
-
-input DateTimeNullableFilter {
-  equals: DateTime
-  in: [DateTime!]
-  notIn: [DateTime!]
-  lt: DateTime
-  lte: DateTime
-  gt: DateTime
-  gte: DateTime
-  not: NestedDateTimeNullableFilter
-}
-
-input NestedDateTimeNullableFilter {
-  equals: DateTime
-  in: [DateTime!]
-  notIn: [DateTime!]
-  lt: DateTime
-  lte: DateTime
-  gt: DateTime
-  gte: DateTime
-  not: NestedDateTimeNullableFilter
-}
-
-input EnumClaimStatusFilter {
-  equals: ClaimStatus
-  in: [ClaimStatus!]
-  notIn: [ClaimStatus!]
-  not: NestedEnumClaimStatusFilter
-}
-
-input NestedEnumClaimStatusFilter {
-  equals: ClaimStatus
-  in: [ClaimStatus!]
-  notIn: [ClaimStatus!]
-  not: NestedEnumClaimStatusFilter
-}
-
-input StringNullableFilter {
-  equals: String
-  in: [String!]
-  notIn: [String!]
-  lt: String
-  lte: String
-  gt: String
-  gte: String
-  contains: String
-  startsWith: String
-  endsWith: String
-  mode: QueryMode
-  not: NestedStringNullableFilter
-}
-
-enum QueryMode {
-  default
-  insensitive
-}
-
-input NestedStringNullableFilter {
-  equals: String
-  in: [String!]
-  notIn: [String!]
-  lt: String
-  lte: String
-  gt: String
-  gte: String
-  contains: String
-  startsWith: String
-  endsWith: String
-  not: NestedStringNullableFilter
-}
-
-input IntNullableFilter {
-  equals: Int
-  in: [Int!]
-  notIn: [Int!]
-  lt: Int
-  lte: Int
-  gt: Int
-  gte: Int
-  not: NestedIntNullableFilter
-}
-
-input NestedIntNullableFilter {
-  equals: Int
-  in: [Int!]
-  notIn: [Int!]
-  lt: Int
-  lte: Int
-  gt: Int
-  gte: Int
-  not: NestedIntNullableFilter
-}
-
-input AddressRelationFilter {
-  is: AddressWhereInput
-  isNot: AddressWhereInput
-}
-
-input AddressWhereInput {
-  AND: [AddressWhereInput!]
-  OR: [AddressWhereInput!]
-  NOT: [AddressWhereInput!]
-  id: IntFilter
-  ethAddress: StringFilter
-  email: EmailRelationFilter
-  createdAt: DateTimeFilter
-  updatedAt: DateTimeFilter
-  githubUserId: IntNullableFilter
-  githubUser: GithubUserRelationFilter
-  ensAvatarImageUrl: StringNullableFilter
-  ensName: StringNullableFilter
-  memberships: OrganizationMembershipListRelationFilter
-  profile: ProfileRelationFilter
-  issuedClaims: ClaimListRelationFilter
-  mintedClaims: ClaimListRelationFilter
-  gitPOAPRequests: GitPOAPRequestListRelationFilter
-  createdGitPOAPs: GitPOAPListRelationFilter
-}
-
 input StringFilter {
   equals: String
   in: [String!]
@@ -751,6 +626,11 @@ input StringFilter {
   endsWith: String
   mode: QueryMode
   not: NestedStringFilter
+}
+
+enum QueryMode {
+  default
+  insensitive
 }
 
 input NestedStringFilter {
@@ -788,26 +668,163 @@ input EmailWhereInput {
   createdGitPOAPRequests: GitPOAPRequestListRelationFilter
 }
 
+input IntNullableFilter {
+  equals: Int
+  in: [Int!]
+  notIn: [Int!]
+  lt: Int
+  lte: Int
+  gt: Int
+  gte: Int
+  not: NestedIntNullableFilter
+}
+
+input NestedIntNullableFilter {
+  equals: Int
+  in: [Int!]
+  notIn: [Int!]
+  lt: Int
+  lte: Int
+  gt: Int
+  gte: Int
+  not: NestedIntNullableFilter
+}
+
+input AddressRelationFilter {
+  is: AddressWhereInput
+  isNot: AddressWhereInput
+}
+
+input DateTimeFilter {
+  equals: DateTime
+  in: [DateTime!]
+  notIn: [DateTime!]
+  lt: DateTime
+  lte: DateTime
+  gt: DateTime
+  gte: DateTime
+  not: NestedDateTimeFilter
+}
+
+input NestedDateTimeFilter {
+  equals: DateTime
+  in: [DateTime!]
+  notIn: [DateTime!]
+  lt: DateTime
+  lte: DateTime
+  gt: DateTime
+  gte: DateTime
+  not: NestedDateTimeFilter
+}
+
 input ClaimListRelationFilter {
   every: ClaimWhereInput
   some: ClaimWhereInput
   none: ClaimWhereInput
 }
 
-input BoolFilter {
-  equals: Boolean
-  not: NestedBoolFilter
+input ClaimWhereInput {
+  AND: [ClaimWhereInput!]
+  OR: [ClaimWhereInput!]
+  NOT: [ClaimWhereInput!]
+  id: IntFilter
+  createdAt: DateTimeFilter
+  updatedAt: DateTimeFilter
+  mintedAt: DateTimeNullableFilter
+  status: EnumClaimStatusFilter
+  poapTokenId: StringNullableFilter
+  mintedAddressId: IntNullableFilter
+  mintedAddress: AddressRelationFilter
+  gitPOAPId: IntFilter
+  gitPOAP: GitPOAPRelationFilter
+  githubUserId: IntNullableFilter
+  githubUser: GithubUserRelationFilter
+  emailId: IntNullableFilter
+  email: EmailRelationFilter
+  issuedAddressId: IntNullableFilter
+  issuedAddress: AddressRelationFilter
+  pullRequestEarnedId: IntNullableFilter
+  pullRequestEarned: GithubPullRequestRelationFilter
+  mentionEarnedId: IntNullableFilter
+  mentionEarned: GithubMentionRelationFilter
+  needsRevalidation: BoolFilter
 }
 
-input NestedBoolFilter {
-  equals: Boolean
-  not: NestedBoolFilter
+input DateTimeNullableFilter {
+  equals: DateTime
+  in: [DateTime!]
+  notIn: [DateTime!]
+  lt: DateTime
+  lte: DateTime
+  gt: DateTime
+  gte: DateTime
+  not: NestedDateTimeNullableFilter
 }
 
-input GitPOAPListRelationFilter {
-  every: GitPOAPWhereInput
-  some: GitPOAPWhereInput
-  none: GitPOAPWhereInput
+input NestedDateTimeNullableFilter {
+  equals: DateTime
+  in: [DateTime!]
+  notIn: [DateTime!]
+  lt: DateTime
+  lte: DateTime
+  gt: DateTime
+  gte: DateTime
+  not: NestedDateTimeNullableFilter
+}
+
+input EnumClaimStatusFilter {
+  equals: ClaimStatus
+  in: [ClaimStatus!]
+  notIn: [ClaimStatus!]
+  not: NestedEnumClaimStatusFilter
+}
+
+enum ClaimStatus {
+  UNCLAIMED
+  PENDING
+  MINTING
+  CLAIMED
+}
+
+input NestedEnumClaimStatusFilter {
+  equals: ClaimStatus
+  in: [ClaimStatus!]
+  notIn: [ClaimStatus!]
+  not: NestedEnumClaimStatusFilter
+}
+
+input StringNullableFilter {
+  equals: String
+  in: [String!]
+  notIn: [String!]
+  lt: String
+  lte: String
+  gt: String
+  gte: String
+  contains: String
+  startsWith: String
+  endsWith: String
+  mode: QueryMode
+  not: NestedStringNullableFilter
+}
+
+input NestedStringNullableFilter {
+  equals: String
+  in: [String!]
+  notIn: [String!]
+  lt: String
+  lte: String
+  gt: String
+  gte: String
+  contains: String
+  startsWith: String
+  endsWith: String
+  not: NestedStringNullableFilter
+}
+
+input GitPOAPRelationFilter {
+  is: GitPOAPWhereInput
+  isNot: GitPOAPWhereInput
 }
 
 input GitPOAPWhereInput {
@@ -969,6 +986,12 @@ input NestedEnumMembershipRoleFilter {
   not: NestedEnumMembershipRoleFilter
 }
 
+input GitPOAPListRelationFilter {
+  every: GitPOAPWhereInput
+  some: GitPOAPWhereInput
+  none: GitPOAPWhereInput
+}
+
 input GitPOAPRequestListRelationFilter {
   every: GitPOAPRequestWhereInput
   some: GitPOAPRequestWhereInput
@@ -1042,11 +1065,6 @@ input NestedEnumAdminApprovalStatusFilter {
   in: [AdminApprovalStatus!]
   notIn: [AdminApprovalStatus!]
   not: NestedEnumAdminApprovalStatusFilter
-}
-
-input GitPOAPRelationFilter {
-  is: GitPOAPWhereInput
-  isNot: GitPOAPWhereInput
 }
 
 input GithubPullRequestListRelationFilter {
@@ -1187,6 +1205,16 @@ input NestedEnumGitPOAPStatusFilter {
   not: NestedEnumGitPOAPStatusFilter
 }
 
+input BoolFilter {
+  equals: Boolean
+  not: NestedBoolFilter
+}
+
+input NestedBoolFilter {
+  equals: Boolean
+  not: NestedBoolFilter
+}
+
 input RedeemCodeListRelationFilter {
   every: RedeemCodeWhereInput
   some: RedeemCodeWhereInput
@@ -1233,6 +1261,11 @@ input GitPOAPRequestRelationFilter {
   isNot: GitPOAPRequestWhereInput
 }
 
+input GithubMentionRelationFilter {
+  is: GithubMentionWhereInput
+  isNot: GithubMentionWhereInput
+}
+
 input ProfileRelationFilter {
   is: ProfileWhereInput
   isNot: ProfileWhereInput
@@ -1274,40 +1307,6 @@ input FeaturedPOAPWhereInput {
   profile: ProfileRelationFilter
 }
 
-input GithubMentionRelationFilter {
-  is: GithubMentionWhereInput
-  isNot: GithubMentionWhereInput
-}
-
-input ClaimOrderByWithRelationInput {
-  id: SortOrder
-  createdAt: SortOrder
-  updatedAt: SortOrder
-  mintedAt: SortOrder
-  status: SortOrder
-  poapTokenId: SortOrder
-  mintedAddressId: SortOrder
-  mintedAddress: AddressOrderByWithRelationInput
-  gitPOAPId: SortOrder
-  gitPOAP: GitPOAPOrderByWithRelationInput
-  githubUserId: SortOrder
-  githubUser: GithubUserOrderByWithRelationInput
-  emailId: SortOrder
-  email: EmailOrderByWithRelationInput
-  issuedAddressId: SortOrder
-  issuedAddress: AddressOrderByWithRelationInput
-  pullRequestEarnedId: SortOrder
-  pullRequestEarned: GithubPullRequestOrderByWithRelationInput
-  mentionEarnedId: SortOrder
-  mentionEarned: GithubMentionOrderByWithRelationInput
-  needsRevalidation: SortOrder
-}
-
-enum SortOrder {
-  asc
-  desc
-}
-
 input AddressOrderByWithRelationInput {
   id: SortOrder
   ethAddress: SortOrder
@@ -1324,6 +1323,11 @@ input AddressOrderByWithRelationInput {
   mintedClaims: ClaimOrderByRelationAggregateInput
   gitPOAPRequests: GitPOAPRequestOrderByRelationAggregateInput
   createdGitPOAPs: GitPOAPOrderByRelationAggregateInput
+}
+
+enum SortOrder {
+  asc
+  desc
 }
 
 input EmailOrderByWithRelationInput {
@@ -1405,202 +1409,113 @@ input FeaturedPOAPOrderByRelationAggregateInput {
   _count: SortOrder
 }
 
-input GitPOAPOrderByWithRelationInput {
-  id: SortOrder
-  type: SortOrder
-  name: SortOrder
-  imageUrl: SortOrder
-  description: SortOrder
-  year: SortOrder
-  poapEventId: SortOrder
-  createdAt: SortOrder
-  updatedAt: SortOrder
-  projectId: SortOrder
-  project: ProjectOrderByWithRelationInput
-  organizationId: SortOrder
-  organization: OrganizationOrderByWithRelationInput
-  claims: ClaimOrderByRelationAggregateInput
-  poapApprovalStatus: SortOrder
-  ongoing: SortOrder
-  redeemCodes: RedeemCodeOrderByRelationAggregateInput
-  eventId: SortOrder
-  event: EventOrderByWithRelationInput
-  level: SortOrder
-  threshold: SortOrder
-  isPRBased: SortOrder
-  isEnabled: SortOrder
-  creatorAddressId: SortOrder
-  creatorAddress: AddressOrderByWithRelationInput
-  creatorEmailId: SortOrder
-  creatorEmail: EmailOrderByWithRelationInput
-  gitPOAPRequestId: SortOrder
-  gitPOAPRequest: GitPOAPRequestOrderByWithRelationInput
-}
-
-input ProjectOrderByWithRelationInput {
-  id: SortOrder
-  createdAt: SortOrder
-  updatedAt: SortOrder
-  repos: RepoOrderByRelationAggregateInput
-  gitPOAPs: GitPOAPOrderByRelationAggregateInput
-  gitPOAPRequests: GitPOAPRequestOrderByRelationAggregateInput
-}
-
-input RepoOrderByRelationAggregateInput {
-  _count: SortOrder
-}
-
-input OrganizationOrderByWithRelationInput {
-  id: SortOrder
-  githubOrgId: SortOrder
-  name: SortOrder
-  createdAt: SortOrder
-  updatedAt: SortOrder
-  description: SortOrder
-  twitterHandle: SortOrder
-  url: SortOrder
-  repos: RepoOrderByRelationAggregateInput
-  memberships: OrganizationMembershipOrderByRelationAggregateInput
-  gitPOAPs: GitPOAPOrderByRelationAggregateInput
-  gitPOAPRequests: GitPOAPRequestOrderByRelationAggregateInput
-}
-
-input RedeemCodeOrderByRelationAggregateInput {
-  _count: SortOrder
-}
-
-input EventOrderByWithRelationInput {
-  id: SortOrder
-  createdAt: SortOrder
-  updatedAt: SortOrder
-  startDate: SortOrder
-  endDate: SortOrder
-  name: SortOrder
-  organization: SortOrder
-  description: SortOrder
-  location: SortOrder
-  imageUrl: SortOrder
-  githubHandle: SortOrder
-  twitterHandle: SortOrder
-  siteUrl: SortOrder
-  gitPOAPs: GitPOAPOrderByRelationAggregateInput
-}
-
-input GitPOAPRequestOrderByWithRelationInput {
-  id: SortOrder
-  createdAt: SortOrder
-  updatedAt: SortOrder
-  startDate: SortOrder
-  endDate: SortOrder
-  creatorEmailId: SortOrder
-  creatorEmail: EmailOrderByWithRelationInput
-  name: SortOrder
-  numRequestedCodes: SortOrder
-  imageUrl: SortOrder
-  description: SortOrder
-  projectId: SortOrder
-  project: ProjectOrderByWithRelationInput
-  organizationId: SortOrder
-  organization: OrganizationOrderByWithRelationInput
-  contributors: SortOrder
-  adminApprovalStatus: SortOrder
-  addressId: SortOrder
-  address: AddressOrderByWithRelationInput
-  gitPOAPId: SortOrder
-  GitPOAP: GitPOAPOrderByWithRelationInput
-}
-
-input GithubPullRequestOrderByWithRelationInput {
-  id: SortOrder
-  createdAt: SortOrder
-  updatedAt: SortOrder
-  githubPullNumber: SortOrder
-  githubTitle: SortOrder
-  githubCreatedAt: SortOrder
-  githubMergedAt: SortOrder
-  githubMergeCommitSha: SortOrder
-  repoId: SortOrder
-  repo: RepoOrderByWithRelationInput
-  githubUserId: SortOrder
-  githubUser: GithubUserOrderByWithRelationInput
-  claims: ClaimOrderByRelationAggregateInput
-  githubMentions: GithubMentionOrderByRelationAggregateInput
-}
-
-input RepoOrderByWithRelationInput {
-  id: SortOrder
-  name: SortOrder
-  githubRepoId: SortOrder
-  createdAt: SortOrder
-  updatedAt: SortOrder
-  organizationId: SortOrder
-  organization: OrganizationOrderByWithRelationInput
-  projectId: SortOrder
-  project: ProjectOrderByWithRelationInput
-  lastPRUpdatedAt: SortOrder
-  githubPullRequests: GithubPullRequestOrderByRelationAggregateInput
-  githubIssues: GithubIssueOrderByRelationAggregateInput
-  githubMentions: GithubMentionOrderByRelationAggregateInput
-}
-
-input GithubMentionOrderByWithRelationInput {
-  id: SortOrder
-  createdAt: SortOrder
-  updatedAt: SortOrder
-  githubMentionedAt: SortOrder
-  repoId: SortOrder
-  repo: RepoOrderByWithRelationInput
-  githubUserId: SortOrder
-  githubUser: GithubUserOrderByWithRelationInput
-  pullRequestId: SortOrder
-  pullRequest: GithubPullRequestOrderByWithRelationInput
-  issueId: SortOrder
-  issue: GithubIssueOrderByWithRelationInput
-  claims: ClaimOrderByRelationAggregateInput
-}
-
-input GithubIssueOrderByWithRelationInput {
-  id: SortOrder
-  createdAt: SortOrder
-  updatedAt: SortOrder
-  githubIssueNumber: SortOrder
-  githubTitle: SortOrder
-  githubCreatedAt: SortOrder
-  githubClosedAt: SortOrder
-  repoId: SortOrder
-  repo: RepoOrderByWithRelationInput
-  githubUserId: SortOrder
-  githubUser: GithubUserOrderByWithRelationInput
-  githubMentions: GithubMentionOrderByRelationAggregateInput
-}
-
-input ClaimWhereUniqueInput {
+input AddressWhereUniqueInput {
   id: Int
-  poapTokenId: String
-  gitPOAPId_githubUserId: ClaimGitPOAPIdGithubUserIdCompoundUniqueInput
-  gitPOAPId_mintedAddressId: ClaimGitPOAPIdMintedAddressIdCompoundUniqueInput
-  gitPOAPId_issuedAddressId: ClaimGitPOAPIdIssuedAddressIdCompoundUniqueInput
-  gitPOAPId_emailId: ClaimGitPOAPIdEmailIdCompoundUniqueInput
+  ethAddress: String
 }
 
-input ClaimGitPOAPIdGithubUserIdCompoundUniqueInput {
-  gitPOAPId: Int!
-  githubUserId: Int!
+type Address {
+  id: Int!
+  ethAddress: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  githubUserId: Int
+  ensAvatarImageUrl: String
+  ensName: String
+  _count: AddressCount
+  email: Email
+  githubUser: GithubUser
+  memberships(
+    where: OrganizationMembershipWhereInput
+    orderBy: [OrganizationMembershipOrderByWithRelationInput!]
+    cursor: OrganizationMembershipWhereUniqueInput
+    take: Int
+    skip: Int
+    distinct: [OrganizationMembershipScalarFieldEnum!]
+  ): [OrganizationMembership!]!
+  profile: Profile
+  issuedClaims(
+    where: ClaimWhereInput
+    orderBy: [ClaimOrderByWithRelationInput!]
+    cursor: ClaimWhereUniqueInput
+    take: Int
+    skip: Int
+    distinct: [ClaimScalarFieldEnum!]
+  ): [Claim!]!
+  mintedClaims(
+    where: ClaimWhereInput
+    orderBy: [ClaimOrderByWithRelationInput!]
+    cursor: ClaimWhereUniqueInput
+    take: Int
+    skip: Int
+    distinct: [ClaimScalarFieldEnum!]
+  ): [Claim!]!
+  gitPOAPRequests(
+    where: GitPOAPRequestWhereInput
+    orderBy: [GitPOAPRequestOrderByWithRelationInput!]
+    cursor: GitPOAPRequestWhereUniqueInput
+    take: Int
+    skip: Int
+    distinct: [GitPOAPRequestScalarFieldEnum!]
+  ): [GitPOAPRequest!]!
+  createdGitPOAPs(
+    where: GitPOAPWhereInput
+    orderBy: [GitPOAPOrderByWithRelationInput!]
+    cursor: GitPOAPWhereUniqueInput
+    take: Int
+    skip: Int
+    distinct: [GitPOAPScalarFieldEnum!]
+  ): [GitPOAP!]!
 }
 
-input ClaimGitPOAPIdMintedAddressIdCompoundUniqueInput {
-  gitPOAPId: Int!
-  mintedAddressId: Int!
+type AddressCount {
+  memberships: Int!
+  issuedClaims: Int!
+  mintedClaims: Int!
+  authTokens: Int!
+  gitPOAPRequests: Int!
+  createdGitPOAPs: Int!
 }
 
-input ClaimGitPOAPIdIssuedAddressIdCompoundUniqueInput {
-  gitPOAPId: Int!
-  issuedAddressId: Int!
+type Email {
+  id: Int!
+  emailAddress: String!
+  addressId: Int
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  isValidated: Boolean!
+  _count: EmailCount
+  address: Address
+  claims(
+    where: ClaimWhereInput
+    orderBy: [ClaimOrderByWithRelationInput!]
+    cursor: ClaimWhereUniqueInput
+    take: Int
+    skip: Int
+    distinct: [ClaimScalarFieldEnum!]
+  ): [Claim!]!
+  createdGitPOAPs(
+    where: GitPOAPWhereInput
+    orderBy: [GitPOAPOrderByWithRelationInput!]
+    cursor: GitPOAPWhereUniqueInput
+    take: Int
+    skip: Int
+    distinct: [GitPOAPScalarFieldEnum!]
+  ): [GitPOAP!]!
+  createdGitPOAPRequests(
+    where: GitPOAPRequestWhereInput
+    orderBy: [GitPOAPRequestOrderByWithRelationInput!]
+    cursor: GitPOAPRequestWhereUniqueInput
+    take: Int
+    skip: Int
+    distinct: [GitPOAPRequestScalarFieldEnum!]
+  ): [GitPOAPRequest!]!
 }
 
-input ClaimGitPOAPIdEmailIdCompoundUniqueInput {
-  gitPOAPId: Int!
-  emailId: Int!
+type EmailCount {
+  claims: Int!
+  createdGitPOAPs: Int!
+  createdGitPOAPRequests: Int!
 }
 
 type Claim {
@@ -1625,26 +1540,6 @@ type Claim {
   issuedAddress: Address
   pullRequestEarned: GithubPullRequest
   mentionEarned: GithubMention
-}
-
-type Address {
-  id: Int!
-  ethAddress: String!
-  createdAt: DateTime!
-  updatedAt: DateTime!
-  githubUserId: Int
-  ensAvatarImageUrl: String
-  ensName: String
-  _count: AddressCount
-}
-
-type AddressCount {
-  memberships: Int!
-  issuedClaims: Int!
-  mintedClaims: Int!
-  authTokens: Int!
-  gitPOAPRequests: Int!
-  createdGitPOAPs: Int!
 }
 
 type GitPOAP {
@@ -1831,6 +1726,50 @@ type OrganizationCount {
   gitPOAPRequests: Int!
 }
 
+input RepoOrderByWithRelationInput {
+  id: SortOrder
+  name: SortOrder
+  githubRepoId: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  organizationId: SortOrder
+  organization: OrganizationOrderByWithRelationInput
+  projectId: SortOrder
+  project: ProjectOrderByWithRelationInput
+  lastPRUpdatedAt: SortOrder
+  githubPullRequests: GithubPullRequestOrderByRelationAggregateInput
+  githubIssues: GithubIssueOrderByRelationAggregateInput
+  githubMentions: GithubMentionOrderByRelationAggregateInput
+}
+
+input OrganizationOrderByWithRelationInput {
+  id: SortOrder
+  githubOrgId: SortOrder
+  name: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  description: SortOrder
+  twitterHandle: SortOrder
+  url: SortOrder
+  repos: RepoOrderByRelationAggregateInput
+  memberships: OrganizationMembershipOrderByRelationAggregateInput
+  gitPOAPs: GitPOAPOrderByRelationAggregateInput
+  gitPOAPRequests: GitPOAPRequestOrderByRelationAggregateInput
+}
+
+input RepoOrderByRelationAggregateInput {
+  _count: SortOrder
+}
+
+input ProjectOrderByWithRelationInput {
+  id: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  repos: RepoOrderByRelationAggregateInput
+  gitPOAPs: GitPOAPOrderByRelationAggregateInput
+  gitPOAPRequests: GitPOAPRequestOrderByRelationAggregateInput
+}
+
 input RepoWhereUniqueInput {
   id: Int
   githubRepoId: Int
@@ -1886,6 +1825,83 @@ enum OrganizationMembershipScalarFieldEnum {
   role
 }
 
+input GitPOAPOrderByWithRelationInput {
+  id: SortOrder
+  type: SortOrder
+  name: SortOrder
+  imageUrl: SortOrder
+  description: SortOrder
+  year: SortOrder
+  poapEventId: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  projectId: SortOrder
+  project: ProjectOrderByWithRelationInput
+  organizationId: SortOrder
+  organization: OrganizationOrderByWithRelationInput
+  claims: ClaimOrderByRelationAggregateInput
+  poapApprovalStatus: SortOrder
+  ongoing: SortOrder
+  redeemCodes: RedeemCodeOrderByRelationAggregateInput
+  eventId: SortOrder
+  event: EventOrderByWithRelationInput
+  level: SortOrder
+  threshold: SortOrder
+  isPRBased: SortOrder
+  isEnabled: SortOrder
+  creatorAddressId: SortOrder
+  creatorAddress: AddressOrderByWithRelationInput
+  creatorEmailId: SortOrder
+  creatorEmail: EmailOrderByWithRelationInput
+  gitPOAPRequestId: SortOrder
+  gitPOAPRequest: GitPOAPRequestOrderByWithRelationInput
+}
+
+input RedeemCodeOrderByRelationAggregateInput {
+  _count: SortOrder
+}
+
+input EventOrderByWithRelationInput {
+  id: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  startDate: SortOrder
+  endDate: SortOrder
+  name: SortOrder
+  organization: SortOrder
+  description: SortOrder
+  location: SortOrder
+  imageUrl: SortOrder
+  githubHandle: SortOrder
+  twitterHandle: SortOrder
+  siteUrl: SortOrder
+  gitPOAPs: GitPOAPOrderByRelationAggregateInput
+}
+
+input GitPOAPRequestOrderByWithRelationInput {
+  id: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  startDate: SortOrder
+  endDate: SortOrder
+  creatorEmailId: SortOrder
+  creatorEmail: EmailOrderByWithRelationInput
+  name: SortOrder
+  numRequestedCodes: SortOrder
+  imageUrl: SortOrder
+  description: SortOrder
+  projectId: SortOrder
+  project: ProjectOrderByWithRelationInput
+  organizationId: SortOrder
+  organization: OrganizationOrderByWithRelationInput
+  contributors: SortOrder
+  adminApprovalStatus: SortOrder
+  addressId: SortOrder
+  address: AddressOrderByWithRelationInput
+  gitPOAPId: SortOrder
+  GitPOAP: GitPOAPOrderByWithRelationInput
+}
+
 input GitPOAPWhereUniqueInput {
   id: Int
   poapEventId: Int
@@ -1939,22 +1955,6 @@ type GitPOAPRequest {
   organization: Organization
   address: Address!
   GitPOAP: GitPOAP
-}
-
-type Email {
-  id: Int!
-  emailAddress: String!
-  addressId: Int
-  createdAt: DateTime!
-  updatedAt: DateTime!
-  isValidated: Boolean!
-  _count: EmailCount
-}
-
-type EmailCount {
-  claims: Int!
-  createdGitPOAPs: Int!
-  createdGitPOAPRequests: Int!
 }
 
 input GitPOAPRequestWhereUniqueInput {
@@ -2073,6 +2073,107 @@ type GithubUserCount {
   githubIssues: Int!
   githubMentions: Int!
   addresses: Int!
+}
+
+input ClaimOrderByWithRelationInput {
+  id: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  mintedAt: SortOrder
+  status: SortOrder
+  poapTokenId: SortOrder
+  mintedAddressId: SortOrder
+  mintedAddress: AddressOrderByWithRelationInput
+  gitPOAPId: SortOrder
+  gitPOAP: GitPOAPOrderByWithRelationInput
+  githubUserId: SortOrder
+  githubUser: GithubUserOrderByWithRelationInput
+  emailId: SortOrder
+  email: EmailOrderByWithRelationInput
+  issuedAddressId: SortOrder
+  issuedAddress: AddressOrderByWithRelationInput
+  pullRequestEarnedId: SortOrder
+  pullRequestEarned: GithubPullRequestOrderByWithRelationInput
+  mentionEarnedId: SortOrder
+  mentionEarned: GithubMentionOrderByWithRelationInput
+  needsRevalidation: SortOrder
+}
+
+input GithubPullRequestOrderByWithRelationInput {
+  id: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  githubPullNumber: SortOrder
+  githubTitle: SortOrder
+  githubCreatedAt: SortOrder
+  githubMergedAt: SortOrder
+  githubMergeCommitSha: SortOrder
+  repoId: SortOrder
+  repo: RepoOrderByWithRelationInput
+  githubUserId: SortOrder
+  githubUser: GithubUserOrderByWithRelationInput
+  claims: ClaimOrderByRelationAggregateInput
+  githubMentions: GithubMentionOrderByRelationAggregateInput
+}
+
+input GithubMentionOrderByWithRelationInput {
+  id: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  githubMentionedAt: SortOrder
+  repoId: SortOrder
+  repo: RepoOrderByWithRelationInput
+  githubUserId: SortOrder
+  githubUser: GithubUserOrderByWithRelationInput
+  pullRequestId: SortOrder
+  pullRequest: GithubPullRequestOrderByWithRelationInput
+  issueId: SortOrder
+  issue: GithubIssueOrderByWithRelationInput
+  claims: ClaimOrderByRelationAggregateInput
+}
+
+input GithubIssueOrderByWithRelationInput {
+  id: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  githubIssueNumber: SortOrder
+  githubTitle: SortOrder
+  githubCreatedAt: SortOrder
+  githubClosedAt: SortOrder
+  repoId: SortOrder
+  repo: RepoOrderByWithRelationInput
+  githubUserId: SortOrder
+  githubUser: GithubUserOrderByWithRelationInput
+  githubMentions: GithubMentionOrderByRelationAggregateInput
+}
+
+input ClaimWhereUniqueInput {
+  id: Int
+  poapTokenId: String
+  gitPOAPId_githubUserId: ClaimGitPOAPIdGithubUserIdCompoundUniqueInput
+  gitPOAPId_mintedAddressId: ClaimGitPOAPIdMintedAddressIdCompoundUniqueInput
+  gitPOAPId_issuedAddressId: ClaimGitPOAPIdIssuedAddressIdCompoundUniqueInput
+  gitPOAPId_emailId: ClaimGitPOAPIdEmailIdCompoundUniqueInput
+}
+
+input ClaimGitPOAPIdGithubUserIdCompoundUniqueInput {
+  gitPOAPId: Int!
+  githubUserId: Int!
+}
+
+input ClaimGitPOAPIdMintedAddressIdCompoundUniqueInput {
+  gitPOAPId: Int!
+  mintedAddressId: Int!
+}
+
+input ClaimGitPOAPIdIssuedAddressIdCompoundUniqueInput {
+  gitPOAPId: Int!
+  issuedAddressId: Int!
+}
+
+input ClaimGitPOAPIdEmailIdCompoundUniqueInput {
+  gitPOAPId: Int!
+  emailId: Int!
 }
 
 enum ClaimScalarFieldEnum {
@@ -2200,11 +2301,6 @@ enum GithubMentionScalarFieldEnum {
   issueId
 }
 
-input AddressWhereUniqueInput {
-  id: Int
-  ethAddress: String
-}
-
 enum AddressScalarFieldEnum {
   id
   ethAddress
@@ -2263,6 +2359,418 @@ type Event {
 
 type EventCount {
   gitPOAPs: Int!
+}
+
+type Profile {
+  id: Int!
+  addressId: Int!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  bio: String
+  bannerImageUrl: String
+  name: String
+  profileImageUrl: String
+  githubHandle: String
+  twitterHandle: String
+  personalSiteUrl: String
+  isVisibleOnLeaderboard: Boolean!
+  _count: ProfileCount
+  address: Address!
+  featuredPOAPs(
+    where: FeaturedPOAPWhereInput
+    orderBy: [FeaturedPOAPOrderByWithRelationInput!]
+    cursor: FeaturedPOAPWhereUniqueInput
+    take: Int
+    skip: Int
+    distinct: [FeaturedPOAPScalarFieldEnum!]
+  ): [FeaturedPOAP!]!
+}
+
+type ProfileCount {
+  featuredPOAPs: Int!
+}
+
+type FeaturedPOAP {
+  id: Int!
+  poapTokenId: String!
+  profileId: Int!
+  profile: Profile!
+}
+
+input FeaturedPOAPOrderByWithRelationInput {
+  id: SortOrder
+  poapTokenId: SortOrder
+  profileId: SortOrder
+  profile: ProfileOrderByWithRelationInput
+}
+
+input FeaturedPOAPWhereUniqueInput {
+  id: Int
+  poapTokenId: String
+  poapTokenId_profileId: FeaturedPOAPPoapTokenIdProfileIdCompoundUniqueInput
+}
+
+input FeaturedPOAPPoapTokenIdProfileIdCompoundUniqueInput {
+  poapTokenId: String!
+  profileId: Int!
+}
+
+enum FeaturedPOAPScalarFieldEnum {
+  id
+  poapTokenId
+  profileId
+}
+
+type AddressGroupBy {
+  id: Int!
+  ethAddress: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  githubUserId: Int
+  ensAvatarImageUrl: String
+  ensName: String
+  _count: AddressCountAggregate
+  _avg: AddressAvgAggregate
+  _sum: AddressSumAggregate
+  _min: AddressMinAggregate
+  _max: AddressMaxAggregate
+}
+
+input AddressOrderByWithAggregationInput {
+  id: SortOrder
+  ethAddress: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  githubUserId: SortOrder
+  ensAvatarImageUrl: SortOrder
+  ensName: SortOrder
+  _count: AddressCountOrderByAggregateInput
+  _avg: AddressAvgOrderByAggregateInput
+  _max: AddressMaxOrderByAggregateInput
+  _min: AddressMinOrderByAggregateInput
+  _sum: AddressSumOrderByAggregateInput
+}
+
+input AddressCountOrderByAggregateInput {
+  id: SortOrder
+  ethAddress: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  githubUserId: SortOrder
+  ensAvatarImageUrl: SortOrder
+  ensName: SortOrder
+}
+
+input AddressAvgOrderByAggregateInput {
+  id: SortOrder
+  githubUserId: SortOrder
+}
+
+input AddressMaxOrderByAggregateInput {
+  id: SortOrder
+  ethAddress: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  githubUserId: SortOrder
+  ensAvatarImageUrl: SortOrder
+  ensName: SortOrder
+}
+
+input AddressMinOrderByAggregateInput {
+  id: SortOrder
+  ethAddress: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  githubUserId: SortOrder
+  ensAvatarImageUrl: SortOrder
+  ensName: SortOrder
+}
+
+input AddressSumOrderByAggregateInput {
+  id: SortOrder
+  githubUserId: SortOrder
+}
+
+input AddressScalarWhereWithAggregatesInput {
+  AND: [AddressScalarWhereWithAggregatesInput!]
+  OR: [AddressScalarWhereWithAggregatesInput!]
+  NOT: [AddressScalarWhereWithAggregatesInput!]
+  id: IntWithAggregatesFilter
+  ethAddress: StringWithAggregatesFilter
+  createdAt: DateTimeWithAggregatesFilter
+  updatedAt: DateTimeWithAggregatesFilter
+  githubUserId: IntNullableWithAggregatesFilter
+  ensAvatarImageUrl: StringNullableWithAggregatesFilter
+  ensName: StringNullableWithAggregatesFilter
+}
+
+input IntWithAggregatesFilter {
+  equals: Int
+  in: [Int!]
+  notIn: [Int!]
+  lt: Int
+  lte: Int
+  gt: Int
+  gte: Int
+  not: NestedIntWithAggregatesFilter
+  _count: NestedIntFilter
+  _avg: NestedFloatFilter
+  _sum: NestedIntFilter
+  _min: NestedIntFilter
+  _max: NestedIntFilter
+}
+
+input NestedIntWithAggregatesFilter {
+  equals: Int
+  in: [Int!]
+  notIn: [Int!]
+  lt: Int
+  lte: Int
+  gt: Int
+  gte: Int
+  not: NestedIntWithAggregatesFilter
+  _count: NestedIntFilter
+  _avg: NestedFloatFilter
+  _sum: NestedIntFilter
+  _min: NestedIntFilter
+  _max: NestedIntFilter
+}
+
+input NestedFloatFilter {
+  equals: Float
+  in: [Float!]
+  notIn: [Float!]
+  lt: Float
+  lte: Float
+  gt: Float
+  gte: Float
+  not: NestedFloatFilter
+}
+
+input StringWithAggregatesFilter {
+  equals: String
+  in: [String!]
+  notIn: [String!]
+  lt: String
+  lte: String
+  gt: String
+  gte: String
+  contains: String
+  startsWith: String
+  endsWith: String
+  mode: QueryMode
+  not: NestedStringWithAggregatesFilter
+  _count: NestedIntFilter
+  _min: NestedStringFilter
+  _max: NestedStringFilter
+}
+
+input NestedStringWithAggregatesFilter {
+  equals: String
+  in: [String!]
+  notIn: [String!]
+  lt: String
+  lte: String
+  gt: String
+  gte: String
+  contains: String
+  startsWith: String
+  endsWith: String
+  not: NestedStringWithAggregatesFilter
+  _count: NestedIntFilter
+  _min: NestedStringFilter
+  _max: NestedStringFilter
+}
+
+input DateTimeWithAggregatesFilter {
+  equals: DateTime
+  in: [DateTime!]
+  notIn: [DateTime!]
+  lt: DateTime
+  lte: DateTime
+  gt: DateTime
+  gte: DateTime
+  not: NestedDateTimeWithAggregatesFilter
+  _count: NestedIntFilter
+  _min: NestedDateTimeFilter
+  _max: NestedDateTimeFilter
+}
+
+input NestedDateTimeWithAggregatesFilter {
+  equals: DateTime
+  in: [DateTime!]
+  notIn: [DateTime!]
+  lt: DateTime
+  lte: DateTime
+  gt: DateTime
+  gte: DateTime
+  not: NestedDateTimeWithAggregatesFilter
+  _count: NestedIntFilter
+  _min: NestedDateTimeFilter
+  _max: NestedDateTimeFilter
+}
+
+input IntNullableWithAggregatesFilter {
+  equals: Int
+  in: [Int!]
+  notIn: [Int!]
+  lt: Int
+  lte: Int
+  gt: Int
+  gte: Int
+  not: NestedIntNullableWithAggregatesFilter
+  _count: NestedIntNullableFilter
+  _avg: NestedFloatNullableFilter
+  _sum: NestedIntNullableFilter
+  _min: NestedIntNullableFilter
+  _max: NestedIntNullableFilter
+}
+
+input NestedIntNullableWithAggregatesFilter {
+  equals: Int
+  in: [Int!]
+  notIn: [Int!]
+  lt: Int
+  lte: Int
+  gt: Int
+  gte: Int
+  not: NestedIntNullableWithAggregatesFilter
+  _count: NestedIntNullableFilter
+  _avg: NestedFloatNullableFilter
+  _sum: NestedIntNullableFilter
+  _min: NestedIntNullableFilter
+  _max: NestedIntNullableFilter
+}
+
+input NestedFloatNullableFilter {
+  equals: Float
+  in: [Float!]
+  notIn: [Float!]
+  lt: Float
+  lte: Float
+  gt: Float
+  gte: Float
+  not: NestedFloatNullableFilter
+}
+
+input StringNullableWithAggregatesFilter {
+  equals: String
+  in: [String!]
+  notIn: [String!]
+  lt: String
+  lte: String
+  gt: String
+  gte: String
+  contains: String
+  startsWith: String
+  endsWith: String
+  mode: QueryMode
+  not: NestedStringNullableWithAggregatesFilter
+  _count: NestedIntNullableFilter
+  _min: NestedStringNullableFilter
+  _max: NestedStringNullableFilter
+}
+
+input NestedStringNullableWithAggregatesFilter {
+  equals: String
+  in: [String!]
+  notIn: [String!]
+  lt: String
+  lte: String
+  gt: String
+  gte: String
+  contains: String
+  startsWith: String
+  endsWith: String
+  not: NestedStringNullableWithAggregatesFilter
+  _count: NestedIntNullableFilter
+  _min: NestedStringNullableFilter
+  _max: NestedStringNullableFilter
+}
+
+type AggregateClaim {
+  _count: ClaimCountAggregate
+  _avg: ClaimAvgAggregate
+  _sum: ClaimSumAggregate
+  _min: ClaimMinAggregate
+  _max: ClaimMaxAggregate
+}
+
+type ClaimCountAggregate {
+  id: Int!
+  createdAt: Int!
+  updatedAt: Int!
+  mintedAt: Int!
+  status: Int!
+  qrHash: Int!
+  poapTokenId: Int!
+  mintedAddressId: Int!
+  gitPOAPId: Int!
+  githubUserId: Int!
+  emailId: Int!
+  issuedAddressId: Int!
+  pullRequestEarnedId: Int!
+  mentionEarnedId: Int!
+  needsRevalidation: Int!
+  _all: Int!
+}
+
+type ClaimAvgAggregate {
+  id: Float
+  mintedAddressId: Float
+  gitPOAPId: Float
+  githubUserId: Float
+  emailId: Float
+  issuedAddressId: Float
+  pullRequestEarnedId: Float
+  mentionEarnedId: Float
+}
+
+type ClaimSumAggregate {
+  id: Int
+  mintedAddressId: Int
+  gitPOAPId: Int
+  githubUserId: Int
+  emailId: Int
+  issuedAddressId: Int
+  pullRequestEarnedId: Int
+  mentionEarnedId: Int
+}
+
+type ClaimMinAggregate {
+  id: Int
+  createdAt: DateTime
+  updatedAt: DateTime
+  mintedAt: DateTime
+  status: ClaimStatus
+  qrHash: String
+  poapTokenId: String
+  mintedAddressId: Int
+  gitPOAPId: Int
+  githubUserId: Int
+  emailId: Int
+  issuedAddressId: Int
+  pullRequestEarnedId: Int
+  mentionEarnedId: Int
+  needsRevalidation: Boolean
+}
+
+type ClaimMaxAggregate {
+  id: Int
+  createdAt: DateTime
+  updatedAt: DateTime
+  mintedAt: DateTime
+  status: ClaimStatus
+  qrHash: String
+  poapTokenId: String
+  mintedAddressId: Int
+  gitPOAPId: Int
+  githubUserId: Int
+  emailId: Int
+  issuedAddressId: Int
+  pullRequestEarnedId: Int
+  mentionEarnedId: Int
+  needsRevalidation: Boolean
 }
 
 type ClaimGroupBy {
@@ -2403,77 +2911,6 @@ input ClaimScalarWhereWithAggregatesInput {
   needsRevalidation: BoolWithAggregatesFilter
 }
 
-input IntWithAggregatesFilter {
-  equals: Int
-  in: [Int!]
-  notIn: [Int!]
-  lt: Int
-  lte: Int
-  gt: Int
-  gte: Int
-  not: NestedIntWithAggregatesFilter
-  _count: NestedIntFilter
-  _avg: NestedFloatFilter
-  _sum: NestedIntFilter
-  _min: NestedIntFilter
-  _max: NestedIntFilter
-}
-
-input NestedIntWithAggregatesFilter {
-  equals: Int
-  in: [Int!]
-  notIn: [Int!]
-  lt: Int
-  lte: Int
-  gt: Int
-  gte: Int
-  not: NestedIntWithAggregatesFilter
-  _count: NestedIntFilter
-  _avg: NestedFloatFilter
-  _sum: NestedIntFilter
-  _min: NestedIntFilter
-  _max: NestedIntFilter
-}
-
-input NestedFloatFilter {
-  equals: Float
-  in: [Float!]
-  notIn: [Float!]
-  lt: Float
-  lte: Float
-  gt: Float
-  gte: Float
-  not: NestedFloatFilter
-}
-
-input DateTimeWithAggregatesFilter {
-  equals: DateTime
-  in: [DateTime!]
-  notIn: [DateTime!]
-  lt: DateTime
-  lte: DateTime
-  gt: DateTime
-  gte: DateTime
-  not: NestedDateTimeWithAggregatesFilter
-  _count: NestedIntFilter
-  _min: NestedDateTimeFilter
-  _max: NestedDateTimeFilter
-}
-
-input NestedDateTimeWithAggregatesFilter {
-  equals: DateTime
-  in: [DateTime!]
-  notIn: [DateTime!]
-  lt: DateTime
-  lte: DateTime
-  gt: DateTime
-  gte: DateTime
-  not: NestedDateTimeWithAggregatesFilter
-  _count: NestedIntFilter
-  _min: NestedDateTimeFilter
-  _max: NestedDateTimeFilter
-}
-
 input DateTimeNullableWithAggregatesFilter {
   equals: DateTime
   in: [DateTime!]
@@ -2522,84 +2959,6 @@ input NestedEnumClaimStatusWithAggregatesFilter {
   _max: NestedEnumClaimStatusFilter
 }
 
-input StringNullableWithAggregatesFilter {
-  equals: String
-  in: [String!]
-  notIn: [String!]
-  lt: String
-  lte: String
-  gt: String
-  gte: String
-  contains: String
-  startsWith: String
-  endsWith: String
-  mode: QueryMode
-  not: NestedStringNullableWithAggregatesFilter
-  _count: NestedIntNullableFilter
-  _min: NestedStringNullableFilter
-  _max: NestedStringNullableFilter
-}
-
-input NestedStringNullableWithAggregatesFilter {
-  equals: String
-  in: [String!]
-  notIn: [String!]
-  lt: String
-  lte: String
-  gt: String
-  gte: String
-  contains: String
-  startsWith: String
-  endsWith: String
-  not: NestedStringNullableWithAggregatesFilter
-  _count: NestedIntNullableFilter
-  _min: NestedStringNullableFilter
-  _max: NestedStringNullableFilter
-}
-
-input IntNullableWithAggregatesFilter {
-  equals: Int
-  in: [Int!]
-  notIn: [Int!]
-  lt: Int
-  lte: Int
-  gt: Int
-  gte: Int
-  not: NestedIntNullableWithAggregatesFilter
-  _count: NestedIntNullableFilter
-  _avg: NestedFloatNullableFilter
-  _sum: NestedIntNullableFilter
-  _min: NestedIntNullableFilter
-  _max: NestedIntNullableFilter
-}
-
-input NestedIntNullableWithAggregatesFilter {
-  equals: Int
-  in: [Int!]
-  notIn: [Int!]
-  lt: Int
-  lte: Int
-  gt: Int
-  gte: Int
-  not: NestedIntNullableWithAggregatesFilter
-  _count: NestedIntNullableFilter
-  _avg: NestedFloatNullableFilter
-  _sum: NestedIntNullableFilter
-  _min: NestedIntNullableFilter
-  _max: NestedIntNullableFilter
-}
-
-input NestedFloatNullableFilter {
-  equals: Float
-  in: [Float!]
-  notIn: [Float!]
-  lt: Float
-  lte: Float
-  gt: Float
-  gte: Float
-  not: NestedFloatNullableFilter
-}
-
 input BoolWithAggregatesFilter {
   equals: Boolean
   not: NestedBoolWithAggregatesFilter
@@ -2614,6 +2973,154 @@ input NestedBoolWithAggregatesFilter {
   _count: NestedIntFilter
   _min: NestedBoolFilter
   _max: NestedBoolFilter
+}
+
+type AggregateEmail {
+  _count: EmailCountAggregate
+  _avg: EmailAvgAggregate
+  _sum: EmailSumAggregate
+  _min: EmailMinAggregate
+  _max: EmailMaxAggregate
+}
+
+type EmailCountAggregate {
+  id: Int!
+  emailAddress: Int!
+  addressId: Int!
+  createdAt: Int!
+  updatedAt: Int!
+  isValidated: Int!
+  activeToken: Int!
+  tokenExpiresAt: Int!
+  _all: Int!
+}
+
+type EmailAvgAggregate {
+  id: Float
+  addressId: Float
+}
+
+type EmailSumAggregate {
+  id: Int
+  addressId: Int
+}
+
+type EmailMinAggregate {
+  id: Int
+  emailAddress: String
+  addressId: Int
+  createdAt: DateTime
+  updatedAt: DateTime
+  isValidated: Boolean
+  activeToken: String
+  tokenExpiresAt: DateTime
+}
+
+type EmailMaxAggregate {
+  id: Int
+  emailAddress: String
+  addressId: Int
+  createdAt: DateTime
+  updatedAt: DateTime
+  isValidated: Boolean
+  activeToken: String
+  tokenExpiresAt: DateTime
+}
+
+input EmailWhereUniqueInput {
+  id: Int
+  emailAddress: String
+  addressId: Int
+}
+
+enum EmailScalarFieldEnum {
+  id
+  emailAddress
+  addressId
+  createdAt
+  updatedAt
+  isValidated
+  activeToken
+  tokenExpiresAt
+}
+
+type EmailGroupBy {
+  id: Int!
+  emailAddress: String!
+  addressId: Int
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  isValidated: Boolean!
+  activeToken: String
+  tokenExpiresAt: DateTime
+  _count: EmailCountAggregate
+  _avg: EmailAvgAggregate
+  _sum: EmailSumAggregate
+  _min: EmailMinAggregate
+  _max: EmailMaxAggregate
+}
+
+input EmailOrderByWithAggregationInput {
+  id: SortOrder
+  emailAddress: SortOrder
+  addressId: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  isValidated: SortOrder
+  _count: EmailCountOrderByAggregateInput
+  _avg: EmailAvgOrderByAggregateInput
+  _max: EmailMaxOrderByAggregateInput
+  _min: EmailMinOrderByAggregateInput
+  _sum: EmailSumOrderByAggregateInput
+}
+
+input EmailCountOrderByAggregateInput {
+  id: SortOrder
+  emailAddress: SortOrder
+  addressId: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  isValidated: SortOrder
+}
+
+input EmailAvgOrderByAggregateInput {
+  id: SortOrder
+  addressId: SortOrder
+}
+
+input EmailMaxOrderByAggregateInput {
+  id: SortOrder
+  emailAddress: SortOrder
+  addressId: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  isValidated: SortOrder
+}
+
+input EmailMinOrderByAggregateInput {
+  id: SortOrder
+  emailAddress: SortOrder
+  addressId: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  isValidated: SortOrder
+}
+
+input EmailSumOrderByAggregateInput {
+  id: SortOrder
+  addressId: SortOrder
+}
+
+input EmailScalarWhereWithAggregatesInput {
+  AND: [EmailScalarWhereWithAggregatesInput!]
+  OR: [EmailScalarWhereWithAggregatesInput!]
+  NOT: [EmailScalarWhereWithAggregatesInput!]
+  id: IntWithAggregatesFilter
+  emailAddress: StringWithAggregatesFilter
+  addressId: IntNullableWithAggregatesFilter
+  createdAt: DateTimeWithAggregatesFilter
+  updatedAt: DateTimeWithAggregatesFilter
+  isValidated: BoolWithAggregatesFilter
 }
 
 type AggregateFeaturedPOAP {
@@ -2651,66 +3158,6 @@ type FeaturedPOAPMaxAggregate {
   id: Int
   poapTokenId: String
   profileId: Int
-}
-
-input FeaturedPOAPOrderByWithRelationInput {
-  id: SortOrder
-  poapTokenId: SortOrder
-  profileId: SortOrder
-  profile: ProfileOrderByWithRelationInput
-}
-
-input FeaturedPOAPWhereUniqueInput {
-  id: Int
-  poapTokenId: String
-  poapTokenId_profileId: FeaturedPOAPPoapTokenIdProfileIdCompoundUniqueInput
-}
-
-input FeaturedPOAPPoapTokenIdProfileIdCompoundUniqueInput {
-  poapTokenId: String!
-  profileId: Int!
-}
-
-type FeaturedPOAP {
-  id: Int!
-  poapTokenId: String!
-  profileId: Int!
-  profile: Profile!
-}
-
-type Profile {
-  id: Int!
-  addressId: Int!
-  createdAt: DateTime!
-  updatedAt: DateTime!
-  bio: String
-  bannerImageUrl: String
-  name: String
-  profileImageUrl: String
-  githubHandle: String
-  twitterHandle: String
-  personalSiteUrl: String
-  isVisibleOnLeaderboard: Boolean!
-  _count: ProfileCount
-  address: Address!
-  featuredPOAPs(
-    where: FeaturedPOAPWhereInput
-    orderBy: [FeaturedPOAPOrderByWithRelationInput!]
-    cursor: FeaturedPOAPWhereUniqueInput
-    take: Int
-    skip: Int
-    distinct: [FeaturedPOAPScalarFieldEnum!]
-  ): [FeaturedPOAP!]!
-}
-
-type ProfileCount {
-  featuredPOAPs: Int!
-}
-
-enum FeaturedPOAPScalarFieldEnum {
-  id
-  poapTokenId
-  profileId
 }
 
 type FeaturedPOAPGroupBy {
@@ -2770,41 +3217,6 @@ input FeaturedPOAPScalarWhereWithAggregatesInput {
   id: IntWithAggregatesFilter
   poapTokenId: StringWithAggregatesFilter
   profileId: IntWithAggregatesFilter
-}
-
-input StringWithAggregatesFilter {
-  equals: String
-  in: [String!]
-  notIn: [String!]
-  lt: String
-  lte: String
-  gt: String
-  gte: String
-  contains: String
-  startsWith: String
-  endsWith: String
-  mode: QueryMode
-  not: NestedStringWithAggregatesFilter
-  _count: NestedIntFilter
-  _min: NestedStringFilter
-  _max: NestedStringFilter
-}
-
-input NestedStringWithAggregatesFilter {
-  equals: String
-  in: [String!]
-  notIn: [String!]
-  lt: String
-  lte: String
-  gt: String
-  gte: String
-  contains: String
-  startsWith: String
-  endsWith: String
-  not: NestedStringWithAggregatesFilter
-  _count: NestedIntFilter
-  _min: NestedStringFilter
-  _max: NestedStringFilter
 }
 
 type AggregateGitPOAP {
