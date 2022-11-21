@@ -1228,6 +1228,7 @@ input EventWhereInput {
   imageUrl: StringNullableFilter
   githubHandle: StringNullableFilter
   twitterHandle: StringNullableFilter
+  discordHandle: StringNullableFilter
   siteUrl: StringNullableFilter
   gitPOAPs: GitPOAPListRelationFilter
 }
@@ -1280,6 +1281,7 @@ input ProfileWhereInput {
   profileImageUrl: StringNullableFilter
   githubHandle: StringNullableFilter
   twitterHandle: StringNullableFilter
+  discordHandle: StringNullableFilter
   personalSiteUrl: StringNullableFilter
   isVisibleOnLeaderboard: BoolFilter
   featuredPOAPs: FeaturedPOAPListRelationFilter
@@ -1406,6 +1408,7 @@ input ProfileOrderByWithRelationInput {
   profileImageUrl: SortOrder
   githubHandle: SortOrder
   twitterHandle: SortOrder
+  discordHandle: SortOrder
   personalSiteUrl: SortOrder
   isVisibleOnLeaderboard: SortOrder
   featuredPOAPs: FeaturedPOAPOrderByRelationAggregateInput
@@ -2330,6 +2333,7 @@ type Event {
   imageUrl: String
   githubHandle: String
   twitterHandle: String
+  discordHandle: String
   siteUrl: String
   _count: EventCount
 }
@@ -4550,6 +4554,7 @@ type ProfileCountAggregate {
   profileImageUrl: Int!
   githubHandle: Int!
   twitterHandle: Int!
+  discordHandle: Int!
   personalSiteUrl: Int!
   isVisibleOnLeaderboard: Int!
   _all: Int!
@@ -4576,6 +4581,7 @@ type ProfileMinAggregate {
   profileImageUrl: String
   githubHandle: String
   twitterHandle: String
+  discordHandle: String
   personalSiteUrl: String
   isVisibleOnLeaderboard: Boolean
 }
@@ -4591,6 +4597,7 @@ type ProfileMaxAggregate {
   profileImageUrl: String
   githubHandle: String
   twitterHandle: String
+  discordHandle: String
   personalSiteUrl: String
   isVisibleOnLeaderboard: Boolean
 }
@@ -4611,6 +4618,7 @@ enum ProfileScalarFieldEnum {
   profileImageUrl
   githubHandle
   twitterHandle
+  discordHandle
   personalSiteUrl
   isVisibleOnLeaderboard
 }
@@ -4626,6 +4634,7 @@ type ProfileGroupBy {
   profileImageUrl: String
   githubHandle: String
   twitterHandle: String
+  discordHandle: String
   personalSiteUrl: String
   isVisibleOnLeaderboard: Boolean!
   _count: ProfileCountAggregate
@@ -4646,6 +4655,7 @@ input ProfileOrderByWithAggregationInput {
   profileImageUrl: SortOrder
   githubHandle: SortOrder
   twitterHandle: SortOrder
+  discordHandle: SortOrder
   personalSiteUrl: SortOrder
   isVisibleOnLeaderboard: SortOrder
   _count: ProfileCountOrderByAggregateInput
@@ -4666,6 +4676,7 @@ input ProfileCountOrderByAggregateInput {
   profileImageUrl: SortOrder
   githubHandle: SortOrder
   twitterHandle: SortOrder
+  discordHandle: SortOrder
   personalSiteUrl: SortOrder
   isVisibleOnLeaderboard: SortOrder
 }
@@ -4686,6 +4697,7 @@ input ProfileMaxOrderByAggregateInput {
   profileImageUrl: SortOrder
   githubHandle: SortOrder
   twitterHandle: SortOrder
+  discordHandle: SortOrder
   personalSiteUrl: SortOrder
   isVisibleOnLeaderboard: SortOrder
 }
@@ -4701,6 +4713,7 @@ input ProfileMinOrderByAggregateInput {
   profileImageUrl: SortOrder
   githubHandle: SortOrder
   twitterHandle: SortOrder
+  discordHandle: SortOrder
   personalSiteUrl: SortOrder
   isVisibleOnLeaderboard: SortOrder
 }
@@ -4724,6 +4737,7 @@ input ProfileScalarWhereWithAggregatesInput {
   profileImageUrl: StringNullableWithAggregatesFilter
   githubHandle: StringNullableWithAggregatesFilter
   twitterHandle: StringNullableWithAggregatesFilter
+  discordHandle: StringNullableWithAggregatesFilter
   personalSiteUrl: StringNullableWithAggregatesFilter
   isVisibleOnLeaderboard: BoolWithAggregatesFilter
 }
