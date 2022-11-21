@@ -65,6 +65,8 @@ const genAuthTokens = setupGenAuthTokens({
   ensAvatarImageUrl,
   githubId: null,
   githubHandle: null,
+  discordId: null,
+  discordHandle: null,
   emailId: null,
 });
 

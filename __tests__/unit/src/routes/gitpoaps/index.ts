@@ -57,6 +57,8 @@ function genAuthTokens(someAddress?: string) {
     null,
     null,
     null,
+    null,
+    null,
   );
 }
 
