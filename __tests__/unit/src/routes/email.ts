@@ -382,7 +382,6 @@ describe('POST /email/resend', () => {
       select: {
         emailAddress: true,
         isValidated: true,
-        tokenExpiresAt: true,
       },
     });
   });
@@ -393,7 +392,6 @@ describe('POST /email/resend', () => {
     contextMock.prisma.email.findUnique.mockResolvedValue({
       emailAddress: testEmailAddress,
       isValidated: true,
-      tokenExpiresAt: DateTime.now().minus({ hour: 4 }).toJSDate(),
     } as any);
 
     const authTokens = genAuthTokens();
@@ -412,37 +410,6 @@ describe('POST /email/resend', () => {
       select: {
         emailAddress: true,
         isValidated: true,
-        tokenExpiresAt: true,
-      },
-    });
-  });
-
-  it('returns EXPIRED if the email token has expired', async () => {
-    mockJwtWithAddress();
-
-    contextMock.prisma.email.findUnique.mockResolvedValue({
-      emailAddress: testEmailAddress,
-      isValidated: false,
-      tokenExpiresAt: DateTime.now().minus({ hour: 4 }).toJSDate(),
-    } as any);
-
-    const authTokens = genAuthTokens();
-
-    const result = await request(await setupApp())
-      .post('/email/resend')
-      .set('Authorization', `Bearer ${authTokens.accessToken}`)
-      .send();
-
-    expect(result.statusCode).toEqual(400);
-    expect(result.body.status).toEqual('EXPIRED');
-
-    expect(contextMock.prisma.email.findUnique).toHaveBeenCalledTimes(1);
-    expect(contextMock.prisma.email.findUnique).toHaveBeenCalledWith({
-      where: { addressId: addressRecord.id },
-      select: {
-        emailAddress: true,
-        isValidated: true,
-        tokenExpiresAt: true,
       },
     });
   });
@@ -453,9 +420,10 @@ describe('POST /email/resend', () => {
     contextMock.prisma.email.findUnique.mockResolvedValue({
       emailAddress: testEmailAddress,
       isValidated: false,
-      tokenExpiresAt: null,
     } as any);
-    contextMock.prisma.email.update.mockResolvedValue(null as any);
+    contextMock.prisma.email.update.mockImplementation(() => {
+      throw new Error('RecordNotFound');
+    });
 
     const authTokens = genAuthTokens();
 
@@ -473,7 +441,6 @@ describe('POST /email/resend', () => {
       select: {
         emailAddress: true,
         isValidated: true,
-        tokenExpiresAt: true,
       },
     });
 
@@ -493,12 +460,9 @@ describe('POST /email/resend', () => {
     contextMock.prisma.email.findUnique.mockResolvedValue({
       emailAddress: testEmailAddress,
       isValidated: false,
-      tokenExpiresAt: null,
     } as any);
     contextMock.prisma.email.update.mockResolvedValue({} as any);
-    mockedSendVerificationEmail.mockImplementation(() => {
-      throw new Error('Failed to send email');
-    });
+    mockedSendVerificationEmail.mockResolvedValue(null as any);
 
     const authTokens = genAuthTokens();
 
@@ -515,7 +479,6 @@ describe('POST /email/resend', () => {
       select: {
         emailAddress: true,
         isValidated: true,
-        tokenExpiresAt: true,
       },
     });
 
@@ -538,7 +501,6 @@ describe('POST /email/resend', () => {
     contextMock.prisma.email.findUnique.mockResolvedValue({
       emailAddress: testEmailAddress,
       isValidated: false,
-      tokenExpiresAt: null,
     } as any);
     contextMock.prisma.email.update.mockResolvedValue({} as any);
     mockedSendVerificationEmail.mockResolvedValue({} as any);
@@ -559,7 +521,6 @@ describe('POST /email/resend', () => {
       select: {
         emailAddress: true,
         isValidated: true,
-        tokenExpiresAt: true,
       },
     });
 
