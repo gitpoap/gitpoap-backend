@@ -35,15 +35,12 @@ model GithubUser {
 }
 
 model DiscordUser {
-  id                Int         @id @default(autoincrement())
-  discordId         String      @unique
-  discordHandle     String      @db.VarChar(255)
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
+  id                Int       @id @default(autoincrement())
+  discordId         String    @unique
+  discordHandle     String    @db.VarChar(255)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
   claims            Claim[]
-  // Hide discordUser.authTokens from generated resolvers
-  /// @TypeGraphQL.omit(output: true, input: true)
-  authTokens        AuthToken[]
   // Hide discordUser.discordOAuthToken from generated resolvers
   /// @TypeGraphQL.omit(output: true, input: true)
   discordOAuthToken String?
@@ -62,6 +59,7 @@ model Profile {
   profileImageUrl        String?        @db.VarChar(255)
   githubHandle           String?        @db.VarChar(255)
   twitterHandle          String?        @db.VarChar(255)
+  discordHandle          String?        @db.VarChar(255)
   personalSiteUrl        String?        @db.VarChar(255)
   isVisibleOnLeaderboard Boolean        @default(true)
   featuredPOAPs          FeaturedPOAP[]
@@ -275,14 +273,12 @@ model GitPOAPRequest {
 }
 
 model AuthToken {
-  id            Int          @id @default(autoincrement())
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
-  generation    Int          @default(0)
-  addressId     Int
-  address       Address      @relation(fields: [addressId], references: [id])
-  DiscordUser   DiscordUser? @relation(fields: [discordUserId], references: [id])
-  discordUserId Int?
+  id         Int      @id @default(autoincrement())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  generation Int      @default(0)
+  addressId  Int
+  address    Address  @relation(fields: [addressId], references: [id])
 }
 
 model FeaturedPOAP {
@@ -391,6 +387,7 @@ model Event {
   imageUrl      String?   @db.VarChar(255)
   githubHandle  String?   @db.VarChar(255)
   twitterHandle String?   @db.VarChar(255)
+  discordHandle String?   @db.VarChar(255)
   siteUrl       String?   @db.VarChar(255)
   gitPOAPs      GitPOAP[]
 }
