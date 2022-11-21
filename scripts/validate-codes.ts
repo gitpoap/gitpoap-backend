@@ -184,6 +184,10 @@ async function checkGitPOAPCodes(gitPOAPId: number) {
     if (!(redeemCode.code in codeUsageMap)) {
       logger.error(`RedeemCode ID ${redeemCode.id} not found via POAP API!`);
       ++notFound;
+
+      await context.prisma.redeemCode.delete({
+        where: { id: redeemCode.id },
+      });
     } else if (codeUsageMap[redeemCode.code]) {
       logger.error(`RedeemCode ID ${redeemCode.id} was already used!`);
       ++alreadyUsed;
