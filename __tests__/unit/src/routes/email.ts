@@ -167,7 +167,7 @@ describe('POST /email', () => {
   it('returns TAKEN if email is taken.', async () => {
     mockJwtWithAddress();
 
-    contextMock.prisma.email.findUnique.mockResolvedValue({
+    contextMock.prisma.email.findFirst.mockResolvedValue({
       id: 1,
       isValidated: true,
       tokenExpiresAt: DateTime.now().toJSDate(),
@@ -182,9 +182,9 @@ describe('POST /email', () => {
 
     expect(result.statusCode).toEqual(400);
 
-    expect(contextMock.prisma.email.findUnique).toHaveBeenCalledTimes(1);
-    expect(contextMock.prisma.email.findUnique).toHaveBeenCalledWith({
-      where: { emailAddress: testEmailAddress },
+    expect(contextMock.prisma.email.findFirst).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.email.findFirst).toHaveBeenCalledWith({
+      where: { emailAddress: { equals: testEmailAddress, mode: 'insensitive' } },
       select: {
         id: true,
         isValidated: true,
@@ -196,7 +196,7 @@ describe('POST /email', () => {
   it('returns TAKEN if email is pending.', async () => {
     mockJwtWithAddress();
 
-    contextMock.prisma.email.findUnique.mockResolvedValue({
+    contextMock.prisma.email.findFirst.mockResolvedValue({
       id: 1,
       isValidated: false,
       tokenExpiresAt: DateTime.now().plus({ hour: 4 }).toJSDate(),
@@ -211,9 +211,9 @@ describe('POST /email', () => {
 
     expect(result.statusCode).toEqual(400);
 
-    expect(contextMock.prisma.email.findUnique).toHaveBeenCalledTimes(1);
-    expect(contextMock.prisma.email.findUnique).toHaveBeenCalledWith({
-      where: { emailAddress: testEmailAddress },
+    expect(contextMock.prisma.email.findFirst).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.email.findFirst).toHaveBeenCalledWith({
+      where: { emailAddress: { equals: testEmailAddress, mode: 'insensitive' } },
       select: {
         id: true,
         isValidated: true,
@@ -225,7 +225,7 @@ describe('POST /email', () => {
   it('Returns 500 if the email upsert fails', async () => {
     mockJwtWithAddress();
 
-    contextMock.prisma.email.findUnique.mockResolvedValue({} as any);
+    contextMock.prisma.email.findFirst.mockResolvedValue({} as any);
     mockedUpsertUnverifiedEmail.mockResolvedValue(null);
 
     const authTokens = genAuthTokens();
@@ -238,9 +238,9 @@ describe('POST /email', () => {
     expect(result.statusCode).toEqual(500);
     expect(result.body).toEqual({ msg: 'Failed to setup email address' });
 
-    expect(contextMock.prisma.email.findUnique).toHaveBeenCalledTimes(1);
-    expect(contextMock.prisma.email.findUnique).toHaveBeenCalledWith({
-      where: { emailAddress: testEmailAddress },
+    expect(contextMock.prisma.email.findFirst).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.email.findFirst).toHaveBeenCalledWith({
+      where: { emailAddress: { equals: testEmailAddress, mode: 'insensitive' } },
       select: {
         id: true,
         isValidated: true,
@@ -260,7 +260,7 @@ describe('POST /email', () => {
   it('returns 500 if the verification email fails to send.', async () => {
     mockJwtWithAddress();
 
-    contextMock.prisma.email.findUnique.mockResolvedValue({} as any);
+    contextMock.prisma.email.findFirst.mockResolvedValue({} as any);
     mockedUpsertUnverifiedEmail.mockResolvedValue({} as any);
     mockedSendVerificationEmail.mockImplementation(() => {
       throw new Error('Failed to send email');
@@ -275,9 +275,9 @@ describe('POST /email', () => {
 
     expect(result.statusCode).toEqual(500);
 
-    expect(contextMock.prisma.email.findUnique).toHaveBeenCalledTimes(1);
-    expect(contextMock.prisma.email.findUnique).toHaveBeenCalledWith({
-      where: { emailAddress: testEmailAddress },
+    expect(contextMock.prisma.email.findFirst).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.email.findFirst).toHaveBeenCalledWith({
+      where: { emailAddress: { equals: testEmailAddress, mode: 'insensitive' } },
       select: {
         id: true,
         isValidated: true,
@@ -300,7 +300,7 @@ describe('POST /email', () => {
   it('successfully creates a new email record', async () => {
     mockJwtWithAddress();
 
-    contextMock.prisma.email.findUnique.mockResolvedValue({} as any);
+    contextMock.prisma.email.findFirst.mockResolvedValue({} as any);
     mockedUpsertUnverifiedEmail.mockResolvedValue({} as any);
     mockedSendVerificationEmail.mockResolvedValue({} as any);
 
@@ -313,9 +313,9 @@ describe('POST /email', () => {
 
     expect(result.statusCode).toEqual(200);
 
-    expect(contextMock.prisma.email.findUnique).toHaveBeenCalledTimes(1);
-    expect(contextMock.prisma.email.findUnique).toHaveBeenCalledWith({
-      where: { emailAddress: testEmailAddress },
+    expect(contextMock.prisma.email.findFirst).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.email.findFirst).toHaveBeenCalledWith({
+      where: { emailAddress: { equals: testEmailAddress, mode: 'insensitive' } },
       select: {
         id: true,
         isValidated: true,
