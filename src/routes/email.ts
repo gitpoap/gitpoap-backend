@@ -135,13 +135,12 @@ emailRouter.delete('/', jwtWithAddress(), async function (req, res) {
   });
 });
 
-emailRouter.post('/verify/:activeToken', jwtWithAddress(), async function (req, res) {
+emailRouter.post('/verify/:activeToken', async function (req, res) {
   const logger = getRequestLogger(req);
 
-  const { address: ethAddress, authTokenId } = getAccessTokenPayload(req.user);
   const activeToken = req.params.activeToken;
 
-  logger.info(`Received request from ${ethAddress} to verify token: ${activeToken}`);
+  logger.info(`Received request to verify token: ${activeToken}`);
 
   const email = await context.prisma.email.findUnique({
     where: { activeToken },
@@ -203,18 +202,7 @@ emailRouter.post('/verify/:activeToken', jwtWithAddress(), async function (req, 
     },
   });
 
-  const dbAuthToken = await updateAuthTokenGeneration(authTokenId);
+  logger.debug(`Completed request to verify token: ${activeToken}`);
 
-  const tokens = await generateAuthTokensWithChecks(
-    authTokenId,
-    dbAuthToken.generation,
-    dbAuthToken.address,
-  );
-
-  logger.debug(`Completed request from ${ethAddress} to verify token: ${activeToken}`);
-
-  return res.status(200).send({
-    msg: 'VALID',
-    tokens,
-  });
+  return res.status(200).send({ msg: 'VALID' });
 });
