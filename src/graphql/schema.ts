@@ -16,7 +16,6 @@ import {
   ProjectRelationsResolver,
   GitPOAPRequestRelationsResolver,
   AddressRelationsResolver,
-  EmailRelationsResolver,
   /* Auto-generated GitPOAP Resolvers */
   FindUniqueGitPOAPResolver,
   FindFirstGitPOAPResolver,
@@ -96,10 +95,6 @@ import {
   GroupByAddressResolver,
   AggregateAddressResolver,
   /* Auto-generated Email Resolvers */
-  FindUniqueEmailResolver,
-  FindFirstEmailResolver,
-  FindManyEmailResolver,
-  GroupByEmailResolver,
   AggregateEmailResolver,
 } from '@generated/type-graphql';
 import { CustomClaimResolver } from './resolvers/claims';
@@ -124,7 +119,6 @@ const allResolvers: NonEmptyArray<ResolverClass> = [
   ProjectRelationsResolver,
   GitPOAPRequestRelationsResolver,
   AddressRelationsResolver,
-  EmailRelationsResolver,
   /* Auto-generated GitPOAP READ Resolvers */
   FindUniqueGitPOAPResolver,
   FindFirstGitPOAPResolver,
@@ -204,10 +198,6 @@ const allResolvers: NonEmptyArray<ResolverClass> = [
   GroupByAddressResolver,
   AggregateAddressResolver,
   /* Auto-generated Email Resolvers */
-  FindUniqueEmailResolver,
-  FindFirstEmailResolver,
-  FindManyEmailResolver,
-  GroupByEmailResolver,
   AggregateEmailResolver,
   /* ~~ Custom resolvers ~~ */
   CustomClaimResolver,
