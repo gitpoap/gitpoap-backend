@@ -54,8 +54,8 @@ export async function upsertEmail(emailAddress: string): Promise<Email | null> {
   } catch (err) {
     logger.warn(`Caught exception while trying to upsert Email: ${err}`);
 
-    return await context.prisma.email.findFirst({
-      where: { emailAddress: { equals: emailAddressLower } },
+    return await context.prisma.email.findUnique({
+      where: { emailAddress: emailAddressLower },
     });
   }
 }
