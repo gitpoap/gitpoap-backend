@@ -107,7 +107,6 @@ emailRouter.post('/resend', jwtWithAddress(), async function (req, res) {
     select: {
       emailAddress: true,
       isValidated: true,
-      tokenExpiresAt: true,
     },
   });
 
@@ -118,7 +117,7 @@ emailRouter.post('/resend', jwtWithAddress(), async function (req, res) {
     return res.status(500).send({ status: 'INVALID' });
   }
 
-  const { emailAddress, isValidated, tokenExpiresAt } = email;
+  const { emailAddress, isValidated } = email;
 
   if (isValidated) {
     logger.warn(
@@ -127,28 +126,21 @@ emailRouter.post('/resend', jwtWithAddress(), async function (req, res) {
     return res.status(400).send({ status: 'VALIDATED' });
   }
 
-  if (tokenExpiresAt && DateTime.fromJSDate(tokenExpiresAt) < DateTime.now()) {
-    logger.warn(
-      'User attempted to resend a verification email for an emailAddress that has an expired token',
-    );
-    return res.status(400).send({ status: 'EXPIRED' });
-  }
-
   // Generate a new token
   const newActiveToken = await generateUniqueEmailToken();
 
   // Created expiration date 24hrs in advance
   const newTokenExpiresAt = DateTime.now().plus({ day: 1 }).toJSDate();
 
-  const result = await context.prisma.email.update({
-    where: { addressId },
-    data: {
-      activeToken: newActiveToken,
-      tokenExpiresAt: newTokenExpiresAt,
-    },
-  });
-
-  if (result === null) {
+  try {
+    await context.prisma.email.update({
+      where: { addressId },
+      data: {
+        activeToken: newActiveToken,
+        tokenExpiresAt: newTokenExpiresAt,
+      },
+    });
+  } catch (err) {
     logger.error(`Failed to update unverified Email "${emailAddress}" for Address ID ${addressId}`);
     return res.status(500).send({ msg: 'Failed to update email address' });
   }
