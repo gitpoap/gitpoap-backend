@@ -70,31 +70,6 @@ type Query {
     take: Int
     skip: Int
   ): AggregateEmail!
-  findFirstEmail(
-    where: EmailWhereInput
-    orderBy: [EmailOrderByWithRelationInput!]
-    cursor: EmailWhereUniqueInput
-    take: Int
-    skip: Int
-    distinct: [EmailScalarFieldEnum!]
-  ): Email
-  emails(
-    where: EmailWhereInput
-    orderBy: [EmailOrderByWithRelationInput!]
-    cursor: EmailWhereUniqueInput
-    take: Int
-    skip: Int
-    distinct: [EmailScalarFieldEnum!]
-  ): [Email!]!
-  email(where: EmailWhereUniqueInput!): Email
-  groupByEmail(
-    where: EmailWhereInput
-    orderBy: [EmailOrderByWithAggregationInput!]
-    by: [EmailScalarFieldEnum!]!
-    having: EmailScalarWhereWithAggregatesInput
-    take: Int
-    skip: Int
-  ): [EmailGroupBy!]!
   aggregateFeaturedPOAP(
     where: FeaturedPOAPWhereInput
     orderBy: [FeaturedPOAPOrderByWithRelationInput!]
@@ -1485,7 +1460,21 @@ type Email {
   updatedAt: DateTime!
   isValidated: Boolean!
   _count: EmailCount
-  address: Address
+}
+
+type EmailCount {
+  claims: Int!
+  createdGitPOAPs: Int!
+  createdGitPOAPRequests: Int!
+}
+
+type GithubUser {
+  id: Int!
+  githubId: Int!
+  githubHandle: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  _count: GithubUserCount
   claims(
     where: ClaimWhereInput
     orderBy: [ClaimOrderByWithRelationInput!]
@@ -1494,28 +1483,46 @@ type Email {
     skip: Int
     distinct: [ClaimScalarFieldEnum!]
   ): [Claim!]!
-  createdGitPOAPs(
-    where: GitPOAPWhereInput
-    orderBy: [GitPOAPOrderByWithRelationInput!]
-    cursor: GitPOAPWhereUniqueInput
+  githubPullRequests(
+    where: GithubPullRequestWhereInput
+    orderBy: [GithubPullRequestOrderByWithRelationInput!]
+    cursor: GithubPullRequestWhereUniqueInput
     take: Int
     skip: Int
-    distinct: [GitPOAPScalarFieldEnum!]
-  ): [GitPOAP!]!
-  createdGitPOAPRequests(
-    where: GitPOAPRequestWhereInput
-    orderBy: [GitPOAPRequestOrderByWithRelationInput!]
-    cursor: GitPOAPRequestWhereUniqueInput
+    distinct: [GithubPullRequestScalarFieldEnum!]
+  ): [GithubPullRequest!]!
+  githubIssues(
+    where: GithubIssueWhereInput
+    orderBy: [GithubIssueOrderByWithRelationInput!]
+    cursor: GithubIssueWhereUniqueInput
     take: Int
     skip: Int
-    distinct: [GitPOAPRequestScalarFieldEnum!]
-  ): [GitPOAPRequest!]!
+    distinct: [GithubIssueScalarFieldEnum!]
+  ): [GithubIssue!]!
+  githubMentions(
+    where: GithubMentionWhereInput
+    orderBy: [GithubMentionOrderByWithRelationInput!]
+    cursor: GithubMentionWhereUniqueInput
+    take: Int
+    skip: Int
+    distinct: [GithubMentionScalarFieldEnum!]
+  ): [GithubMention!]!
+  addresses(
+    where: AddressWhereInput
+    orderBy: [AddressOrderByWithRelationInput!]
+    cursor: AddressWhereUniqueInput
+    take: Int
+    skip: Int
+    distinct: [AddressScalarFieldEnum!]
+  ): [Address!]!
 }
 
-type EmailCount {
+type GithubUserCount {
   claims: Int!
-  createdGitPOAPs: Int!
-  createdGitPOAPRequests: Int!
+  githubPullRequests: Int!
+  githubIssues: Int!
+  githubMentions: Int!
+  addresses: Int!
 }
 
 type Claim {
@@ -2018,63 +2025,6 @@ type GithubPullRequestCount {
   githubMentions: Int!
 }
 
-type GithubUser {
-  id: Int!
-  githubId: Int!
-  githubHandle: String!
-  createdAt: DateTime!
-  updatedAt: DateTime!
-  _count: GithubUserCount
-  claims(
-    where: ClaimWhereInput
-    orderBy: [ClaimOrderByWithRelationInput!]
-    cursor: ClaimWhereUniqueInput
-    take: Int
-    skip: Int
-    distinct: [ClaimScalarFieldEnum!]
-  ): [Claim!]!
-  githubPullRequests(
-    where: GithubPullRequestWhereInput
-    orderBy: [GithubPullRequestOrderByWithRelationInput!]
-    cursor: GithubPullRequestWhereUniqueInput
-    take: Int
-    skip: Int
-    distinct: [GithubPullRequestScalarFieldEnum!]
-  ): [GithubPullRequest!]!
-  githubIssues(
-    where: GithubIssueWhereInput
-    orderBy: [GithubIssueOrderByWithRelationInput!]
-    cursor: GithubIssueWhereUniqueInput
-    take: Int
-    skip: Int
-    distinct: [GithubIssueScalarFieldEnum!]
-  ): [GithubIssue!]!
-  githubMentions(
-    where: GithubMentionWhereInput
-    orderBy: [GithubMentionOrderByWithRelationInput!]
-    cursor: GithubMentionWhereUniqueInput
-    take: Int
-    skip: Int
-    distinct: [GithubMentionScalarFieldEnum!]
-  ): [GithubMention!]!
-  addresses(
-    where: AddressWhereInput
-    orderBy: [AddressOrderByWithRelationInput!]
-    cursor: AddressWhereUniqueInput
-    take: Int
-    skip: Int
-    distinct: [AddressScalarFieldEnum!]
-  ): [Address!]!
-}
-
-type GithubUserCount {
-  claims: Int!
-  githubPullRequests: Int!
-  githubIssues: Int!
-  githubMentions: Int!
-  addresses: Int!
-}
-
 input ClaimOrderByWithRelationInput {
   id: SortOrder
   createdAt: SortOrder
@@ -2194,6 +2144,51 @@ enum ClaimScalarFieldEnum {
   needsRevalidation
 }
 
+type GithubMention {
+  id: Int!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  githubMentionedAt: DateTime!
+  repoId: Int!
+  githubUserId: Int!
+  pullRequestId: Int
+  issueId: Int
+  _count: GithubMentionCount
+}
+
+type GithubMentionCount {
+  claims: Int!
+}
+
+input GithubMentionWhereUniqueInput {
+  id: Int
+  repoId_githubUserId_pullRequestId: GithubMentionRepoIdGithubUserIdPullRequestIdCompoundUniqueInput
+  repoId_githubUserId_issueId: GithubMentionRepoIdGithubUserIdIssueIdCompoundUniqueInput
+}
+
+input GithubMentionRepoIdGithubUserIdPullRequestIdCompoundUniqueInput {
+  repoId: Int!
+  githubUserId: Int!
+  pullRequestId: Int!
+}
+
+input GithubMentionRepoIdGithubUserIdIssueIdCompoundUniqueInput {
+  repoId: Int!
+  githubUserId: Int!
+  issueId: Int!
+}
+
+enum GithubMentionScalarFieldEnum {
+  id
+  createdAt
+  updatedAt
+  githubMentionedAt
+  repoId
+  githubUserId
+  pullRequestId
+  issueId
+}
+
 input GithubPullRequestWhereUniqueInput {
   id: Int
   repoId_githubPullNumber: GithubPullRequestRepoIdGithubPullNumberCompoundUniqueInput
@@ -2256,61 +2251,6 @@ enum GithubIssueScalarFieldEnum {
   githubUserId
 }
 
-type GithubMention {
-  id: Int!
-  createdAt: DateTime!
-  updatedAt: DateTime!
-  githubMentionedAt: DateTime!
-  repoId: Int!
-  githubUserId: Int!
-  pullRequestId: Int
-  issueId: Int
-  _count: GithubMentionCount
-}
-
-type GithubMentionCount {
-  claims: Int!
-}
-
-input GithubMentionWhereUniqueInput {
-  id: Int
-  repoId_githubUserId_pullRequestId: GithubMentionRepoIdGithubUserIdPullRequestIdCompoundUniqueInput
-  repoId_githubUserId_issueId: GithubMentionRepoIdGithubUserIdIssueIdCompoundUniqueInput
-}
-
-input GithubMentionRepoIdGithubUserIdPullRequestIdCompoundUniqueInput {
-  repoId: Int!
-  githubUserId: Int!
-  pullRequestId: Int!
-}
-
-input GithubMentionRepoIdGithubUserIdIssueIdCompoundUniqueInput {
-  repoId: Int!
-  githubUserId: Int!
-  issueId: Int!
-}
-
-enum GithubMentionScalarFieldEnum {
-  id
-  createdAt
-  updatedAt
-  githubMentionedAt
-  repoId
-  githubUserId
-  pullRequestId
-  issueId
-}
-
-enum AddressScalarFieldEnum {
-  id
-  ethAddress
-  createdAt
-  updatedAt
-  githubUserId
-  ensAvatarImageUrl
-  ensName
-}
-
 type RedeemCode {
   id: Int!
   gitPOAPId: Int!
@@ -2359,6 +2299,16 @@ type Event {
 
 type EventCount {
   gitPOAPs: Int!
+}
+
+enum AddressScalarFieldEnum {
+  id
+  ethAddress
+  createdAt
+  updatedAt
+  githubUserId
+  ensAvatarImageUrl
+  ensName
 }
 
 type Profile {
@@ -3031,96 +2981,6 @@ input EmailWhereUniqueInput {
   id: Int
   emailAddress: String
   addressId: Int
-}
-
-enum EmailScalarFieldEnum {
-  id
-  emailAddress
-  addressId
-  createdAt
-  updatedAt
-  isValidated
-  activeToken
-  tokenExpiresAt
-}
-
-type EmailGroupBy {
-  id: Int!
-  emailAddress: String!
-  addressId: Int
-  createdAt: DateTime!
-  updatedAt: DateTime!
-  isValidated: Boolean!
-  activeToken: String
-  tokenExpiresAt: DateTime
-  _count: EmailCountAggregate
-  _avg: EmailAvgAggregate
-  _sum: EmailSumAggregate
-  _min: EmailMinAggregate
-  _max: EmailMaxAggregate
-}
-
-input EmailOrderByWithAggregationInput {
-  id: SortOrder
-  emailAddress: SortOrder
-  addressId: SortOrder
-  createdAt: SortOrder
-  updatedAt: SortOrder
-  isValidated: SortOrder
-  _count: EmailCountOrderByAggregateInput
-  _avg: EmailAvgOrderByAggregateInput
-  _max: EmailMaxOrderByAggregateInput
-  _min: EmailMinOrderByAggregateInput
-  _sum: EmailSumOrderByAggregateInput
-}
-
-input EmailCountOrderByAggregateInput {
-  id: SortOrder
-  emailAddress: SortOrder
-  addressId: SortOrder
-  createdAt: SortOrder
-  updatedAt: SortOrder
-  isValidated: SortOrder
-}
-
-input EmailAvgOrderByAggregateInput {
-  id: SortOrder
-  addressId: SortOrder
-}
-
-input EmailMaxOrderByAggregateInput {
-  id: SortOrder
-  emailAddress: SortOrder
-  addressId: SortOrder
-  createdAt: SortOrder
-  updatedAt: SortOrder
-  isValidated: SortOrder
-}
-
-input EmailMinOrderByAggregateInput {
-  id: SortOrder
-  emailAddress: SortOrder
-  addressId: SortOrder
-  createdAt: SortOrder
-  updatedAt: SortOrder
-  isValidated: SortOrder
-}
-
-input EmailSumOrderByAggregateInput {
-  id: SortOrder
-  addressId: SortOrder
-}
-
-input EmailScalarWhereWithAggregatesInput {
-  AND: [EmailScalarWhereWithAggregatesInput!]
-  OR: [EmailScalarWhereWithAggregatesInput!]
-  NOT: [EmailScalarWhereWithAggregatesInput!]
-  id: IntWithAggregatesFilter
-  emailAddress: StringWithAggregatesFilter
-  addressId: IntNullableWithAggregatesFilter
-  createdAt: DateTimeWithAggregatesFilter
-  updatedAt: DateTimeWithAggregatesFilter
-  isValidated: BoolWithAggregatesFilter
 }
 
 type AggregateFeaturedPOAP {
