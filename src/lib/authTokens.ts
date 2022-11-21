@@ -5,8 +5,10 @@ import { JWT_SECRET } from '../environment';
 import { AccessTokenPayload, RefreshTokenPayload, UserAuthTokens } from '../types/authTokens';
 import { createScopedLogger } from '../logging';
 import { isGithubTokenValidForUser } from '../external/github';
+import { isDiscordTokenValidForUser } from '../external/discord';
 import { removeGithubUsersGithubOAuthToken } from '../lib/githubUsers';
-import { removeGithubLoginForAddress } from '../lib/addresses';
+import { removeDiscordUsersDiscordOAuthToken } from '../lib/discordUsers';
+import { removeGithubLoginForAddress, removeDiscordLoginForAddress } from '../lib/addresses';
 
 async function createAuthToken(addressId: number) {
   return await context.prisma.authToken.create({
@@ -34,6 +36,14 @@ async function createAuthToken(addressId: number) {
               githubOAuthToken: true,
             },
           },
+          discordUser: {
+            select: {
+              id: true,
+              discordId: true,
+              discordHandle: true,
+              discordOAuthToken: true,
+            },
+          },
           email: {
             select: {
               id: true,
@@ -53,9 +63,21 @@ type CheckGithubUserType = {
   githubOAuthToken: string | null;
 };
 
+type CheckDiscordUserType = {
+  id: number;
+  discordId: string;
+  discordHandle: string;
+  discordOAuthToken: string | null;
+};
+
 type GithubTokenData = {
   githubId: number | null;
   githubHandle: string | null;
+};
+
+type DiscordTokenData = {
+  discordId: string | null;
+  discordHandle: string | null;
 };
 
 async function checkGithubTokenData(
@@ -90,6 +112,38 @@ async function checkGithubTokenData(
   };
 }
 
+async function checkDiscordTokenData(
+  addressId: number,
+  discordUser: CheckDiscordUserType | null,
+): Promise<DiscordTokenData> {
+  const logger = createScopedLogger('getTokenDataWithDiscordCheck');
+
+  if (discordUser === null) {
+    return {
+      discordId: null,
+      discordHandle: null,
+    };
+  }
+
+  if (await isDiscordTokenValidForUser(discordUser.discordOAuthToken, discordUser.discordId)) {
+    return {
+      discordId: discordUser.discordId,
+      discordHandle: discordUser.discordHandle,
+    };
+  }
+
+  logger.info(`Removing invalid Discord OAuth token for DiscordUser ID ${discordUser.id}`);
+
+  await removeDiscordUsersDiscordOAuthToken(discordUser.id);
+
+  await removeDiscordLoginForAddress(addressId);
+
+  return {
+    discordId: null,
+    discordHandle: null,
+  };
+}
+
 function generateAccessToken(payload: AccessTokenPayload): string {
   return sign(payload, JWT_SECRET, {
     expiresIn: JWT_EXP_TIME_SECONDS,
@@ -109,6 +163,8 @@ export function generateAuthTokens(
   ensAvatarImageUrl: string | null,
   githubId: number | null,
   githubHandle: string | null,
+  discordId: string | null,
+  discordHandle: string | null,
   emailId: number | null,
 ): UserAuthTokens {
   const accessTokenPayload: AccessTokenPayload = {
@@ -119,6 +175,8 @@ export function generateAuthTokens(
     ensAvatarImageUrl,
     githubId,
     githubHandle,
+    discordId,
+    discordHandle,
     emailId,
   };
   const refreshTokenPayload: RefreshTokenPayload = {
@@ -144,6 +202,7 @@ type CheckAddressType = {
   ensName: string | null;
   ensAvatarImageUrl: string | null;
   githubUser: CheckGithubUserType | null;
+  discordUser: CheckDiscordUserType | null;
   email: CheckEmailType | null;
 };
 
@@ -153,6 +212,7 @@ export async function generateAuthTokensWithChecks(
   address: CheckAddressType,
 ): Promise<UserAuthTokens> {
   const { githubId, githubHandle } = await checkGithubTokenData(address.id, address.githubUser);
+  const { discordId, discordHandle } = await checkDiscordTokenData(address.id, address.discordUser);
 
   let emailId: number | null = null;
   if (address.email !== null) {
@@ -168,6 +228,8 @@ export async function generateAuthTokensWithChecks(
     address.ensAvatarImageUrl,
     githubId,
     githubHandle,
+    discordId,
+    discordHandle,
     emailId,
   );
 }

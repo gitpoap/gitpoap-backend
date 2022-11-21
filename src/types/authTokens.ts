@@ -33,6 +33,8 @@ function isAccessTokenPayloadBase(payload: any): boolean {
 export type AccessTokenPayload = AccessTokenPayloadBase & {
   githubId: number | null;
   githubHandle: string | null;
+  discordId: string | null;
+  discordHandle: string | null;
   emailId: number | null;
 };
 
