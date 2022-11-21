@@ -43,18 +43,19 @@ export const generateUniqueEmailToken = async (
 
 export async function upsertEmail(emailAddress: string): Promise<Email | null> {
   const logger = createScopedLogger('upsertEmail');
+  const emailAddressLower = emailAddress.toLowerCase();
 
   try {
     return await context.prisma.email.upsert({
-      where: { emailAddress },
+      where: { emailAddress: emailAddressLower },
       update: {},
-      create: { emailAddress },
+      create: { emailAddress: emailAddressLower },
     });
   } catch (err) {
     logger.warn(`Caught exception while trying to upsert Email: ${err}`);
 
-    return await context.prisma.email.findUnique({
-      where: { emailAddress },
+    return await context.prisma.email.findFirst({
+      where: { emailAddress: { equals: emailAddressLower, mode: 'insensitive' } },
     });
   }
 }
@@ -66,10 +67,11 @@ export async function upsertUnverifiedEmail(
   addressId: number,
 ): Promise<Email | null> {
   const logger = createScopedLogger('upsertUnverifiedEmail');
+  const emailAddressLower = emailAddress.toLowerCase();
 
   try {
     return await context.prisma.email.upsert({
-      where: { emailAddress },
+      where: { emailAddress: emailAddressLower },
       update: {
         address: {
           connect: { id: addressId },
@@ -81,7 +83,7 @@ export async function upsertUnverifiedEmail(
         address: {
           connect: { id: addressId },
         },
-        emailAddress,
+        emailAddress: emailAddressLower,
         activeToken,
         tokenExpiresAt,
       },
@@ -95,7 +97,7 @@ export async function upsertUnverifiedEmail(
   try {
     // Attempt to update the record (which we now assume to exist)
     return await context.prisma.email.update({
-      where: { emailAddress },
+      where: { emailAddress: emailAddressLower },
       data: {
         address: {
           connect: { id: addressId },
