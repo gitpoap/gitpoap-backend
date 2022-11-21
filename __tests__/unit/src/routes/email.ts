@@ -184,7 +184,7 @@ describe('POST /email', () => {
 
     expect(contextMock.prisma.email.findFirst).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.email.findFirst).toHaveBeenCalledWith({
-      where: { emailAddress: { equals: testEmailAddress.toLowerCase(), mode: 'insensitive' } },
+      where: { emailAddress: { equals: testEmailAddress.toLowerCase() } },
       select: {
         id: true,
         isValidated: true,
@@ -213,7 +213,7 @@ describe('POST /email', () => {
 
     expect(contextMock.prisma.email.findFirst).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.email.findFirst).toHaveBeenCalledWith({
-      where: { emailAddress: { equals: testEmailAddress.toLowerCase(), mode: 'insensitive' } },
+      where: { emailAddress: { equals: testEmailAddress.toLowerCase() } },
       select: {
         id: true,
         isValidated: true,
@@ -240,7 +240,7 @@ describe('POST /email', () => {
 
     expect(contextMock.prisma.email.findFirst).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.email.findFirst).toHaveBeenCalledWith({
-      where: { emailAddress: { equals: testEmailAddress.toLowerCase(), mode: 'insensitive' } },
+      where: { emailAddress: { equals: testEmailAddress.toLowerCase() } },
       select: {
         id: true,
         isValidated: true,
@@ -277,7 +277,7 @@ describe('POST /email', () => {
 
     expect(contextMock.prisma.email.findFirst).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.email.findFirst).toHaveBeenCalledWith({
-      where: { emailAddress: { equals: testEmailAddress.toLowerCase(), mode: 'insensitive' } },
+      where: { emailAddress: { equals: testEmailAddress.toLowerCase() } },
       select: {
         id: true,
         isValidated: true,
@@ -318,7 +318,7 @@ describe('POST /email', () => {
 
     expect(contextMock.prisma.email.findFirst).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.email.findFirst).toHaveBeenCalledWith({
-      where: { emailAddress: { equals: testEmailAddress.toLowerCase(), mode: 'insensitive' } },
+      where: { emailAddress: { equals: testEmailAddress.toLowerCase() } },
       select: {
         id: true,
         isValidated: true,
