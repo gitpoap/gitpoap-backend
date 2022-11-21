@@ -54,12 +54,12 @@ export async function requestDiscordOAuthToken(code: string) {
 }
 
 /** -- External Functions -- **/
-export async function getDiscordCurrentUserInfo(discordToken: DiscordOAuthToken) {
+export async function getDiscordCurrentUserInfo(discordToken: string) {
   const logger = createScopedLogger('getDiscordCurrentUserInfo');
 
   const userResult = await fetch(`${DISCORD_URL}/api/users/@me`, {
     headers: {
-      authorization: `${discordToken.token_type} ${discordToken.access_token}`,
+      authorization: discordToken,
     },
   });
 
@@ -72,4 +72,15 @@ export async function getDiscordCurrentUserInfo(discordToken: DiscordOAuthToken)
   }
 
   return userInfoJson;
+}
+
+/* -- Token Utils -- */
+export async function isDiscordTokenValidForUser(discordToken: string | null, discordId: string) {
+  if (discordToken === null) {
+    return false;
+  }
+
+  const discordUser = await getDiscordCurrentUserInfo(discordToken);
+
+  return discordUser !== null && discordUser.id === discordId;
 }
