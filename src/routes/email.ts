@@ -47,12 +47,12 @@ emailRouter.post('/', jwtWithAddress(), async function (req, res) {
   }
 
   const { address: ethAddress, addressId } = getAccessTokenPayload(req.user);
-  const { emailAddress } = req.body;
+  const { emailAddress } = schemaResult.data;
 
   logger.info(`Request from ${ethAddress} to connect email: ${emailAddress}`);
 
-  const email = await context.prisma.email.findUnique({
-    where: { emailAddress },
+  const email = await context.prisma.email.findFirst({
+    where: { emailAddress: { equals: emailAddress, mode: 'insensitive' } },
     select: {
       id: true,
       isValidated: true,
