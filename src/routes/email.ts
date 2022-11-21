@@ -52,7 +52,7 @@ emailRouter.post('/', jwtWithAddress(), async function (req, res) {
   logger.info(`Request from ${ethAddress} to connect email: ${emailAddress}`);
 
   const email = await context.prisma.email.findFirst({
-    where: { emailAddress: { equals: emailAddress, mode: 'insensitive' } },
+    where: { emailAddress: { equals: emailAddress.toLowerCase(), mode: 'insensitive' } },
     select: {
       id: true,
       isValidated: true,

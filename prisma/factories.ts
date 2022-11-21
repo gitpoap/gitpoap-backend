@@ -455,7 +455,7 @@ export class EmailFactory {
     tokenExpiresAt?: Date,
   ): Promise<Email> => {
     const data: Prisma.EmailCreateInput = {
-      emailAddress,
+      emailAddress: emailAddress.toLowerCase(),
       activeToken,
       address,
       isValidated,

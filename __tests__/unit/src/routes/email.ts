@@ -32,7 +32,7 @@ const address = '0x206e554084BEeC98e08043397be63C5132Cc01A1';
 const ensName = 'gitpoap.eth';
 const ensAvatarImageUrl = null;
 
-const testEmailAddress = 'test@gitpoap.io';
+const testEmailAddress = 'tEst@gitpoap.io';
 const testActiveToken = '1q2w3e4r5t6y7u8i9o0p';
 
 const addressRecord = {
@@ -184,7 +184,7 @@ describe('POST /email', () => {
 
     expect(contextMock.prisma.email.findFirst).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.email.findFirst).toHaveBeenCalledWith({
-      where: { emailAddress: { equals: testEmailAddress, mode: 'insensitive' } },
+      where: { emailAddress: { equals: testEmailAddress.toLowerCase(), mode: 'insensitive' } },
       select: {
         id: true,
         isValidated: true,
@@ -213,7 +213,7 @@ describe('POST /email', () => {
 
     expect(contextMock.prisma.email.findFirst).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.email.findFirst).toHaveBeenCalledWith({
-      where: { emailAddress: { equals: testEmailAddress, mode: 'insensitive' } },
+      where: { emailAddress: { equals: testEmailAddress.toLowerCase(), mode: 'insensitive' } },
       select: {
         id: true,
         isValidated: true,
@@ -240,7 +240,7 @@ describe('POST /email', () => {
 
     expect(contextMock.prisma.email.findFirst).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.email.findFirst).toHaveBeenCalledWith({
-      where: { emailAddress: { equals: testEmailAddress, mode: 'insensitive' } },
+      where: { emailAddress: { equals: testEmailAddress.toLowerCase(), mode: 'insensitive' } },
       select: {
         id: true,
         isValidated: true,
@@ -277,7 +277,7 @@ describe('POST /email', () => {
 
     expect(contextMock.prisma.email.findFirst).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.email.findFirst).toHaveBeenCalledWith({
-      where: { emailAddress: { equals: testEmailAddress, mode: 'insensitive' } },
+      where: { emailAddress: { equals: testEmailAddress.toLowerCase(), mode: 'insensitive' } },
       select: {
         id: true,
         isValidated: true,
@@ -304,6 +304,9 @@ describe('POST /email', () => {
     mockedUpsertUnverifiedEmail.mockResolvedValue({} as any);
     mockedSendVerificationEmail.mockResolvedValue({} as any);
 
+    /* IMPORTANT: Base assertion that the testEmailAddress isn't all lower case */
+    expect(testEmailAddress.toLowerCase()).not.toEqual(testEmailAddress);
+
     const authTokens = genAuthTokens();
 
     const result = await request(await setupApp())
@@ -315,7 +318,7 @@ describe('POST /email', () => {
 
     expect(contextMock.prisma.email.findFirst).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.email.findFirst).toHaveBeenCalledWith({
-      where: { emailAddress: { equals: testEmailAddress, mode: 'insensitive' } },
+      where: { emailAddress: { equals: testEmailAddress.toLowerCase(), mode: 'insensitive' } },
       select: {
         id: true,
         isValidated: true,
