@@ -38,6 +38,12 @@ export function jwtWithAddress() {
                   githubHandle: true,
                 },
               },
+              discordUser: {
+                select: {
+                  discordId: true,
+                  discordHandle: true,
+                },
+              },
               email: {
                 select: {
                   id: true,
@@ -63,6 +69,8 @@ export function jwtWithAddress() {
       set(req, 'user.ensAvatarImageUrl', tokenInfo.address.ensAvatarImageUrl);
       set(req, 'user.githubId', tokenInfo.address.githubUser?.githubId ?? null);
       set(req, 'user.githubHandle', tokenInfo.address.githubUser?.githubHandle ?? null);
+      set(req, 'user.discordId', tokenInfo.address.discordUser?.discordId ?? null);
+      set(req, 'user.discordHandle', tokenInfo.address.discordUser?.discordHandle ?? null);
       set(req, 'user.emailId', emailId);
 
       next();

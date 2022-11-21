@@ -11,14 +11,8 @@ import {
   removeDiscordLoginForAddress,
 } from '../../../../../src/lib/addresses';
 import { upsertDiscordUser } from '../../../../../src/lib/discordUsers';
-import { generateAuthTokens } from '../../../../../src/lib/authTokens';
-import { verify } from 'jsonwebtoken';
-import { JWT_SECRET } from '../../../../../src/environment';
-import {
-  UserAuthTokens,
-  getAccessTokenPayload,
-  getRefreshTokenPayload,
-} from '../../../../../src/types/authTokens';
+import { generateAuthTokensWithChecks } from '../../../../../src/lib/authTokens';
+import { setupGenAuthTokens } from '../../../../../__mocks__/src/lib/authTokens';
 
 jest.mock('../../../../../src/logging');
 jest.mock('../../../../../src/external/discord');
@@ -30,6 +24,7 @@ const mockedGetDiscordCurrentUserInfo = jest.mocked(getDiscordCurrentUserInfo, t
 const mockedUpsertDiscordUser = jest.mocked(upsertDiscordUser, true);
 const mockedAddDiscordLoginForAddress = jest.mocked(addDiscordLoginForAddress, true);
 const mockedRemoveDiscordLoginForAddress = jest.mocked(removeDiscordLoginForAddress, true);
+const mockedGenerateAuthTokensWithChecks = jest.mocked(generateAuthTokensWithChecks, true);
 
 const authTokenId = 995;
 const authTokenGeneration = 42;
@@ -38,11 +33,8 @@ const address = '0xbArF00';
 const ensName = null;
 const ensAvatarImageUrl = null;
 const code = '243lkjlkjdfs';
-const discordToken = {
-  token_type: 'Bear',
-  access_token: 'fooajldkfjlskj32f',
-};
-const discordId = 2342;
+const discordToken = 'Bear fooajldkfjlskj32f';
+const discordId = '2342';
 const discordHandle = 'snoop-doggy-dog';
 const discordUserId = 342444;
 
@@ -53,20 +45,21 @@ function mockJwtWithAddress() {
   } as any);
 }
 
-function genAuthTokens(hasDiscord = false) {
-  return generateAuthTokens(
-    authTokenId,
-    authTokenGeneration,
-    addressId,
-    address,
-    ensName,
-    ensAvatarImageUrl,
-    hasDiscord ? discordId : null,
-    hasDiscord ? discordHandle : null,
-  );
-}
+const genAuthTokens = setupGenAuthTokens({
+  authTokenId,
+  generation: authTokenGeneration,
+  addressId,
+  address,
+  ensName,
+  ensAvatarImageUrl,
+  githubId: null,
+  githubHandle: null,
+  discordId,
+  discordHandle,
+  emailId: null,
+});
 
-describe('POST /discord', () => {
+describe('POST /oauth/discord', () => {
   it('Fails with no access token provided', async () => {
     const result = await request(await setupApp())
       .post('/oauth/discord')
@@ -133,11 +126,17 @@ describe('POST /discord', () => {
       id: discordId,
       username: discordHandle,
     } as any);
-    mockedUpsertDiscordUser.mockResolvedValue({ id: discordUserId } as any);
+    const fakeDiscordUser = { id: discordUserId };
+    mockedUpsertDiscordUser.mockResolvedValue(fakeDiscordUser as any);
+    const nextGeneration = authTokenGeneration + 1;
+    const fakeAddress = { is: 'fake' };
     contextMock.prisma.authToken.update.mockResolvedValue({
-      generation: authTokenGeneration,
+      generation: nextGeneration,
+      address: fakeAddress,
     } as any);
     mockedAddDiscordLoginForAddress.mockResolvedValue(undefined);
+    const fakeAuthTokens = { accessToken: 'foo', refreshToken: 'bar' };
+    mockedGenerateAuthTokensWithChecks.mockResolvedValue(fakeAuthTokens);
 
     const authTokens = genAuthTokens();
 
@@ -147,26 +146,7 @@ describe('POST /discord', () => {
       .send({ code });
 
     expect(result.statusCode).toEqual(200);
-
-    const { accessToken, refreshToken } = <UserAuthTokens>JSON.parse(result.text);
-
-    expect(getAccessTokenPayload(verify(accessToken, JWT_SECRET))).toEqual(
-      expect.objectContaining({
-        authTokenId,
-        addressId,
-        address,
-        ensName,
-        ensAvatarImageUrl,
-      }),
-    );
-
-    expect(getRefreshTokenPayload(verify(refreshToken, JWT_SECRET))).toEqual(
-      expect.objectContaining({
-        authTokenId,
-        addressId,
-        generation: authTokenGeneration,
-      }),
-    );
+    expect(result.body).toEqual(fakeAuthTokens);
 
     expect(mockedRequestDiscordOAuthToken).toHaveBeenCalledTimes(1);
     expect(mockedRequestDiscordOAuthToken).toHaveBeenCalledWith(code);
@@ -175,11 +155,7 @@ describe('POST /discord', () => {
     expect(mockedGetDiscordCurrentUserInfo).toHaveBeenCalledWith(discordToken);
 
     expect(mockedUpsertDiscordUser).toHaveBeenCalledTimes(1);
-    expect(mockedUpsertDiscordUser).toHaveBeenCalledWith(
-      discordId,
-      discordHandle,
-      discordToken.access_token,
-    );
+    expect(mockedUpsertDiscordUser).toHaveBeenCalledWith(discordId, discordHandle, discordToken);
 
     expect(mockedAddDiscordLoginForAddress).toHaveBeenCalledTimes(1);
     expect(mockedAddDiscordLoginForAddress).toHaveBeenCalledWith(addressId, discordUserId);
@@ -189,14 +165,35 @@ describe('POST /discord', () => {
       where: { id: authTokenId },
       data: {
         generation: { increment: 1 },
-        discordUser: { connect: { id: discordUserId } },
       },
-      select: { generation: true },
+      select: {
+        generation: true,
+        address: {
+          select: {
+            ensName: true,
+            ensAvatarImageUrl: true,
+            email: {
+              select: {
+                id: true,
+                isValidated: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    expect(generateAuthTokensWithChecks).toHaveBeenCalledTimes(1);
+    expect(generateAuthTokensWithChecks).toHaveBeenCalledWith(authTokenId, nextGeneration, {
+      ...fakeAddress,
+      id: addressId,
+      ethAddress: address,
+      githubUser: fakeDiscordUser,
     });
   });
 });
 
-describe('DELETE /discord', () => {
+describe('DELETE /oauth/discord', () => {
   it('Fails with no access token provided', async () => {
     const result = await request(await setupApp()).delete('/oauth/discord');
 
@@ -211,32 +208,94 @@ describe('DELETE /discord', () => {
     expect(result.statusCode).toEqual(400);
   });
 
-  it('Succeeds if discord user is connected to the address', async () => {
-    contextMock.prisma.authToken.findUnique.mockResolvedValue({
-      id: authTokenId,
-      address: { ensName, ensAvatarImageUrl },
-      discordUser: { id: discordUserId },
-    } as any);
-    mockedRemoveDiscordLoginForAddress.mockResolvedValue(undefined);
-
-    const authTokens = genAuthTokens(true);
-
-    const result = await request(await setupApp())
-      .delete('/oauth/discord')
-      .set('Authorization', `Bearer ${authTokens.accessToken}`);
-
-    expect(result.statusCode).toEqual(200);
-
+  const expectAuthTokenFindUnique = () => {
     expect(contextMock.prisma.authToken.findUnique).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.authToken.findUnique).toHaveBeenCalledWith({
       where: { id: authTokenId },
       select: {
         id: true,
         address: {
-          select: { ensName: true, ensAvatarImageUrl: true },
+          select: {
+            ensName: true,
+            ensAvatarImageUrl: true,
+            githubUser: {
+              select: {
+                githubId: true,
+                githubHandle: true,
+              },
+            },
+            discordUser: {
+              select: {
+                discordId: true,
+                discordHandle: true,
+              },
+            },
+            email: {
+              select: {
+                id: true,
+                isValidated: true,
+              },
+            },
+          },
         },
       },
     });
+  };
+  it('Fails if no Discord user is connected to the address', async () => {
+    contextMock.prisma.authToken.findUnique.mockResolvedValue({
+      id: authTokenId,
+      address: {
+        ensName,
+        ensAvatarImageUrl,
+        email: null,
+        discordUser: null,
+      },
+    } as any);
+
+    const authTokens = genAuthTokens({ hasDiscord: false });
+
+    const result = await request(await setupApp())
+      .delete('/oauth/discord')
+      .set('Authorization', `Bearer ${authTokens.accessToken}`);
+
+    expect(result.statusCode).toEqual(400);
+
+    expectAuthTokenFindUnique();
+  });
+
+  it('Succeeds if discord user is connected to the address', async () => {
+    contextMock.prisma.authToken.findUnique.mockResolvedValue({
+      id: authTokenId,
+      address: {
+        ensName,
+        ensAvatarImageUrl,
+        email: null,
+        discordUser: {
+          id: discordUserId,
+          discordId,
+          discordHandle,
+        },
+      },
+    } as any);
+    const nextGeneration = authTokenGeneration + 1;
+    const fakeAddress = { wow: 'so fake' };
+    contextMock.prisma.authToken.update.mockResolvedValue({
+      generation: nextGeneration,
+      address: fakeAddress,
+    } as any);
+    const fakeAuthTokens = { accessToken: 'yeet', refreshToken: 'yolo' };
+    mockedGenerateAuthTokensWithChecks.mockResolvedValue(fakeAuthTokens);
+
+    const authTokens = genAuthTokens({ hasDiscord: true });
+
+    const result = await request(await setupApp())
+      .delete('/oauth/discord')
+      .set('Authorization', `Bearer ${authTokens.accessToken}`);
+
+    expect(result.statusCode).toEqual(200);
+    expect(result.body).toEqual(fakeAuthTokens);
+
+    expectAuthTokenFindUnique();
 
     /* Expect that the token is updated to remove the user */
     expect(contextMock.prisma.authToken.update).toHaveBeenCalledTimes(1);
@@ -244,12 +303,33 @@ describe('DELETE /discord', () => {
       where: { id: authTokenId },
       data: {
         generation: { increment: 1 },
-        discordUser: { disconnect: true },
       },
-      select: { generation: true },
+      select: {
+        generation: true,
+        address: {
+          select: {
+            ensName: true,
+            ensAvatarImageUrl: true,
+            email: {
+              select: {
+                id: true,
+                isValidated: true,
+              },
+            },
+          },
+        },
+      },
     });
 
     expect(mockedRemoveDiscordLoginForAddress).toHaveBeenCalledTimes(1);
     expect(mockedRemoveDiscordLoginForAddress).toHaveBeenCalledWith(addressId);
+
+    expect(mockedGenerateAuthTokensWithChecks).toHaveBeenCalledTimes(1);
+    expect(mockedGenerateAuthTokensWithChecks).toHaveBeenCalledWith(authTokenId, nextGeneration, {
+      ...fakeAddress,
+      id: addressId,
+      ethAddress: address,
+      discordUser: null,
+    });
   });
 });

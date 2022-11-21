@@ -58,10 +58,12 @@ const genAuthTokens = setupGenAuthTokens({
   ensAvatarImageUrl,
   githubId,
   githubHandle,
+  discordHandle: null,
+  discordId: null,
   emailId: null,
 });
 
-describe('POST /github', () => {
+describe('POST /oauth/github', () => {
   it('Fails with no access token provided', async () => {
     const result = await request(await setupApp())
       .post('/oauth/github')
@@ -191,11 +193,12 @@ describe('POST /github', () => {
       id: addressId,
       ethAddress: address,
       githubUser: fakeGithubUser,
+      discordUser: null,
     });
   });
 });
 
-describe('DELETE /github', () => {
+describe('DELETE /oauth/github', () => {
   it('Fails with no access token provided', async () => {
     const result = await request(await setupApp()).delete('/oauth/github');
 
@@ -224,6 +227,12 @@ describe('DELETE /github', () => {
               select: {
                 githubId: true,
                 githubHandle: true,
+              },
+            },
+            discordUser: {
+              select: {
+                discordId: true,
+                discordHandle: true,
               },
             },
             email: {
@@ -327,6 +336,7 @@ describe('DELETE /github', () => {
       id: addressId,
       ethAddress: address,
       githubUser: null,
+      discordUser: null,
     });
   });
 });

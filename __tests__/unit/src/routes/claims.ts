@@ -99,6 +99,8 @@ const ensName = null;
 const ensAvatarImageUrl = null;
 const githubId = 3333;
 const githubHandle = 'burzadillo';
+const discordId = '7777';
+const discordHandle = 'test#2324';
 const emailId = 2342;
 const redeemCodeId = 942;
 const redeemCode = '4433';
@@ -131,6 +133,8 @@ function genAuthTokens(someAddress?: string) {
     ensAvatarImageUrl,
     githubId,
     githubHandle,
+    discordId,
+    discordHandle,
     emailId,
   );
 }
