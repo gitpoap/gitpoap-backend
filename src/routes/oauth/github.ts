@@ -96,6 +96,7 @@ githubRouter.post('/', jwtWithAddress(), async function (req, res) {
     id: addressId,
     ethAddress,
     githubUser,
+    discordUser: null,
   });
 
   logger.debug(`Completed a GitHub login request for address ${ethAddress}`);
@@ -156,6 +157,7 @@ githubRouter.delete('/', jwtWithAddress(), async function (req, res) {
     id: addressId,
     ethAddress,
     githubUser: null,
+    discordUser: null,
   });
 
   logger.debug(`Completed Github disconnect request for address ${ethAddress}`);
