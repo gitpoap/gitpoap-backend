@@ -270,6 +270,14 @@ export async function updateAuthTokenGeneration(authTokenId: number) {
               githubOAuthToken: true,
             },
           },
+          discordUser: {
+            select: {
+              id: true,
+              discordId: true,
+              discordHandle: true,
+              discordOAuthToken: true,
+            },
+          },
           email: {
             select: {
               id: true,

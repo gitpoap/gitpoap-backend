@@ -2,7 +2,12 @@ import '../../../../__mocks__/src/logging';
 import { generateAuthTokensWithChecks } from '../../../../src/lib/authTokens';
 import { isGithubTokenValidForUser } from '../../../../src/external/github';
 import { removeGithubUsersGithubOAuthToken } from '../../../../src/lib/githubUsers';
-import { removeGithubLoginForAddress } from '../../../../src/lib/addresses';
+import { isDiscordTokenValidForUser } from '../../../../src/external/discord';
+import { removeDiscordUsersDiscordOAuthToken } from '../../../../src/lib/discordUsers';
+import {
+  removeGithubLoginForAddress,
+  removeDiscordLoginForAddress,
+} from '../../../../src/lib/addresses';
 import {
   UserAuthTokens,
   getAccessTokenPayload,
@@ -22,6 +27,12 @@ const mockedRemoveGithubUsersGithubOAuthToken = jest.mocked(
   true,
 );
 const mockedRemoveGithubLoginForAddress = jest.mocked(removeGithubLoginForAddress, true);
+const mockedIsDiscordTokenValidForUser = jest.mocked(isDiscordTokenValidForUser, true);
+const mockedRemoveDiscordUsersDiscordOAuthToken = jest.mocked(
+  removeDiscordUsersDiscordOAuthToken,
+  true,
+);
+const mockedRemoveDiscordLoginForAddress = jest.mocked(removeDiscordLoginForAddress, true);
 
 const authTokenId = 43848;
 const addressId = 44;
@@ -33,6 +44,10 @@ const githubUserId = 5;
 const githubId = 6433;
 const githubHandle = 'yohohoho';
 const githubOAuthToken = 'lksjdflkjslajflsdkjflkjaslkdjflkajjjjjj444';
+const discordUserId = 7;
+const discordId = '4555';
+const discordHandle = 'test#2343';
+const discordOAuthToken = 'Bearer lksjdflkjslajflsdkjflkjaslkdjflkajjjjjj7777';
 const emailId = 6748;
 
 describe('generateAuthTokensWithChecks', () => {
@@ -40,6 +55,8 @@ describe('generateAuthTokensWithChecks', () => {
     { accessToken, refreshToken }: UserAuthTokens,
     expectedGithubId: number | null = null,
     expectedGithubHandle: string | null = null,
+    expectedDiscordId: string | null = null,
+    expectedDiscordHandle: string | null = null,
     expectedEmailId: number | null = null,
   ) => {
     expect(getAccessTokenPayload(verify(accessToken, JWT_SECRET))).toEqual(
@@ -51,6 +68,8 @@ describe('generateAuthTokensWithChecks', () => {
         ensAvatarImageUrl,
         githubId: expectedGithubId,
         githubHandle: expectedGithubHandle,
+        discordId: expectedDiscordId,
+        discordHandle: expectedDiscordHandle,
         emailId: expectedEmailId,
       }),
     );
@@ -67,6 +86,7 @@ describe('generateAuthTokensWithChecks', () => {
       ensName,
       ensAvatarImageUrl,
       githubUser: null,
+      discordUser: null,
       email: null,
     });
 
@@ -89,6 +109,7 @@ describe('generateAuthTokensWithChecks', () => {
         githubHandle,
         githubOAuthToken,
       },
+      discordUser: null,
       email: null,
     });
 
@@ -118,6 +139,7 @@ describe('generateAuthTokensWithChecks', () => {
         githubHandle,
         githubOAuthToken,
       },
+      discordUser: null,
       email: null,
     });
 
@@ -130,6 +152,79 @@ describe('generateAuthTokensWithChecks', () => {
     expect(mockedRemoveGithubLoginForAddress).toHaveBeenCalledTimes(0);
   });
 
+  it("Doesn't return Discord login info if they weren't logged in", async () => {
+    const tokens = await generateAuthTokensWithChecks(authTokenId, generation, {
+      id: addressId,
+      ethAddress,
+      ensName,
+      ensAvatarImageUrl,
+      githubUser: null,
+      discordUser: null,
+      email: null,
+    });
+
+    validatePayloads(tokens);
+
+    expect(mockedIsGithubTokenValidForUser).toHaveBeenCalledTimes(0);
+  });
+
+  it('Removes Discord logins when they are invalid', async () => {
+    mockedIsDiscordTokenValidForUser.mockResolvedValue(false);
+
+    const tokens = await generateAuthTokensWithChecks(authTokenId, generation, {
+      id: addressId,
+      ethAddress,
+      ensName,
+      ensAvatarImageUrl,
+      githubUser: null,
+      discordUser: {
+        id: discordUserId,
+        discordId,
+        discordHandle,
+        discordOAuthToken,
+      },
+      email: null,
+    });
+
+    validatePayloads(tokens);
+
+    expect(mockedIsDiscordTokenValidForUser).toHaveBeenCalledTimes(1);
+    expect(mockedIsDiscordTokenValidForUser).toHaveBeenCalledWith(discordOAuthToken, discordId);
+
+    expect(mockedRemoveDiscordUsersDiscordOAuthToken).toHaveBeenCalledTimes(1);
+    expect(mockedRemoveDiscordUsersDiscordOAuthToken).toHaveBeenCalledWith(discordUserId);
+
+    expect(mockedRemoveDiscordLoginForAddress).toHaveBeenCalledTimes(1);
+    expect(mockedRemoveDiscordLoginForAddress).toHaveBeenCalledWith(addressId);
+  });
+
+  it('Keeps Discord logins when they are valid', async () => {
+    mockedIsDiscordTokenValidForUser.mockResolvedValue(true);
+
+    const tokens = await generateAuthTokensWithChecks(authTokenId, generation, {
+      id: addressId,
+      ethAddress,
+      ensName,
+      ensAvatarImageUrl,
+      githubUser: null,
+      discordUser: {
+        id: discordUserId,
+        discordId,
+        discordHandle,
+        discordOAuthToken,
+      },
+      email: null,
+    });
+
+    validatePayloads(tokens, null, null, discordId, discordHandle);
+
+    expect(mockedIsDiscordTokenValidForUser).toHaveBeenCalledTimes(1);
+    expect(mockedIsDiscordTokenValidForUser).toHaveBeenCalledWith(discordOAuthToken, discordId);
+
+    expect(mockedRemoveDiscordUsersDiscordOAuthToken).toHaveBeenCalledTimes(0);
+    expect(mockedRemoveDiscordLoginForAddress).toHaveBeenCalledTimes(0);
+  });
+
   it('Removes emailIds when they are not validated', async () => {
     const tokens = await generateAuthTokensWithChecks(authTokenId, generation, {
       id: addressId,
@@ -137,6 +232,7 @@ describe('generateAuthTokensWithChecks', () => {
       ensName,
       ensAvatarImageUrl,
       githubUser: null,
+      discordUser: null,
       email: {
         id: emailId,
         isValidated: false,
@@ -155,13 +251,14 @@ describe('generateAuthTokensWithChecks', () => {
       ensName,
       ensAvatarImageUrl,
       githubUser: null,
+      discordUser: null,
       email: {
         id: emailId,
         isValidated: true,
       },
     });
 
-    validatePayloads(tokens, null, null, emailId);
+    validatePayloads(tokens, null, null, null, null, emailId);
 
     expect(mockedIsGithubTokenValidForUser).toHaveBeenCalledTimes(0);
   });

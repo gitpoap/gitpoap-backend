@@ -52,7 +52,13 @@ function mockJwtWithOAuth() {
   } as any);
 }
 
-function genAuthTokens(someAddress?: string, someGithubId?: number, someGithubHandle?: string) {
+function genAuthTokens(
+  someAddress?: string,
+  someGithubId?: number,
+  someGithubHandle?: string,
+  someDiscordId?: string,
+  someDiscordHandle?: string,
+) {
   return generateAuthTokens(
     authTokenId,
     authTokenGeneration,
@@ -62,6 +68,8 @@ function genAuthTokens(someAddress?: string, someGithubId?: number, someGithubHa
     ensAvatarImageUrl,
     someGithubId ?? null,
     someGithubHandle ?? null,
+    someDiscordId ?? null,
+    someDiscordHandle ?? null,
     null,
   );
 }

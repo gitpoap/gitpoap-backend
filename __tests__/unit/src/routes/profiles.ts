@@ -50,6 +50,8 @@ function genAuthTokens() {
     null,
     null,
     null,
+    null,
+    null,
   );
 }
 
