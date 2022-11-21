@@ -106,7 +106,7 @@ export class CustomClaimResolver {
     const emailAddress = addressRecord.email?.emailAddress ?? null;
     if (emailAddress !== null) {
       possibleMatches.push({
-        email: { emailAddress: { equals: emailAddress, mode: 'insensitive' } },
+        email: { emailAddress: { equals: emailAddress.toLowerCase() } },
       });
     }
 
