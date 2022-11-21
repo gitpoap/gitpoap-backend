@@ -85,13 +85,17 @@ async function lookupEmailAddress(
 }
 
 /** -- Use-case specific slack messages -- **/
-export const sendInternalClaimMessage = async (claims: FoundClaim[], ethAddress: string) => {
+export const sendInternalClaimMessage = async (
+  claims: FoundClaim[],
+  ethAddress: string,
+  ensName: string | null,
+) => {
   const logger = createScopedLogger('sendInternalClaimMessage');
 
   const profileLink = `<${GITPOAP_URL}/p/${ethAddress}|GitPOAP Profile>`;
-  const etherscanLink = `<https://etherscan.io/address/${ethAddress}|${shortenAddress(
-    ethAddress,
-  )}>`;
+  const etherscanLink = `<https://etherscan.io/address/${ethAddress}|${
+    ensName === null ? shortenAddress(ethAddress) : ensName
+  }>`;
 
   let msg = `💸 [${profileLink}]: Address ${etherscanLink} claimed new GitPOAP(s)! 🥳`;
 

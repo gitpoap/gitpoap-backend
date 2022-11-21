@@ -1058,6 +1058,7 @@ describe('POST /claims', () => {
         },
       ],
       address,
+      ensName,
     );
 
     expect(mockedRunClaimsPostProcessing).toHaveBeenCalledTimes(1);
@@ -1144,6 +1145,7 @@ describe('POST /claims', () => {
         },
       ],
       address,
+      ensName,
     );
 
     expect(mockedRunClaimsPostProcessing).toHaveBeenCalledTimes(1);

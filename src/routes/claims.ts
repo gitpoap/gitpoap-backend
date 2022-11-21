@@ -42,7 +42,13 @@ claimsRouter.post('/', jwtWithAddress(), async function (req, res) {
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
-  const { addressId, address: ethAddress, emailId, githubId } = getAccessTokenPayload(req.user);
+  const {
+    addressId,
+    address: ethAddress,
+    ensName,
+    emailId,
+    githubId,
+  } = getAccessTokenPayload(req.user);
   const { claimIds } = schemaResult.data;
 
   logger.info(`Request claiming IDs ${claimIds} for address ${ethAddress}`);
@@ -192,7 +198,7 @@ claimsRouter.post('/', jwtWithAddress(), async function (req, res) {
     }
   }
 
-  void sendInternalClaimMessage(foundClaims, ethAddress);
+  void sendInternalClaimMessage(foundClaims, ethAddress, ensName);
 
   logger.debug(`Completed request claiming IDs ${claimIds} for address ${ethAddress}`);
 
