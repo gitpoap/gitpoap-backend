@@ -49,7 +49,12 @@ jest.mock('multer', () =>
 
 const mockedUploadMulterFile = jest.mocked(uploadMulterFile, true);
 
-function genAuthTokens(someGithubId?: number, githubHandle?: string) {
+function genAuthTokens(
+  someGithubId?: number,
+  githubHandle?: string,
+  someDiscordId?: string,
+  discordHandle?: string,
+) {
   return generateAuthTokens(
     authTokenId,
     authTokenGeneration,
@@ -59,6 +64,8 @@ function genAuthTokens(someGithubId?: number, githubHandle?: string) {
     ensAvatarImageUrl,
     someGithubId ?? null,
     githubHandle ?? null,
+    someDiscordId ?? null,
+    discordHandle ?? null,
     null,
   );
 }

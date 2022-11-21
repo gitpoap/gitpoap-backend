@@ -5,6 +5,7 @@ import { JWT_EXP_TIME_SECONDS } from '../../../src/constants';
 
 type GenAuthTokensExtras = {
   hasGithub?: boolean;
+  hasDiscord?: boolean;
   hasEmail?: boolean;
 };
 
@@ -17,6 +18,8 @@ type SetupGenAuthTokensArgs = {
   ensAvatarImageUrl: string | null;
   githubId: number | null;
   githubHandle: string | null;
+  discordId: string | null;
+  discordHandle: string | null;
   emailId: number | null;
 };
 
@@ -29,6 +32,8 @@ export function setupGenAuthTokens({
   ensAvatarImageUrl,
   githubId,
   githubHandle,
+  discordId,
+  discordHandle,
   emailId,
 }: SetupGenAuthTokensArgs) {
   const refreshTokenPayload: RefreshTokenPayload = {
@@ -46,6 +51,8 @@ export function setupGenAuthTokens({
       ensAvatarImageUrl,
       githubId: extras?.hasGithub ? githubId : null,
       githubHandle: extras?.hasGithub ? githubHandle : null,
+      discordId: extras?.hasDiscord ? discordId : null,
+      discordHandle: extras?.hasDiscord ? discordHandle : null,
       emailId: extras?.hasEmail ? emailId : null,
     };
 
