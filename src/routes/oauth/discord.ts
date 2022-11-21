@@ -5,11 +5,11 @@ import {
   getDiscordCurrentUserInfo,
   DiscordOAuthToken,
 } from '../../external/discord';
-import { generateAuthTokens } from '../../lib/authTokens';
 import { jwtWithAddress } from '../../middleware/auth';
 import { RequestAccessTokenSchema } from '../../schemas/discord';
 import { getAccessTokenPayload } from '../../types/authTokens';
 import { upsertDiscordUser } from '../../lib/discordUsers';
+import { generateAuthTokensWithChecks } from '../../lib/authTokens';
 import { addDiscordLoginForAddress, removeDiscordLoginForAddress } from '../../lib/addresses';
 import { getRequestLogger } from '../../middleware/loggingAndTiming';
 
@@ -26,16 +26,15 @@ discordRouter.post('/', jwtWithAddress(), async function (req, res) {
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
-  const { authTokenId, addressId, address, ensName, ensAvatarImageUrl } = getAccessTokenPayload(
-    req.user,
-  );
+  const { authTokenId, addressId, address: ethAddress } = getAccessTokenPayload(req.user);
   const { code } = schemaResult.data;
 
-  logger.info(`Received a Discord login request from address ${address}`);
+  logger.info(`Received a Discord login request from address ${ethAddress}`);
 
-  let discordToken: DiscordOAuthToken;
+  let discordToken: string;
   try {
-    discordToken = await requestDiscordOAuthToken(code);
+    const token: DiscordOAuthToken = await requestDiscordOAuthToken(code);
+    discordToken = `${token.token_type} ${token.access_token}`;
   } catch (err) {
     logger.warn(`Failed to request OAuth token with code: ${err}`);
     return res.status(400).send({
@@ -52,56 +51,54 @@ discordRouter.post('/', jwtWithAddress(), async function (req, res) {
   }
 
   // Update User with new OAuth token
-  const discordUser = await upsertDiscordUser(
-    discordInfo.id,
-    discordInfo.username,
-    discordToken.access_token,
-  );
+  const discordUser = await upsertDiscordUser(discordInfo.id, discordInfo.username, discordToken);
 
   /* Add the discord login to the address record */
   await addDiscordLoginForAddress(addressId, discordUser.id);
 
   // Update the generation of the AuthToken (this should exist
   // since it was looked up within the middleware)
-  let newGeneration: number;
+  let dbAuthToken;
   try {
-    newGeneration = (
-      await context.prisma.authToken.update({
-        where: {
-          id: authTokenId,
-        },
-        data: {
-          generation: { increment: 1 },
-          discordUser: {
-            connect: {
-              id: discordUser.id,
+    dbAuthToken = await context.prisma.authToken.update({
+      where: {
+        id: authTokenId,
+      },
+      data: {
+        generation: { increment: 1 },
+      },
+      select: {
+        generation: true,
+        address: {
+          select: {
+            ensName: true,
+            ensAvatarImageUrl: true,
+            email: {
+              select: {
+                id: true,
+                isValidated: true,
+              },
             },
           },
         },
-        select: {
-          generation: true,
-        },
-      })
-    ).generation;
+      },
+    });
   } catch (err) {
     logger.warn(
       `DiscordUser ID ${discordUser.id}'s AuthToken was invalidated during Discord login process`,
     );
     return res.status(401).send({ msg: 'Not logged in with address' });
   }
-  // NOTE; we will need discordId and discordHandle into token if we need those in the future
-  const userAuthTokens = generateAuthTokens(
-    authTokenId,
-    newGeneration,
-    addressId,
-    address,
-    ensName,
-    ensAvatarImageUrl,
-    null,
-    null,
-  );
 
-  logger.debug(`Completed a Discord login request for address ${address}`);
+  const userAuthTokens = await generateAuthTokensWithChecks(authTokenId, dbAuthToken.generation, {
+    ...dbAuthToken.address,
+    id: addressId,
+    ethAddress,
+    githubUser: null,
+    discordUser,
+  });
+
+  logger.debug(`Completed a Discord login request for address ${ethAddress}`);
 
   return res.status(200).send(userAuthTokens);
 });
@@ -110,11 +107,9 @@ discordRouter.post('/', jwtWithAddress(), async function (req, res) {
 discordRouter.delete('/', jwtWithAddress(), async function (req, res) {
   const logger = getRequestLogger(req);
 
-  const { authTokenId, addressId, address, ensName, ensAvatarImageUrl } = getAccessTokenPayload(
-    req.user,
-  );
+  const { authTokenId, addressId, address: ethAddress } = getAccessTokenPayload(req.user);
 
-  logger.info(`Received a Discord disconnect request from address ${address}`);
+  logger.info(`Received a Discord disconnect request from address ${ethAddress}`);
 
   /* Remove the Discord login from the address record */
   await removeDiscordLoginForAddress(addressId);
@@ -125,23 +120,33 @@ discordRouter.delete('/', jwtWithAddress(), async function (req, res) {
     where: { id: authTokenId },
     data: {
       generation: { increment: 1 },
-      discordUser: { disconnect: true },
     },
-    select: { generation: true },
+    select: {
+      generation: true,
+      address: {
+        select: {
+          ensName: true,
+          ensAvatarImageUrl: true,
+          email: {
+            select: {
+              id: true,
+              isValidated: true,
+            },
+          },
+        },
+      },
+    },
   });
 
-  const userAuthTokens = generateAuthTokens(
-    authTokenId,
-    dbAuthToken.generation,
-    addressId,
-    address,
-    ensName,
-    ensAvatarImageUrl,
-    null,
-    null,
-  );
+  const userAuthTokens = await generateAuthTokensWithChecks(authTokenId, dbAuthToken.generation, {
+    ...dbAuthToken.address,
+    id: addressId,
+    ethAddress,
+    githubUser: null,
+    discordUser: null,
+  });
 
-  logger.debug(`Completed Discord disconnect request for address ${address}`);
+  logger.debug(`Completed Discord disconnect request for address ${ethAddress}`);
 
   return res.status(200).send(userAuthTokens);
 });
