@@ -17,7 +17,7 @@ import {
   createProjectWithGithubRepoIds,
   getOrCreateProjectWithGithubRepoId,
 } from '../../lib/projects';
-import { upsertCode } from '../../lib/codes';
+import { upsertRedeemCode } from '../../lib/codes';
 import { generatePOAPSecret } from '../../lib/secrets';
 import { customGitPOAPsRouter } from './custom';
 import { isAddressAnAdmin } from '../../lib/admins';
@@ -269,7 +269,7 @@ gitPOAPsRouter.post(
     }
 
     for (const code of codes) {
-      await upsertCode(gitPOAPId, code);
+      await upsertRedeemCode(gitPOAPId, code);
     }
 
     // Move the GitPOAP (back) into the APPROVED state

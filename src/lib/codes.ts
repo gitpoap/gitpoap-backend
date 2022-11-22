@@ -1,14 +1,20 @@
 import { context } from '../context';
-import { GitPOAPType, Email, GitPOAPRequest } from '@prisma/client';
-import { GitPOAPStatus, RedeemCode, Organization, Address } from '@generated/type-graphql';
+import {
+  Email,
+  GitPOAPRequest,
+  GitPOAPStatus,
+  GitPOAPType,
+  Organization,
+  RedeemCode,
+} from '@prisma/client';
 import { createScopedLogger } from '../logging';
-import { retrieveUnusedPOAPCodes } from '../external/poap';
+import { retrieveClaimInfo, retrieveUnusedPOAPCodes } from '../external/poap';
 import { DateTime } from 'luxon';
 import { lookupLastRun, updateLastRun } from './batchProcessing';
 import { backloadGithubPullRequestData } from './pullRequests';
 import { GitPOAPRequestEmailForm } from '../types/gitpoaps';
 import { sendGitPOAPRequestLiveEmail } from '../external/postmark';
-import { formatDateToString } from '../../src/routes/gitpoaps/utils';
+import { formatDateToString } from '../routes/gitpoaps/utils';
 
 // The name of the row in the BatchTiming table used for checking for new codes
 const CHECK_FOR_CODES_BATCH_TIMING_KEY = 'check-for-codes';
@@ -16,7 +22,7 @@ const CHECK_FOR_CODES_BATCH_TIMING_KEY = 'check-for-codes';
 // The amount of minutes to wait before checking for new codes
 const CHECK_FOR_CODES_DELAY_MINUTES = 30;
 
-export async function upsertCode(gitPOAPId: number, code: string): Promise<RedeemCode> {
+export async function upsertRedeemCode(gitPOAPId: number, code: string): Promise<RedeemCode> {
   return await context.prisma.redeemCode.upsert({
     where: {
       gitPOAPId_code: {
@@ -36,26 +42,11 @@ export async function upsertCode(gitPOAPId: number, code: string): Promise<Redee
   });
 }
 
-async function countCodes(gitPOAPId: number): Promise<number> {
+async function countRedeemCodes(gitPOAPId: number): Promise<number> {
   return await context.prisma.redeemCode.count({
     where: { gitPOAPId },
   });
 }
-
-export type GitPOAPWithSecret = {
-  id: number;
-  poapApprovalStatus: string;
-  poapEventId: number;
-  poapSecret: string;
-  type: GitPOAPType;
-  name: string;
-  description: string;
-  organization: Organization | null;
-  creatorAddress: Address | null;
-  imageUrl: string;
-  creatorEmail: Email | null;
-  gitPOAPRequest: GitPOAPRequest | null;
-};
 
 async function lookupRepoIds(gitPOAPId: number): Promise<number[]> {
   const logger = createScopedLogger('backloadRepoData');
@@ -89,38 +80,40 @@ async function lookupRepoIds(gitPOAPId: number): Promise<number[]> {
   return gitPOAPRepoData.project.repos.map(r => r.id);
 }
 
-export async function checkGitPOAPForNewCodes(gitPOAP: GitPOAPWithSecret): Promise<number[]> {
-  const logger = createScopedLogger('checkGitPOAPForNewCodes');
+type CheckGitPOAPForCodesType = {
+  id: number;
+  poapApprovalStatus: GitPOAPStatus;
+  poapEventId: number;
+  poapSecret: string;
+};
+
+async function checkGitPOAPForNewCodesHelper(gitPOAP: CheckGitPOAPForCodesType) {
+  const logger = createScopedLogger('checkGitPOAPForNewCodesHelper');
 
   logger.info(
     `Checking GitPOAP ID ${gitPOAP.id} with status ${gitPOAP.poapApprovalStatus} for new codes`,
   );
 
-  const startingCount = await countCodes(gitPOAP.id);
+  const startingCount = await countRedeemCodes(gitPOAP.id);
 
   logger.info(`GitPOAP ID currently has ${startingCount} codes`);
 
   const unusedCodes = await retrieveUnusedPOAPCodes(gitPOAP.poapEventId, gitPOAP.poapSecret);
   if (unusedCodes === null) {
     logger.warn(`Failed to retrieve unused codes from POAP API for GitPOAP ID ${gitPOAP.id}`);
-    return [];
+    return { startingCount, endingCount: startingCount };
   }
 
   logger.debug(`Received ${unusedCodes.length} unused codes from POAP API`);
 
   for (const code of unusedCodes) {
-    await upsertCode(gitPOAP.id, code);
+    await upsertRedeemCode(gitPOAP.id, code);
   }
 
-  const endingCount = await countCodes(gitPOAP.id);
+  const endingCount = await countRedeemCodes(gitPOAP.id);
 
-  if (endingCount <= startingCount) {
-    logger.info(`GitPOAP ID ${gitPOAP.id} is still awaiting codes`);
-  } else {
-    logger.info(
-      `Received at least ${endingCount - startingCount} new codes for GitPOAP ID ${gitPOAP.id}`,
-    );
-
+  if (startingCount < endingCount) {
+    // Move the GitPOAP back into APPROVED state
     await context.prisma.gitPOAP.update({
       where: {
         id: gitPOAP.id,
@@ -129,6 +122,41 @@ export async function checkGitPOAPForNewCodes(gitPOAP: GitPOAPWithSecret): Promi
         poapApprovalStatus: GitPOAPStatus.APPROVED,
       },
     });
+  }
+
+  return { startingCount, endingCount };
+}
+
+export type CheckGitPOAPForCodesWithExtrasType = CheckGitPOAPForCodesType & {
+  type: GitPOAPType;
+  name: string;
+  description: string;
+  organization: Organization | null;
+  creatorAddress: {
+    email: { emailAddress: string } | null;
+  } | null;
+  imageUrl: string;
+  creatorEmail: Email | null;
+  gitPOAPRequest: GitPOAPRequest | null;
+};
+
+export async function checkGitPOAPForNewCodesWithApprovalEmail(
+  gitPOAP: CheckGitPOAPForCodesWithExtrasType,
+): Promise<number[]> {
+  const logger = createScopedLogger('checkGitPOAPForNewCodesWithEmail');
+
+  logger.info(
+    `Checking GitPOAP ID ${gitPOAP.id} with status ${gitPOAP.poapApprovalStatus} for new codes`,
+  );
+
+  const { startingCount, endingCount } = await checkGitPOAPForNewCodesHelper(gitPOAP);
+
+  if (endingCount <= startingCount) {
+    logger.info(`GitPOAP ID ${gitPOAP.id} is still awaiting codes`);
+  } else {
+    logger.info(
+      `Received at least ${endingCount - startingCount} new codes for GitPOAP ID ${gitPOAP.id}`,
+    );
 
     // If we just got the first codes for a GitPOAP, we need to backload
     // its repos so that claims are created
@@ -187,7 +215,15 @@ export async function checkForNewPOAPCodes() {
       type: true,
       description: true,
       organization: true,
-      creatorAddress: true,
+      creatorAddress: {
+        select: {
+          email: {
+            select: {
+              emailAddress: true,
+            },
+          },
+        },
+      },
       imageUrl: true,
       creatorEmail: true,
       gitPOAPRequest: true,
@@ -199,7 +235,7 @@ export async function checkForNewPOAPCodes() {
   const repoIds = new Set<number>();
 
   for (const gitPOAP of gitPOAPsAwaitingCodes) {
-    (await checkGitPOAPForNewCodes(gitPOAP)).forEach(r => repoIds.add(r));
+    (await checkGitPOAPForNewCodesWithApprovalEmail(gitPOAP)).forEach(r => repoIds.add(r));
   }
 
   // Backload any new repoIds
@@ -241,4 +277,65 @@ export async function tryToCheckForNewPOAPCodes() {
   } catch (err) {
     logger.error(`Failed to check for new POAP codes: ${err}`);
   }
+}
+
+async function chooseRedeemCode(gitPOAPId: number) {
+  return await context.prisma.redeemCode.findFirst({
+    where: { gitPOAPId },
+  });
+}
+
+async function deleteRedeemCode(redeemCodeId: number) {
+  await context.prisma.redeemCode.delete({
+    where: { id: redeemCodeId },
+  });
+}
+
+async function isRedeemCodeUsed(redeemCode: RedeemCode): Promise<boolean> {
+  const logger = createScopedLogger('isCodeUsed');
+
+  const poapResponse = await retrieveClaimInfo(redeemCode.code);
+
+  if (poapResponse === null) {
+    logger.error(`RedeemCode ID ${redeemCode} was not found via POAP API`);
+
+    return true;
+  }
+
+  return poapResponse.claimed;
+}
+
+export async function chooseUnusedRedeemCode(
+  gitPOAP: CheckGitPOAPForCodesType,
+): Promise<RedeemCode | null> {
+  const logger = createScopedLogger('chooseUnusedRedeemCode');
+
+  const redeemCode = await chooseRedeemCode(gitPOAP.id);
+
+  if (redeemCode === null) {
+    logger.error(`GitPOAP ID ${gitPOAP.id} doesn't have any more claim codes`);
+  } else if (await isRedeemCodeUsed(redeemCode)) {
+    logger.error(`GitPOAP ID ${gitPOAP.id} has a used RedeemCode ID ${redeemCode.id}. Deleting it`);
+
+    try {
+      await deleteRedeemCode(redeemCode.id);
+    } catch (err) {
+      logger.error(`Tried to delete a RedeemCode that was already deleted: ${err}`);
+    }
+  } else {
+    // This RedeemCode hasn't been used
+    return redeemCode;
+  }
+
+  const { startingCount, endingCount } = await checkGitPOAPForNewCodesHelper(gitPOAP);
+
+  if (startingCount >= endingCount) {
+    logger.error(
+      `Checking for new claim codes for GitPOAP ID ${gitPOAP.id} didn't return any new codes`,
+    );
+
+    return null;
+  }
+
+  return await chooseRedeemCode(gitPOAP.id);
 }

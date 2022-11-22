@@ -6,7 +6,7 @@ import { createScopedLogger, updateLogLevel } from '../src/logging';
 import minimist from 'minimist';
 import { context } from '../src/context';
 import { GitPOAPStatus } from '@prisma/client';
-import { checkGitPOAPForNewCodes } from '../src/lib/codes';
+import { checkGitPOAPForNewCodesWithApprovalEmail } from '../src/lib/codes';
 
 async function forceCheckForNewCodes() {
   const logger = createScopedLogger('forceCheckForNewCodes');
@@ -24,7 +24,15 @@ async function forceCheckForNewCodes() {
       type: true,
       description: true,
       organization: true,
-      creatorAddress: true,
+      creatorAddress: {
+        select: {
+          email: {
+            select: {
+              emailAddress: true,
+            },
+          },
+        },
+      },
       imageUrl: true,
       creatorEmail: true,
       gitPOAPRequest: true,
@@ -34,7 +42,7 @@ async function forceCheckForNewCodes() {
   logger.info(`Force-running check for new codes for ${gitPOAPs.length} GitPOAPs`);
 
   for (const gitPOAP of gitPOAPs) {
-    await checkGitPOAPForNewCodes(gitPOAP);
+    await checkGitPOAPForNewCodesWithApprovalEmail(gitPOAP);
   }
 }
 
