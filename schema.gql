@@ -507,6 +507,7 @@ type AddressCountAggregate {
   createdAt: Int!
   updatedAt: Int!
   githubUserId: Int!
+  discordUserId: Int!
   ensAvatarImageUrl: Int!
   ensName: Int!
   _all: Int!
@@ -515,11 +516,13 @@ type AddressCountAggregate {
 type AddressAvgAggregate {
   id: Float
   githubUserId: Float
+  discordUserId: Float
 }
 
 type AddressSumAggregate {
   id: Int
   githubUserId: Int
+  discordUserId: Int
 }
 
 type AddressMinAggregate {
@@ -528,6 +531,7 @@ type AddressMinAggregate {
   createdAt: DateTime
   updatedAt: DateTime
   githubUserId: Int
+  discordUserId: Int
   ensAvatarImageUrl: String
   ensName: String
 }
@@ -541,6 +545,7 @@ type AddressMaxAggregate {
   createdAt: DateTime
   updatedAt: DateTime
   githubUserId: Int
+  discordUserId: Int
   ensAvatarImageUrl: String
   ensName: String
 }
@@ -556,6 +561,8 @@ input AddressWhereInput {
   updatedAt: DateTimeFilter
   githubUserId: IntNullableFilter
   githubUser: GithubUserRelationFilter
+  discordUserId: IntNullableFilter
+  discordUser: DiscordUserRelationFilter
   ensAvatarImageUrl: StringNullableFilter
   ensName: StringNullableFilter
   memberships: OrganizationMembershipListRelationFilter
@@ -718,6 +725,8 @@ input ClaimWhereInput {
   email: EmailRelationFilter
   issuedAddressId: IntNullableFilter
   issuedAddress: AddressRelationFilter
+  discordUserId: IntNullableFilter
+  discordUser: DiscordUserRelationFilter
   pullRequestEarnedId: IntNullableFilter
   pullRequestEarned: GithubPullRequestRelationFilter
   mentionEarnedId: IntNullableFilter
@@ -1238,11 +1247,6 @@ input GitPOAPRequestRelationFilter {
   isNot: GitPOAPRequestWhereInput
 }
 
-input GithubMentionRelationFilter {
-  is: GithubMentionWhereInput
-  isNot: GithubMentionWhereInput
-}
-
 input DiscordUserRelationFilter {
   is: DiscordUserWhereInput
   isNot: DiscordUserWhereInput
@@ -1259,6 +1263,11 @@ input DiscordUserWhereInput {
   updatedAt: DateTimeFilter
   claims: ClaimListRelationFilter
   addresses: AddressListRelationFilter
+}
+
+input GithubMentionRelationFilter {
+  is: GithubMentionWhereInput
+  isNot: GithubMentionWhereInput
 }
 
 input ProfileRelationFilter {
@@ -1429,11 +1438,13 @@ type Address {
   createdAt: DateTime!
   updatedAt: DateTime!
   githubUserId: Int
+  discordUserId: Int
   ensAvatarImageUrl: String
   ensName: String
   _count: AddressCount
   email: Email
   githubUser: GithubUser
+  discordUser: DiscordUser
   memberships(
     where: OrganizationMembershipWhereInput
     orderBy: [OrganizationMembershipOrderByWithRelationInput!]
@@ -1919,6 +1930,7 @@ input EventOrderByWithRelationInput {
   imageUrl: SortOrder
   githubHandle: SortOrder
   twitterHandle: SortOrder
+  discordHandle: SortOrder
   siteUrl: SortOrder
   gitPOAPs: GitPOAPOrderByRelationAggregateInput
 }
@@ -2081,6 +2093,8 @@ input ClaimOrderByWithRelationInput {
   email: EmailOrderByWithRelationInput
   issuedAddressId: SortOrder
   issuedAddress: AddressOrderByWithRelationInput
+  discordUserId: SortOrder
+  discordUser: DiscordUserOrderByWithRelationInput
   pullRequestEarnedId: SortOrder
   pullRequestEarned: GithubPullRequestOrderByWithRelationInput
   mentionEarnedId: SortOrder
@@ -2342,16 +2356,6 @@ type EventCount {
   gitPOAPs: Int!
 }
 
-enum AddressScalarFieldEnum {
-  id
-  ethAddress
-  createdAt
-  updatedAt
-  githubUserId
-  ensAvatarImageUrl
-  ensName
-}
-
 type DiscordUser {
   id: Int!
   discordId: String!
@@ -2359,6 +2363,22 @@ type DiscordUser {
   createdAt: DateTime!
   updatedAt: DateTime!
   _count: DiscordUserCount
+}
+
+type DiscordUserCount {
+  claims: Int!
+  addresses: Int!
+}
+
+enum AddressScalarFieldEnum {
+  id
+  ethAddress
+  createdAt
+  updatedAt
+  githubUserId
+  discordUserId
+  ensAvatarImageUrl
+  ensName
 }
 
 type Profile {
@@ -2372,6 +2392,7 @@ type Profile {
   profileImageUrl: String
   githubHandle: String
   twitterHandle: String
+  discordHandle: String
   personalSiteUrl: String
   isVisibleOnLeaderboard: Boolean!
   _count: ProfileCount
@@ -2427,6 +2448,7 @@ type AddressGroupBy {
   createdAt: DateTime!
   updatedAt: DateTime!
   githubUserId: Int
+  discordUserId: Int
   ensAvatarImageUrl: String
   ensName: String
   _count: AddressCountAggregate
@@ -2442,6 +2464,7 @@ input AddressOrderByWithAggregationInput {
   createdAt: SortOrder
   updatedAt: SortOrder
   githubUserId: SortOrder
+  discordUserId: SortOrder
   ensAvatarImageUrl: SortOrder
   ensName: SortOrder
   _count: AddressCountOrderByAggregateInput
@@ -2457,6 +2480,7 @@ input AddressCountOrderByAggregateInput {
   createdAt: SortOrder
   updatedAt: SortOrder
   githubUserId: SortOrder
+  discordUserId: SortOrder
   ensAvatarImageUrl: SortOrder
   ensName: SortOrder
 }
@@ -2464,6 +2488,7 @@ input AddressCountOrderByAggregateInput {
 input AddressAvgOrderByAggregateInput {
   id: SortOrder
   githubUserId: SortOrder
+  discordUserId: SortOrder
 }
 
 input AddressMaxOrderByAggregateInput {
@@ -2472,6 +2497,7 @@ input AddressMaxOrderByAggregateInput {
   createdAt: SortOrder
   updatedAt: SortOrder
   githubUserId: SortOrder
+  discordUserId: SortOrder
   ensAvatarImageUrl: SortOrder
   ensName: SortOrder
 }
@@ -2482,6 +2508,7 @@ input AddressMinOrderByAggregateInput {
   createdAt: SortOrder
   updatedAt: SortOrder
   githubUserId: SortOrder
+  discordUserId: SortOrder
   ensAvatarImageUrl: SortOrder
   ensName: SortOrder
 }
@@ -2489,6 +2516,7 @@ input AddressMinOrderByAggregateInput {
 input AddressSumOrderByAggregateInput {
   id: SortOrder
   githubUserId: SortOrder
+  discordUserId: SortOrder
 }
 
 input AddressScalarWhereWithAggregatesInput {
@@ -2500,6 +2528,7 @@ input AddressScalarWhereWithAggregatesInput {
   createdAt: DateTimeWithAggregatesFilter
   updatedAt: DateTimeWithAggregatesFilter
   githubUserId: IntNullableWithAggregatesFilter
+  discordUserId: IntNullableWithAggregatesFilter
   ensAvatarImageUrl: StringNullableWithAggregatesFilter
   ensName: StringNullableWithAggregatesFilter
 }
@@ -2709,6 +2738,7 @@ type ClaimCountAggregate {
   githubUserId: Int!
   emailId: Int!
   issuedAddressId: Int!
+  discordUserId: Int!
   pullRequestEarnedId: Int!
   mentionEarnedId: Int!
   needsRevalidation: Int!
@@ -2722,6 +2752,7 @@ type ClaimAvgAggregate {
   githubUserId: Float
   emailId: Float
   issuedAddressId: Float
+  discordUserId: Float
   pullRequestEarnedId: Float
   mentionEarnedId: Float
 }
@@ -2733,6 +2764,7 @@ type ClaimSumAggregate {
   githubUserId: Int
   emailId: Int
   issuedAddressId: Int
+  discordUserId: Int
   pullRequestEarnedId: Int
   mentionEarnedId: Int
 }
@@ -2750,6 +2782,7 @@ type ClaimMinAggregate {
   githubUserId: Int
   emailId: Int
   issuedAddressId: Int
+  discordUserId: Int
   pullRequestEarnedId: Int
   mentionEarnedId: Int
   needsRevalidation: Boolean
@@ -2768,6 +2801,7 @@ type ClaimMaxAggregate {
   githubUserId: Int
   emailId: Int
   issuedAddressId: Int
+  discordUserId: Int
   pullRequestEarnedId: Int
   mentionEarnedId: Int
   needsRevalidation: Boolean
