@@ -77,7 +77,8 @@ jobs:
             "task_definition_tag": "${{ inputs.task_definition_tag }}",
             "aws_region": "${{ env.AWS_REGION }}",
             "deploy_environment": "${{ inputs.deploy_environment }}",
-            "login_redirect_url": "${{ inputs.login_redirect_url }}"
+            "login_redirect_url": "${{ inputs.login_redirect_url }}",
+            "discord_redirect_url": "${{ inputs.discord_redirect_url }}"
           }
           EOF
           jinja -d defs.json aws/public-api-server.task-definition.json.j2 > aws/public-api-server.task-definition.json
