@@ -108,7 +108,7 @@ export async function getRepoByName(
         select: {
           gitPOAPs: {
             where: {
-              ongoing: true,
+              isOngoing: true,
               isPRBased,
               NOT: {
                 poapApprovalStatus: GitPOAPStatus.DEPRECATED,

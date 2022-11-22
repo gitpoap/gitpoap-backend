@@ -96,7 +96,7 @@ async function convertPOAPToGitPOAP(poapEventId: number) {
       poapEventId,
       poapSecret,
       poapApprovalStatus: GitPOAPStatus.APPROVED,
-      ongoing: true,
+      isOngoing: true,
       isPRBased: false,
       isEnabled: true,
       // Temporarily use Kayleen's address
