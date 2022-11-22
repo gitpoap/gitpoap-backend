@@ -293,6 +293,7 @@ export class GitPOAPFactory {
       poapSecret,
       poapApprovalStatus,
       isOngoing,
+      canRequestMoreCodes: isOngoing,
       level,
       threshold,
       isEnabled,
