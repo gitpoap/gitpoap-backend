@@ -26,6 +26,11 @@ import {
   sendInternalClaimMessage,
 } from '../../../../src/external/slack';
 import { redeemPOAP } from '../../../../src/external/poap';
+import {
+  chooseUnusedRedeemCode,
+  deleteRedeemCode,
+  upsertRedeemCode,
+} from '../../../../src/lib/codes';
 
 jest.mock('../../../../src/logging');
 jest.mock('../../../../src/external/github');
@@ -33,6 +38,7 @@ jest.mock('../../../../src/lib/bot');
 jest.mock('../../../../src/lib/claims');
 jest.mock('../../../../src/external/slack');
 jest.mock('../../../../src/external/poap');
+jest.mock('../../../../src/lib/codes');
 
 const mockedGetGithubAuthenticatedApp = jest.mocked(getGithubAuthenticatedApp, true);
 const mockedCreateClaimsForPR = jest.mocked(createClaimsForPR, true);
@@ -48,6 +54,9 @@ const mockedRedeemPOAP = jest.mocked(redeemPOAP, true);
 const mockedUpdateClaimStatusById = jest.mocked(updateClaimStatusById, true);
 const mockedEnsureRedeemCodeThreshold = jest.mocked(ensureRedeemCodeThreshold, true);
 const mockedRunClaimsPostProcessing = jest.mocked(runClaimsPostProcessing, true);
+const mockedChooseUnusedRedeemCode = jest.mocked(chooseUnusedRedeemCode, true);
+const mockedDeleteRedeemCode = jest.mocked(deleteRedeemCode, true);
+const mockedUpsertRedeemCode = jest.mocked(upsertRedeemCode, true);
 
 const botJWTToken = 'foobar2';
 const contributorId = 2;
@@ -886,15 +895,16 @@ describe('POST /claims', () => {
 
   it('Fails when there are no more RedeemCodes', async () => {
     mockJwtWithAddress();
+    const gitPOAP = {
+      id: gitPOAPId,
+      isEnabled: true,
+    };
     contextMock.prisma.claim.findUnique.mockResolvedValue({
       status: ClaimStatus.UNCLAIMED,
-      gitPOAP: {
-        id: gitPOAPId,
-        isEnabled: true,
-      },
+      gitPOAP,
       emailId,
     } as any);
-    contextMock.prisma.redeemCode.findFirst.mockResolvedValue(null);
+    mockedChooseUnusedRedeemCode.mockResolvedValue(null);
 
     const authTokens = genAuthTokens();
     const claimIds = [claimId];
@@ -915,19 +925,23 @@ describe('POST /claims', () => {
     });
 
     expectFindUniqueClaims(claimIds);
+
+    expect(mockedChooseUnusedRedeemCode).toHaveBeenCalledTimes(1);
+    expect(mockedChooseUnusedRedeemCode).toHaveBeenCalledWith(gitPOAP);
   });
 
   it('Fails when POAP API redeem call fails', async () => {
     mockJwtWithAddress();
+    const gitPOAP = {
+      id: gitPOAPId,
+      isEnabled: true,
+    };
     contextMock.prisma.claim.findUnique.mockResolvedValue({
       status: ClaimStatus.UNCLAIMED,
-      gitPOAP: {
-        id: gitPOAPId,
-        isEnabled: true,
-      },
+      gitPOAP,
       emailId,
     } as any);
-    contextMock.prisma.redeemCode.findFirst.mockResolvedValue({
+    mockedChooseUnusedRedeemCode.mockResolvedValue({
       id: redeemCodeId,
       code: redeemCode,
     } as any);
@@ -953,10 +967,11 @@ describe('POST /claims', () => {
 
     expectFindUniqueClaims(claimIds);
 
-    expect(contextMock.prisma.redeemCode.delete).toHaveBeenCalledTimes(1);
-    expect(contextMock.prisma.redeemCode.delete).toHaveBeenCalledWith({
-      where: { id: redeemCodeId },
-    });
+    expect(mockedChooseUnusedRedeemCode).toHaveBeenCalledTimes(1);
+    expect(mockedChooseUnusedRedeemCode).toHaveBeenCalledWith(gitPOAP);
+
+    expect(mockedDeleteRedeemCode).toHaveBeenCalledTimes(1);
+    expect(mockedDeleteRedeemCode).toHaveBeenCalledWith(redeemCodeId);
 
     expect(mockedUpdateClaimStatusById).toHaveBeenCalledTimes(2);
     expect(mockedUpdateClaimStatusById).toHaveBeenNthCalledWith(
@@ -969,15 +984,8 @@ describe('POST /claims', () => {
     expect(mockedRedeemPOAP).toHaveBeenCalledTimes(1);
     expect(mockedRedeemPOAP).toHaveBeenCalledWith(address, redeemCode);
 
-    expect(contextMock.prisma.redeemCode.create).toHaveBeenCalledTimes(1);
-    expect(contextMock.prisma.redeemCode.create).toHaveBeenCalledWith({
-      data: {
-        gitPOAP: {
-          connect: { id: gitPOAPId },
-        },
-        code: redeemCode,
-      },
-    });
+    expect(mockedUpsertRedeemCode).toHaveBeenCalledTimes(1);
+    expect(mockedUpsertRedeemCode).toHaveBeenCalledWith(gitPOAPId, redeemCode);
 
     expect(mockedUpdateClaimStatusById).toHaveBeenNthCalledWith(
       2,
@@ -999,7 +1007,7 @@ describe('POST /claims', () => {
       gitPOAP,
       emailId,
     } as any);
-    contextMock.prisma.redeemCode.findFirst.mockResolvedValue({
+    mockedChooseUnusedRedeemCode.mockResolvedValue({
       id: redeemCodeId,
       code: redeemCode,
     } as any);
@@ -1017,10 +1025,11 @@ describe('POST /claims', () => {
 
     expectFindUniqueClaims(claimIds);
 
-    expect(contextMock.prisma.redeemCode.delete).toHaveBeenCalledTimes(1);
-    expect(contextMock.prisma.redeemCode.delete).toHaveBeenCalledWith({
-      where: { id: redeemCodeId },
-    });
+    expect(mockedChooseUnusedRedeemCode).toHaveBeenCalledTimes(1);
+    expect(mockedChooseUnusedRedeemCode).toHaveBeenCalledWith(gitPOAP);
+
+    expect(mockedDeleteRedeemCode).toHaveBeenCalledTimes(1);
+    expect(mockedDeleteRedeemCode).toHaveBeenCalledWith(redeemCodeId);
 
     expect(mockedUpdateClaimStatusById).toHaveBeenCalledTimes(1);
     expect(mockedUpdateClaimStatusById).toHaveBeenCalledWith(
@@ -1078,7 +1087,7 @@ describe('POST /claims', () => {
       gitPOAP,
       emailId,
     } as any);
-    contextMock.prisma.redeemCode.findFirst.mockResolvedValue({
+    mockedChooseUnusedRedeemCode.mockResolvedValue({
       id: redeemCodeId,
       code: redeemCode,
     } as any);
@@ -1104,10 +1113,11 @@ describe('POST /claims', () => {
 
     expectFindUniqueClaims(claimIds);
 
-    expect(contextMock.prisma.redeemCode.delete).toHaveBeenCalledTimes(1);
-    expect(contextMock.prisma.redeemCode.delete).toHaveBeenCalledWith({
-      where: { id: redeemCodeId },
-    });
+    expect(mockedChooseUnusedRedeemCode).toHaveBeenCalledTimes(1);
+    expect(mockedChooseUnusedRedeemCode).toHaveBeenCalledWith(gitPOAP);
+
+    expect(mockedDeleteRedeemCode).toHaveBeenCalledTimes(1);
+    expect(mockedDeleteRedeemCode).toHaveBeenCalledWith(redeemCodeId);
 
     expect(mockedUpdateClaimStatusById).toHaveBeenCalledTimes(1);
     expect(mockedUpdateClaimStatusById).toHaveBeenCalledWith(

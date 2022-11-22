@@ -28,7 +28,7 @@ import { ensureRedeemCodeThreshold, runClaimsPostProcessing } from '../lib/claim
 import { ClaimData, FoundClaim } from '../types/claims';
 import { getRequestLogger } from '../middleware/loggingAndTiming';
 import { shortenAddress } from '../lib/addresses';
-import { chooseUnusedRedeemCode, upsertRedeemCode } from '../lib/codes';
+import { chooseUnusedRedeemCode, deleteRedeemCode, upsertRedeemCode } from '../lib/codes';
 
 export const claimsRouter = Router();
 
@@ -125,6 +125,7 @@ claimsRouter.post('/', jwtWithAddress(), async function (req, res) {
       continue;
     }
 
+    await deleteRedeemCode(redeemCode.id);
     await updateClaimStatusById(claimId, ClaimStatus.PENDING, addressId);
 
     const poapData = await redeemPOAP(ethAddress, redeemCode.code);
