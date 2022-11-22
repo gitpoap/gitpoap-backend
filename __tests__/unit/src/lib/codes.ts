@@ -2,7 +2,7 @@ import { GitPOAPStatus } from '@generated/type-graphql';
 import { GitPOAPType } from '@prisma/client';
 import { mockedLogger } from '../../../../__mocks__/src/logging';
 import { contextMock } from '../../../../__mocks__/src/context';
-import { retrieveUnusedPOAPCodes } from '../../../../src/external/poap';
+import { retrievePOAPCodes } from '../../../../src/external/poap';
 import {
   CheckGitPOAPForCodesWithExtrasType,
   checkGitPOAPForNewCodesWithApprovalEmail,
@@ -17,7 +17,7 @@ jest.mock('../../../../src/external/poap');
 jest.mock('../../../../src/external/postmark');
 jest.mocked(sendGitPOAPRequestLiveEmail, true);
 
-const mockedRetrieveUnusedPOAPCodes = jest.mocked(retrieveUnusedPOAPCodes, true);
+const mockedRetrieveUnusedPOAPCodes = jest.mocked(retrievePOAPCodes, true);
 
 // 10 codes
 const fakeCodes = [
