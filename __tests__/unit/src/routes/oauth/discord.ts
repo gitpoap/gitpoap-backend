@@ -18,6 +18,7 @@ jest.mock('../../../../../src/logging');
 jest.mock('../../../../../src/external/discord');
 jest.mock('../../../../../src/lib/discordUsers');
 jest.mock('../../../../../src/lib/addresses');
+jest.mock('../../../../../src/lib/authTokens');
 
 const mockedRequestDiscordOAuthToken = jest.mocked(requestDiscordOAuthToken, true);
 const mockedGetDiscordCurrentUserInfo = jest.mocked(getDiscordCurrentUserInfo, true);
@@ -33,15 +34,22 @@ const address = '0xbArF00';
 const ensName = null;
 const ensAvatarImageUrl = null;
 const code = '243lkjlkjdfs';
-const discordToken = 'Bear fooajldkfjlskj32f';
+const discordTokenJson = {
+  token_type: 'Bear',
+  access_token: 'fooajldkfjlskj32f',
+};
+const discordToken = `${discordTokenJson.token_type} ${discordTokenJson.access_token}`;
 const discordId = '2342';
 const discordHandle = 'snoop-doggy-dog';
 const discordUserId = 342444;
 
 function mockJwtWithAddress() {
   contextMock.prisma.authToken.findUnique.mockResolvedValue({
-    id: authTokenId,
-    address: { ensName, ensAvatarImageUrl },
+    address: {
+      ensName,
+      ensAvatarImageUrl,
+      email: null,
+    },
   } as any);
 }
 
@@ -98,9 +106,9 @@ describe('POST /oauth/discord', () => {
     expect(mockedRequestDiscordOAuthToken).toHaveBeenCalledWith(code);
   });
 
-  it('Fails if current discord user lookup fails', async () => {
+  it('Fails if current Discord user lookup fails', async () => {
     mockJwtWithAddress();
-    mockedRequestDiscordOAuthToken.mockResolvedValue(discordToken);
+    mockedRequestDiscordOAuthToken.mockResolvedValue(discordTokenJson);
     mockedGetDiscordCurrentUserInfo.mockResolvedValue(null);
 
     const authTokens = genAuthTokens();
@@ -121,7 +129,7 @@ describe('POST /oauth/discord', () => {
 
   it('Returns UserAuthTokens on success', async () => {
     mockJwtWithAddress();
-    mockedRequestDiscordOAuthToken.mockResolvedValue(discordToken);
+    mockedRequestDiscordOAuthToken.mockResolvedValue(discordTokenJson);
     mockedGetDiscordCurrentUserInfo.mockResolvedValue({
       id: discordId,
       username: discordHandle,
@@ -172,6 +180,14 @@ describe('POST /oauth/discord', () => {
           select: {
             ensName: true,
             ensAvatarImageUrl: true,
+            githubUser: {
+              select: {
+                id: true,
+                githubId: true,
+                githubHandle: true,
+                githubOAuthToken: true,
+              },
+            },
             email: {
               select: {
                 id: true,
@@ -188,7 +204,7 @@ describe('POST /oauth/discord', () => {
       ...fakeAddress,
       id: addressId,
       ethAddress: address,
-      githubUser: fakeDiscordUser,
+      discordUser: fakeDiscordUser,
     });
   });
 });
@@ -310,6 +326,14 @@ describe('DELETE /oauth/discord', () => {
           select: {
             ensName: true,
             ensAvatarImageUrl: true,
+            githubUser: {
+              select: {
+                id: true,
+                githubId: true,
+                githubHandle: true,
+                githubOAuthToken: true,
+              },
+            },
             email: {
               select: {
                 id: true,

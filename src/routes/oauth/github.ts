@@ -74,6 +74,14 @@ githubRouter.post('/', jwtWithAddress(), async function (req, res) {
           select: {
             ensName: true,
             ensAvatarImageUrl: true,
+            discordUser: {
+              select: {
+                id: true,
+                discordId: true,
+                discordHandle: true,
+                discordOAuthToken: true,
+              },
+            },
             email: {
               select: {
                 id: true,
@@ -96,7 +104,6 @@ githubRouter.post('/', jwtWithAddress(), async function (req, res) {
     id: addressId,
     ethAddress,
     githubUser,
-    discordUser: null,
   });
 
   logger.debug(`Completed a GitHub login request for address ${ethAddress}`);
@@ -141,6 +148,14 @@ githubRouter.delete('/', jwtWithAddress(), async function (req, res) {
         select: {
           ensName: true,
           ensAvatarImageUrl: true,
+          discordUser: {
+            select: {
+              id: true,
+              discordId: true,
+              discordHandle: true,
+              discordOAuthToken: true,
+            },
+          },
           email: {
             select: {
               id: true,
@@ -157,7 +172,6 @@ githubRouter.delete('/', jwtWithAddress(), async function (req, res) {
     id: addressId,
     ethAddress,
     githubUser: null,
-    discordUser: null,
   });
 
   logger.debug(`Completed Github disconnect request for address ${ethAddress}`);

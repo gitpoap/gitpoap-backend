@@ -19,6 +19,8 @@ import { JWT_SECRET } from '../../../../src/environment';
 jest.mock('../../../../src/logging');
 jest.mock('../../../../src/external/github');
 jest.mock('../../../../src/lib/githubUsers');
+jest.mock('../../../../src/external/discord');
+jest.mock('../../../../src/lib/discordUsers');
 jest.mock('../../../../src/lib/addresses');
 
 const mockedIsGithubTokenValidForUser = jest.mocked(isGithubTokenValidForUser, true);
