@@ -5,40 +5,9 @@ import 'reflect-metadata';
 import { createScopedLogger, updateLogLevel } from '../src/logging';
 import minimist from 'minimist';
 import { context } from '../src/context';
-import { retrievePOAPCodes, retrievePOAPsForEvent } from '../src/external/poap';
+import { retrievePOAPsForEvent } from '../src/external/poap';
 import { ClaimStatus } from '@prisma/client';
-
-type CodeUsageMap = Record<string, boolean>;
-
-async function generateCodeUsageMap(
-  poapEventId: number,
-  poapSecretCode: string,
-): Promise<{ codeUsageMap: CodeUsageMap; unusedCount: number } | null> {
-  const logger = createScopedLogger('generateCodeUsageMap');
-
-  logger.info(`Requesting QR code status from POAP API for POAP Event ID ${poapEventId}`);
-
-  const codeData = await retrievePOAPCodes(poapEventId, poapSecretCode);
-
-  if (codeData === null) {
-    logger.error(`Failed to lookup codes for POAP Event ID ${poapEventId}`);
-    return null;
-  }
-
-  logger.info(`Found ${codeData.length} existing codes`);
-
-  const usages: CodeUsageMap = {};
-  let unusedCount = 0;
-
-  for (const codeStatus of codeData) {
-    usages[codeStatus.qr_hash] = codeStatus.claimed;
-    if (!codeStatus.claimed) {
-      ++unusedCount;
-    }
-  }
-
-  return { codeUsageMap: usages, unusedCount };
-}
+import { checkGitPOAPForNewCodesHelper } from '../src/lib/codes';
 
 async function attemptToFindGithubUserForAddress(ethAddress: string) {
   return await context.prisma.claim.findFirst({
@@ -145,66 +114,20 @@ async function checkGitPOAPCodes(gitPOAPId: number) {
   const gitPOAP = await context.prisma.gitPOAP.findUnique({
     where: { id: gitPOAPId },
     select: {
-      name: true,
+      id: true,
+      poapApprovalStatus: true,
       poapEventId: true,
       poapSecret: true,
     },
   });
-
   if (gitPOAP === null) {
-    logger.error(`Failed to find GitPOAP ID ${gitPOAPId}`);
+    logger.error(`Failed to lookup GitPOAP with ID ${gitPOAPId}`);
     return;
   }
 
-  const mapResult = await generateCodeUsageMap(gitPOAP.poapEventId, gitPOAP.poapSecret);
+  const { notFound, alreadyUsed } = await checkGitPOAPForNewCodesHelper(gitPOAP);
 
-  if (mapResult === null) {
-    logger.error(`Couldn't lookup codes for GitPOAP ID ${gitPOAPId}`);
-    return;
-  }
-
-  const { codeUsageMap, unusedCount } = mapResult;
-
-  logger.info(`POAP API says there are ${unusedCount} unused codes`);
-
-  const gitPOAPCodes = await context.prisma.redeemCode.findMany({
-    where: { gitPOAPId },
-    select: {
-      id: true,
-      code: true,
-    },
-  });
-
-  logger.info(`There are ${gitPOAPCodes.length} "unused" codes in our database`);
-
-  let notFound = 0;
-  let alreadyUsed = 0;
-
-  for (const redeemCode of gitPOAPCodes) {
-    if (!(redeemCode.code in codeUsageMap)) {
-      logger.error(`RedeemCode ID ${redeemCode.id} not found via POAP API!`);
-      ++notFound;
-
-      await context.prisma.redeemCode.delete({
-        where: { id: redeemCode.id },
-      });
-    } else if (codeUsageMap[redeemCode.code]) {
-      logger.error(`RedeemCode ID ${redeemCode.id} was already used!`);
-      ++alreadyUsed;
-
-      await context.prisma.redeemCode.delete({
-        where: { id: redeemCode.id },
-      });
-    }
-  }
-
-  const goodCodes = gitPOAPCodes.length - notFound - alreadyUsed;
-
-  logger.info(
-    `The DB has ${goodCodes} unclaimed codes, ${alreadyUsed} claimed codes, and ${notFound} codes weren't found`,
-  );
-
-  if (goodCodes === gitPOAPCodes.length) {
+  if (notFound === 0 && alreadyUsed === 0) {
     logger.info(`GitPOAP ID ${gitPOAPId} has PASSED validation`);
   } else {
     logger.error(`GitPOAP ID ${gitPOAPId} has FAILED validation`);

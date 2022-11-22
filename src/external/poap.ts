@@ -187,18 +187,6 @@ export async function retrievePOAPCodes(
   );
 }
 
-export async function retrieveUnusedPOAPCodes(
-  event_id: number,
-  secret_code: string,
-): Promise<string[] | null> {
-  const data = await retrievePOAPCodes(event_id, secret_code);
-  if (data === null) {
-    return null;
-  }
-
-  return data.filter(x => !x.claimed).map(x => x.qr_hash);
-}
-
 export async function retrieveClaimInfo(qr_hash: string) {
   return await makePOAPRequest(`${POAP_API_URL}/actions/claim-qr?qr_hash=${qr_hash}`, 'GET', null);
 }
