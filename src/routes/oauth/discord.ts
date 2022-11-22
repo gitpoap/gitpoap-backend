@@ -73,6 +73,14 @@ discordRouter.post('/', jwtWithAddress(), async function (req, res) {
           select: {
             ensName: true,
             ensAvatarImageUrl: true,
+            githubUser: {
+              select: {
+                id: true,
+                githubId: true,
+                githubHandle: true,
+                githubOAuthToken: true,
+              },
+            },
             email: {
               select: {
                 id: true,
@@ -94,7 +102,6 @@ discordRouter.post('/', jwtWithAddress(), async function (req, res) {
     ...dbAuthToken.address,
     id: addressId,
     ethAddress,
-    githubUser: null,
     discordUser,
   });
 
@@ -107,9 +114,22 @@ discordRouter.post('/', jwtWithAddress(), async function (req, res) {
 discordRouter.delete('/', jwtWithAddress(), async function (req, res) {
   const logger = getRequestLogger(req);
 
-  const { authTokenId, addressId, address: ethAddress } = getAccessTokenPayload(req.user);
+  const {
+    authTokenId,
+    addressId,
+    address: ethAddress,
+    discordId,
+    discordHandle,
+  } = getAccessTokenPayload(req.user);
 
   logger.info(`Received a Discord disconnect request from address ${ethAddress}`);
+
+  if (discordHandle === null || discordId === null) {
+    logger.warn('No Discord login found for address');
+    return res.status(400).send({
+      msg: 'No Discord login found for address',
+    });
+  }
 
   /* Remove the Discord login from the address record */
   await removeDiscordLoginForAddress(addressId);
@@ -127,6 +147,14 @@ discordRouter.delete('/', jwtWithAddress(), async function (req, res) {
         select: {
           ensName: true,
           ensAvatarImageUrl: true,
+          githubUser: {
+            select: {
+              id: true,
+              githubId: true,
+              githubHandle: true,
+              githubOAuthToken: true,
+            },
+          },
           email: {
             select: {
               id: true,
@@ -142,7 +170,6 @@ discordRouter.delete('/', jwtWithAddress(), async function (req, res) {
     ...dbAuthToken.address,
     id: addressId,
     ethAddress,
-    githubUser: null,
     discordUser: null,
   });
 

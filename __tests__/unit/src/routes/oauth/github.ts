@@ -176,6 +176,14 @@ describe('POST /oauth/github', () => {
           select: {
             ensName: true,
             ensAvatarImageUrl: true,
+            discordUser: {
+              select: {
+                id: true,
+                discordId: true,
+                discordHandle: true,
+                discordOAuthToken: true,
+              },
+            },
             email: {
               select: {
                 id: true,
@@ -193,7 +201,6 @@ describe('POST /oauth/github', () => {
       id: addressId,
       ethAddress: address,
       githubUser: fakeGithubUser,
-      discordUser: null,
     });
   });
 });
@@ -316,6 +323,14 @@ describe('DELETE /oauth/github', () => {
           select: {
             ensName: true,
             ensAvatarImageUrl: true,
+            discordUser: {
+              select: {
+                id: true,
+                discordId: true,
+                discordHandle: true,
+                discordOAuthToken: true,
+              },
+            },
             email: {
               select: {
                 id: true,
@@ -336,7 +351,6 @@ describe('DELETE /oauth/github', () => {
       id: addressId,
       ethAddress: address,
       githubUser: null,
-      discordUser: null,
     });
   });
 });
