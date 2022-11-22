@@ -210,7 +210,7 @@ model GitPOAP {
   // If a GitPOAP is marked as isOngoing then the backend will automatically
   // check if new claims can be created for new PRs (if isPRBased)
   isOngoing           Boolean         @default(false)
-  canRequestMoreCodes Boolean?
+  canRequestMoreCodes Boolean         @default(false)
   redeemCodes         RedeemCode[]
   eventId             Int?
   event               Event?          @relation(fields: [eventId], references: [id])

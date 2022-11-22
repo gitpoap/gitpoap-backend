@@ -822,7 +822,7 @@ input GitPOAPWhereInput {
   claims: ClaimListRelationFilter
   poapApprovalStatus: EnumGitPOAPStatusFilter
   isOngoing: BoolFilter
-  canRequestMoreCodes: BoolNullableFilter
+  canRequestMoreCodes: BoolFilter
   redeemCodes: RedeemCodeListRelationFilter
   eventId: IntNullableFilter
   event: EventRelationFilter
@@ -1189,16 +1189,6 @@ input BoolFilter {
 input NestedBoolFilter {
   equals: Boolean
   not: NestedBoolFilter
-}
-
-input BoolNullableFilter {
-  equals: Boolean
-  not: NestedBoolNullableFilter
-}
-
-input NestedBoolNullableFilter {
-  equals: Boolean
-  not: NestedBoolNullableFilter
 }
 
 input RedeemCodeListRelationFilter {
@@ -1574,7 +1564,7 @@ type GitPOAP {
   organizationId: Int
   poapApprovalStatus: GitPOAPStatus!
   isOngoing: Boolean!
-  canRequestMoreCodes: Boolean
+  canRequestMoreCodes: Boolean!
   eventId: Int
   level: Int!
   threshold: Int!
@@ -3223,7 +3213,7 @@ type GitPOAPGroupBy {
   poapSecret: String!
   poapApprovalStatus: GitPOAPStatus!
   isOngoing: Boolean!
-  canRequestMoreCodes: Boolean
+  canRequestMoreCodes: Boolean!
   eventId: Int
   level: Int!
   threshold: Int!
@@ -3389,7 +3379,7 @@ input GitPOAPScalarWhereWithAggregatesInput {
   organizationId: IntNullableWithAggregatesFilter
   poapApprovalStatus: EnumGitPOAPStatusWithAggregatesFilter
   isOngoing: BoolWithAggregatesFilter
-  canRequestMoreCodes: BoolNullableWithAggregatesFilter
+  canRequestMoreCodes: BoolWithAggregatesFilter
   eventId: IntNullableWithAggregatesFilter
   level: IntWithAggregatesFilter
   threshold: IntWithAggregatesFilter
@@ -3438,22 +3428,6 @@ input NestedEnumGitPOAPStatusWithAggregatesFilter {
   _count: NestedIntFilter
   _min: NestedEnumGitPOAPStatusFilter
   _max: NestedEnumGitPOAPStatusFilter
-}
-
-input BoolNullableWithAggregatesFilter {
-  equals: Boolean
-  not: NestedBoolNullableWithAggregatesFilter
-  _count: NestedIntNullableFilter
-  _min: NestedBoolNullableFilter
-  _max: NestedBoolNullableFilter
-}
-
-input NestedBoolNullableWithAggregatesFilter {
-  equals: Boolean
-  not: NestedBoolNullableWithAggregatesFilter
-  _count: NestedIntNullableFilter
-  _min: NestedBoolNullableFilter
-  _max: NestedBoolNullableFilter
 }
 
 type AggregateGitPOAPRequest {
