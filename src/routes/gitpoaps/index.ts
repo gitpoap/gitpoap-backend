@@ -57,7 +57,17 @@ gitPOAPsRouter.post(
 
     const { githubOAuthToken } = getAccessTokenPayloadWithOAuth(req.user);
 
-    const projectChoice: z.infer<typeof CreateGitPOAPProjectSchema> = JSON.parse(req.body.project);
+    const isOngoing = schemaResult.data.isOngoing === 'true';
+    const canRequestMoreCodes = schemaResult.data.isOngoing === 'true';
+    if (isOngoing && !canRequestMoreCodes) {
+      const msg = `GitPOAP requested to be ongoing but can't request additional codes`;
+      logger.warn(msg);
+      return res.status(400).send({ msg });
+    }
+
+    const projectChoice: z.infer<typeof CreateGitPOAPProjectSchema> = JSON.parse(
+      schemaResult.data.project,
+    );
     const projectSchemaResult = CreateGitPOAPProjectSchema.safeParse(projectChoice);
     if (!projectSchemaResult.success) {
       logger.warn(
@@ -68,10 +78,13 @@ gitPOAPsRouter.post(
       return res.status(400).send({ issues: projectSchemaResult.error.issues });
     }
 
+    const name = schemaResult.data.name;
+    const year = parseInt(schemaResult.data.year, 10);
+
     let project: { id: number } | null = null;
     if ('projectId' in projectChoice && projectChoice.projectId) {
       logger.info(
-        `Request to create a new GitPOAP "${req.body.name}" for year ${req.body.year} in Project ID ${projectChoice.projectId}`,
+        `Request to create a new GitPOAP "${name}" for year ${year} in Project ID ${projectChoice.projectId}`,
       );
 
       project = await context.prisma.project.findUnique({
@@ -89,7 +102,7 @@ gitPOAPsRouter.post(
       }
     } else if ('githubRepoIds' in projectChoice) {
       logger.info(
-        `Request to create a new GitPOAP "${req.body.name}" for year ${req.body.year} in Project with Github Repo IDs: ${projectChoice.githubRepoIds}`,
+        `Request to create a new GitPOAP "${name}" for year ${year} in Project with Github Repo IDs: ${projectChoice.githubRepoIds}`,
       );
       if (projectChoice.githubRepoIds.length === 1) {
         project = await getOrCreateProjectWithGithubRepoId(
@@ -114,23 +127,21 @@ gitPOAPsRouter.post(
     // modify the event and allow minting of POAPs
     const secretCode = generatePOAPSecret();
 
-    const year = parseInt(req.body.year, 10);
-
     // Call the POAP API to create the event
     const poapInfo = await createPOAPEvent({
-      name: req.body.name,
-      description: req.body.description,
-      start_date: req.body.startDate,
-      end_date: req.body.endDate,
-      expiry_date: req.body.expiryDate,
-      event_url: req.body.eventUrl,
+      name,
+      description: schemaResult.data.description,
+      start_date: schemaResult.data.startDate,
+      end_date: schemaResult.data.endDate,
+      expiry_date: schemaResult.data.expiryDate,
+      event_url: schemaResult.data.eventUrl,
       imageName: req.file.originalname,
       imageBuffer: req.file.buffer,
       secret_code: secretCode,
       email: GITPOAP_ISSUER_EMAIL,
-      num_requested_codes: parseInt(req.body.numRequestedCodes, 10),
-      city: req.body.city, // optional
-      country: req.body.country, // optional
+      num_requested_codes: parseInt(schemaResult.data.numRequestedCodes, 10),
+      city: schemaResult.data.city, // optional
+      country: schemaResult.data.country, // optional
     });
     if (poapInfo === null) {
       logger.error('Failed to create event via POAP API');
@@ -158,14 +169,15 @@ gitPOAPsRouter.post(
           },
         },
         poapSecret: secretCode,
-        isOngoing: req.body.isOngoing === 'true',
-        isPRBased: req.body.isPRBased !== 'false',
-        isEnabled: req.body.isEnabled !== 'false',
+        isOngoing,
+        canRequestMoreCodes,
+        isPRBased: schemaResult.data.isPRBased !== 'false',
+        isEnabled: schemaResult.data.isEnabled !== 'false',
       },
     });
 
     logger.debug(
-      `Completed request to create a new GitPOAP "${req.body.name}" for project ${project.id}`,
+      `Completed request to create a new GitPOAP "${schemaResult.data.name}" for project ${project.id}`,
     );
 
     return res.status(201).send('CREATED');
@@ -243,7 +255,7 @@ gitPOAPsRouter.post(
       return res.status(400).send({ msg });
     }
 
-    const gitPOAPId = parseInt(req.body.id, 10);
+    const gitPOAPId = parseInt(schemaResult.data.id, 10);
 
     logger.info(`Request to upload codes for GitPOAP ID ${gitPOAPId}`);
 
@@ -385,6 +397,7 @@ gitPOAPsRouter.put('/deprecate/:id', jwtWithAdminAddress(), async (req, res) => 
     },
     data: {
       isOngoing: false,
+      canRequestMoreCodes: false,
       poapApprovalStatus: GitPOAPStatus.DEPRECATED,
     },
   });
@@ -404,8 +417,6 @@ gitPOAPsRouter.put('/deprecate/:id', jwtWithAdminAddress(), async (req, res) => 
 
 gitPOAPsRouter.put('/:gitPOAPId/claims', jwtWithAddress(), async (req, res) => {
   const logger = getRequestLogger(req);
-
-  logger.debug(`Body: ${JSON.stringify(req.body)}, Params: ${JSON.stringify(req.params)}`);
 
   const gitPOAPId = parseInt(req.params.gitPOAPId, 10);
 
@@ -427,7 +438,7 @@ gitPOAPsRouter.put('/:gitPOAPId/claims', jwtWithAddress(), async (req, res) => {
     select: {
       creatorAddressId: true,
       id: true,
-      isOngoing: true,
+      canRequestMoreCodes: true,
       poapApprovalStatus: true,
       poapEventId: true,
       poapSecret: true,

@@ -566,7 +566,7 @@ export const createClaimForEnsName = async (ensName: string, gitPOAPId: number) 
 
 type MinimalGitPOAPForRedeemCheck = {
   id: number;
-  isOngoing: boolean;
+  canRequestMoreCodes: boolean;
   poapApprovalStatus: GitPOAPStatus;
   poapEventId: number;
   poapSecret: string;
@@ -575,7 +575,7 @@ type MinimalGitPOAPForRedeemCheck = {
 // Ensure that we still have enough codes left for a GitPOAP after a claim
 export async function ensureRedeemCodeThreshold(gitPOAP: MinimalGitPOAPForRedeemCheck) {
   // If the distribution is not ongoing then we don't need to do anything
-  if (!gitPOAP.isOngoing || gitPOAP.poapApprovalStatus === GitPOAPStatus.DEPRECATED) {
+  if (!gitPOAP.canRequestMoreCodes || gitPOAP.poapApprovalStatus === GitPOAPStatus.DEPRECATED) {
     return;
   }
 
