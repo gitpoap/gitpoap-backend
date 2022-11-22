@@ -188,42 +188,43 @@ model Claim {
 }
 
 model GitPOAP {
-  id                 Int             @id @default(autoincrement())
-  type               GitPOAPType     @default(ANNUAL)
-  name               String          @db.VarChar(255)
-  imageUrl           String
-  description        String
-  year               Int
-  poapEventId        Int             @unique
-  createdAt          DateTime        @default(now())
-  updatedAt          DateTime        @updatedAt
-  projectId          Int?
-  project            Project?        @relation(fields: [projectId], references: [id])
-  organizationId     Int?
-  organization       Organization?   @relation(fields: [organizationId], references: [id])
-  claims             Claim[]
+  id                  Int             @id @default(autoincrement())
+  type                GitPOAPType     @default(ANNUAL)
+  name                String          @db.VarChar(255)
+  imageUrl            String
+  description         String
+  year                Int
+  poapEventId         Int             @unique
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  projectId           Int?
+  project             Project?        @relation(fields: [projectId], references: [id])
+  organizationId      Int?
+  organization        Organization?   @relation(fields: [organizationId], references: [id])
+  claims              Claim[]
   // Hide poapSecret from generated resolvers
   /// @TypeGraphQL.omit(output: true, input: true)
-  poapSecret         String          @db.VarChar(6)
+  poapSecret          String          @db.VarChar(6)
   // External POAP approval status ~ related to the POAP Curation Team
-  poapApprovalStatus GitPOAPStatus   @default(UNAPPROVED)
+  poapApprovalStatus  GitPOAPStatus   @default(UNAPPROVED)
   // If a GitPOAP is marked as isOngoing then the backend will automatically
-  // request additional codes when we reach a minimum number remaining
-  isOngoing          Boolean         @default(false)
-  redeemCodes        RedeemCode[]
-  eventId            Int?
-  event              Event?          @relation(fields: [eventId], references: [id])
-  level              Int             @default(1)
-  threshold          Int             @default(1)
-  isPRBased          Boolean         @default(true)
-  isEnabled          Boolean         @default(true)
-  creatorAddressId   Int?
-  creatorAddress     Address?        @relation(fields: [creatorAddressId], references: [id])
-  creatorEmailId     Int?
-  creatorEmail       Email?          @relation(fields: [creatorEmailId], references: [id])
+  // check if new claims can be created for new PRs (if isPRBased)
+  isOngoing           Boolean         @default(false)
+  canRequestMoreCodes Boolean?
+  redeemCodes         RedeemCode[]
+  eventId             Int?
+  event               Event?          @relation(fields: [eventId], references: [id])
+  level               Int             @default(1)
+  threshold           Int             @default(1)
+  isPRBased           Boolean         @default(true)
+  isEnabled           Boolean         @default(true)
+  creatorAddressId    Int?
+  creatorAddress      Address?        @relation(fields: [creatorAddressId], references: [id])
+  creatorEmailId      Int?
+  creatorEmail        Email?          @relation(fields: [creatorEmailId], references: [id])
   // TODO: remove these two after POAP fixes their issues with dates
-  gitPOAPRequestId   Int?            @unique
-  gitPOAPRequest     GitPOAPRequest? @relation(fields: [gitPOAPRequestId], references: [id])
+  gitPOAPRequestId    Int?            @unique
+  gitPOAPRequest      GitPOAPRequest? @relation(fields: [gitPOAPRequestId], references: [id])
 }
 
 // Records in this table are used for GitPOAP Creation Requests via the Creation Form

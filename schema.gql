@@ -822,6 +822,7 @@ input GitPOAPWhereInput {
   claims: ClaimListRelationFilter
   poapApprovalStatus: EnumGitPOAPStatusFilter
   isOngoing: BoolFilter
+  canRequestMoreCodes: BoolNullableFilter
   redeemCodes: RedeemCodeListRelationFilter
   eventId: IntNullableFilter
   event: EventRelationFilter
@@ -1188,6 +1189,16 @@ input BoolFilter {
 input NestedBoolFilter {
   equals: Boolean
   not: NestedBoolFilter
+}
+
+input BoolNullableFilter {
+  equals: Boolean
+  not: NestedBoolNullableFilter
+}
+
+input NestedBoolNullableFilter {
+  equals: Boolean
+  not: NestedBoolNullableFilter
 }
 
 input RedeemCodeListRelationFilter {
@@ -1563,6 +1574,7 @@ type GitPOAP {
   organizationId: Int
   poapApprovalStatus: GitPOAPStatus!
   isOngoing: Boolean!
+  canRequestMoreCodes: Boolean
   eventId: Int
   level: Int!
   threshold: Int!
@@ -1849,6 +1861,7 @@ input GitPOAPOrderByWithRelationInput {
   claims: ClaimOrderByRelationAggregateInput
   poapApprovalStatus: SortOrder
   isOngoing: SortOrder
+  canRequestMoreCodes: SortOrder
   redeemCodes: RedeemCodeOrderByRelationAggregateInput
   eventId: SortOrder
   event: EventOrderByWithRelationInput
@@ -1930,6 +1943,7 @@ enum GitPOAPScalarFieldEnum {
   poapSecret
   poapApprovalStatus
   isOngoing
+  canRequestMoreCodes
   eventId
   level
   threshold
@@ -3102,6 +3116,7 @@ type GitPOAPCountAggregate {
   poapSecret: Int!
   poapApprovalStatus: Int!
   isOngoing: Int!
+  canRequestMoreCodes: Int!
   eventId: Int!
   level: Int!
   threshold: Int!
@@ -3156,6 +3171,7 @@ type GitPOAPMinAggregate {
   poapSecret: String
   poapApprovalStatus: GitPOAPStatus
   isOngoing: Boolean
+  canRequestMoreCodes: Boolean
   eventId: Int
   level: Int
   threshold: Int
@@ -3181,6 +3197,7 @@ type GitPOAPMaxAggregate {
   poapSecret: String
   poapApprovalStatus: GitPOAPStatus
   isOngoing: Boolean
+  canRequestMoreCodes: Boolean
   eventId: Int
   level: Int
   threshold: Int
@@ -3206,6 +3223,7 @@ type GitPOAPGroupBy {
   poapSecret: String!
   poapApprovalStatus: GitPOAPStatus!
   isOngoing: Boolean!
+  canRequestMoreCodes: Boolean
   eventId: Int
   level: Int!
   threshold: Int!
@@ -3235,6 +3253,7 @@ input GitPOAPOrderByWithAggregationInput {
   organizationId: SortOrder
   poapApprovalStatus: SortOrder
   isOngoing: SortOrder
+  canRequestMoreCodes: SortOrder
   eventId: SortOrder
   level: SortOrder
   threshold: SortOrder
@@ -3264,6 +3283,7 @@ input GitPOAPCountOrderByAggregateInput {
   organizationId: SortOrder
   poapApprovalStatus: SortOrder
   isOngoing: SortOrder
+  canRequestMoreCodes: SortOrder
   eventId: SortOrder
   level: SortOrder
   threshold: SortOrder
@@ -3302,6 +3322,7 @@ input GitPOAPMaxOrderByAggregateInput {
   organizationId: SortOrder
   poapApprovalStatus: SortOrder
   isOngoing: SortOrder
+  canRequestMoreCodes: SortOrder
   eventId: SortOrder
   level: SortOrder
   threshold: SortOrder
@@ -3326,6 +3347,7 @@ input GitPOAPMinOrderByAggregateInput {
   organizationId: SortOrder
   poapApprovalStatus: SortOrder
   isOngoing: SortOrder
+  canRequestMoreCodes: SortOrder
   eventId: SortOrder
   level: SortOrder
   threshold: SortOrder
@@ -3367,6 +3389,7 @@ input GitPOAPScalarWhereWithAggregatesInput {
   organizationId: IntNullableWithAggregatesFilter
   poapApprovalStatus: EnumGitPOAPStatusWithAggregatesFilter
   isOngoing: BoolWithAggregatesFilter
+  canRequestMoreCodes: BoolNullableWithAggregatesFilter
   eventId: IntNullableWithAggregatesFilter
   level: IntWithAggregatesFilter
   threshold: IntWithAggregatesFilter
@@ -3415,6 +3438,22 @@ input NestedEnumGitPOAPStatusWithAggregatesFilter {
   _count: NestedIntFilter
   _min: NestedEnumGitPOAPStatusFilter
   _max: NestedEnumGitPOAPStatusFilter
+}
+
+input BoolNullableWithAggregatesFilter {
+  equals: Boolean
+  not: NestedBoolNullableWithAggregatesFilter
+  _count: NestedIntNullableFilter
+  _min: NestedBoolNullableFilter
+  _max: NestedBoolNullableFilter
+}
+
+input NestedBoolNullableWithAggregatesFilter {
+  equals: Boolean
+  not: NestedBoolNullableWithAggregatesFilter
+  _count: NestedIntNullableFilter
+  _min: NestedBoolNullableFilter
+  _max: NestedBoolNullableFilter
 }
 
 type AggregateGitPOAPRequest {
