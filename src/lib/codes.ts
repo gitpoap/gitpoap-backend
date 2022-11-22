@@ -285,7 +285,7 @@ async function chooseRedeemCode(gitPOAPId: number) {
   });
 }
 
-async function deleteRedeemCode(redeemCodeId: number) {
+export async function deleteRedeemCode(redeemCodeId: number) {
   await context.prisma.redeemCode.delete({
     where: { id: redeemCodeId },
   });
