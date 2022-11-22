@@ -41,7 +41,7 @@ const baseGitPOAPRequest = {
   endDate: DateTime.fromISO('2021-01-10').toJSDate(),
   expiryDate: DateTime.fromISO('2023-01-01').toJSDate(),
   eventUrl: 'https://foobar.com',
-  ongoing: 'true',
+  isOngoing: 'true',
   isEnabled: 'true',
   image: {
     data: Buffer.from('foobar'),
@@ -328,7 +328,7 @@ describe('PUT /gitpoaps/custom/approve/:id', () => {
         isEnabled: true,
         isPRBased: false,
         name: 'foobar',
-        ongoing: true,
+        isOngoing: true,
         year: 2021,
         poapEventId: 1,
         poapSecret: '123423123',
@@ -770,7 +770,7 @@ describe('POST /gitpoaps/custom', () => {
       adminApprovalStatus: AdminApprovalStatus.PENDING,
       isEnabled: true,
       isPRBased: false,
-      ongoing: true,
+      isOngoing: true,
       year: 2021,
       imageUrl: getS3URL('gitpoap-request-images-test', 'foobar.png-123456789000'),
       contributors: {

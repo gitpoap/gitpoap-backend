@@ -70,7 +70,7 @@ for convenience):
   "year": 2022,
   "eventUrl": "https://github.com/gitpoap/gitpoap-backend",
   "numRequestedCodes": 10,
-  "ongoing": false,
+  "isOngoing": false,
   "city": "London", // optional
   "country": "UK" // optional
 }
@@ -91,7 +91,7 @@ to create a project, or for an existing project:
   "year": 2022,
   "eventUrl": "https://github.com/gitpoap/gitpoap-backend",
   "numRequestedCodes": 10,
-  "ongoing": false,
+  "isOngoing": false,
   "city": "London", // optional
   "country": "UK" // optional
 }
