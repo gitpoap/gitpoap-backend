@@ -8,7 +8,7 @@ import {
   RedeemCode,
 } from '@prisma/client';
 import { createScopedLogger } from '../logging';
-import { retrieveClaimInfo, retrieveUnusedPOAPCodes } from '../external/poap';
+import { retrieveClaimInfo, retrievePOAPCodes } from '../external/poap';
 import { DateTime } from 'luxon';
 import { lookupLastRun, updateLastRun } from './batchProcessing';
 import { backloadGithubPullRequestData } from './pullRequests';
@@ -39,6 +39,12 @@ export async function upsertRedeemCode(gitPOAPId: number, code: string): Promise
       },
       code,
     },
+  });
+}
+
+export async function deleteRedeemCode(redeemCodeId: number) {
+  await context.prisma.redeemCode.delete({
+    where: { id: redeemCodeId },
   });
 }
 
@@ -80,6 +86,36 @@ async function lookupRepoIds(gitPOAPId: number): Promise<number[]> {
   return gitPOAPRepoData.project.repos.map(r => r.id);
 }
 
+type CodeUsageMap = Record<string, boolean>;
+
+async function generateCodeUsageMap(
+  poapEventId: number,
+  poapSecretCode: string,
+): Promise<{ codeUsageMap: CodeUsageMap; unusedCount: number } | null> {
+  const logger = createScopedLogger('generateCodeUsageMap');
+
+  logger.info(`Requesting QR code status from POAP API for POAP Event ID ${poapEventId}`);
+
+  const codeData = await retrievePOAPCodes(poapEventId, poapSecretCode);
+  if (codeData === null) {
+    return null;
+  }
+
+  logger.info(`Found ${codeData.length} existing codes`);
+
+  const usages: CodeUsageMap = {};
+  let unusedCount = 0;
+
+  for (const codeStatus of codeData) {
+    usages[codeStatus.qr_hash] = codeStatus.claimed;
+    if (!codeStatus.claimed) {
+      ++unusedCount;
+    }
+  }
+
+  return { codeUsageMap: usages, unusedCount };
+}
+
 type CheckGitPOAPForCodesType = {
   id: number;
   poapApprovalStatus: GitPOAPStatus;
@@ -87,7 +123,16 @@ type CheckGitPOAPForCodesType = {
   poapSecret: string;
 };
 
-async function checkGitPOAPForNewCodesHelper(gitPOAP: CheckGitPOAPForCodesType) {
+type CheckGitPOAPForCodesReturnType = {
+  startingCount: number;
+  endingCount: number;
+  notFound: number;
+  alreadyUsed: number;
+};
+
+export async function checkGitPOAPForNewCodesHelper(
+  gitPOAP: CheckGitPOAPForCodesType,
+): Promise<CheckGitPOAPForCodesReturnType> {
   const logger = createScopedLogger('checkGitPOAPForNewCodesHelper');
 
   logger.info(
@@ -98,15 +143,44 @@ async function checkGitPOAPForNewCodesHelper(gitPOAP: CheckGitPOAPForCodesType) 
 
   logger.info(`GitPOAP ID currently has ${startingCount} codes`);
 
-  const unusedCodes = await retrieveUnusedPOAPCodes(gitPOAP.poapEventId, gitPOAP.poapSecret);
-  if (unusedCodes === null) {
-    logger.warn(`Failed to retrieve unused codes from POAP API for GitPOAP ID ${gitPOAP.id}`);
-    return { startingCount, endingCount: startingCount };
+  const mapResult = await generateCodeUsageMap(gitPOAP.poapEventId, gitPOAP.poapSecret);
+  if (mapResult === null) {
+    logger.error(
+      `Failed to lookup codes for GitPOAP ID ${gitPOAP.id} (POAP Event ID ${gitPOAP.poapEventId}`,
+    );
+    return { startingCount, endingCount: startingCount, notFound: -1, alreadyUsed: -1 };
+  }
+  const { codeUsageMap, unusedCount } = mapResult;
+
+  logger.info(`POAP API says there are ${unusedCount} unused codes for GitPOAP ID ${gitPOAP.id}`);
+
+  const redeemCodes = await context.prisma.redeemCode.findMany({
+    where: { gitPOAPId: gitPOAP.id },
+  });
+
+  let notFound = 0;
+  let alreadyUsed = 0;
+
+  for (const redeemCode of redeemCodes) {
+    if (!(redeemCode.code in codeUsageMap)) {
+      logger.error(`RedeemCode ID ${redeemCode.id} was not found via POAP API`);
+      ++notFound;
+      await deleteRedeemCode(redeemCode.id);
+    } else if (codeUsageMap[redeemCode.code]) {
+      logger.error(`RedeemCode ID ${redeemCode.id} was already used`);
+      ++alreadyUsed;
+      await deleteRedeemCode(redeemCode.id);
+    } else {
+      // Skip upserting this code
+      delete codeUsageMap[redeemCode.code];
+    }
   }
 
-  logger.debug(`Received ${unusedCodes.length} unused codes from POAP API`);
+  logger.info(`There were ${notFound} codes in our DB not found via POAP API`);
+  logger.info(`There were ${alreadyUsed} codes in our DB that were already used`);
 
-  for (const code of unusedCodes) {
+  // Upsert the new codes
+  for (const code of Object.keys(codeUsageMap)) {
     await upsertRedeemCode(gitPOAP.id, code);
   }
 
@@ -124,7 +198,7 @@ async function checkGitPOAPForNewCodesHelper(gitPOAP: CheckGitPOAPForCodesType) 
     });
   }
 
-  return { startingCount, endingCount };
+  return { startingCount, endingCount, notFound, alreadyUsed };
 }
 
 export type CheckGitPOAPForCodesWithExtrasType = CheckGitPOAPForCodesType & {
@@ -282,12 +356,6 @@ export async function tryToCheckForNewPOAPCodes() {
 async function chooseRedeemCode(gitPOAPId: number) {
   return await context.prisma.redeemCode.findFirst({
     where: { gitPOAPId },
-  });
-}
-
-export async function deleteRedeemCode(redeemCodeId: number) {
-  await context.prisma.redeemCode.delete({
-    where: { id: redeemCodeId },
   });
 }
 
