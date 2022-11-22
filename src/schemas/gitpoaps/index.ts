@@ -11,7 +11,7 @@ export const CreateGitPOAPSchema = z.object({
   eventUrl: z.string().nonempty(),
   year: z.string().nonempty(),
   numRequestedCodes: z.string().nonempty(),
-  ongoing: z.enum(['true', 'false']),
+  isOngoing: z.enum(['true', 'false']),
   city: z.string().optional(),
   country: z.string().optional(),
   isPRBased: z.enum(['true', 'false']).optional(),

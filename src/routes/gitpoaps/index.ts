@@ -158,7 +158,7 @@ gitPOAPsRouter.post(
           },
         },
         poapSecret: secretCode,
-        ongoing: req.body.ongoing === 'true',
+        isOngoing: req.body.isOngoing === 'true',
         isPRBased: req.body.isPRBased !== 'false',
         isEnabled: req.body.isEnabled !== 'false',
       },
@@ -384,7 +384,7 @@ gitPOAPsRouter.put('/deprecate/:id', jwtWithAdminAddress(), async (req, res) => 
       id: gitPOAPId,
     },
     data: {
-      ongoing: false,
+      isOngoing: false,
       poapApprovalStatus: GitPOAPStatus.DEPRECATED,
     },
   });
@@ -427,7 +427,7 @@ gitPOAPsRouter.put('/:gitPOAPId/claims', jwtWithAddress(), async (req, res) => {
     select: {
       creatorAddressId: true,
       id: true,
-      ongoing: true,
+      isOngoing: true,
       poapApprovalStatus: true,
       poapEventId: true,
       poapSecret: true,

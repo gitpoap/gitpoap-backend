@@ -821,7 +821,7 @@ input GitPOAPWhereInput {
   organization: OrganizationRelationFilter
   claims: ClaimListRelationFilter
   poapApprovalStatus: EnumGitPOAPStatusFilter
-  ongoing: BoolFilter
+  isOngoing: BoolFilter
   redeemCodes: RedeemCodeListRelationFilter
   eventId: IntNullableFilter
   event: EventRelationFilter
@@ -1562,7 +1562,7 @@ type GitPOAP {
   projectId: Int
   organizationId: Int
   poapApprovalStatus: GitPOAPStatus!
-  ongoing: Boolean!
+  isOngoing: Boolean!
   eventId: Int
   level: Int!
   threshold: Int!
@@ -1848,7 +1848,7 @@ input GitPOAPOrderByWithRelationInput {
   organization: OrganizationOrderByWithRelationInput
   claims: ClaimOrderByRelationAggregateInput
   poapApprovalStatus: SortOrder
-  ongoing: SortOrder
+  isOngoing: SortOrder
   redeemCodes: RedeemCodeOrderByRelationAggregateInput
   eventId: SortOrder
   event: EventOrderByWithRelationInput
@@ -1929,7 +1929,7 @@ enum GitPOAPScalarFieldEnum {
   organizationId
   poapSecret
   poapApprovalStatus
-  ongoing
+  isOngoing
   eventId
   level
   threshold
@@ -3101,7 +3101,7 @@ type GitPOAPCountAggregate {
   organizationId: Int!
   poapSecret: Int!
   poapApprovalStatus: Int!
-  ongoing: Int!
+  isOngoing: Int!
   eventId: Int!
   level: Int!
   threshold: Int!
@@ -3155,7 +3155,7 @@ type GitPOAPMinAggregate {
   organizationId: Int
   poapSecret: String
   poapApprovalStatus: GitPOAPStatus
-  ongoing: Boolean
+  isOngoing: Boolean
   eventId: Int
   level: Int
   threshold: Int
@@ -3180,7 +3180,7 @@ type GitPOAPMaxAggregate {
   organizationId: Int
   poapSecret: String
   poapApprovalStatus: GitPOAPStatus
-  ongoing: Boolean
+  isOngoing: Boolean
   eventId: Int
   level: Int
   threshold: Int
@@ -3205,7 +3205,7 @@ type GitPOAPGroupBy {
   organizationId: Int
   poapSecret: String!
   poapApprovalStatus: GitPOAPStatus!
-  ongoing: Boolean!
+  isOngoing: Boolean!
   eventId: Int
   level: Int!
   threshold: Int!
@@ -3234,7 +3234,7 @@ input GitPOAPOrderByWithAggregationInput {
   projectId: SortOrder
   organizationId: SortOrder
   poapApprovalStatus: SortOrder
-  ongoing: SortOrder
+  isOngoing: SortOrder
   eventId: SortOrder
   level: SortOrder
   threshold: SortOrder
@@ -3263,7 +3263,7 @@ input GitPOAPCountOrderByAggregateInput {
   projectId: SortOrder
   organizationId: SortOrder
   poapApprovalStatus: SortOrder
-  ongoing: SortOrder
+  isOngoing: SortOrder
   eventId: SortOrder
   level: SortOrder
   threshold: SortOrder
@@ -3301,7 +3301,7 @@ input GitPOAPMaxOrderByAggregateInput {
   projectId: SortOrder
   organizationId: SortOrder
   poapApprovalStatus: SortOrder
-  ongoing: SortOrder
+  isOngoing: SortOrder
   eventId: SortOrder
   level: SortOrder
   threshold: SortOrder
@@ -3325,7 +3325,7 @@ input GitPOAPMinOrderByAggregateInput {
   projectId: SortOrder
   organizationId: SortOrder
   poapApprovalStatus: SortOrder
-  ongoing: SortOrder
+  isOngoing: SortOrder
   eventId: SortOrder
   level: SortOrder
   threshold: SortOrder
@@ -3366,7 +3366,7 @@ input GitPOAPScalarWhereWithAggregatesInput {
   projectId: IntNullableWithAggregatesFilter
   organizationId: IntNullableWithAggregatesFilter
   poapApprovalStatus: EnumGitPOAPStatusWithAggregatesFilter
-  ongoing: BoolWithAggregatesFilter
+  isOngoing: BoolWithAggregatesFilter
   eventId: IntNullableWithAggregatesFilter
   level: IntWithAggregatesFilter
   threshold: IntWithAggregatesFilter

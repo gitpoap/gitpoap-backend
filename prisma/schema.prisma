@@ -207,9 +207,9 @@ model GitPOAP {
   poapSecret         String          @db.VarChar(6)
   // External POAP approval status ~ related to the POAP Curation Team
   poapApprovalStatus GitPOAPStatus   @default(UNAPPROVED)
-  // If a GitPOAP is marked as ongoing then the backend will automatically
+  // If a GitPOAP is marked as isOngoing then the backend will automatically
   // request additional codes when we reach a minimum number remaining
-  ongoing            Boolean         @default(false)
+  isOngoing          Boolean         @default(false)
   redeemCodes        RedeemCode[]
   eventId            Int?
   event              Event?          @relation(fields: [eventId], references: [id])

@@ -40,7 +40,7 @@ export const convertGitPOAPRequestToGitPOAP = async (
       project,
       organization,
       poapSecret: secretCode,
-      ongoing: true,
+      isOngoing: true,
       isPRBased: false,
       isEnabled: true,
       creatorAddress: {
