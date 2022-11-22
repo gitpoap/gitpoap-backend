@@ -39,6 +39,9 @@ MAILCHIMP_API_KEY="fake-key-us14"
 SENTRY_DSN="https://test.ingest.sentry.io/12345"
 POSTMARK_SERVER_TOKEN="fake-token"
 SLACK_TOKEN="fake-slack-token"
+DISCORD_CLIENT_ID="1123545252342342"
+DISCORD_CLIENT_SECRET="x0_t_3adf3gadfasdf_faefes"
+DISCORD_REDIRECT_URL="http://localhost:3000/settings?type=discord"
 ```
 
 ### Entire Backend
