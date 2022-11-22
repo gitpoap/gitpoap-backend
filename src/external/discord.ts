@@ -1,11 +1,6 @@
 import fetch from 'cross-fetch';
-import { DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET } from '../environment';
-import {
-  DISCORD_URL,
-  DISCORD_REDIRECT_URL,
-  DISCORD_AUTH_GRANT_TYPE,
-  DISCORD_AUTH_SCOPE,
-} from '../constants';
+import { DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET, DISCORD_REDIRECT_URL } from '../environment';
+import { DISCORD_URL, DISCORD_AUTH_GRANT_TYPE, DISCORD_AUTH_SCOPE } from '../constants';
 import { createScopedLogger } from '../logging';
 
 export type DiscordUser = {
