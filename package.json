@@ -39,7 +39,8 @@
     "heat-up-ens-cache": "APP_NAME=heat-up-ens-cache ts-node-dev ./scripts/heat-up-ens-cache.ts",
     "first-users": "APP_NAME=first-users ts-node-dev ./scripts/first-users.ts",
     "poap-to-gitpoap": "APP_NAME=poap-to-gitpoap ts-node-dev ./scripts/poap-to-gitpoap.ts",
-    "validate-codes": "APP_NAME=validate-codes ts-node-dev ./scripts/validate-codes.ts"
+    "validate-codes": "APP_NAME=validate-codes ts-node-dev ./scripts/validate-codes.ts",
+    "force-check-for-new-codes": "APP_NAME=force-check-for-new-codes ts-node-dev ./scripts/force-check-for-new-codes.ts"
   },
   "devDependencies": {
     "@faker-js/faker": "^7.6.0",
