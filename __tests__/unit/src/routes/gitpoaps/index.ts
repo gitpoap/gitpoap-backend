@@ -209,6 +209,7 @@ describe('PUT /gitpoaps/deprecate/:id', () => {
       where: { id: gitPOAPId },
       data: {
         isOngoing: false,
+        canRequestMoreCodes: false,
         poapApprovalStatus: GitPOAPStatus.DEPRECATED,
       },
     });
@@ -256,7 +257,7 @@ describe('PUT /gitpoaps/:gitPOAPId/claims', () => {
       select: {
         creatorAddressId: true,
         id: true,
-        isOngoing: true,
+        canRequestMoreCodes: true,
         poapApprovalStatus: true,
         poapEventId: true,
         poapSecret: true,
