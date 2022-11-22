@@ -12,6 +12,7 @@ export const CreateGitPOAPSchema = z.object({
   year: z.string().nonempty(),
   numRequestedCodes: z.string().nonempty(),
   isOngoing: z.enum(['true', 'false']),
+  canRequestMoreCodes: z.enum(['true', 'false']),
   city: z.string().optional(),
   country: z.string().optional(),
   isPRBased: z.enum(['true', 'false']).optional(),

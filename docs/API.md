@@ -71,6 +71,7 @@ for convenience):
   "eventUrl": "https://github.com/gitpoap/gitpoap-backend",
   "numRequestedCodes": 10,
   "isOngoing": false,
+  "canRequestMoreCodes": false,
   "city": "London", // optional
   "country": "UK" // optional
 }
@@ -92,6 +93,7 @@ to create a project, or for an existing project:
   "eventUrl": "https://github.com/gitpoap/gitpoap-backend",
   "numRequestedCodes": 10,
   "isOngoing": false,
+  "canRequestMoreCodes": false,
   "city": "London", // optional
   "country": "UK" // optional
 }
