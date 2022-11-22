@@ -3,7 +3,10 @@ import { GitPOAPType } from '@prisma/client';
 import { mockedLogger } from '../../../../__mocks__/src/logging';
 import { contextMock } from '../../../../__mocks__/src/context';
 import { retrieveUnusedPOAPCodes } from '../../../../src/external/poap';
-import { checkGitPOAPForNewCodes, GitPOAPWithSecret } from '../../../../src/lib/codes';
+import {
+  CheckGitPOAPForCodesWithExtrasType,
+  checkGitPOAPForNewCodesWithApprovalEmail,
+} from '../../../../src/lib/codes';
 import { sendGitPOAPRequestLiveEmail } from '../../../../src/external/postmark';
 import { getS3URL } from '../../../../src/external/s3';
 import { DateTime } from 'luxon';
@@ -30,7 +33,7 @@ const fakeCodes = [
   '123464',
 ];
 
-const gitPOAP: GitPOAPWithSecret = {
+const gitPOAP: CheckGitPOAPForCodesWithExtrasType = {
   id: 34,
   poapApprovalStatus: GitPOAPStatus.UNAPPROVED,
   poapEventId: 32423,
@@ -54,7 +57,7 @@ const gitPOAP: GitPOAPWithSecret = {
 
 const repoIds = [34, 4, 3];
 
-describe('checkGitPOAPForNewCodes', () => {
+describe('checkGitPOAPForNewCodesWithApprovalEmail', () => {
   const expectCountCodes = (gitPOAPId: number) => {
     expect(contextMock.prisma.redeemCode.count).toHaveBeenCalledWith({
       where: { gitPOAPId },
@@ -65,7 +68,7 @@ describe('checkGitPOAPForNewCodes', () => {
     contextMock.prisma.redeemCode.count.mockResolvedValue(10);
     mockedRetrieveUnusedPOAPCodes.mockResolvedValue(null);
 
-    const returnedRepoIds = await checkGitPOAPForNewCodes(gitPOAP);
+    const returnedRepoIds = await checkGitPOAPForNewCodesWithApprovalEmail(gitPOAP);
 
     expect(returnedRepoIds).toEqual([]);
 
@@ -107,7 +110,7 @@ describe('checkGitPOAPForNewCodes', () => {
     contextMock.prisma.redeemCode.count.mockResolvedValue(10);
     mockedRetrieveUnusedPOAPCodes.mockResolvedValue(fakeCodes);
 
-    const returnedRepoIds = await checkGitPOAPForNewCodes(gitPOAP);
+    const returnedRepoIds = await checkGitPOAPForNewCodesWithApprovalEmail(gitPOAP);
 
     expect(returnedRepoIds).toEqual([]);
 
@@ -133,7 +136,7 @@ describe('checkGitPOAPForNewCodes', () => {
     contextMock.prisma.redeemCode.count.mockResolvedValueOnce(10).mockResolvedValueOnce(9);
     mockedRetrieveUnusedPOAPCodes.mockResolvedValue(fakeCodes);
 
-    const returnedRepoIds = await checkGitPOAPForNewCodes(gitPOAP);
+    const returnedRepoIds = await checkGitPOAPForNewCodesWithApprovalEmail(gitPOAP);
 
     expect(returnedRepoIds).toEqual([]);
 
@@ -167,7 +170,7 @@ describe('checkGitPOAPForNewCodes', () => {
     mockedRetrieveUnusedPOAPCodes.mockResolvedValue(fakeCodes);
     mockLookupRepoIds();
 
-    const returnedRepoIds = await checkGitPOAPForNewCodes(gitPOAP);
+    const returnedRepoIds = await checkGitPOAPForNewCodesWithApprovalEmail(gitPOAP);
 
     expect(returnedRepoIds).toEqual(repoIds);
 
@@ -203,7 +206,7 @@ describe('checkGitPOAPForNewCodes', () => {
     mockedRetrieveUnusedPOAPCodes.mockResolvedValue(fakeCodes);
     mockLookupRepoIds();
 
-    await checkGitPOAPForNewCodes(gitPOAP);
+    await checkGitPOAPForNewCodesWithApprovalEmail(gitPOAP);
 
     expect(sendGitPOAPRequestLiveEmail).toHaveBeenCalledWith({
       id: 34,
@@ -229,7 +232,7 @@ describe('checkGitPOAPForNewCodes', () => {
     contextMock.prisma.redeemCode.count.mockResolvedValueOnce(5).mockResolvedValueOnce(10);
     mockedRetrieveUnusedPOAPCodes.mockResolvedValue(fakeCodes);
 
-    const returnedRepoIds = await checkGitPOAPForNewCodes({
+    const returnedRepoIds = await checkGitPOAPForNewCodesWithApprovalEmail({
       ...gitPOAP,
       poapApprovalStatus: GitPOAPStatus.REDEEM_REQUEST_PENDING,
     });

@@ -28,6 +28,7 @@ import { ensureRedeemCodeThreshold, runClaimsPostProcessing } from '../lib/claim
 import { ClaimData, FoundClaim } from '../types/claims';
 import { getRequestLogger } from '../middleware/loggingAndTiming';
 import { shortenAddress } from '../lib/addresses';
+import { chooseUnusedRedeemCode, upsertRedeemCode } from '../lib/codes';
 
 export const claimsRouter = Router();
 
@@ -115,23 +116,13 @@ claimsRouter.post('/', jwtWithAddress(), async function (req, res) {
       });
       continue;
     }
-    const redeemCode = await context.prisma.redeemCode.findFirst({
-      where: {
-        gitPOAPId: claim.gitPOAP.id,
-      },
-    });
+
+    const redeemCode = await chooseUnusedRedeemCode(claim.gitPOAP);
     if (redeemCode === null) {
       const msg = `GitPOAP ID ${claim.gitPOAP.id} has no more redeem codes`;
       logger.error(msg);
       invalidClaims.push({ claimId, reason: msg });
       continue;
-    }
-    try {
-      await context.prisma.redeemCode.delete({
-        where: { id: redeemCode.id },
-      });
-    } catch (err) {
-      logger.error(`Tried to delete a RedeemCode that was already deleted: ${err}`);
     }
 
     await updateClaimStatusById(claimId, ClaimStatus.PENDING, addressId);
@@ -146,14 +137,7 @@ claimsRouter.post('/', jwtWithAddress(), async function (req, res) {
         reason: 'Failed to claim via POAP API',
       });
 
-      await context.prisma.redeemCode.create({
-        data: {
-          gitPOAP: {
-            connect: { id: claim.gitPOAP.id },
-          },
-          code: redeemCode.code,
-        },
-      });
+      await upsertRedeemCode(claim.gitPOAP.id, redeemCode.code);
       await updateClaimStatusById(claimId, ClaimStatus.UNCLAIMED, null);
 
       continue;
