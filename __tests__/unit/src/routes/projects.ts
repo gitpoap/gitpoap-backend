@@ -22,6 +22,9 @@ const address = ADDRESSES.vitalik;
 const githubId = 232444;
 const githubOAuthToken = 'foobar34543';
 const githubHandle = 'b-burz';
+const discordId = '123144123';
+const discordOAuthToken = 'foobar34543';
+const discordHandle = 'tyler#2342';
 const projectId = 234;
 const githubRepoIds = [2];
 const ensName = 'wowza.eth';
@@ -47,6 +50,11 @@ function mockJwtWithOAuth() {
         githubId: 23,
         githubHandle: 'yo',
         githubOAuthToken,
+      },
+      discordUser: {
+        discordId: '123144123',
+        discordHandle: 'tyler#2342',
+        discordOAuthToken,
       },
     },
   } as any);
@@ -86,7 +94,7 @@ describe('POST /projects/add-repos', () => {
   it('Fails with non-admin OAuth Access Token provided', async () => {
     mockJwtWithOAuth();
 
-    const authTokens = genAuthTokens(address, githubId, githubHandle);
+    const authTokens = genAuthTokens(address, githubId, githubHandle, discordId, discordHandle);
 
     const result = await request(await setupApp())
       .post('/projects/add-repos')
@@ -102,7 +110,13 @@ describe('POST /projects/add-repos', () => {
     mockJwtWithOAuth();
     contextMock.prisma.project.findUnique.mockResolvedValue(null);
 
-    const authTokens = genAuthTokens(ADMIN_ADDRESSES[0], ADMIN_GITHUB_IDS[0], githubHandle);
+    const authTokens = genAuthTokens(
+      ADMIN_ADDRESSES[0],
+      ADMIN_GITHUB_IDS[0],
+      githubHandle,
+      discordId,
+      discordHandle,
+    );
 
     const result = await request(await setupApp())
       .post('/projects/add-repos')
@@ -124,7 +138,13 @@ describe('POST /projects/add-repos', () => {
     contextMock.prisma.project.findUnique.mockResolvedValue({ id: projectId } as any);
     mockedCreateRepoByGithubId.mockResolvedValue(null);
 
-    const authTokens = genAuthTokens(ADMIN_ADDRESSES[0], ADMIN_GITHUB_IDS[0], githubHandle);
+    const authTokens = genAuthTokens(
+      ADMIN_ADDRESSES[0],
+      ADMIN_GITHUB_IDS[0],
+      githubHandle,
+      discordId,
+      discordHandle,
+    );
 
     const result = await request(await setupApp())
       .post('/projects/add-repos')
@@ -153,7 +173,13 @@ describe('POST /projects/add-repos', () => {
     const repoId = 234232;
     mockedCreateRepoByGithubId.mockResolvedValue({ id: repoId } as any);
 
-    const authTokens = genAuthTokens(ADMIN_ADDRESSES[0], ADMIN_GITHUB_IDS[0], githubHandle);
+    const authTokens = genAuthTokens(
+      ADMIN_ADDRESSES[0],
+      ADMIN_GITHUB_IDS[0],
+      githubHandle,
+      discordId,
+      discordHandle,
+    );
 
     const result = await request(await setupApp())
       .post('/projects/add-repos')
