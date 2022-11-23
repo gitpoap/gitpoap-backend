@@ -23,19 +23,16 @@ async function forceCheckForNewCodes() {
       name: true,
       type: true,
       description: true,
-      organization: true,
-      creatorAddress: {
+      imageUrl: true,
+      creatorEmail: {
+        select: { emailAddress: true },
+      },
+      gitPOAPRequest: {
         select: {
-          email: {
-            select: {
-              emailAddress: true,
-            },
-          },
+          startDate: true,
+          endDate: true,
         },
       },
-      imageUrl: true,
-      creatorEmail: true,
-      gitPOAPRequest: true,
     },
   });
 
