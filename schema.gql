@@ -63,6 +63,38 @@ type Query {
     take: Int
     skip: Int
   ): [ClaimGroupBy!]!
+  aggregateDiscordUser(
+    where: DiscordUserWhereInput
+    orderBy: [DiscordUserOrderByWithRelationInput!]
+    cursor: DiscordUserWhereUniqueInput
+    take: Int
+    skip: Int
+  ): AggregateDiscordUser!
+  findFirstDiscordUser(
+    where: DiscordUserWhereInput
+    orderBy: [DiscordUserOrderByWithRelationInput!]
+    cursor: DiscordUserWhereUniqueInput
+    take: Int
+    skip: Int
+    distinct: [DiscordUserScalarFieldEnum!]
+  ): DiscordUser
+  discordUsers(
+    where: DiscordUserWhereInput
+    orderBy: [DiscordUserOrderByWithRelationInput!]
+    cursor: DiscordUserWhereUniqueInput
+    take: Int
+    skip: Int
+    distinct: [DiscordUserScalarFieldEnum!]
+  ): [DiscordUser!]!
+  discordUser(where: DiscordUserWhereUniqueInput!): DiscordUser
+  groupByDiscordUser(
+    where: DiscordUserWhereInput
+    orderBy: [DiscordUserOrderByWithAggregationInput!]
+    by: [DiscordUserScalarFieldEnum!]!
+    having: DiscordUserScalarWhereWithAggregatesInput
+    take: Int
+    skip: Int
+  ): [DiscordUserGroupBy!]!
   aggregateEmail(
     where: EmailWhereInput
     orderBy: [EmailOrderByWithRelationInput!]
@@ -2363,6 +2395,22 @@ type DiscordUser {
   createdAt: DateTime!
   updatedAt: DateTime!
   _count: DiscordUserCount
+  claims(
+    where: ClaimWhereInput
+    orderBy: [ClaimOrderByWithRelationInput!]
+    cursor: ClaimWhereUniqueInput
+    take: Int
+    skip: Int
+    distinct: [ClaimScalarFieldEnum!]
+  ): [Claim!]!
+  addresses(
+    where: AddressWhereInput
+    orderBy: [AddressOrderByWithRelationInput!]
+    cursor: AddressWhereUniqueInput
+    take: Int
+    skip: Int
+    distinct: [AddressScalarFieldEnum!]
+  ): [Address!]!
 }
 
 type DiscordUserCount {
@@ -3015,6 +3063,134 @@ input NestedBoolWithAggregatesFilter {
   _count: NestedIntFilter
   _min: NestedBoolFilter
   _max: NestedBoolFilter
+}
+
+type AggregateDiscordUser {
+  _count: DiscordUserCountAggregate
+  _avg: DiscordUserAvgAggregate
+  _sum: DiscordUserSumAggregate
+  _min: DiscordUserMinAggregate
+  _max: DiscordUserMaxAggregate
+}
+
+type DiscordUserCountAggregate {
+  id: Int!
+  discordId: Int!
+  discordHandle: Int!
+  createdAt: Int!
+  updatedAt: Int!
+  discordOAuthToken: Int!
+  _all: Int!
+}
+
+type DiscordUserAvgAggregate {
+  id: Float
+}
+
+type DiscordUserSumAggregate {
+  id: Int
+}
+
+type DiscordUserMinAggregate {
+  id: Int
+  discordId: String
+  discordHandle: String
+  createdAt: DateTime
+  updatedAt: DateTime
+  discordOAuthToken: String
+}
+
+type DiscordUserMaxAggregate {
+  id: Int
+  discordId: String
+  discordHandle: String
+  createdAt: DateTime
+  updatedAt: DateTime
+  discordOAuthToken: String
+}
+
+input DiscordUserWhereUniqueInput {
+  id: Int
+  discordId: String
+}
+
+enum DiscordUserScalarFieldEnum {
+  id
+  discordId
+  discordHandle
+  createdAt
+  updatedAt
+  discordOAuthToken
+}
+
+type DiscordUserGroupBy {
+  id: Int!
+  discordId: String!
+  discordHandle: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  discordOAuthToken: String
+  _count: DiscordUserCountAggregate
+  _avg: DiscordUserAvgAggregate
+  _sum: DiscordUserSumAggregate
+  _min: DiscordUserMinAggregate
+  _max: DiscordUserMaxAggregate
+}
+
+input DiscordUserOrderByWithAggregationInput {
+  id: SortOrder
+  discordId: SortOrder
+  discordHandle: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  _count: DiscordUserCountOrderByAggregateInput
+  _avg: DiscordUserAvgOrderByAggregateInput
+  _max: DiscordUserMaxOrderByAggregateInput
+  _min: DiscordUserMinOrderByAggregateInput
+  _sum: DiscordUserSumOrderByAggregateInput
+}
+
+input DiscordUserCountOrderByAggregateInput {
+  id: SortOrder
+  discordId: SortOrder
+  discordHandle: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+}
+
+input DiscordUserAvgOrderByAggregateInput {
+  id: SortOrder
+}
+
+input DiscordUserMaxOrderByAggregateInput {
+  id: SortOrder
+  discordId: SortOrder
+  discordHandle: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+}
+
+input DiscordUserMinOrderByAggregateInput {
+  id: SortOrder
+  discordId: SortOrder
+  discordHandle: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+}
+
+input DiscordUserSumOrderByAggregateInput {
+  id: SortOrder
+}
+
+input DiscordUserScalarWhereWithAggregatesInput {
+  AND: [DiscordUserScalarWhereWithAggregatesInput!]
+  OR: [DiscordUserScalarWhereWithAggregatesInput!]
+  NOT: [DiscordUserScalarWhereWithAggregatesInput!]
+  id: IntWithAggregatesFilter
+  discordId: StringWithAggregatesFilter
+  discordHandle: StringWithAggregatesFilter
+  createdAt: DateTimeWithAggregatesFilter
+  updatedAt: DateTimeWithAggregatesFilter
 }
 
 type AggregateEmail {

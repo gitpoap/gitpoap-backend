@@ -6,6 +6,7 @@ import { buildSchema, NonEmptyArray } from 'type-graphql';
 import {
   /* Auto-generated Relation Resolvers */
   GithubUserRelationsResolver,
+  DiscordUserRelationsResolver,
   ProfileRelationsResolver,
   OrganizationRelationsResolver,
   RepoRelationsResolver,
@@ -28,6 +29,12 @@ import {
   FindManyGithubUserResolver,
   GroupByGithubUserResolver,
   AggregateGithubUserResolver,
+  /* Auto-generated DiscordUser Resolvers */
+  FindUniqueDiscordUserResolver,
+  FindFirstDiscordUserResolver,
+  FindManyDiscordUserResolver,
+  GroupByDiscordUserResolver,
+  AggregateDiscordUserResolver,
   /* Auto-generated Profile Resolvers */
   FindUniqueProfileResolver,
   FindFirstProfileResolver,
@@ -109,6 +116,7 @@ type ResolverClass = { new (...args: any[]): any };
 const allResolvers: NonEmptyArray<ResolverClass> = [
   /* ~~ Generated resolvers ~~ */
   GithubUserRelationsResolver,
+  DiscordUserRelationsResolver,
   ProfileRelationsResolver,
   OrganizationRelationsResolver,
   RepoRelationsResolver,
@@ -131,6 +139,12 @@ const allResolvers: NonEmptyArray<ResolverClass> = [
   FindManyGithubUserResolver,
   GroupByGithubUserResolver,
   AggregateGithubUserResolver,
+  /* Auto-generated DiscordUser READ Resolvers */
+  FindUniqueDiscordUserResolver,
+  FindFirstDiscordUserResolver,
+  FindManyDiscordUserResolver,
+  GroupByDiscordUserResolver,
+  AggregateDiscordUserResolver,
   /* Auto-generated Profile READ Resolvers */
   FindUniqueProfileResolver,
   FindFirstProfileResolver,
