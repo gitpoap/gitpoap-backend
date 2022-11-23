@@ -1,12 +1,5 @@
 import { context } from '../context';
-import {
-  Email,
-  GitPOAPRequest,
-  GitPOAPStatus,
-  GitPOAPType,
-  Organization,
-  RedeemCode,
-} from '@prisma/client';
+import { GitPOAPStatus, GitPOAPType, RedeemCode } from '@prisma/client';
 import { createScopedLogger } from '../logging';
 import { retrieveClaimInfo, retrievePOAPCodes } from '../external/poap';
 import { DateTime } from 'luxon';
@@ -33,9 +26,7 @@ export async function upsertRedeemCode(gitPOAPId: number, code: string): Promise
     update: {},
     create: {
       gitPOAP: {
-        connect: {
-          id: gitPOAPId,
-        },
+        connect: { id: gitPOAPId },
       },
       code,
     },
@@ -141,7 +132,7 @@ export async function checkGitPOAPForNewCodesHelper(
 
   const startingCount = await countRedeemCodes(gitPOAP.id);
 
-  logger.info(`GitPOAP ID currently has ${startingCount} codes`);
+  logger.info(`GitPOAP ID ${gitPOAP.id} currently has ${startingCount} codes`);
 
   const mapResult = await generateCodeUsageMap(gitPOAP.poapEventId, gitPOAP.poapSecret);
   if (mapResult === null) {
@@ -179,22 +170,22 @@ export async function checkGitPOAPForNewCodesHelper(
   logger.info(`There were ${notFound} codes in our DB not found via POAP API`);
   logger.info(`There were ${alreadyUsed} codes in our DB that were already used`);
 
-  // Upsert the new codes
+  // Upsert the unclaimed codes
   for (const code of Object.keys(codeUsageMap)) {
-    await upsertRedeemCode(gitPOAP.id, code);
+    if (!codeUsageMap[code]) {
+      await upsertRedeemCode(gitPOAP.id, code);
+    }
   }
 
   const endingCount = await countRedeemCodes(gitPOAP.id);
 
   if (startingCount < endingCount) {
+    logger.info(`Found ${endingCount} new codes for GitPOAP ID ${gitPOAP.id}`);
+
     // Move the GitPOAP back into APPROVED state
     await context.prisma.gitPOAP.update({
-      where: {
-        id: gitPOAP.id,
-      },
-      data: {
-        poapApprovalStatus: GitPOAPStatus.APPROVED,
-      },
+      where: { id: gitPOAP.id },
+      data: { poapApprovalStatus: GitPOAPStatus.APPROVED },
     });
   }
 
@@ -205,13 +196,9 @@ export type CheckGitPOAPForCodesWithExtrasType = CheckGitPOAPForCodesType & {
   type: GitPOAPType;
   name: string;
   description: string;
-  organization: Organization | null;
-  creatorAddress: {
-    email: { emailAddress: string } | null;
-  } | null;
   imageUrl: string;
-  creatorEmail: Email | null;
-  gitPOAPRequest: GitPOAPRequest | null;
+  creatorEmail: { emailAddress: string } | null;
+  gitPOAPRequest: { startDate: Date; endDate: Date } | null;
 };
 
 export async function checkGitPOAPForNewCodesWithApprovalEmail(
@@ -238,8 +225,7 @@ export async function checkGitPOAPForNewCodesWithApprovalEmail(
       // if it is custom gitPOAP, we send an email for approval
       if (gitPOAP.type === GitPOAPType.CUSTOM) {
         // if email exists
-        const email =
-          gitPOAP.creatorEmail?.emailAddress ?? gitPOAP.creatorAddress?.email?.emailAddress;
+        const email = gitPOAP.creatorEmail?.emailAddress ?? null;
         if (email) {
           const emailForm: GitPOAPRequestEmailForm = {
             id: gitPOAP.id,
@@ -256,7 +242,7 @@ export async function checkGitPOAPForNewCodesWithApprovalEmail(
           };
           void sendGitPOAPRequestLiveEmail(emailForm);
         } else {
-          logger.debug(
+          logger.error(
             `We are not able to send an confirmation email since creator email for Custom GitPOAP id: ${gitPOAP.id} is null `,
           );
         }
@@ -288,19 +274,16 @@ export async function checkForNewPOAPCodes() {
       name: true,
       type: true,
       description: true,
-      organization: true,
-      creatorAddress: {
+      imageUrl: true,
+      creatorEmail: {
+        select: { emailAddress: true },
+      },
+      gitPOAPRequest: {
         select: {
-          email: {
-            select: {
-              emailAddress: true,
-            },
-          },
+          startDate: true,
+          endDate: true,
         },
       },
-      imageUrl: true,
-      creatorEmail: true,
-      gitPOAPRequest: true,
     },
   });
 
