@@ -11,7 +11,10 @@ import {
   removeDiscordLoginForAddress,
 } from '../../../../../src/lib/addresses';
 import { upsertDiscordUser } from '../../../../../src/lib/discordUsers';
-import { generateAuthTokensWithChecks } from '../../../../../src/lib/authTokens';
+import {
+  generateAuthTokensWithChecks,
+  updateAuthTokenGeneration,
+} from '../../../../../src/lib/authTokens';
 import { setupGenAuthTokens } from '../../../../../__mocks__/src/lib/authTokens';
 
 jest.mock('../../../../../src/logging');
@@ -26,6 +29,7 @@ const mockedUpsertDiscordUser = jest.mocked(upsertDiscordUser, true);
 const mockedAddDiscordLoginForAddress = jest.mocked(addDiscordLoginForAddress, true);
 const mockedRemoveDiscordLoginForAddress = jest.mocked(removeDiscordLoginForAddress, true);
 const mockedGenerateAuthTokensWithChecks = jest.mocked(generateAuthTokensWithChecks, true);
+const mockedUpdateAuthTokenGeneration = jest.mocked(updateAuthTokenGeneration, true);
 
 const authTokenId = 995;
 const authTokenGeneration = 42;
@@ -138,7 +142,7 @@ describe('POST /oauth/discord', () => {
     mockedUpsertDiscordUser.mockResolvedValue(fakeDiscordUser as any);
     const nextGeneration = authTokenGeneration + 1;
     const fakeAddress = { is: 'fake' };
-    contextMock.prisma.authToken.update.mockResolvedValue({
+    mockedUpdateAuthTokenGeneration.mockResolvedValue({
       generation: nextGeneration,
       address: fakeAddress,
     } as any);
@@ -168,36 +172,8 @@ describe('POST /oauth/discord', () => {
     expect(mockedAddDiscordLoginForAddress).toHaveBeenCalledTimes(1);
     expect(mockedAddDiscordLoginForAddress).toHaveBeenCalledWith(addressId, discordUserId);
 
-    expect(contextMock.prisma.authToken.update).toHaveBeenCalledTimes(1);
-    expect(contextMock.prisma.authToken.update).toHaveBeenCalledWith({
-      where: { id: authTokenId },
-      data: {
-        generation: { increment: 1 },
-      },
-      select: {
-        generation: true,
-        address: {
-          select: {
-            ensName: true,
-            ensAvatarImageUrl: true,
-            githubUser: {
-              select: {
-                id: true,
-                githubId: true,
-                githubHandle: true,
-                githubOAuthToken: true,
-              },
-            },
-            email: {
-              select: {
-                id: true,
-                isValidated: true,
-              },
-            },
-          },
-        },
-      },
-    });
+    expect(mockedUpdateAuthTokenGeneration).toHaveBeenCalledTimes(1);
+    expect(mockedUpdateAuthTokenGeneration).toHaveBeenCalledWith(authTokenId);
 
     expect(generateAuthTokensWithChecks).toHaveBeenCalledTimes(1);
     expect(generateAuthTokensWithChecks).toHaveBeenCalledWith(authTokenId, nextGeneration, {
@@ -295,7 +271,7 @@ describe('DELETE /oauth/discord', () => {
     } as any);
     const nextGeneration = authTokenGeneration + 1;
     const fakeAddress = { wow: 'so fake' };
-    contextMock.prisma.authToken.update.mockResolvedValue({
+    mockedUpdateAuthTokenGeneration.mockResolvedValue({
       generation: nextGeneration,
       address: fakeAddress,
     } as any);
@@ -314,36 +290,8 @@ describe('DELETE /oauth/discord', () => {
     expectAuthTokenFindUnique();
 
     /* Expect that the token is updated to remove the user */
-    expect(contextMock.prisma.authToken.update).toHaveBeenCalledTimes(1);
-    expect(contextMock.prisma.authToken.update).toHaveBeenCalledWith({
-      where: { id: authTokenId },
-      data: {
-        generation: { increment: 1 },
-      },
-      select: {
-        generation: true,
-        address: {
-          select: {
-            ensName: true,
-            ensAvatarImageUrl: true,
-            githubUser: {
-              select: {
-                id: true,
-                githubId: true,
-                githubHandle: true,
-                githubOAuthToken: true,
-              },
-            },
-            email: {
-              select: {
-                id: true,
-                isValidated: true,
-              },
-            },
-          },
-        },
-      },
-    });
+    expect(mockedUpdateAuthTokenGeneration).toHaveBeenCalledTimes(1);
+    expect(mockedUpdateAuthTokenGeneration).toHaveBeenCalledWith(authTokenId);
 
     expect(mockedRemoveDiscordLoginForAddress).toHaveBeenCalledTimes(1);
     expect(mockedRemoveDiscordLoginForAddress).toHaveBeenCalledWith(addressId);

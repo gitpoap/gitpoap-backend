@@ -136,6 +136,13 @@ export function jwtWithGitHubOAuth() {
                   githubOAuthToken: true,
                 },
               },
+              discordUser: {
+                select: {
+                  discordId: true,
+                  discordHandle: true,
+                  discordOAuthToken: true,
+                },
+              },
               email: {
                 select: {
                   id: true,
@@ -161,6 +168,18 @@ export function jwtWithGitHubOAuth() {
       set(req, 'user.githubId', tokenInfo.address.githubUser.githubId);
       set(req, 'user.githubHandle', tokenInfo.address.githubUser.githubHandle);
       set(req, 'user.githubOAuthToken', tokenInfo.address.githubUser.githubOAuthToken);
+
+      if (
+        tokenInfo.address.discordUser === null ||
+        tokenInfo.address.discordUser.discordOAuthToken === null
+      ) {
+        next({ status: 401, msg: 'Not logged into discord' });
+        return;
+      }
+
+      set(req, 'user.discordId', tokenInfo.address.discordUser.discordId);
+      set(req, 'user.discordHandle', tokenInfo.address.discordUser.discordHandle);
+      set(req, 'user.discordOAuthToken', tokenInfo.address.discordUser.discordOAuthToken);
 
       let emailId: number | null = null;
       if (tokenInfo.address.email !== null) {
