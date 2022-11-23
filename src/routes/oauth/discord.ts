@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import { context } from '../../context';
 import {
   requestDiscordOAuthToken,
   getDiscordCurrentUserInfo,
@@ -9,7 +8,7 @@ import { jwtWithAddress } from '../../middleware/auth';
 import { RequestAccessTokenSchema } from '../../schemas/discord';
 import { getAccessTokenPayload } from '../../types/authTokens';
 import { upsertDiscordUser } from '../../lib/discordUsers';
-import { generateAuthTokensWithChecks } from '../../lib/authTokens';
+import { generateAuthTokensWithChecks, updateAuthTokenGeneration } from '../../lib/authTokens';
 import { addDiscordLoginForAddress, removeDiscordLoginForAddress } from '../../lib/addresses';
 import { getRequestLogger } from '../../middleware/loggingAndTiming';
 
@@ -60,37 +59,7 @@ discordRouter.post('/', jwtWithAddress(), async function (req, res) {
   // since it was looked up within the middleware)
   let dbAuthToken;
   try {
-    dbAuthToken = await context.prisma.authToken.update({
-      where: {
-        id: authTokenId,
-      },
-      data: {
-        generation: { increment: 1 },
-      },
-      select: {
-        generation: true,
-        address: {
-          select: {
-            ensName: true,
-            ensAvatarImageUrl: true,
-            githubUser: {
-              select: {
-                id: true,
-                githubId: true,
-                githubHandle: true,
-                githubOAuthToken: true,
-              },
-            },
-            email: {
-              select: {
-                id: true,
-                isValidated: true,
-              },
-            },
-          },
-        },
-      },
-    });
+    dbAuthToken = await updateAuthTokenGeneration(authTokenId);
   } catch (err) {
     logger.warn(
       `DiscordUser ID ${discordUser.id}'s AuthToken was invalidated during Discord login process`,
@@ -136,35 +105,7 @@ discordRouter.delete('/', jwtWithAddress(), async function (req, res) {
 
   // Update the generation of the AuthToken (this must exist
   // since it was looked up within the middleware)
-  const dbAuthToken = await context.prisma.authToken.update({
-    where: { id: authTokenId },
-    data: {
-      generation: { increment: 1 },
-    },
-    select: {
-      generation: true,
-      address: {
-        select: {
-          ensName: true,
-          ensAvatarImageUrl: true,
-          githubUser: {
-            select: {
-              id: true,
-              githubId: true,
-              githubHandle: true,
-              githubOAuthToken: true,
-            },
-          },
-          email: {
-            select: {
-              id: true,
-              isValidated: true,
-            },
-          },
-        },
-      },
-    },
-  });
+  const dbAuthToken = await updateAuthTokenGeneration(authTokenId);
 
   const userAuthTokens = await generateAuthTokensWithChecks(authTokenId, dbAuthToken.generation, {
     ...dbAuthToken.address,

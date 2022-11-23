@@ -45,6 +45,10 @@ function isAccessTokenPayload(payload: any): payload is AccessTokenPayload {
     isNumberOrNull(payload.githubId) &&
     'githubHandle' in payload &&
     isStringOrNull(payload.githubHandle) &&
+    'discordId' in payload &&
+    isStringOrNull(payload.discordId) &&
+    'discordHandle' in payload &&
+    isStringOrNull(payload.discordHandle) &&
     'emailId' in payload &&
     isNumberOrNull(payload.emailId)
   );
@@ -62,6 +66,9 @@ export type AccessTokenPayloadWithOAuth = AccessTokenPayloadBase & {
   githubId: number;
   githubHandle: string;
   githubOAuthToken: string;
+  discordId: string;
+  discordHandle: string;
+  discordOAuthToken: string;
   emailId: number | null;
 };
 
@@ -74,6 +81,12 @@ function isAccessTokenPayloadWithOAuth(payload: any): payload is AccessTokenPayl
     typeof payload.githubHandle === 'string' &&
     'githubOAuthToken' in payload &&
     typeof payload.githubOAuthToken === 'string' &&
+    'discordId' in payload &&
+    typeof payload.discordId === 'string' &&
+    'discordHandle' in payload &&
+    typeof payload.discordHandle === 'string' &&
+    'discordOAuthToken' in payload &&
+    typeof payload.discordOAuthToken === 'string' &&
     'emailId' in payload &&
     isNumberOrNull(payload.emailId)
   );
@@ -90,6 +103,8 @@ export function getAccessTokenPayloadWithOAuth(payload: any): AccessTokenPayload
 export type AccessTokenPayloadWithEmail = AccessTokenPayloadBase & {
   githubId: number | null;
   githubHandle: string | null;
+  discordId: string | null;
+  discordHandle: string | null;
   emailId: number;
 };
 

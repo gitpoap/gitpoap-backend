@@ -1,8 +1,7 @@
 import { Router } from 'express';
-import { context } from '../../context';
 import { RequestAccessTokenSchema } from '../../schemas/github';
 import { requestGithubOAuthToken, getGithubCurrentUserInfo } from '../../external/github';
-import { generateAuthTokensWithChecks } from '../../lib/authTokens';
+import { generateAuthTokensWithChecks, updateAuthTokenGeneration } from '../../lib/authTokens';
 import { jwtWithAddress } from '../../middleware/auth';
 import { getAccessTokenPayload } from '../../types/authTokens';
 import { upsertGithubUser } from '../../lib/githubUsers';
@@ -61,37 +60,7 @@ githubRouter.post('/', jwtWithAddress(), async function (req, res) {
   // since it was looked up within the middleware)
   let dbAuthToken;
   try {
-    dbAuthToken = await context.prisma.authToken.update({
-      where: {
-        id: authTokenId,
-      },
-      data: {
-        generation: { increment: 1 },
-      },
-      select: {
-        generation: true,
-        address: {
-          select: {
-            ensName: true,
-            ensAvatarImageUrl: true,
-            discordUser: {
-              select: {
-                id: true,
-                discordId: true,
-                discordHandle: true,
-                discordOAuthToken: true,
-              },
-            },
-            email: {
-              select: {
-                id: true,
-                isValidated: true,
-              },
-            },
-          },
-        },
-      },
-    });
+    dbAuthToken = await updateAuthTokenGeneration(authTokenId);
   } catch (err) {
     logger.warn(
       `GithubUser ID ${githubUser.id}'s AuthToken was invalidated during GitHub login process`,
@@ -137,35 +106,7 @@ githubRouter.delete('/', jwtWithAddress(), async function (req, res) {
 
   // Update the generation of the AuthToken (this must exist
   // since it was looked up within the middleware)
-  const dbAuthToken = await context.prisma.authToken.update({
-    where: { id: authTokenId },
-    data: {
-      generation: { increment: 1 },
-    },
-    select: {
-      generation: true,
-      address: {
-        select: {
-          ensName: true,
-          ensAvatarImageUrl: true,
-          discordUser: {
-            select: {
-              id: true,
-              discordId: true,
-              discordHandle: true,
-              discordOAuthToken: true,
-            },
-          },
-          email: {
-            select: {
-              id: true,
-              isValidated: true,
-            },
-          },
-        },
-      },
-    },
-  });
+  const dbAuthToken = await updateAuthTokenGeneration(authTokenId);
 
   const userAuthTokens = await generateAuthTokensWithChecks(authTokenId, dbAuthToken.generation, {
     ...dbAuthToken.address,
