@@ -169,19 +169,8 @@ export function jwtWithGitHubOAuth() {
       set(req, 'user.githubHandle', tokenInfo.address.githubUser.githubHandle);
       set(req, 'user.githubOAuthToken', tokenInfo.address.githubUser.githubOAuthToken);
 
-      let discordId: string | null = null;
-      let discordHandle: string | null = null;
-      let discordOAuthToken: string | null = null;
-
-      if (tokenInfo.address.discordUser !== null) {
-        discordId = tokenInfo.address.discordUser.discordId ?? null;
-        discordHandle = tokenInfo.address.discordUser.discordHandle ?? null;
-        discordOAuthToken = tokenInfo.address.discordUser.discordOAuthToken ?? null;
-      }
-
-      set(req, 'user.discordId', discordId);
-      set(req, 'user.discordHandle', discordHandle);
-      set(req, 'user.discordOAuthToken', discordOAuthToken);
+      set(req, 'user.discordId', tokenInfo.address.discordUser?.discordId ?? null);
+      set(req, 'user.discordHandle', tokenInfo.address.discordUser?.discordHandle ?? null);
 
       let emailId: number | null = null;
       if (tokenInfo.address.email !== null) {
