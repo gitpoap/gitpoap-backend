@@ -12,6 +12,20 @@ import { isAddressAnAdmin } from '../lib/admins';
 
 export const jwtMiddleware = jwt({ secret: JWT_SECRET as string, algorithms: ['HS256'] });
 
+function safelyGetAuthTokenId(payload: any): number | null {
+  const logger = createScopedLogger('safelyGetAuthTokenId');
+
+  try {
+    const { authTokenId } = getAccessTokenPayload(payload);
+
+    return authTokenId;
+  } catch (err) {
+    logger.warn(`Got a malformed AuthToken in middleware: ${err}`);
+
+    return null;
+  }
+}
+
 export function jwtWithAddress() {
   const middleware: RequestHandler = async (req, res, next) => {
     const callback = async () => {
@@ -20,12 +34,14 @@ export function jwtWithAddress() {
         return;
       }
 
-      const { authTokenId } = getAccessTokenPayload(req.user);
+      const authTokenId = safelyGetAuthTokenId(req.user);
+      if (authTokenId === null) {
+        next({ status: 400, msg: 'Malformed Access Token' });
+        return;
+      }
 
       const tokenInfo = await context.prisma.authToken.findUnique({
-        where: {
-          id: authTokenId,
-        },
+        where: { id: authTokenId },
         select: {
           id: true,
           address: {
@@ -120,10 +136,14 @@ export function jwtWithGitHubOAuth() {
         return;
       }
 
+      const authTokenId = safelyGetAuthTokenId(req.user);
+      if (authTokenId === null) {
+        next({ status: 400, msg: 'Malformed Access Token' });
+        return;
+      }
+
       const tokenInfo = await context.prisma.authToken.findUnique({
-        where: {
-          id: getAccessTokenPayload(req.user).authTokenId,
-        },
+        where: { id: authTokenId },
         select: {
           address: {
             select: {
