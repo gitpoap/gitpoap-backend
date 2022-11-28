@@ -62,17 +62,18 @@ export function getAccessTokenPayload(payload: any): AccessTokenPayload {
   throw Error('Tried to convert payload to AccessTokenPayload but it is not!');
 }
 
-export type AccessTokenPayloadWithOAuth = AccessTokenPayloadBase & {
+export type AccessTokenPayloadWithGithubOAuth = AccessTokenPayloadBase & {
   githubId: number;
   githubHandle: string;
   githubOAuthToken: string;
-  discordId: string;
-  discordHandle: string;
-  discordOAuthToken: string;
+  discordId: string | null;
+  discordHandle: string | null;
   emailId: number | null;
 };
 
-function isAccessTokenPayloadWithOAuth(payload: any): payload is AccessTokenPayloadWithOAuth {
+function isAccessTokenPayloadWithGithubOAuth(
+  payload: any,
+): payload is AccessTokenPayloadWithGithubOAuth {
   return (
     isAccessTokenPayloadBase(payload) &&
     'githubId' in payload &&
@@ -92,12 +93,14 @@ function isAccessTokenPayloadWithOAuth(payload: any): payload is AccessTokenPayl
   );
 }
 
-export function getAccessTokenPayloadWithOAuth(payload: any): AccessTokenPayloadWithOAuth {
-  if (isAccessTokenPayloadWithOAuth(payload)) {
+export function getAccessTokenPayloadWithGithubOAuth(
+  payload: any,
+): AccessTokenPayloadWithGithubOAuth {
+  if (isAccessTokenPayloadWithGithubOAuth(payload)) {
     return payload;
   }
 
-  throw Error('Tried to convert payload to AccessTokenPayloadWithOAuth but it is not!');
+  throw Error('Tried to convert payload to AccessTokenPayloadWithGithubOAuth but it is not!');
 }
 
 export type AccessTokenPayloadWithEmail = AccessTokenPayloadBase & {
