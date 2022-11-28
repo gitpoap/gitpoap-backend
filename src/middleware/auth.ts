@@ -1,7 +1,7 @@
 import jwt from 'express-jwt';
 import { context } from '../context';
 import set from 'lodash/set';
-import { getAccessTokenPayload, getAccessTokenPayloadWithOAuth } from '../types/authTokens';
+import { getAccessTokenPayload, getAccessTokenPayloadWithGithubOAuth } from '../types/authTokens';
 import { RequestHandler } from 'express';
 import { JWT_SECRET } from '../environment';
 import { createScopedLogger } from '../logging';
@@ -204,7 +204,7 @@ export function jwtWithAdminOAuth() {
         return;
       }
 
-      const { address, githubHandle } = getAccessTokenPayloadWithOAuth(req.user);
+      const { address, githubHandle } = getAccessTokenPayloadWithGithubOAuth(req.user);
 
       if (!isAddressAnAdmin(address)) {
         logger.warn(

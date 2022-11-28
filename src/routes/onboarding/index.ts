@@ -11,7 +11,7 @@ import {
 } from '@aws-sdk/client-dynamodb';
 import { configProfile, dynamoDBClient } from '../../external/dynamo';
 import { jwtWithGitHubOAuth } from '../../middleware/auth';
-import { getAccessTokenPayloadWithOAuth } from '../../types/authTokens';
+import { getAccessTokenPayloadWithGithubOAuth } from '../../types/authTokens';
 import { sendConfirmationEmail, sendInternalConfirmationEmail } from '../../external/postmark';
 import {
   IntakeFormImageFilesSchema,
@@ -36,7 +36,7 @@ onboardingRouter.post<'/intake-form', any, any, IntakeForm>(
   async (req, res) => {
     const logger = getRequestLogger(req);
 
-    const { githubHandle } = getAccessTokenPayloadWithOAuth(req.user);
+    const { githubHandle } = getAccessTokenPayloadWithGithubOAuth(req.user);
     const unixTime = DateTime.local().toUnixInteger();
     const intakeFormTable = configProfile.tables.intakeForm;
 
@@ -178,7 +178,7 @@ onboardingRouter.get<'/github/repos', any, APIResponseData<Repo[]>>(
   async function (req, res) {
     const logger = getRequestLogger(req);
 
-    const { githubOAuthToken } = getAccessTokenPayloadWithOAuth(req.user);
+    const { githubOAuthToken } = getAccessTokenPayloadWithGithubOAuth(req.user);
     const octokit = new Octokit({ auth: githubOAuthToken });
     const user = await octokit.rest.users.getAuthenticated();
 

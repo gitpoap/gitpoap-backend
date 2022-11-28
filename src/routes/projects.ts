@@ -3,7 +3,7 @@ import { jwtWithAdminAddress, jwtWithAdminOAuth } from '../middleware/auth';
 import { AddReposSchema } from '../schemas/projects';
 import { createRepoByGithubId } from '../lib/repos';
 import { context } from '../context';
-import { getAccessTokenPayloadWithOAuth } from '../types/authTokens';
+import { getAccessTokenPayloadWithGithubOAuth } from '../types/authTokens';
 import { backloadGithubPullRequestData } from '../lib/pullRequests';
 import { getRequestLogger } from '../middleware/loggingAndTiming';
 
@@ -20,7 +20,7 @@ projectsRouter.post('/add-repos', jwtWithAdminOAuth(), async (req, res) => {
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
-  const { githubOAuthToken } = getAccessTokenPayloadWithOAuth(req.user);
+  const { githubOAuthToken } = getAccessTokenPayloadWithGithubOAuth(req.user);
 
   logger.info(
     `Request to add GitHub Repo IDs ${req.body.githubRepoIds} to Project ID ${req.body.projectId}`,
