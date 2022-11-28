@@ -7,7 +7,7 @@ import { Router, Request } from 'express';
 import { context } from '../context';
 import { ClaimStatus, GitPOAPStatus, GitPOAPType } from '@prisma/client';
 import { gitpoapBotAuth, jwtWithAddress, jwtWithAdminOAuth } from '../middleware/auth';
-import { getAccessTokenPayloadWithOAuth } from '../types/authTokens';
+import { getAccessTokenPayloadWithGithubOAuth } from '../types/authTokens';
 import { redeemPOAP } from '../external/poap';
 import { getGithubUserById } from '../external/github';
 import { backloadGithubPullRequestData } from '../lib/pullRequests';
@@ -208,7 +208,7 @@ claimsRouter.post('/create', jwtWithAdminOAuth(), async function (req, res) {
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
-  const { githubOAuthToken } = getAccessTokenPayloadWithOAuth(req.user);
+  const { githubOAuthToken } = getAccessTokenPayloadWithGithubOAuth(req.user);
 
   logger.info(
     `Request to create ${req.body.recipientGithubIds.length} claims for GitPOAP Id: ${req.body.gitPOAPId}`,
