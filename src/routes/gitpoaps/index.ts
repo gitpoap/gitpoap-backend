@@ -11,7 +11,10 @@ import { createPOAPEvent } from '../../external/poap';
 import { jwtWithAddress, jwtWithAdminAddress, jwtWithAdminOAuth } from '../../middleware/auth';
 import multer from 'multer';
 import { ClaimStatus, GitPOAPStatus, GitPOAPType } from '@prisma/client';
-import { getAccessTokenPayload, getAccessTokenPayloadWithOAuth } from '../../types/authTokens';
+import {
+  getAccessTokenPayload,
+  getAccessTokenPayloadWithGithubOAuth,
+} from '../../types/authTokens';
 import { backloadGithubPullRequestData } from '../../lib/pullRequests';
 import {
   createProjectWithGithubRepoIds,
@@ -55,7 +58,7 @@ gitPOAPsRouter.post(
       return res.status(400).send({ msg });
     }
 
-    const { githubOAuthToken } = getAccessTokenPayloadWithOAuth(req.user);
+    const { githubOAuthToken } = getAccessTokenPayloadWithGithubOAuth(req.user);
 
     const isOngoing = schemaResult.data.isOngoing === 'true';
     const canRequestMoreCodes = schemaResult.data.isOngoing === 'true';
