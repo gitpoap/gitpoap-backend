@@ -83,11 +83,9 @@ function isAccessTokenPayloadWithGithubOAuth(
     'githubOAuthToken' in payload &&
     typeof payload.githubOAuthToken === 'string' &&
     'discordId' in payload &&
-    typeof payload.discordId === 'string' &&
+    isStringOrNull(payload.discordId) &&
     'discordHandle' in payload &&
-    typeof payload.discordHandle === 'string' &&
-    'discordOAuthToken' in payload &&
-    typeof payload.discordOAuthToken === 'string' &&
+    isStringOrNull(payload.discordHandle) &&
     'emailId' in payload &&
     isNumberOrNull(payload.emailId)
   );
@@ -118,6 +116,10 @@ function isAccessTokenPayloadWithEmail(payload: any): payload is AccessTokenPayl
     isNumberOrNull(payload.githubId) &&
     'githubHandle' in payload &&
     isStringOrNull(payload.githubHandle) &&
+    'discordId' in payload &&
+    isStringOrNull(payload.discordId) &&
+    'discordHandle' in payload &&
+    isStringOrNull(payload.discordHandle) &&
     'emailId' in payload &&
     typeof payload.emailId === 'number'
   );
