@@ -3,7 +3,7 @@ import { Multer } from 'multer';
 import '../../../../../__mocks__/src/logging';
 import { contextMock } from '../../../../../__mocks__/src/context';
 import { AdminApprovalStatus, GitPOAPType } from '@prisma/client';
-import { setupApp } from '../../../../../__mocks__/src/app';
+import { setupApp } from '../../../../../__mocks__/src/backend/app';
 import { generateAuthTokens } from '../../../../../src/lib/authTokens';
 import request from 'supertest';
 import {

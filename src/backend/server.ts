@@ -2,9 +2,9 @@ import { config } from 'dotenv';
 config();
 
 import 'reflect-metadata';
-import { CONTACTS_TABLE_NAME } from './external/dynamo';
-import { PORT } from './constants';
-import { context } from './context';
+import { CONTACTS_TABLE_NAME } from '../external/dynamo';
+import { PORT } from '../constants';
+import { context } from '../context';
 import { registerHandler } from 'segfault-handler';
 import {
   NODE_ENV,
@@ -14,10 +14,10 @@ import {
   SENTRY_DSN,
   POSTMARK_SERVER_TOKEN,
   SLACK_TOKEN,
-} from './environment';
-import { createScopedLogger, updateLogLevel } from './logging';
+} from '../environment';
+import { createScopedLogger, updateLogLevel } from '../logging';
 import minimist from 'minimist';
-import { startMetricsServer } from './metrics';
+import { startMetricsServer } from '../metrics';
 import { setupApp } from './app';
 import { startBatchProcesses } from './batchProcessing';
 

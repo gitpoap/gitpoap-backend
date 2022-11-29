@@ -1,5 +1,5 @@
 import request from 'supertest';
-import { setupApp as setupServerApp } from '../../../../__mocks__/src/app';
+import { setupApp as setupServerApp } from '../../../../__mocks__/src/backend/app';
 import { setupApp as setupPublicApiApp } from '../../../../__mocks__/src/public-api/app';
 import { Express } from 'express';
 

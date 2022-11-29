@@ -1,7 +1,7 @@
 import '../../../../__mocks__/src/logging';
 import { contextMock } from '../../../../__mocks__/src/context';
 import request from 'supertest';
-import { setupApp } from '../../../../__mocks__/src/app';
+import { setupApp } from '../../../../__mocks__/src/backend/app';
 import { isAuthSignatureDataValid } from '../../../../src/lib/signatures';
 import { sign } from 'jsonwebtoken';
 import { JWT_SECRET } from '../../../../src/environment';
