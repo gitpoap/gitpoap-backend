@@ -57,6 +57,7 @@ export const LOGIN_EXP_TIME_MONTHS = 1;
 export const GITPOAP_ISSUER_EMAIL = 'issuer@gitpoap.io';
 
 export const GITPOAP_ROOT_URL = 'https://www.gitpoap.io';
+export const GITPOAP_STAGING_ROOT_URL = 'https://brisket.gitpoap.io';
 export const GITPOAP_DEV_ROOT_URL = 'http://localhost:3000';
 
 export const TEAM_EMAIL = 'team@gitpoap.io';
@@ -67,7 +68,10 @@ export const TEAM_NAME = 'GitPOAP Team';
 export const PRODUCT_NAME = 'GitPOAP';
 export const GITPOAP_DOC_URL = 'https://docs.gitpoap.io';
 
-export const IS_PROD = NODE_ENV === 'production';
+export const PROD_ENV = 'production';
+export const STAGING_ENV = 'staging';
+
+export const IS_PROD = NODE_ENV === PROD_ENV;
 
 // The absolute minimum codes we will request for a Custom GitPOAP
 export const CUSTOM_GITPOAP_MINIMUM_CODES = 20;

@@ -5,7 +5,6 @@ import * as Tracing from '@sentry/tracing';
 import { graphqlHTTP } from 'express-graphql';
 import { createAndEmitSchema } from '../graphql/schema';
 import { context } from '../context';
-import cors from 'cors';
 import { errorHandler } from '../middleware/error';
 import { subscribeRouter } from '../routes/subscribe';
 import { suggestRouter } from '../routes/suggest';
@@ -26,6 +25,8 @@ import { NODE_ENV, SENTRY_DSN } from '../environment';
 import { authRouter } from '../routes/auth';
 import { loggingAndTimingMiddleware } from '../middleware/loggingAndTiming';
 import { routeNotFoundHandler } from '../middleware/routeNotFound';
+import { cors } from './cors';
+import { IS_PROD } from '../constants';
 
 const initializeSentry = (app: Express) => {
   if (SENTRY_DSN) {
@@ -33,7 +34,7 @@ const initializeSentry = (app: Express) => {
       dsn: SENTRY_DSN,
       environment: NODE_ENV,
       /* Only send errors to sentry if env is production */
-      enabled: NODE_ENV === 'production',
+      enabled: IS_PROD,
       integrations: [
         new Sentry.Integrations.Http({ tracing: true }),
         new Tracing.Integrations.Express({ app }),
@@ -55,13 +56,17 @@ export async function setupAppWithMiddleware(middleware: RequestHandler[]) {
   const app = express();
   initializeSentry(app);
 
-  app.use(cors());
-  app.use(express.json());
+  app.use(cors);
+
+  // Enable pre-flight on all routes
+  app.options('*', cors);
 
   app.use(
     '/graphql',
     graphqlHTTP({ schema: await createAndEmitSchema(), context, graphiql: true }),
   );
+
+  app.use(express.json());
 
   for (const mw of middleware) {
     app.use(mw);
