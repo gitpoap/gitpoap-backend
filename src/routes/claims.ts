@@ -6,7 +6,7 @@ import {
 import { Router, Request } from 'express';
 import { context } from '../context';
 import { ClaimStatus, GitPOAPStatus, GitPOAPType } from '@prisma/client';
-import { gitpoapBotAuth, jwtWithAddress, jwtWithAdminOAuth } from '../middleware/auth';
+import { gitpoapBotAuth, jwtWithAddress, jwtWithStaffOAuth } from '../middleware/auth';
 import { getAccessTokenPayloadWithGithubOAuth } from '../types/authTokens';
 import { redeemPOAP } from '../external/poap';
 import { getGithubUserById } from '../external/github';
@@ -22,7 +22,7 @@ import { z } from 'zod';
 import { BotCreateClaimsErrorType, createClaimsForPR, createClaimsForIssue } from '../lib/bot';
 import { RestrictedContribution } from '../lib/contributions';
 import { sendInternalClaimMessage, sendInternalClaimByMentionMessage } from '../external/slack';
-import { isAddressAnAdmin } from '../lib/admins';
+import { isAddressAStaffMember } from '../lib/staff';
 import { getAccessTokenPayload } from '../types/authTokens';
 import { ensureRedeemCodeThreshold, runClaimsPostProcessing } from '../lib/claims';
 import { ClaimData, FoundClaim } from '../types/claims';
@@ -195,7 +195,7 @@ claimsRouter.post('/', jwtWithAddress(), async function (req, res) {
   await runClaimsPostProcessing(claimedIds, qrHashes);
 });
 
-claimsRouter.post('/create', jwtWithAdminOAuth(), async function (req, res) {
+claimsRouter.post('/create', jwtWithStaffOAuth(), async function (req, res) {
   const logger = getRequestLogger(req);
 
   logger.error('[DEPRECATED] POST /claims/create called');
@@ -614,9 +614,9 @@ claimsRouter.delete('/:id', jwtWithAddress(), async (req, res) => {
       return res.status(401).send({ msg: 'Not Custom GitPOAP creator' });
     }
   } else {
-    // Otherwise ensure that the requestor is an admin
-    if (!isAddressAnAdmin(address)) {
-      logger.warn(`Non-admin address ${address} attempted to delete a Claim for a GitPOAP`);
+    // Otherwise ensure that the requestor is a staff member
+    if (!isAddressAStaffMember(address)) {
+      logger.warn(`Non-staff address ${address} attempted to delete a Claim for a GitPOAP`);
       return res.status(401).send({ msg: 'Not authorized to delete claims' });
     }
   }

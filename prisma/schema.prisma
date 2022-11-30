@@ -265,7 +265,7 @@ model GitPOAPRequest {
   contributors        Json                @db.Json
   rejectionReason     String?
   // Internal approval status for Custom GitPOAPs
-  adminApprovalStatus AdminApprovalStatus @default(PENDING)
+  staffApprovalStatus StaffApprovalStatus @default(PENDING)
   addressId           Int
   address             Address             @relation(fields: [addressId], references: [id])
   // TODO: remove after POAP fixes their issues with dates
@@ -418,7 +418,7 @@ enum MembershipRole {
   MEMBER
 }
 
-enum AdminApprovalStatus {
+enum StaffApprovalStatus {
   APPROVED
   PENDING
   REJECTED

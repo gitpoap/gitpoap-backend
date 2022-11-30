@@ -27,7 +27,7 @@ import { ADDRESSES, GH_HANDLES, GH_IDS } from './constants';
 import { TEAM_EMAIL } from '../src/constants';
 
 import * as data from './data';
-import { AdminApprovalStatus, GitPOAPType } from '@prisma/client';
+import { StaffApprovalStatus, GitPOAPType } from '@prisma/client';
 import { getS3URL } from '../src/external/s3';
 import { context } from '../src/context';
 
@@ -307,7 +307,7 @@ export const seed = async () => {
     imageUrl: getS3URL('gitpoap-request-images-test', 'gitpoap-test-2.png-1666121850.987'),
     startDate: DateTime.fromISO('2022-01-01').toJSDate(),
     endDate: DateTime.fromISO('2022-01-30').toJSDate(),
-    adminApprovalStatus: AdminApprovalStatus.PENDING,
+    staffApprovalStatus: StaffApprovalStatus.PENDING,
     contributors: {
       ensNames: ['peebeejay.eth'],
       githubHandles: ['peebeejay'],
@@ -324,7 +324,7 @@ export const seed = async () => {
     imageUrl: getS3URL('gitpoap-request-images-test', 'gitpoap-test-1.png-1666121850.987'),
     startDate: DateTime.fromISO('2022-06-01').toJSDate(),
     endDate: DateTime.fromISO('2022-06-30').toJSDate(),
-    adminApprovalStatus: AdminApprovalStatus.PENDING,
+    staffApprovalStatus: StaffApprovalStatus.PENDING,
     contributors: {
       ensNames: ['lamberti.eth'],
       githubHandles: ['aldolamb'],

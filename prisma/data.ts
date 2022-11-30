@@ -387,7 +387,7 @@ export const event71781 = {
   start_date: '01-Jan-2022',
   end_date: '31-Dec-2022',
   expiry_date: '01-Apr-2023',
-  from_admin: false,
+  from_staff: false,
   virtual_event: true,
   event_template_id: 0,
   event_host_id: 0,

@@ -1,7 +1,7 @@
 import { ClaimStatus, GitPOAPStatus } from '@generated/type-graphql';
 import {
   Address,
-  AdminApprovalStatus,
+  StaffApprovalStatus,
   Claim,
   Email,
   FeaturedPOAP,
@@ -606,7 +606,7 @@ type CreateGitPOAPRequestParams = {
   contributors: z.infer<typeof GitPOAPContributorsSchema>;
   startDate: Date;
   endDate: Date;
-  adminApprovalStatus: AdminApprovalStatus;
+  staffApprovalStatus: StaffApprovalStatus;
 };
 
 export class GitPOAPRequestFactory {
@@ -619,7 +619,7 @@ export class GitPOAPRequestFactory {
     contributors,
     startDate,
     endDate,
-    adminApprovalStatus = AdminApprovalStatus.PENDING,
+    staffApprovalStatus = StaffApprovalStatus.PENDING,
   }: CreateGitPOAPRequestParams): Promise<GitPOAPRequest> => {
     const data: Prisma.GitPOAPRequestCreateInput = {
       name,
@@ -631,7 +631,7 @@ export class GitPOAPRequestFactory {
       address: { connect: { id: addressId } },
       imageUrl,
       contributors,
-      adminApprovalStatus,
+      staffApprovalStatus,
     };
     const gitPOAPRequest = await prisma.gitPOAPRequest.create({ data });
     logger.debug(`Creating GitPOAPRequest with ID: ${gitPOAPRequest.id}`);
