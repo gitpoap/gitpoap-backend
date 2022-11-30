@@ -22,3 +22,7 @@ export const UpdateCustomGitPOAPSchema = z
     contributors: z.string().nonempty().optional(),
   })
   .strict();
+
+export const RejectCustomGitPOAPSchema = z.object({
+  rejectionReason: z.nullable(z.string().nonempty()),
+});
