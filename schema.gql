@@ -1035,6 +1035,7 @@ input GitPOAPRequestWhereInput {
   organizationId: IntNullableFilter
   organization: OrganizationRelationFilter
   contributors: JsonFilter
+  rejectionReason: StringNullableFilter
   adminApprovalStatus: EnumAdminApprovalStatusFilter
   addressId: IntFilter
   address: AddressRelationFilter
@@ -1984,6 +1985,7 @@ input GitPOAPRequestOrderByWithRelationInput {
   organizationId: SortOrder
   organization: OrganizationOrderByWithRelationInput
   contributors: SortOrder
+  rejectionReason: SortOrder
   adminApprovalStatus: SortOrder
   addressId: SortOrder
   address: AddressOrderByWithRelationInput
@@ -2037,6 +2039,7 @@ type GitPOAPRequest {
   projectId: Int
   organizationId: Int
   contributors: JSON!
+  rejectionReason: String
   adminApprovalStatus: AdminApprovalStatus!
   addressId: Int!
   gitPOAPId: Int
@@ -2066,6 +2069,7 @@ enum GitPOAPRequestScalarFieldEnum {
   projectId
   organizationId
   contributors
+  rejectionReason
   adminApprovalStatus
   addressId
   gitPOAPId
@@ -3716,6 +3720,7 @@ type GitPOAPRequestCountAggregate {
   projectId: Int!
   organizationId: Int!
   contributors: Int!
+  rejectionReason: Int!
   adminApprovalStatus: Int!
   addressId: Int!
   gitPOAPId: Int!
@@ -3755,6 +3760,7 @@ type GitPOAPRequestMinAggregate {
   description: String
   projectId: Int
   organizationId: Int
+  rejectionReason: String
   adminApprovalStatus: AdminApprovalStatus
   addressId: Int
   gitPOAPId: Int
@@ -3773,6 +3779,7 @@ type GitPOAPRequestMaxAggregate {
   description: String
   projectId: Int
   organizationId: Int
+  rejectionReason: String
   adminApprovalStatus: AdminApprovalStatus
   addressId: Int
   gitPOAPId: Int
@@ -3792,6 +3799,7 @@ type GitPOAPRequestGroupBy {
   projectId: Int
   organizationId: Int
   contributors: JSON!
+  rejectionReason: String
   adminApprovalStatus: AdminApprovalStatus!
   addressId: Int!
   gitPOAPId: Int
@@ -3816,6 +3824,7 @@ input GitPOAPRequestOrderByWithAggregationInput {
   projectId: SortOrder
   organizationId: SortOrder
   contributors: SortOrder
+  rejectionReason: SortOrder
   adminApprovalStatus: SortOrder
   addressId: SortOrder
   gitPOAPId: SortOrder
@@ -3840,6 +3849,7 @@ input GitPOAPRequestCountOrderByAggregateInput {
   projectId: SortOrder
   organizationId: SortOrder
   contributors: SortOrder
+  rejectionReason: SortOrder
   adminApprovalStatus: SortOrder
   addressId: SortOrder
   gitPOAPId: SortOrder
@@ -3868,6 +3878,7 @@ input GitPOAPRequestMaxOrderByAggregateInput {
   description: SortOrder
   projectId: SortOrder
   organizationId: SortOrder
+  rejectionReason: SortOrder
   adminApprovalStatus: SortOrder
   addressId: SortOrder
   gitPOAPId: SortOrder
@@ -3886,6 +3897,7 @@ input GitPOAPRequestMinOrderByAggregateInput {
   description: SortOrder
   projectId: SortOrder
   organizationId: SortOrder
+  rejectionReason: SortOrder
   adminApprovalStatus: SortOrder
   addressId: SortOrder
   gitPOAPId: SortOrder
@@ -3918,6 +3930,7 @@ input GitPOAPRequestScalarWhereWithAggregatesInput {
   projectId: IntNullableWithAggregatesFilter
   organizationId: IntNullableWithAggregatesFilter
   contributors: JsonWithAggregatesFilter
+  rejectionReason: StringNullableWithAggregatesFilter
   adminApprovalStatus: EnumAdminApprovalStatusWithAggregatesFilter
   addressId: IntWithAggregatesFilter
   gitPOAPId: IntNullableWithAggregatesFilter
