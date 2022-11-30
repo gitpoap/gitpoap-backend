@@ -367,7 +367,7 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
   it('Fails with no Access Token provided', async () => {
     const result = await request(await setupApp())
       .put(`/gitpoaps/custom/reject/${gitPOAPRequestId}`)
-      .send();
+      .send({ rejectionReason: null });
 
     expect(result.statusCode).toEqual(400);
   });
@@ -378,9 +378,22 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
     const result = await request(await setupApp())
       .put(`/gitpoaps/custom/reject/${gitPOAPRequestId}`)
       .set('Authorization', `Bearer ${authTokens.accessToken}`)
-      .send();
+      .send({ rejectionReason: null });
 
     expect(result.statusCode).toEqual(401);
+    expect(contextMock.prisma.authToken.findUnique).toHaveBeenCalledTimes(1);
+  });
+
+  it('Fails with invalid request body', async () => {
+    mockJwtWithAddress();
+    const authTokens = genAuthTokens(ADMIN_ADDRESSES[0]);
+
+    const result = await request(await setupApp())
+      .put(`/gitpoaps/custom/reject/${gitPOAPRequestId}`)
+      .set('Authorization', `Bearer ${authTokens.accessToken}`)
+      .send({ foo: 'bar' });
+
+    expect(result.statusCode).toEqual(400);
     expect(contextMock.prisma.authToken.findUnique).toHaveBeenCalledTimes(1);
   });
 
@@ -392,7 +405,7 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
     const result = await request(await setupApp())
       .put(`/gitpoaps/custom/reject/${gitPOAPRequestId}`)
       .set('Authorization', `Bearer ${authTokens.accessToken}`)
-      .send();
+      .send({ rejectionReason: null });
 
     expect(result.statusCode).toEqual(404);
     expect(contextMock.prisma.authToken.findUnique).toHaveBeenCalledTimes(1);
@@ -417,7 +430,7 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
     const result = await request(await setupApp())
       .put(`/gitpoaps/custom/reject/${gitPOAPRequestId}`)
       .set('Authorization', `Bearer ${authTokens.accessToken}`)
-      .send();
+      .send({ rejectionReason: null });
 
     expect(result.statusCode).toEqual(400);
     expect(contextMock.prisma.authToken.findUnique).toHaveBeenCalledTimes(1);
@@ -442,7 +455,7 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
     const result = await request(await setupApp())
       .put(`/gitpoaps/custom/reject/${gitPOAPRequestId}`)
       .set('Authorization', `Bearer ${authTokens.accessToken}`)
-      .send();
+      .send({ rejectionReason: null });
 
     expect(result.statusCode).toEqual(200);
     expect(contextMock.prisma.authToken.findUnique).toHaveBeenCalledTimes(1);
@@ -475,11 +488,12 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
     } as any);
 
     const authTokens = genAuthTokens(ADMIN_ADDRESSES[0]);
+    const rejectionReason = 'You did a terrible job with this. SHAME';
 
     const result = await request(await setupApp())
       .put(`/gitpoaps/custom/reject/${gitPOAPRequestId}`)
       .set('Authorization', `Bearer ${authTokens.accessToken}`)
-      .send();
+      .send({ rejectionReason });
 
     expect(result.statusCode).toEqual(200);
     expect(contextMock.prisma.authToken.findUnique).toHaveBeenCalledTimes(1);
@@ -494,6 +508,7 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
       where: { id: gitPOAPRequestId },
       data: {
         adminApprovalStatus: AdminApprovalStatus.REJECTED,
+        rejectionReason,
       },
       select: {
         organization: {
@@ -538,7 +553,7 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
     await request(await setupApp())
       .put(`/gitpoaps/custom/reject/${gitPOAPRequestId}`)
       .set('Authorization', `Bearer ${authTokens.accessToken}`)
-      .send();
+      .send({ rejectionReason: null });
 
     expect(sendGitPOAPRequestRejectionEmail).toHaveBeenCalledWith({
       id: gitPOAPRequestId,

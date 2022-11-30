@@ -1,6 +1,7 @@
 import {
   CreateCustomGitPOAPSchema,
   UpdateCustomGitPOAPSchema,
+  RejectCustomGitPOAPSchema,
 } from '../../schemas/gitpoaps/custom';
 import { Request, Router } from 'express';
 import { z } from 'zod';
@@ -281,7 +282,17 @@ customGitPOAPsRouter.put('/reject/:id', jwtWithAdminAddress(), async (req, res) 
 
   const gitPOAPRequestId = parseInt(req.params.id, 10);
 
-  logger.info(`Admin request to reject GitPOAP Request with ID: ${gitPOAPRequestId}`);
+  const schemaResult = RejectCustomGitPOAPSchema.safeParse(req.body);
+  if (!schemaResult.success) {
+    logger.warn(
+      `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
+    );
+    return res.status(400).send({ issues: schemaResult.error.issues });
+  }
+
+  logger.info(
+    `Admin request to reject GitPOAP Request with ID: ${gitPOAPRequestId} for reason: ${schemaResult.data.rejectionReason}`,
+  );
 
   const gitPOAPRequest = await context.prisma.gitPOAPRequest.findUnique({
     where: { id: gitPOAPRequestId },
@@ -309,6 +320,7 @@ customGitPOAPsRouter.put('/reject/:id', jwtWithAdminAddress(), async (req, res) 
     where: { id: gitPOAPRequestId },
     data: {
       adminApprovalStatus: AdminApprovalStatus.REJECTED,
+      rejectionReason: schemaResult.data.rejectionReason,
     },
     select: {
       organization: {
@@ -354,7 +366,6 @@ customGitPOAPsRouter.patch(
     const gitPOAPRequestId = parseInt(req.params.gitPOAPRequestId, 10);
 
     const schemaResult = UpdateCustomGitPOAPSchema.safeParse(req.body);
-
     if (!schemaResult.success) {
       logger.warn(
         `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
