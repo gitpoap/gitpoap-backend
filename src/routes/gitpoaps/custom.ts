@@ -36,6 +36,7 @@ import {
 } from '../../external/postmark';
 import { GitPOAPRequestEmailForm } from '../../types/gitpoaps';
 import { formatDateToString } from './utils';
+import { isAddressAnAdmin } from '../../lib/admins';
 
 export const customGitPOAPsRouter = Router();
 
@@ -377,11 +378,11 @@ customGitPOAPsRouter.patch(
       return res.status(404).send({ msg });
     }
 
-    const { addressId } = getAccessTokenPayload(req.user);
+    const { address, addressId } = getAccessTokenPayload(req.user);
 
-    if (gitPOAPRequest.addressId !== addressId) {
+    if (gitPOAPRequest.addressId !== addressId && !isAddressAnAdmin(address)) {
       logger.warn(
-        `User attempted to update a GitPOAPRequest (ID: ${gitPOAPRequestId}) that they do not own`,
+        `Non-admin address ${address} attempted to update a GitPOAPRequest (ID: ${gitPOAPRequestId}) that they do not own`,
       );
       return res.status(401).send({ msg: 'Not GitPOAPRequest creator' });
     }

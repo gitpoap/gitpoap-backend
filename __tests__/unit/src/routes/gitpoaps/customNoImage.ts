@@ -7,6 +7,7 @@ import { generateAuthTokens } from '../../../../../src/lib/authTokens';
 import request from 'supertest';
 import { uploadMulterFile } from '../../../../../src/external/s3';
 import { AdminApprovalStatus } from '@prisma/client';
+import { ADMIN_ADDRESSES } from '../../../../../src/constants';
 
 const authTokenId = 4;
 const authTokenGeneration = 1;
@@ -14,6 +15,7 @@ const addressId = 342;
 const address = '0xburzistheword';
 const ensName = 'furby.eth';
 const ensAvatarImageUrl = null;
+const gitPOAPRequestId = 213;
 
 jest.mock('../../../../../src/logging');
 jest.mock('../../../../../src/external/s3', () => {
@@ -50,16 +52,18 @@ jest.mock('multer', () =>
 const mockedUploadMulterFile = jest.mocked(uploadMulterFile, true);
 
 function genAuthTokens(
-  someGithubId?: number,
-  githubHandle?: string,
-  someDiscordId?: string,
-  discordHandle?: string,
+  someGithubId?: number | null,
+  githubHandle?: string | null,
+  someDiscordId?: string | null,
+  discordHandle?: string | null,
+  someAddressId?: number,
+  someAddress?: string,
 ) {
   return generateAuthTokens(
     authTokenId,
     authTokenGeneration,
-    addressId,
-    address,
+    someAddressId ?? addressId,
+    someAddress ?? address,
     ensName,
     ensAvatarImageUrl,
     someGithubId ?? null,
@@ -122,7 +126,6 @@ describe('POST /gitpoaps/custom', () => {
 describe('PATCH /gitpoaps/custom/:gitPOAPRequestId', () => {
   it('Allows updates of other fields when no image is uploaded', async () => {
     mockJwtWithAddress();
-    const gitPOAPRequestId = 213;
     contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue({
       addressId,
       adminApprovalStatus: AdminApprovalStatus.PENDING,
@@ -154,6 +157,49 @@ describe('PATCH /gitpoaps/custom/:gitPOAPRequestId', () => {
       where: { id: gitPOAPRequestId },
       data: {
         name,
+        description,
+        imageUrl: undefined,
+        startDate: undefined,
+        endDate: undefined,
+        contributors: undefined,
+        numRequestedCodes: undefined,
+        adminApprovalStatus: AdminApprovalStatus.PENDING,
+      },
+    });
+  });
+
+  it('Allows admin to update a GitPOAPRequest', async () => {
+    mockJwtWithAddress();
+    contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue({
+      addressId: addressId + 2,
+      adminApprovalStatus: AdminApprovalStatus.PENDING,
+    } as any);
+    const authTokens = genAuthTokens(null, null, null, null, addressId, ADMIN_ADDRESSES[0]);
+
+    const description = 'hey there!';
+    const result = await request(await setupApp())
+      .patch(`/gitpoaps/custom/${gitPOAPRequestId}`)
+      .set('Authorization', `Bearer ${authTokens.accessToken}`)
+      .send({ description });
+
+    expect(result.statusCode).toEqual(200);
+
+    expect(contextMock.prisma.gitPOAPRequest.findUnique).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.gitPOAPRequest.findUnique).toHaveBeenCalledWith({
+      where: { id: gitPOAPRequestId },
+      select: {
+        addressId: true,
+        adminApprovalStatus: true,
+      },
+    });
+
+    expect(mockedUploadMulterFile).toHaveBeenCalledTimes(0);
+
+    expect(contextMock.prisma.gitPOAPRequest.update).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.gitPOAPRequest.update).toHaveBeenCalledWith({
+      where: { id: gitPOAPRequestId },
+      data: {
+        name: undefined,
         description,
         imageUrl: undefined,
         startDate: undefined,
