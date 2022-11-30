@@ -856,7 +856,7 @@ describe('PATCH /gitpoaps/custom/:gitPOAPRequestId', () => {
     expectFindUniqueCalls();
   });
 
-  it('Fails when user is not the owner', async () => {
+  it('Fails when user is not the owner or an admin', async () => {
     mockJwtWithAddress();
     contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue({
       ...gitPOAPRequest,
