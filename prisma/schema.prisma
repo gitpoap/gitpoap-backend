@@ -263,6 +263,7 @@ model GitPOAPRequest {
   organizationId      Int?
   organization        Organization?       @relation(fields: [organizationId], references: [id])
   contributors        Json                @db.Json
+  rejectionReason     String?
   // Internal approval status for Custom GitPOAPs
   adminApprovalStatus AdminApprovalStatus @default(PENDING)
   addressId           Int
