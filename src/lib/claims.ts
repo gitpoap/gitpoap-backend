@@ -3,7 +3,7 @@ import { utils } from 'ethers';
 import { context } from '../context';
 import { createScopedLogger } from '../logging';
 import { RestrictedContribution, countContributionsForClaim } from './contributions';
-import { getGithubUserAsAdmin } from '../external/github';
+import { getGithubUserAsApp } from '../external/github';
 import { resolveENS, upsertENSNameInDB } from './ens';
 import { upsertGithubUser } from './githubUsers';
 import { upsertAddress } from './addresses';
@@ -406,7 +406,7 @@ export const createClaimForGithubHandle = async (githubHandle: string, gitPOAPId
   const logger = createScopedLogger('createClaimForGithubHandle');
 
   /* Use octokit to get a githubHandles githubId */
-  const githubInfo = await getGithubUserAsAdmin(githubHandle);
+  const githubInfo = await getGithubUserAsApp(githubHandle);
 
   if (githubInfo === null) {
     logger.error(`Failed to lookup GitHub user ${githubHandle}`);

@@ -1,7 +1,7 @@
 import { createScopedLogger } from '../logging';
 import { context } from '../context';
 import {
-  getGithubRepositoryPullsAsAdmin,
+  getGithubRepositoryPullsAsApp,
   OctokitPullListItem,
   OctokitPullItem,
 } from '../external/github';
@@ -225,7 +225,7 @@ export async function backloadGithubPullRequestData(repoId: number) {
   while (isProcessing) {
     logger.debug(`Handling page #${page}`);
 
-    const prData = await getGithubRepositoryPullsAsAdmin(
+    const prData = await getGithubRepositoryPullsAsApp(
       repoInfo.organization.name,
       repoInfo.name,
       BACKFILL_PRS_PER_REQUEST,

@@ -2,7 +2,7 @@ import { mockDeep } from 'jest-mock-extended';
 import { Multer } from 'multer';
 import '../../../../../__mocks__/src/logging';
 import { contextMock } from '../../../../../__mocks__/src/context';
-import { AdminApprovalStatus, GitPOAPType } from '@prisma/client';
+import { StaffApprovalStatus, GitPOAPType } from '@prisma/client';
 import { setupApp } from '../../../../../__mocks__/src/app';
 import { generateAuthTokens } from '../../../../../src/lib/authTokens';
 import request from 'supertest';
@@ -13,7 +13,7 @@ import {
   uploadMulterFile,
 } from '../../../../../src/external/s3';
 import { DateTime } from 'luxon';
-import { ADMIN_ADDRESSES, CUSTOM_GITPOAP_MINIMUM_CODES } from '../../../../../src/constants';
+import { STAFF_ADDRESSES, CUSTOM_GITPOAP_MINIMUM_CODES } from '../../../../../src/constants';
 import { ADDRESSES, GH_HANDLES } from '../../../../../prisma/constants';
 import { upsertEmail } from '../../../../../src/lib/emails';
 import {
@@ -56,7 +56,7 @@ const baseGitPOAPRequest = {
 
 const gitPOAPRequest = {
   addressId,
-  adminApprovalStatus: AdminApprovalStatus.PENDING,
+  staffApprovalStatus: StaffApprovalStatus.PENDING,
   contributors: {
     githubHandles: [GH_HANDLES.burz],
     emails: [burzEmail],
@@ -168,7 +168,7 @@ describe('PUT /gitpoaps/custom/approve/:id', () => {
     expect(result.statusCode).toEqual(400);
   });
 
-  it('Fails with non-admin Access Token provided', async () => {
+  it('Fails with non-staff Access Token provided', async () => {
     mockJwtWithAddress();
     const authTokens = genAuthTokens();
     const result = await request(await setupApp())
@@ -183,7 +183,7 @@ describe('PUT /gitpoaps/custom/approve/:id', () => {
   it('Returns a 404 when the GitPOAP Request is not found', async () => {
     mockJwtWithAddress();
     contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue(null);
-    const authTokens = genAuthTokens(ADMIN_ADDRESSES[0]);
+    const authTokens = genAuthTokens(STAFF_ADDRESSES[0]);
 
     const result = await request(await setupApp())
       .put(`/gitpoaps/custom/approve/${gitPOAPRequestId}`)
@@ -202,9 +202,9 @@ describe('PUT /gitpoaps/custom/approve/:id', () => {
     mockJwtWithAddress();
     contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue({
       id: gitPOAPRequestId,
-      adminApprovalStatus: AdminApprovalStatus.APPROVED,
+      staffApprovalStatus: StaffApprovalStatus.APPROVED,
     } as any);
-    const authTokens = genAuthTokens(ADMIN_ADDRESSES[0]);
+    const authTokens = genAuthTokens(STAFF_ADDRESSES[0]);
 
     const result = await request(await setupApp())
       .put(`/gitpoaps/custom/approve/${gitPOAPRequestId}`)
@@ -225,7 +225,7 @@ describe('PUT /gitpoaps/custom/approve/:id', () => {
 
     contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue({
       id: gitPOAPRequestId,
-      adminApprovalStatus: AdminApprovalStatus.PENDING,
+      staffApprovalStatus: StaffApprovalStatus.PENDING,
       description: 'foobar',
       imageUrl: getS3URL('gitpoap-request-images-test', 'foobar-123456789.png'),
       name: 'foobar',
@@ -235,12 +235,12 @@ describe('PUT /gitpoaps/custom/approve/:id', () => {
 
     contextMock.prisma.gitPOAPRequest.update.mockResolvedValue({
       id: gitPOAPRequestId,
-      adminApprovalStatus: AdminApprovalStatus.APPROVED,
+      staffApprovalStatus: StaffApprovalStatus.APPROVED,
     } as any);
 
     mockedCreatePOAPEvent.mockResolvedValue(null);
 
-    const authTokens = genAuthTokens(ADMIN_ADDRESSES[0]);
+    const authTokens = genAuthTokens(STAFF_ADDRESSES[0]);
 
     const result = await request(await setupApp())
       .put(`/gitpoaps/custom/approve/${gitPOAPRequestId}`)
@@ -261,13 +261,13 @@ describe('PUT /gitpoaps/custom/approve/:id', () => {
     expect(contextMock.prisma.gitPOAPRequest.update).toHaveBeenNthCalledWith(1, {
       where: { id: gitPOAPRequestId },
       data: {
-        adminApprovalStatus: AdminApprovalStatus.APPROVED,
+        staffApprovalStatus: StaffApprovalStatus.APPROVED,
       },
     });
     expect(contextMock.prisma.gitPOAPRequest.update).toHaveBeenNthCalledWith(2, {
       where: { id: gitPOAPRequestId },
       data: {
-        adminApprovalStatus: AdminApprovalStatus.PENDING,
+        staffApprovalStatus: StaffApprovalStatus.PENDING,
       },
     });
 
@@ -280,7 +280,7 @@ describe('PUT /gitpoaps/custom/approve/:id', () => {
 
     contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue({
       id: gitPOAPRequestId,
-      adminApprovalStatus: AdminApprovalStatus.PENDING,
+      staffApprovalStatus: StaffApprovalStatus.PENDING,
       description: 'foobar',
       imageUrl: getS3URL('gitpoap-request-images-test', 'foobar-123456789.png'),
       name: 'foobar',
@@ -291,7 +291,7 @@ describe('PUT /gitpoaps/custom/approve/:id', () => {
 
     contextMock.prisma.gitPOAPRequest.update.mockResolvedValue({
       id: gitPOAPRequestId,
-      adminApprovalStatus: AdminApprovalStatus.APPROVED,
+      staffApprovalStatus: StaffApprovalStatus.APPROVED,
     } as any);
 
     mockedCreatePOAPEvent.mockResolvedValue({ id: 1, image_url: 'https://poap.xyz' } as any);
@@ -299,10 +299,10 @@ describe('PUT /gitpoaps/custom/approve/:id', () => {
     contextMock.prisma.gitPOAP.create.mockResolvedValue({
       id: gitPOAPId,
       gitPOAPRequestId,
-      adminApprovalStatus: AdminApprovalStatus.APPROVED,
+      staffApprovalStatus: StaffApprovalStatus.APPROVED,
     } as any);
 
-    const authTokens = genAuthTokens(ADMIN_ADDRESSES[0]);
+    const authTokens = genAuthTokens(STAFF_ADDRESSES[0]);
 
     const result = await request(await setupApp())
       .put(`/gitpoaps/custom/approve/${gitPOAPRequestId}`)
@@ -350,7 +350,7 @@ describe('PUT /gitpoaps/custom/approve/:id', () => {
     expect(contextMock.prisma.gitPOAPRequest.update).toHaveBeenCalledWith({
       where: { id: gitPOAPRequestId },
       data: {
-        adminApprovalStatus: AdminApprovalStatus.APPROVED,
+        staffApprovalStatus: StaffApprovalStatus.APPROVED,
       },
     });
 
@@ -372,7 +372,7 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
     expect(result.statusCode).toEqual(400);
   });
 
-  it('Fails with non-admin Access Token provided', async () => {
+  it('Fails with non-staff Access Token provided', async () => {
     mockJwtWithAddress();
     const authTokens = genAuthTokens();
     const result = await request(await setupApp())
@@ -386,7 +386,7 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
 
   it('Fails with invalid request body', async () => {
     mockJwtWithAddress();
-    const authTokens = genAuthTokens(ADMIN_ADDRESSES[0]);
+    const authTokens = genAuthTokens(STAFF_ADDRESSES[0]);
 
     const result = await request(await setupApp())
       .put(`/gitpoaps/custom/reject/${gitPOAPRequestId}`)
@@ -400,7 +400,7 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
   it('Fails and returns a 404 when the GitPOAP Request is not found', async () => {
     mockJwtWithAddress();
     contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue(null);
-    const authTokens = genAuthTokens(ADMIN_ADDRESSES[0]);
+    const authTokens = genAuthTokens(STAFF_ADDRESSES[0]);
 
     const result = await request(await setupApp())
       .put(`/gitpoaps/custom/reject/${gitPOAPRequestId}`)
@@ -419,13 +419,13 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
     mockJwtWithAddress();
     contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue({
       id: gitPOAPRequestId,
-      adminApprovalStatus: AdminApprovalStatus.APPROVED,
+      staffApprovalStatus: StaffApprovalStatus.APPROVED,
       description: 'foobar',
       imageUrl: getS3URL('gitpoap-request-images-test', 'foobar-123456789.png'),
       name: 'foobar',
       creatorEmailId,
     } as any);
-    const authTokens = genAuthTokens(ADMIN_ADDRESSES[0]);
+    const authTokens = genAuthTokens(STAFF_ADDRESSES[0]);
 
     const result = await request(await setupApp())
       .put(`/gitpoaps/custom/reject/${gitPOAPRequestId}`)
@@ -444,13 +444,13 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
     mockJwtWithAddress();
     contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue({
       id: gitPOAPRequestId,
-      adminApprovalStatus: AdminApprovalStatus.REJECTED,
+      staffApprovalStatus: StaffApprovalStatus.REJECTED,
       description: 'foobar',
       imageUrl: getS3URL('gitpoap-request-images-test', 'foobar-123456789.png'),
       name: 'foobar',
     } as any);
 
-    const authTokens = genAuthTokens(ADMIN_ADDRESSES[0]);
+    const authTokens = genAuthTokens(STAFF_ADDRESSES[0]);
 
     const result = await request(await setupApp())
       .put(`/gitpoaps/custom/reject/${gitPOAPRequestId}`)
@@ -469,7 +469,7 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
     mockJwtWithAddress();
     contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue({
       id: gitPOAPRequestId,
-      adminApprovalStatus: AdminApprovalStatus.PENDING,
+      staffApprovalStatus: StaffApprovalStatus.PENDING,
       description: 'foobar',
       imageUrl: getS3URL('gitpoap-request-images-test', 'foobar-123456789.png'),
       name: 'foobar',
@@ -477,7 +477,7 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
 
     contextMock.prisma.gitPOAPRequest.update.mockResolvedValue({
       id: gitPOAPRequestId,
-      adminApprovalStatus: AdminApprovalStatus.REJECTED,
+      staffApprovalStatus: StaffApprovalStatus.REJECTED,
       organization: {
         id: 1,
         name: 'organization 1',
@@ -487,7 +487,7 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
       },
     } as any);
 
-    const authTokens = genAuthTokens(ADMIN_ADDRESSES[0]);
+    const authTokens = genAuthTokens(STAFF_ADDRESSES[0]);
     const rejectionReason = 'You did a terrible job with this. SHAME';
 
     const result = await request(await setupApp())
@@ -507,7 +507,7 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
     expect(contextMock.prisma.gitPOAPRequest.update).toHaveBeenCalledWith({
       where: { id: gitPOAPRequestId },
       data: {
-        adminApprovalStatus: AdminApprovalStatus.REJECTED,
+        staffApprovalStatus: StaffApprovalStatus.REJECTED,
         rejectionReason,
       },
       select: {
@@ -531,14 +531,14 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
     contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue({
       ...baseGitPOAPRequest,
       id: gitPOAPRequestId,
-      adminApprovalStatus: AdminApprovalStatus.PENDING,
+      staffApprovalStatus: StaffApprovalStatus.PENDING,
       type: GitPOAPType.CUSTOM,
       imageUrl: getS3URL('gitpoap-request-images-test', 'foobar.png-123456789000'),
     } as any);
 
     contextMock.prisma.gitPOAPRequest.update.mockResolvedValue({
       id: gitPOAPRequestId,
-      adminApprovalStatus: AdminApprovalStatus.REJECTED,
+      staffApprovalStatus: StaffApprovalStatus.REJECTED,
       organization: {
         id: 1,
         name: 'organization 1',
@@ -548,7 +548,7 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
       },
     } as any);
 
-    const authTokens = genAuthTokens(ADMIN_ADDRESSES[0]);
+    const authTokens = genAuthTokens(STAFF_ADDRESSES[0]);
 
     await request(await setupApp())
       .put(`/gitpoaps/custom/reject/${gitPOAPRequestId}`)
@@ -581,7 +581,7 @@ describe('POST /gitpoaps/custom', () => {
           connect: { id: creatorEmailId },
         },
         numRequestedCodes: CUSTOM_GITPOAP_MINIMUM_CODES,
-        adminApprovalStatus: AdminApprovalStatus.PENDING,
+        staffApprovalStatus: StaffApprovalStatus.PENDING,
         contributors: {
           githubHandles: ['peebeejay'],
           ensNames: ['burz.eth'],
@@ -679,7 +679,7 @@ describe('POST /gitpoaps/custom', () => {
       ...baseGitPOAPRequest,
       id: gitPOAPRequestId,
       type: GitPOAPType.CUSTOM,
-      adminApprovalStatus: AdminApprovalStatus.PENDING,
+      staffApprovalStatus: StaffApprovalStatus.PENDING,
     } as any);
 
     mockedUploadMulterFile.mockResolvedValue({
@@ -705,7 +705,7 @@ describe('POST /gitpoaps/custom', () => {
       ...baseGitPOAPRequest,
       id: gitPOAPRequestId,
       type: GitPOAPType.CUSTOM,
-      adminApprovalStatus: AdminApprovalStatus.PENDING,
+      staffApprovalStatus: StaffApprovalStatus.PENDING,
     } as any);
 
     mockedUploadMulterFile.mockResolvedValue({
@@ -736,7 +736,7 @@ describe('POST /gitpoaps/custom', () => {
     contextMock.prisma.gitPOAPRequest.create.mockResolvedValue({
       ...baseGitPOAPRequest,
       id: gitPOAPRequestId,
-      adminApprovalStatus: AdminApprovalStatus.PENDING,
+      staffApprovalStatus: StaffApprovalStatus.PENDING,
       imageUrl: getS3URL('gitpoap-request-images-test', 'foobar.png-123456789000'),
     } as any);
 
@@ -781,7 +781,7 @@ describe('POST /gitpoaps/custom', () => {
       ...baseGitPOAPRequest,
       id: gitPOAPRequestId,
       type: GitPOAPType.CUSTOM,
-      adminApprovalStatus: AdminApprovalStatus.PENDING,
+      staffApprovalStatus: StaffApprovalStatus.PENDING,
       isEnabled: true,
       isPRBased: false,
       isOngoing: false,
@@ -852,7 +852,7 @@ describe('PATCH /gitpoaps/custom/:gitPOAPRequestId', () => {
       where: { id: gitPOAPRequestId },
       select: {
         addressId: true,
-        adminApprovalStatus: true,
+        staffApprovalStatus: true,
       },
     });
   };
@@ -871,7 +871,7 @@ describe('PATCH /gitpoaps/custom/:gitPOAPRequestId', () => {
     expectFindUniqueCalls();
   });
 
-  it('Fails when user is not the owner or an admin', async () => {
+  it('Fails when user is not the owner or a staff member', async () => {
     mockJwtWithAddress();
     contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue({
       ...gitPOAPRequest,
@@ -892,7 +892,7 @@ describe('PATCH /gitpoaps/custom/:gitPOAPRequestId', () => {
     mockJwtWithAddress();
     contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue({
       ...gitPOAPRequest,
-      adminApprovalStatus: AdminApprovalStatus.APPROVED,
+      staffApprovalStatus: StaffApprovalStatus.APPROVED,
     } as any);
     const authTokens = genAuthTokens();
     const result = await request(await setupApp())
@@ -928,7 +928,7 @@ describe('PATCH /gitpoaps/custom/:gitPOAPRequestId', () => {
           endDate: undefined,
           contributors: undefined,
           numRequestedCodes: undefined,
-          adminApprovalStatus: AdminApprovalStatus.PENDING,
+          staffApprovalStatus: StaffApprovalStatus.PENDING,
         },
       });
     }
@@ -950,7 +950,7 @@ describe('PATCH /gitpoaps/custom/:gitPOAPRequestId', () => {
           endDate: undefined,
           contributors,
           numRequestedCodes: CUSTOM_GITPOAP_MINIMUM_CODES,
-          adminApprovalStatus: AdminApprovalStatus.PENDING,
+          staffApprovalStatus: StaffApprovalStatus.PENDING,
         },
       });
     }

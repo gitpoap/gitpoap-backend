@@ -6,8 +6,8 @@ import { setupApp } from '../../../../../__mocks__/src/app';
 import { generateAuthTokens } from '../../../../../src/lib/authTokens';
 import request from 'supertest';
 import { uploadMulterFile } from '../../../../../src/external/s3';
-import { AdminApprovalStatus } from '@prisma/client';
-import { ADMIN_ADDRESSES } from '../../../../../src/constants';
+import { StaffApprovalStatus } from '@prisma/client';
+import { STAFF_ADDRESSES } from '../../../../../src/constants';
 
 const authTokenId = 4;
 const authTokenGeneration = 1;
@@ -128,7 +128,7 @@ describe('PATCH /gitpoaps/custom/:gitPOAPRequestId', () => {
     mockJwtWithAddress();
     contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue({
       addressId,
-      adminApprovalStatus: AdminApprovalStatus.PENDING,
+      staffApprovalStatus: StaffApprovalStatus.PENDING,
     } as any);
     const authTokens = genAuthTokens();
 
@@ -146,7 +146,7 @@ describe('PATCH /gitpoaps/custom/:gitPOAPRequestId', () => {
       where: { id: gitPOAPRequestId },
       select: {
         addressId: true,
-        adminApprovalStatus: true,
+        staffApprovalStatus: true,
       },
     });
 
@@ -163,18 +163,18 @@ describe('PATCH /gitpoaps/custom/:gitPOAPRequestId', () => {
         endDate: undefined,
         contributors: undefined,
         numRequestedCodes: undefined,
-        adminApprovalStatus: AdminApprovalStatus.PENDING,
+        staffApprovalStatus: StaffApprovalStatus.PENDING,
       },
     });
   });
 
-  it('Allows admin to update a GitPOAPRequest', async () => {
+  it('Allows staff to update a GitPOAPRequest', async () => {
     mockJwtWithAddress();
     contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue({
       addressId: addressId + 2,
-      adminApprovalStatus: AdminApprovalStatus.PENDING,
+      staffApprovalStatus: StaffApprovalStatus.PENDING,
     } as any);
-    const authTokens = genAuthTokens(null, null, null, null, addressId, ADMIN_ADDRESSES[0]);
+    const authTokens = genAuthTokens(null, null, null, null, addressId, STAFF_ADDRESSES[0]);
 
     const description = 'hey there!';
     const result = await request(await setupApp())
@@ -189,7 +189,7 @@ describe('PATCH /gitpoaps/custom/:gitPOAPRequestId', () => {
       where: { id: gitPOAPRequestId },
       select: {
         addressId: true,
-        adminApprovalStatus: true,
+        staffApprovalStatus: true,
       },
     });
 
@@ -206,7 +206,7 @@ describe('PATCH /gitpoaps/custom/:gitPOAPRequestId', () => {
         endDate: undefined,
         contributors: undefined,
         numRequestedCodes: undefined,
-        adminApprovalStatus: AdminApprovalStatus.PENDING,
+        staffApprovalStatus: StaffApprovalStatus.PENDING,
       },
     });
   });

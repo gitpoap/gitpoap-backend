@@ -2,7 +2,7 @@ import '../../../../../__mocks__/src/logging';
 import { contextMock } from '../../../../../__mocks__/src/context';
 import { setupApp } from '../../../../../__mocks__/src/app';
 import { generateAuthTokens } from '../../../../../src/lib/authTokens';
-import { ADMIN_ADDRESSES } from '../../../../../src/constants';
+import { STAFF_ADDRESSES } from '../../../../../src/constants';
 import request from 'supertest';
 import { ClaimStatus, GitPOAPStatus, GitPOAPType } from '@prisma/client';
 import { ADDRESSES, GH_HANDLES } from '../../../../../prisma/constants';
@@ -71,7 +71,7 @@ describe('PUT /gitpoaps/enable/:id', () => {
     expect(result.statusCode).toEqual(400);
   });
 
-  it('Fails with non-admin Access Token provided', async () => {
+  it('Fails with non-staff Access Token provided', async () => {
     mockJwtWithAddress();
 
     const authTokens = genAuthTokens();
@@ -90,7 +90,7 @@ describe('PUT /gitpoaps/enable/:id', () => {
     mockJwtWithAddress();
     contextMock.prisma.gitPOAP.findUnique.mockResolvedValue(null);
 
-    const authTokens = genAuthTokens(ADMIN_ADDRESSES[0]);
+    const authTokens = genAuthTokens(STAFF_ADDRESSES[0]);
 
     const result = await request(await setupApp())
       .put(`/gitpoaps/enable/${gitPOAPId}`)
@@ -114,7 +114,7 @@ describe('PUT /gitpoaps/enable/:id', () => {
     mockJwtWithAddress();
     contextMock.prisma.gitPOAP.findUnique.mockResolvedValue({ id: gitPOAPId } as any);
 
-    const authTokens = genAuthTokens(ADMIN_ADDRESSES[0]);
+    const authTokens = genAuthTokens(STAFF_ADDRESSES[0]);
 
     const result = await request(await setupApp())
       .put(`/gitpoaps/enable/${gitPOAPId}`)
@@ -150,7 +150,7 @@ describe('PUT /gitpoaps/deprecate/:id', () => {
     expect(result.statusCode).toEqual(400);
   });
 
-  it('Fails with non-admin Access Token provided', async () => {
+  it('Fails with non-staff Access Token provided', async () => {
     mockJwtWithAddress();
 
     const authTokens = genAuthTokens();
@@ -169,7 +169,7 @@ describe('PUT /gitpoaps/deprecate/:id', () => {
     mockJwtWithAddress();
     contextMock.prisma.gitPOAP.findUnique.mockResolvedValue(null);
 
-    const authTokens = genAuthTokens(ADMIN_ADDRESSES[0]);
+    const authTokens = genAuthTokens(STAFF_ADDRESSES[0]);
 
     const result = await request(await setupApp())
       .put(`/gitpoaps/deprecate/${gitPOAPId}`)
@@ -190,7 +190,7 @@ describe('PUT /gitpoaps/deprecate/:id', () => {
     mockJwtWithAddress();
     contextMock.prisma.gitPOAP.findUnique.mockResolvedValue({ id: gitPOAPId } as any);
 
-    const authTokens = genAuthTokens(ADMIN_ADDRESSES[0]);
+    const authTokens = genAuthTokens(STAFF_ADDRESSES[0]);
 
     const result = await request(await setupApp())
       .put(`/gitpoaps/deprecate/${gitPOAPId}`)
@@ -299,7 +299,7 @@ describe('PUT /gitpoaps/:gitPOAPId/claims', () => {
     expectFindUniqueCalls();
   });
 
-  it('Fails when user is not an admin for non-CUSTOM GitPOAPs', async () => {
+  it('Fails when user is not a staff member for non-CUSTOM GitPOAPs', async () => {
     mockJwtWithAddress();
     contextMock.prisma.gitPOAP.findUnique.mockResolvedValue({
       type: GitPOAPType.ANNUAL,
@@ -388,13 +388,13 @@ describe('PUT /gitpoaps/:gitPOAPId/claims', () => {
     await expectSuccessWithAuthTokens(authTokens);
   });
 
-  it('Succeeds for admin with non-Custom GitPOAP', async () => {
+  it('Succeeds for staff with non-Custom GitPOAP', async () => {
     mockJwtWithAddress();
     contextMock.prisma.gitPOAP.findUnique.mockResolvedValue({
       type: GitPOAPType.ANNUAL,
       creatorAddressId: null,
     } as any);
-    const authTokens = genAuthTokens(ADMIN_ADDRESSES[0]);
+    const authTokens = genAuthTokens(STAFF_ADDRESSES[0]);
 
     await expectSuccessWithAuthTokens(authTokens);
   });

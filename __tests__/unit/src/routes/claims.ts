@@ -17,7 +17,7 @@ import {
   updateClaimStatusById,
 } from '../../../../src/lib/claims';
 import { generateAuthTokens } from '../../../../src/lib/authTokens';
-import { ADMIN_ADDRESSES } from '../../../../src/constants';
+import { STAFF_ADDRESSES } from '../../../../src/constants';
 import { ADDRESSES } from '../../../../prisma/constants';
 import { ClaimStatus, GitPOAPType } from '@prisma/client';
 import { ClaimData } from '../../../../src/types/claims';
@@ -571,7 +571,7 @@ describe('DELETE /claims/:id', () => {
     expectFindUniqueCalls();
   });
 
-  it('Fails if the claim is not CUSTOM and user is not an admin', async () => {
+  it('Fails if the claim is not CUSTOM and user is not a staff member', async () => {
     mockJwtWithAddress();
     contextMock.prisma.claim.findUnique.mockResolvedValue({
       gitPOAP: { type: GitPOAPType.ANNUAL },
@@ -632,7 +632,7 @@ describe('DELETE /claims/:id', () => {
       status: ClaimStatus,
       creatorAddressId?: number,
     ) => {
-      const authTokens = genAuthTokens(ADMIN_ADDRESSES[0]);
+      const authTokens = genAuthTokens(STAFF_ADDRESSES[0]);
 
       contextMock.prisma.claim.findUnique.mockResolvedValueOnce({
         status,
@@ -669,7 +669,7 @@ describe('DELETE /claims/:id', () => {
           creatorAddressId: null,
         },
       } as any);
-      const authTokens = genAuthTokens(ADMIN_ADDRESSES[0]);
+      const authTokens = genAuthTokens(STAFF_ADDRESSES[0]);
       const result = await request(await setupApp())
         .delete(`/claims/${claimId}`)
         .set('Authorization', `Bearer ${authTokens.accessToken}`)

@@ -7,11 +7,11 @@ import { Request, Router } from 'express';
 import { z } from 'zod';
 import { context } from '../../context';
 import { createPOAPEvent } from '../../external/poap';
-import { jwtWithAdminAddress, jwtWithAddress } from '../../middleware/auth';
+import { jwtWithStaffAddress, jwtWithAddress } from '../../middleware/auth';
 import multer from 'multer';
 import { generatePOAPSecret } from '../../lib/secrets';
 import { DateTime } from 'luxon';
-import { AdminApprovalStatus, Prisma } from '@prisma/client';
+import { StaffApprovalStatus, Prisma } from '@prisma/client';
 import {
   getImageBufferFromS3URL,
   getKeyFromS3URL,
@@ -37,7 +37,7 @@ import {
 } from '../../external/postmark';
 import { GitPOAPRequestEmailForm } from '../../types/gitpoaps';
 import { formatDateToString } from './utils';
-import { isAddressAnAdmin } from '../../lib/admins';
+import { isAddressAStaffMember } from '../../lib/staff';
 
 export const customGitPOAPsRouter = Router();
 
@@ -150,7 +150,7 @@ customGitPOAPsRouter.post(
         description: schemaResult.data.description,
         project: project ? { connect: { id: project?.id } } : undefined,
         organization: organization ? { connect: { id: organization?.id } } : undefined,
-        adminApprovalStatus: AdminApprovalStatus.PENDING,
+        staffApprovalStatus: StaffApprovalStatus.PENDING,
         contributors: contributors as Prisma.JsonObject,
         address: {
           connect: { id: addressId },
@@ -180,12 +180,12 @@ customGitPOAPsRouter.post(
   },
 );
 
-customGitPOAPsRouter.put('/approve/:id', jwtWithAdminAddress(), async (req, res) => {
+customGitPOAPsRouter.put('/approve/:id', jwtWithStaffAddress(), async (req, res) => {
   const logger = getRequestLogger(req);
 
   const gitPOAPRequestId = parseInt(req.params.id, 10);
 
-  logger.info(`Admin request to create GitPOAP from GitPOAPRequest ID ${gitPOAPRequestId}`);
+  logger.info(`Staff request to create GitPOAP from GitPOAPRequest ID ${gitPOAPRequestId}`);
 
   const gitPOAPRequest = await context.prisma.gitPOAPRequest.findUnique({
     where: { id: gitPOAPRequestId },
@@ -197,7 +197,7 @@ customGitPOAPsRouter.put('/approve/:id', jwtWithAdminAddress(), async (req, res)
     return res.status(404).send({ msg });
   }
 
-  const isApproved = gitPOAPRequest.adminApprovalStatus === AdminApprovalStatus.APPROVED;
+  const isApproved = gitPOAPRequest.staffApprovalStatus === StaffApprovalStatus.APPROVED;
 
   if (isApproved) {
     const msg = `GitPOAP Request with ID:${gitPOAPRequestId} is already approved.`;
@@ -216,7 +216,7 @@ customGitPOAPsRouter.put('/approve/:id', jwtWithAdminAddress(), async (req, res)
   /* Update the GitPOAPRequest to APPROVED */
   const updatedGitPOAPRequest = await updateGitPOAPRequestStatus(
     gitPOAPRequestId,
-    AdminApprovalStatus.APPROVED,
+    StaffApprovalStatus.APPROVED,
   );
 
   logger.info(`Marking GitPOAP Request with ID:${gitPOAPRequestId} as APPROVED.`);
@@ -244,7 +244,7 @@ customGitPOAPsRouter.put('/approve/:id', jwtWithAdminAddress(), async (req, res)
   if (poapInfo === null) {
     logger.error('Failed to create event via POAP API');
     // Set back to pending so we can possibly re-approve
-    await updateGitPOAPRequestStatus(gitPOAPRequestId, AdminApprovalStatus.PENDING);
+    await updateGitPOAPRequestStatus(gitPOAPRequestId, StaffApprovalStatus.PENDING);
     return res.status(500).send({ msg: 'Failed to create POAP via API' });
   }
 
@@ -271,13 +271,13 @@ customGitPOAPsRouter.put('/approve/:id', jwtWithAdminAddress(), async (req, res)
   */
 
   logger.debug(
-    `Completed admin request to create GitPOAP from GitPOAPRequest ID ${gitPOAPRequestId}`,
+    `Completed staff request to create GitPOAP from GitPOAPRequest ID ${gitPOAPRequestId}`,
   );
 
   return res.status(200).send('APPROVED');
 });
 
-customGitPOAPsRouter.put('/reject/:id', jwtWithAdminAddress(), async (req, res) => {
+customGitPOAPsRouter.put('/reject/:id', jwtWithStaffAddress(), async (req, res) => {
   const logger = getRequestLogger(req);
 
   const gitPOAPRequestId = parseInt(req.params.id, 10);
@@ -291,7 +291,7 @@ customGitPOAPsRouter.put('/reject/:id', jwtWithAdminAddress(), async (req, res) 
   }
 
   logger.info(
-    `Admin request to reject GitPOAP Request with ID: ${gitPOAPRequestId} for reason: ${schemaResult.data.rejectionReason}`,
+    `Staff request to reject GitPOAP Request with ID: ${gitPOAPRequestId} for reason: ${schemaResult.data.rejectionReason}`,
   );
 
   const gitPOAPRequest = await context.prisma.gitPOAPRequest.findUnique({
@@ -304,13 +304,13 @@ customGitPOAPsRouter.put('/reject/:id', jwtWithAdminAddress(), async (req, res) 
     return res.status(404).send({ msg });
   }
 
-  if (gitPOAPRequest.adminApprovalStatus === AdminApprovalStatus.APPROVED) {
+  if (gitPOAPRequest.staffApprovalStatus === StaffApprovalStatus.APPROVED) {
     const msg = `GitPOAP Request with ID:${gitPOAPRequestId} is already approved.`;
     logger.warn(msg);
     return res.status(400).send({ msg });
   }
 
-  if (gitPOAPRequest.adminApprovalStatus === AdminApprovalStatus.REJECTED) {
+  if (gitPOAPRequest.staffApprovalStatus === StaffApprovalStatus.REJECTED) {
     const msg = `GitPOAP Request with ID:${gitPOAPRequestId} is already rejected.`;
     logger.warn(msg);
     return res.status(200).send({ msg });
@@ -319,7 +319,7 @@ customGitPOAPsRouter.put('/reject/:id', jwtWithAdminAddress(), async (req, res) 
   const updatedGitPOAPRequest = await context.prisma.gitPOAPRequest.update({
     where: { id: gitPOAPRequestId },
     data: {
-      adminApprovalStatus: AdminApprovalStatus.REJECTED,
+      staffApprovalStatus: StaffApprovalStatus.REJECTED,
       rejectionReason: schemaResult.data.rejectionReason,
     },
     select: {
@@ -350,7 +350,7 @@ customGitPOAPsRouter.put('/reject/:id', jwtWithAdminAddress(), async (req, res) 
   void sendGitPOAPRequestRejectionEmail(emailForm);
 
   logger.info(
-    `Completed admin request to reject Custom GitPOAP with Request ID:${gitPOAPRequest.id}`,
+    `Completed staff request to reject Custom GitPOAP with Request ID:${gitPOAPRequest.id}`,
   );
 
   return res.status(200).send('REJECTED');
@@ -379,7 +379,7 @@ customGitPOAPsRouter.patch(
       where: { id: gitPOAPRequestId },
       select: {
         addressId: true,
-        adminApprovalStatus: true,
+        staffApprovalStatus: true,
       },
     });
 
@@ -391,17 +391,17 @@ customGitPOAPsRouter.patch(
 
     const { address, addressId } = getAccessTokenPayload(req.user);
 
-    if (gitPOAPRequest.addressId !== addressId && !isAddressAnAdmin(address)) {
+    if (gitPOAPRequest.addressId !== addressId && !isAddressAStaffMember(address)) {
       logger.warn(
-        `Non-admin address ${address} attempted to update a GitPOAPRequest (ID: ${gitPOAPRequestId}) that they do not own`,
+        `Non-staff address ${address} attempted to update a GitPOAPRequest (ID: ${gitPOAPRequestId}) that they do not own`,
       );
       return res.status(401).send({ msg: 'Not GitPOAPRequest creator' });
     }
 
-    // This could happen if the admin approval request is put in around the same time
+    // This could happen if the staff approval request is put in around the same time
     // that the creator is trying to add new contributors, i.e. that the conversion
     // from GitPOAPRequest to GitPOAP hasn't completed yet.
-    if (gitPOAPRequest.adminApprovalStatus === AdminApprovalStatus.APPROVED) {
+    if (gitPOAPRequest.staffApprovalStatus === StaffApprovalStatus.APPROVED) {
       const msg = `GitPOAPRequest with ID ${gitPOAPRequestId} is already APPROVED`;
       logger.warn(msg);
       return res.status(400).send({ msg });
@@ -439,7 +439,7 @@ customGitPOAPsRouter.patch(
       endDate: maybeParseDate(schemaResult.data.endDate),
       contributors,
       numRequestedCodes,
-      adminApprovalStatus: AdminApprovalStatus.PENDING,
+      staffApprovalStatus: StaffApprovalStatus.PENDING,
       imageUrl,
     };
 

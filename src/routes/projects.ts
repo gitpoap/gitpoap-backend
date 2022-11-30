@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { jwtWithAdminAddress, jwtWithAdminOAuth } from '../middleware/auth';
+import { jwtWithStaffAddress, jwtWithStaffOAuth } from '../middleware/auth';
 import { AddReposSchema } from '../schemas/projects';
 import { createRepoByGithubId } from '../lib/repos';
 import { context } from '../context';
@@ -9,7 +9,7 @@ import { getRequestLogger } from '../middleware/loggingAndTiming';
 
 export const projectsRouter = Router();
 
-projectsRouter.post('/add-repos', jwtWithAdminOAuth(), async (req, res) => {
+projectsRouter.post('/add-repos', jwtWithStaffOAuth(), async (req, res) => {
   const logger = getRequestLogger(req);
 
   const schemaResult = AddReposSchema.safeParse(req.body);
@@ -69,12 +69,12 @@ projectsRouter.post('/add-repos', jwtWithAdminOAuth(), async (req, res) => {
   }
 });
 
-projectsRouter.put('/enable/:id', jwtWithAdminAddress(), async (req, res) => {
+projectsRouter.put('/enable/:id', jwtWithStaffAddress(), async (req, res) => {
   const logger = getRequestLogger(req);
 
   const projectId = parseInt(req.params.id, 10);
 
-  logger.info(`Admin request to enable all GitPOAPs in Project ID ${projectId}`);
+  logger.info(`Staff request to enable all GitPOAPs in Project ID ${projectId}`);
 
   const projectData = await context.prisma.project.findUnique({
     where: {
@@ -99,7 +99,7 @@ projectsRouter.put('/enable/:id', jwtWithAdminAddress(), async (req, res) => {
     },
   });
 
-  logger.debug(`Completed admin request to enable all GitPOAPs in Project ID ${projectId}`);
+  logger.debug(`Completed staff request to enable all GitPOAPs in Project ID ${projectId}`);
 
   return res.status(200).send('ENABLED');
 });
