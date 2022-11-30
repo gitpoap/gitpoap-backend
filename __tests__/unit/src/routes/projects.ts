@@ -2,7 +2,7 @@ import '../../../../__mocks__/src/logging';
 import { contextMock } from '../../../../__mocks__/src/context';
 import { setupApp } from '../../../../__mocks__/src/app';
 import { generateAuthTokens } from '../../../../src/lib/authTokens';
-import { ADMIN_ADDRESSES, ADMIN_GITHUB_IDS } from '../../../../src/constants';
+import { STAFF_ADDRESSES, STAFF_GITHUB_IDS } from '../../../../src/constants';
 import request from 'supertest';
 import { createRepoByGithubId } from '../../../../src/lib/repos';
 import { backloadGithubPullRequestData } from '../../../../src/lib/pullRequests';
@@ -91,7 +91,7 @@ describe('POST /projects/add-repos', () => {
     expect(result.statusCode).toEqual(400);
   });
 
-  it('Fails with non-admin OAuth Access Token provided', async () => {
+  it('Fails with non-staff OAuth Access Token provided', async () => {
     mockJwtWithOAuth();
 
     const authTokens = genAuthTokens(address, githubId, githubHandle, discordId, discordHandle);
@@ -111,8 +111,8 @@ describe('POST /projects/add-repos', () => {
     contextMock.prisma.project.findUnique.mockResolvedValue(null);
 
     const authTokens = genAuthTokens(
-      ADMIN_ADDRESSES[0],
-      ADMIN_GITHUB_IDS[0],
+      STAFF_ADDRESSES[0],
+      STAFF_GITHUB_IDS[0],
       githubHandle,
       discordId,
       discordHandle,
@@ -139,8 +139,8 @@ describe('POST /projects/add-repos', () => {
     mockedCreateRepoByGithubId.mockResolvedValue(null);
 
     const authTokens = genAuthTokens(
-      ADMIN_ADDRESSES[0],
-      ADMIN_GITHUB_IDS[0],
+      STAFF_ADDRESSES[0],
+      STAFF_GITHUB_IDS[0],
       githubHandle,
       discordId,
       discordHandle,
@@ -167,15 +167,15 @@ describe('POST /projects/add-repos', () => {
     );
   });
 
-  it('Adds valid repos to valid project with admin JWT', async () => {
+  it('Adds valid repos to valid project with staff JWT', async () => {
     mockJwtWithOAuth();
     contextMock.prisma.project.findUnique.mockResolvedValue({ id: projectId } as any);
     const repoId = 234232;
     mockedCreateRepoByGithubId.mockResolvedValue({ id: repoId } as any);
 
     const authTokens = genAuthTokens(
-      ADMIN_ADDRESSES[0],
-      ADMIN_GITHUB_IDS[0],
+      STAFF_ADDRESSES[0],
+      STAFF_GITHUB_IDS[0],
       githubHandle,
       discordId,
       discordHandle,
@@ -214,7 +214,7 @@ describe('PUT /projects/enable/:id', () => {
     expect(result.statusCode).toEqual(400);
   });
 
-  it('Fails with non-admin Access Token provided', async () => {
+  it('Fails with non-staff Access Token provided', async () => {
     mockJwtWithAddress();
 
     const authTokens = genAuthTokens();
@@ -233,7 +233,7 @@ describe('PUT /projects/enable/:id', () => {
     mockJwtWithAddress();
     contextMock.prisma.project.findUnique.mockResolvedValue(null);
 
-    const authTokens = genAuthTokens(ADMIN_ADDRESSES[0]);
+    const authTokens = genAuthTokens(STAFF_ADDRESSES[0]);
 
     const result = await request(await setupApp())
       .put(`/projects/enable/${projectId}`)
@@ -254,7 +254,7 @@ describe('PUT /projects/enable/:id', () => {
     mockJwtWithAddress();
     contextMock.prisma.project.findUnique.mockResolvedValue({ id: projectId } as any);
 
-    const authTokens = genAuthTokens(ADMIN_ADDRESSES[0]);
+    const authTokens = genAuthTokens(STAFF_ADDRESSES[0]);
 
     const result = await request(await setupApp())
       .put(`/projects/enable/${projectId}`)

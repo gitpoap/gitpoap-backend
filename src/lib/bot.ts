@@ -1,7 +1,7 @@
 import {
-  getGithubUserByIdAsAdmin,
-  getSingleGithubRepositoryIssueAsAdmin,
-  getSingleGithubRepositoryPullAsAdmin,
+  getGithubUserByIdAsApp,
+  getSingleGithubRepositoryIssueAsApp,
+  getSingleGithubRepositoryPullAsApp,
 } from '../external/github';
 import { createScopedLogger } from '../logging';
 import { getRepoByName } from './repos';
@@ -27,7 +27,7 @@ export async function createClaimsForPR(
 ): Promise<RestrictedContribution | BotCreateClaimsErrorType> {
   const logger = createScopedLogger('createClaimsForPR');
 
-  const userInfo = await getGithubUserByIdAsAdmin(githubId);
+  const userInfo = await getGithubUserByIdAsApp(githubId);
   if (userInfo === null) {
     // In this case let's log an error and then pretend they are a bot
     // so they get skipped
@@ -49,7 +49,7 @@ export async function createClaimsForPR(
     return BotCreateClaimsErrorType.RepoNotFound;
   }
 
-  const pull = await getSingleGithubRepositoryPullAsAdmin(organization, repo, pullRequestNumber);
+  const pull = await getSingleGithubRepositoryPullAsApp(organization, repo, pullRequestNumber);
   if (pull === null) {
     logger.error(`Failed to query repo data for "${organization}/${repo}" via GitHub API`);
     return BotCreateClaimsErrorType.GithubRecordNotFound;
@@ -97,7 +97,7 @@ export async function createClaimsForIssue(
 ): Promise<RestrictedContribution | BotCreateClaimsErrorType> {
   const logger = createScopedLogger('createClaimsForIssue');
 
-  const userInfo = await getGithubUserByIdAsAdmin(githubId);
+  const userInfo = await getGithubUserByIdAsApp(githubId);
   if (userInfo === null) {
     // In this case let's log an error and then pretend they are a bot
     // so they get skipped
@@ -115,7 +115,7 @@ export async function createClaimsForIssue(
     return BotCreateClaimsErrorType.RepoNotFound;
   }
 
-  const issue = await getSingleGithubRepositoryIssueAsAdmin(organization, repo, issueNumber);
+  const issue = await getSingleGithubRepositoryIssueAsApp(organization, repo, issueNumber);
   if (issue === null) {
     return BotCreateClaimsErrorType.GithubRecordNotFound;
   }

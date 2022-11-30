@@ -8,7 +8,7 @@ import { Request, Router } from 'express';
 import { z } from 'zod';
 import { context } from '../../context';
 import { createPOAPEvent } from '../../external/poap';
-import { jwtWithAddress, jwtWithAdminAddress, jwtWithAdminOAuth } from '../../middleware/auth';
+import { jwtWithAddress, jwtWithStaffAddress, jwtWithStaffOAuth } from '../../middleware/auth';
 import multer from 'multer';
 import { ClaimStatus, GitPOAPStatus, GitPOAPType } from '@prisma/client';
 import {
@@ -23,7 +23,7 @@ import {
 import { upsertRedeemCode } from '../../lib/codes';
 import { generatePOAPSecret } from '../../lib/secrets';
 import { customGitPOAPsRouter } from './custom';
-import { isAddressAnAdmin } from '../../lib/admins';
+import { isAddressAStaffMember } from '../../lib/staff';
 import { convertContributorsFromSchema, createClaimsForContributors } from '../../lib/gitpoaps';
 import { ensureRedeemCodeThreshold } from '../../lib/claims';
 import { getRequestLogger } from '../../middleware/loggingAndTiming';
@@ -40,7 +40,7 @@ type CreateGitPOAPReqBody = z.infer<typeof CreateGitPOAPSchema>;
 
 gitPOAPsRouter.post(
   '/',
-  jwtWithAdminOAuth(),
+  jwtWithStaffOAuth(),
   upload.single('image'),
   async function (req: Request<any, any, CreateGitPOAPReqBody>, res) {
     const logger = getRequestLogger(req);
@@ -240,7 +240,7 @@ gitPOAPsRouter.get('/poap-token-id/:id', async function (req, res) {
 
 gitPOAPsRouter.post(
   '/codes',
-  jwtWithAdminAddress(),
+  jwtWithStaffAddress(),
   upload.single('codes'),
   async function (req, res) {
     const logger = getRequestLogger(req);
@@ -332,12 +332,12 @@ gitPOAPsRouter.post(
   },
 );
 
-gitPOAPsRouter.put('/enable/:id', jwtWithAdminAddress(), async (req, res) => {
+gitPOAPsRouter.put('/enable/:id', jwtWithStaffAddress(), async (req, res) => {
   const logger = getRequestLogger(req);
 
   const gitPOAPId = parseInt(req.params.id, 10);
 
-  logger.info(`Admin request to enable GitPOAP ID ${gitPOAPId}`);
+  logger.info(`Staff request to enable GitPOAP ID ${gitPOAPId}`);
 
   const gitPOAPInfo = await context.prisma.gitPOAP.findUnique({
     where: {
@@ -368,17 +368,17 @@ gitPOAPsRouter.put('/enable/:id', jwtWithAdminAddress(), async (req, res) => {
     },
   });
 
-  logger.debug(`Completed admin request to enable GitPOAP ID ${gitPOAPId}`);
+  logger.debug(`Completed staff request to enable GitPOAP ID ${gitPOAPId}`);
 
   return res.status(200).send('ENABLED');
 });
 
-gitPOAPsRouter.put('/deprecate/:id', jwtWithAdminAddress(), async (req, res) => {
+gitPOAPsRouter.put('/deprecate/:id', jwtWithStaffAddress(), async (req, res) => {
   const logger = getRequestLogger(req);
 
   const gitPOAPId = parseInt(req.params.id, 10);
 
-  logger.info(`Admin request to deprecate GitPOAP ID ${gitPOAPId}`);
+  logger.info(`Staff request to deprecate GitPOAP ID ${gitPOAPId}`);
 
   const gitPOAPInfo = await context.prisma.gitPOAP.findUnique({
     where: {
@@ -413,7 +413,7 @@ gitPOAPsRouter.put('/deprecate/:id', jwtWithAdminAddress(), async (req, res) => 
     },
   });
 
-  logger.debug(`Completed admin request to deprecate GitPOAP ID ${gitPOAPId}`);
+  logger.debug(`Completed staff request to deprecate GitPOAP ID ${gitPOAPId}`);
 
   return res.status(200).send('DEPRECATED');
 });
@@ -464,8 +464,8 @@ gitPOAPsRouter.put('/:gitPOAPId/claims', jwtWithAddress(), async (req, res) => {
       return res.status(401).send({ msg: 'Not GitPOAP owner' });
     }
   } else {
-    if (!isAddressAnAdmin(address)) {
-      logger.warn(`Non-admin ${address} tried to add claims to non-Custom GitPOAP ID ${gitPOAPId}`);
+    if (!isAddressAStaffMember(address)) {
+      logger.warn(`Non-staff ${address} tried to add claims to non-Custom GitPOAP ID ${gitPOAPId}`);
       return res.status(401).send({ msg: 'Not authorized to create Claims' });
     }
   }

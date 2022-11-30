@@ -8,7 +8,7 @@ import { createScopedLogger } from '../logging';
 import { GITPOAP_BOT_APP_ID } from '../constants';
 import { getGithubAuthenticatedApp } from '../external/github';
 import { captureException } from '../lib/sentry';
-import { isAddressAnAdmin } from '../lib/admins';
+import { isAddressAStaffMember } from '../lib/staff';
 
 export const jwtMiddleware = jwt({ secret: JWT_SECRET as string, algorithms: ['HS256'] });
 
@@ -98,8 +98,8 @@ export function jwtWithAddress() {
   return middleware;
 }
 
-export function jwtWithAdminAddress() {
-  const logger = createScopedLogger('jwtWithAdminAddress');
+export function jwtWithStaffAddress() {
+  const logger = createScopedLogger('jwtWithStaffAddress');
 
   const jwtMiddleware = jwtWithAddress();
 
@@ -113,8 +113,8 @@ export function jwtWithAdminAddress() {
 
       const { address } = getAccessTokenPayload(req.user);
 
-      if (!isAddressAnAdmin(address)) {
-        logger.warn(`Non-admin user (Address: ${address}) attempted to use admin-only routes`);
+      if (!isAddressAStaffMember(address)) {
+        logger.warn(`Non-staff user (Address: ${address}) attempted to use staff-only routes`);
         next({ status: 401, msg: 'You are not privileged for this endpoint' });
         return;
       }
@@ -211,8 +211,8 @@ export function jwtWithGitHubOAuth() {
   return middleware;
 }
 
-export function jwtWithAdminOAuth() {
-  const logger = createScopedLogger('jwtWithAdminOAuth');
+export function jwtWithStaffOAuth() {
+  const logger = createScopedLogger('jwtWithStaffOAuth');
 
   const jwtMiddleware = jwtWithGitHubOAuth();
 
@@ -226,9 +226,9 @@ export function jwtWithAdminOAuth() {
 
       const { address, githubHandle } = getAccessTokenPayloadWithGithubOAuth(req.user);
 
-      if (!isAddressAnAdmin(address)) {
+      if (!isAddressAStaffMember(address)) {
         logger.warn(
-          `Non-admin user (GitHub handle: ${githubHandle}) attempted to use admin-only routes`,
+          `Non-staff user (GitHub handle: ${githubHandle}) attempted to use staff-only routes`,
         );
         next({ status: 401, msg: 'You are not privileged for this endpoint' });
         return;

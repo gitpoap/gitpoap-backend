@@ -110,7 +110,7 @@ export async function getGithubUser(githubHandle: string, githubToken: string) {
   );
 }
 
-export async function getGithubUserAsAdmin(githubHandle: string) {
+export async function getGithubUserAsApp(githubHandle: string) {
   return await responseHandler<OctokitResponseData<UsersAPI['getByUsername']>>(
     getOAuthAppOctokit().rest.users.getByUsername({
       username: githubHandle,
@@ -126,7 +126,7 @@ export async function getGithubUserById(githubId: number, githubToken: string) {
   );
 }
 
-export async function getGithubUserByIdAsAdmin(githubId: number) {
+export async function getGithubUserByIdAsApp(githubId: number) {
   return await responseHandler<OctokitResponseData<UsersAPI['getByUsername']>>(
     getOAuthAppOctokit().request('GET /user/{githubId}', {
       githubId,
@@ -151,7 +151,7 @@ export async function getGithubRepositoryById(repoId: number, githubToken: strin
   );
 }
 
-async function getGithubRepositoryByIdAsAdmin(repoId: number) {
+async function getGithubRepositoryByIdAsApp(repoId: number) {
   return await responseHandler<OctokitRepoItem>(
     getOAuthAppOctokit().request('GET /repositories/{repoId}', {
       repoId,
@@ -159,8 +159,8 @@ async function getGithubRepositoryByIdAsAdmin(repoId: number) {
   );
 }
 
-async function getGithubRepositoryStarCountAsAdmin(repoId: number) {
-  const githubResponse = await getGithubRepositoryByIdAsAdmin(repoId);
+async function getGithubRepositoryStarCountAsApp(repoId: number) {
+  const githubResponse = await getGithubRepositoryByIdAsApp(repoId);
 
   if (githubResponse === null) {
     // If the something went wrong just return 0
@@ -189,7 +189,7 @@ export async function getGithubRepositoryStarCount(repoId: number) {
 
   logger.debug(`GitHub stars count for githubRepoId ${repoId} not in cache`);
 
-  const starsCount = await getGithubRepositoryStarCountAsAdmin(repoId);
+  const starsCount = await getGithubRepositoryStarCountAsApp(repoId);
 
   void context.redis.setValue(
     GITHUB_STARS_COUNT_CACHE_PREFIX,
@@ -232,7 +232,7 @@ export async function getGithubOrganizationAdmins(organization: string, githubTo
 }
 
 // This should only be used for our background processes
-export async function getGithubRepositoryPullsAsAdmin(
+export async function getGithubRepositoryPullsAsApp(
   org: string,
   repo: string,
   perPage: number,
@@ -255,7 +255,7 @@ export async function getGithubRepositoryPullsAsAdmin(
 }
 
 /* Get single pull request data */
-export async function getSingleGithubRepositoryPullAsAdmin(
+export async function getSingleGithubRepositoryPullAsApp(
   org: string,
   repo: string,
   pullRequestNumber: number,
@@ -269,7 +269,7 @@ export async function getSingleGithubRepositoryPullAsAdmin(
   );
 }
 
-export async function getSingleGithubRepositoryIssueAsAdmin(
+export async function getSingleGithubRepositoryIssueAsApp(
   org: string,
   repo: string,
   issueNumber: number,
