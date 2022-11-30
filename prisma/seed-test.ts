@@ -47,7 +47,7 @@ import {
   event37430,
 } from './data';
 import { getS3URL } from '../src/external/s3';
-import { AdminApprovalStatus } from '@prisma/client';
+import { StaffApprovalStatus } from '@prisma/client';
 
 export const seed = async () => {
   console.log('Starting DB seeding...');
@@ -304,7 +304,7 @@ export const seed = async () => {
     imageUrl: getS3URL('gitpoap-request-images-test', 'gitpoap-test-2.png-1666121850.987'),
     startDate: DateTime.fromISO('2022-01-01').toJSDate(),
     endDate: DateTime.fromISO('2022-01-30').toJSDate(),
-    adminApprovalStatus: AdminApprovalStatus.PENDING,
+    staffApprovalStatus: StaffApprovalStatus.PENDING,
     contributors: {
       ensNames: ['peebeejay.eth'],
       githubHandles: ['peebeejay'],
@@ -321,7 +321,7 @@ export const seed = async () => {
     imageUrl: getS3URL('gitpoap-request-images-test', 'gitpoap-test-1.png-1666121850.987'),
     startDate: DateTime.fromISO('2022-06-01').toJSDate(),
     endDate: DateTime.fromISO('2022-06-30').toJSDate(),
-    adminApprovalStatus: AdminApprovalStatus.PENDING,
+    staffApprovalStatus: StaffApprovalStatus.PENDING,
     contributors: {
       ensNames: ['lamberti.eth'],
       githubHandles: ['aldolamb'],

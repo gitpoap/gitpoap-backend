@@ -1,6 +1,6 @@
 import { context } from '../context';
 import { createScopedLogger } from '../logging';
-import { getGithubRepositoryPullsAsAdmin, OctokitPullListItem } from '../external/github';
+import { getGithubRepositoryPullsAsApp, OctokitPullListItem } from '../external/github';
 import { DateTime } from 'luxon';
 import { sleep } from './sleep';
 import {
@@ -143,7 +143,7 @@ export async function checkForNewContributions(repo: RepoReturnType) {
   let lastUpdatedAt = null;
   let newName;
   while (isProcessing) {
-    const pulls = await getGithubRepositoryPullsAsAdmin(
+    const pulls = await getGithubRepositoryPullsAsApp(
       repo.organization.name,
       repo.name,
       PULL_STEP_SIZE,

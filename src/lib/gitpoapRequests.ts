@@ -1,5 +1,5 @@
 import { context } from '../context';
-import { AdminApprovalStatus } from '@prisma/client';
+import { StaffApprovalStatus } from '@prisma/client';
 import { convertContributorsFromSchema, countContributors } from './gitpoaps';
 import {
   CUSTOM_GITPOAP_CODE_BUFFER,
@@ -22,11 +22,11 @@ export async function deleteGitPOAPRequest(id: number) {
 
 export async function updateGitPOAPRequestStatus(
   gitPOAPRequestId: number,
-  adminApprovalStatus: AdminApprovalStatus,
+  staffApprovalStatus: StaffApprovalStatus,
 ) {
   return await context.prisma.gitPOAPRequest.update({
     where: { id: gitPOAPRequestId },
-    data: { adminApprovalStatus },
+    data: { staffApprovalStatus },
   });
 }
 
