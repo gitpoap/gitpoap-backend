@@ -2,6 +2,7 @@ import { writeFileSync } from 'fs';
 import { printSchema } from 'graphql/utilities';
 import { format } from 'prettier';
 import { buildSchema, NonEmptyArray } from 'type-graphql';
+import { authChecker } from './auth';
 
 import {
   /* Auto-generated Relation Resolvers */
@@ -250,6 +251,7 @@ const createSchema = async () =>
   await buildSchema({
     resolvers: allResolvers,
     validate: false,
+    authChecker,
   });
 
 export const createAndEmitSchema = async () => {
