@@ -8,25 +8,27 @@ import { createScopedLogger } from '../logging';
 import { verify } from 'jsonwebtoken';
 import { FRONTEND_JWT_SECRET, JWT_SECRET } from '../environment';
 import { AccessTokenPayload, getAccessTokenPayload } from '../types/authTokens';
-import { Request, RequestHandler } from 'express';
+import { RequestHandler } from 'express';
 
 export async function createGQLServer(): Promise<RequestHandler> {
-  const gqlHandler = graphqlHTTP({
-    schema: await createAndEmitSchema(),
-    context: (req: Request) => ({
+  const gqlSchema = await createAndEmitSchema();
+  const gqlHandler = graphqlHTTP((req: any) => ({
+    schema: gqlSchema,
+    context: {
       ...context,
       userAccessTokenPayload: req.user !== null ? getAccessTokenPayload(req.user) : null,
-    }),
+    },
     // Allow graphiql outside of PROD
     graphiql: !IS_PROD,
-  });
+  }));
 
-  return (req, res) => {
+  return async (req, res) => {
     const logger = createScopedLogger('gqlServerHandler');
 
     // Allow graphiql outside of PROD
     if (!IS_PROD && req.method === 'GET' && req.path === '/') {
-      return gqlHandler(req, res);
+      gqlHandler(req, res);
+      return;
     }
 
     const authorization = req.get('authorization');

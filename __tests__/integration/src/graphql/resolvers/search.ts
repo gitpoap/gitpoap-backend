@@ -1,8 +1,9 @@
-import { GraphQLClient, gql } from 'graphql-request';
+import { gql } from 'graphql-request';
 import { ADDRESSES, GH_HANDLES } from '../../../../../prisma/constants';
+import { getGraphQLClient } from '../../../../../__mocks__/src/graphql/server';
 
 describe('CustomSearchResolver', () => {
-  const client = new GraphQLClient('http://server:3001/graphql');
+  const client = getGraphQLClient();
 
   it('search - githubUsers', async () => {
     const data = await client.request(gql`
