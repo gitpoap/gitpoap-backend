@@ -2,9 +2,6 @@ import 'reflect-metadata';
 import express, { Express, RequestHandler } from 'express';
 import * as Sentry from '@sentry/node';
 import * as Tracing from '@sentry/tracing';
-import { graphqlHTTP } from 'express-graphql';
-import { createAndEmitSchema } from './graphql/schema';
-import { context } from './context';
 import cors from 'cors';
 import { errorHandler } from './middleware/error';
 import { subscribeRouter } from './routes/subscribe';
@@ -25,6 +22,7 @@ import { NODE_ENV, SENTRY_DSN } from './environment';
 import { authRouter } from './routes/auth';
 import { loggingAndTimingMiddleware } from './middleware/loggingAndTiming';
 import { routeNotFoundHandler } from './middleware/routeNotFound';
+import { createGQLServer } from './graphql/server';
 
 const initializeSentry = (app: Express) => {
   if (SENTRY_DSN) {
@@ -57,10 +55,7 @@ export async function setupAppWithMiddleware(middleware: RequestHandler[]) {
   app.use(cors());
   app.use(express.json());
 
-  app.use(
-    '/graphql',
-    graphqlHTTP({ schema: await createAndEmitSchema(), context, graphiql: true }),
-  );
+  app.use('/graphql', await createGQLServer());
 
   for (const mw of middleware) {
     app.use(mw);
