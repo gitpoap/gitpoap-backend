@@ -3,6 +3,7 @@ import env from 'env-var';
 export const APP_NAME = env.get('APP_NAME').required().asString();
 
 export const JWT_SECRET = env.get('JWT_SECRET').required().asString();
+export const FRONTEND_JWT_SECRET = env.get('FRONTEND_JWT_SECRET').required().asString();
 
 export const NODE_ENV = env.get('NODE_ENV').required().asString();
 
