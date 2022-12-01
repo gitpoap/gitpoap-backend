@@ -3,7 +3,7 @@ import { Profile as ProfileValue, GithubUser as GithubUserValue } from '@generat
 import { createScopedLogger } from '../../logging';
 import { gqlRequestDurationSeconds } from '../../metrics';
 import { resolveENS } from '../../lib/ens';
-import { Context, context } from '../../context';
+import { AuthContext } from '../auth';
 import { GithubUser, Profile } from '@prisma/client';
 
 @ObjectType()
@@ -18,7 +18,7 @@ class SearchResults {
 @Resolver()
 export class CustomSearchResolver {
   @Query(() => SearchResults)
-  async search(@Ctx() { prisma }: Context, @Arg('text') text: string): Promise<SearchResults> {
+  async search(@Ctx() { prisma }: AuthContext, @Arg('text') text: string): Promise<SearchResults> {
     const logger = createScopedLogger('GQL search');
 
     logger.info(`Request to search for "${text}"`);
@@ -81,7 +81,7 @@ export class CustomSearchResolver {
 
       // If we just found a resolution, return the profile
       if (address !== null) {
-        const profile = await context.prisma.profile.findFirst({
+        const profile = await prisma.profile.findFirst({
           where: {
             address: {
               ethAddress: address.toLowerCase(),

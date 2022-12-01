@@ -1,4 +1,4 @@
-import { GraphQLClient, gql } from 'graphql-request';
+import { gql } from 'graphql-request';
 import {
   event1,
   event2,
@@ -11,9 +11,10 @@ import {
   event36576,
 } from '../../../../../prisma/data';
 import { ADDRESSES } from '../../../../../prisma/constants';
+import { getGraphQLClient } from '../../../../../__mocks__/src/graphql/server';
 
 describe('CustomClaimResolver', () => {
-  const client = new GraphQLClient('http://server:3001/graphql');
+  const client = getGraphQLClient();
 
   it('totalGitPOAPs', async () => {
     const data = await client.request(gql`

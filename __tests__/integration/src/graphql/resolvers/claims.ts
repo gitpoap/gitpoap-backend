@@ -1,10 +1,11 @@
-import { GraphQLClient, gql } from 'graphql-request';
+import { gql } from 'graphql-request';
 import { ADDRESSES } from '../../../../../prisma/constants';
 import { context } from '../../../../../src/context';
 import { GitPOAPStatus } from '@prisma/client';
+import { getGraphQLClient } from '../../../../../__mocks__/src/graphql/server';
 
 describe('CustomClaimResolver', () => {
-  const client = new GraphQLClient('http://server:3001/graphql');
+  const client = getGraphQLClient();
 
   it('totalClaims', async () => {
     const data = await client.request(gql`

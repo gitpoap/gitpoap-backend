@@ -1,7 +1,8 @@
-import { GraphQLClient, gql } from 'graphql-request';
+import { gql } from 'graphql-request';
+import { getGraphQLClient } from '../../../../../__mocks__/src/graphql/server';
 
 describe('CustomOrganizationResolver', () => {
-  const client = new GraphQLClient('http://server:3001/graphql');
+  const client = getGraphQLClient();
 
   it('organizationData - orgId', async () => {
     const data = await client.request(gql`

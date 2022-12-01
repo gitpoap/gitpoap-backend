@@ -9,8 +9,7 @@ export enum AuthRoles {
   Staff,
 }
 
-type AuthContext = Context & {
-  frontendAuthToken: string;
+export type AuthContext = Context & {
   userAccessTokenPayload: AccessTokenPayload | null;
 };
 
