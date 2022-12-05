@@ -192,7 +192,13 @@ claimsRouter.post('/', jwtWithAddress(), async function (req, res) {
     invalid: invalidClaims,
   });
 
-  await runClaimsPostProcessing(claimedIds, qrHashes);
+  // Run in the background
+  void runClaimsPostProcessing(
+    claimedIds.map((id, i) => ({
+      id,
+      qrHash: qrHashes[i],
+    })),
+  );
 });
 
 claimsRouter.post('/create', jwtWithStaffOAuth(), async function (req, res) {
