@@ -103,6 +103,18 @@ import {
   AggregateAddressResolver,
   /* Auto-generated Email Resolvers */
   AggregateEmailResolver,
+  /* Auto-generated Team Resolvers */
+  FindUniqueTeamResolver,
+  FindFirstTeamResolver,
+  FindManyTeamResolver,
+  GroupByTeamResolver,
+  AggregateTeamResolver,
+  /* Auto-generated Membership Resolvers */
+  FindUniqueMembershipResolver,
+  FindFirstMembershipResolver,
+  FindManyMembershipResolver,
+  GroupByMembershipResolver,
+  AggregateMembershipResolver,
 } from '@generated/type-graphql';
 import { CustomClaimResolver } from './resolvers/claims';
 import { CustomGitPOAPResolver } from './resolvers/gitpoaps';
@@ -213,6 +225,18 @@ const allResolvers: NonEmptyArray<ResolverClass> = [
   AggregateAddressResolver,
   /* Auto-generated Email Resolvers */
   AggregateEmailResolver,
+  /* Auto-generated Team Resolvers */
+  FindUniqueTeamResolver,
+  FindFirstTeamResolver,
+  FindManyTeamResolver,
+  GroupByTeamResolver,
+  AggregateTeamResolver,
+  /* Auto-generated Membership Resolvers */
+  FindUniqueMembershipResolver,
+  FindFirstMembershipResolver,
+  FindManyMembershipResolver,
+  GroupByMembershipResolver,
+  AggregateMembershipResolver,
   /* ~~ Custom resolvers ~~ */
   CustomClaimResolver,
   CustomGitPOAPResolver,
