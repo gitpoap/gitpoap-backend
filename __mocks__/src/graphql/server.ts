@@ -7,7 +7,7 @@ function genFrontendToken() {
   return sign({}, FRONTEND_JWT_SECRET);
 }
 
-function genGQLAccessTokens(): GQLAccessTokens {
+export function genGQLAccessTokens(): GQLAccessTokens {
   return {
     frontend: genFrontendToken(),
     user: null,
