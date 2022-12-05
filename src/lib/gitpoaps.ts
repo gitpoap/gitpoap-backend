@@ -22,10 +22,10 @@ export const convertGitPOAPRequestToGitPOAP = async (
       connect: { id: gitPOAPRequest.projectId },
     };
   }
-  let organization;
-  if (gitPOAPRequest.organizationId) {
-    organization = {
-      connect: { id: gitPOAPRequest.organizationId },
+  let team;
+  if (gitPOAPRequest.teamId) {
+    team = {
+      connect: { id: gitPOAPRequest.teamId },
     };
   }
 
@@ -38,7 +38,7 @@ export const convertGitPOAPRequestToGitPOAP = async (
       year: gitPOAPRequest.startDate.getFullYear(),
       poapEventId: poapInfo.id,
       project,
-      organization,
+      team,
       poapSecret: secretCode,
       canRequestMoreCodes: true,
       isEnabled: true,
