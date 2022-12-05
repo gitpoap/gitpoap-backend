@@ -12,6 +12,7 @@ import { requestPOAPCodes } from '../external/poap';
 import { upsertEmail } from './emails';
 import { sleep } from '../lib/sleep';
 import { retrieveClaimInfo } from '../external/poap';
+import { DateTime } from 'luxon';
 
 type GitPOAPs = {
   id: number;
@@ -637,25 +638,34 @@ export async function ensureRedeemCodeThreshold(gitPOAP: MinimalGitPOAPForRedeem
   }
 }
 
-export async function runClaimsPostProcessing(claimIds: number[], qrHashes: string[]) {
+type PostProcessingClaimType = {
+  id: number;
+  qrHash: string | null;
+};
+
+export async function runClaimsPostProcessing(claims: PostProcessingClaimType[]) {
   const logger = createScopedLogger('runClaimsPostProcessing');
 
-  while (claimIds.length > 0) {
-    logger.info(`Waiting for ${claimIds.length} claim transactions to process`);
+  while (claims.length > 0) {
+    logger.info(`Still waiting for ${claims.length} claim transactions to process`);
 
     // Wait for 5 seconds
     await sleep(5);
 
     // Helper function to remove a claim from postprocessing
-    const removeAtIndex = (i: number) => {
-      claimIds.splice(i, 1);
-      qrHashes.splice(i, 1);
-    };
+    const removeAtIndex = (i: number) => claims.splice(i, i);
 
-    for (let i = 0; i < claimIds.length; ++i) {
-      const poapData = await retrieveClaimInfo(qrHashes[i]);
+    for (let i = 0; i < claims.length; ++i) {
+      if (claims[i].qrHash === null) {
+        logger.error(`Claim ID ${claims[i].id} has status MINTING but qrHash is null`);
+        removeAtIndex(i);
+        break;
+      }
+
+      // TypeScript can't tell that we removed the null qrHashes above...
+      const poapData = await retrieveClaimInfo(claims[i].qrHash as string);
       if (poapData === null) {
-        logger.error(`Failed to retrieve claim info for Claim ID: ${claimIds[i]}`);
+        logger.error(`Failed to retrieve claim info for Claim ID: ${claims[i].id}`);
         removeAtIndex(i);
         break;
       }
@@ -669,20 +679,45 @@ export async function runClaimsPostProcessing(claimIds: number[], qrHashes: stri
 
         // Set the new poapTokenId now that the TX is finalized
         await context.prisma.claim.update({
-          where: {
-            id: claimIds[i],
-          },
+          where: { id: claims[i].id },
           data: {
             status: ClaimStatus.CLAIMED,
             poapTokenId: poapData.result.token.toString(),
-            mintedAt: new Date(),
+            mintedAt: DateTime.fromISO(poapData.claimed_date).toJSDate(),
           },
         });
 
         removeAtIndex(i);
+        break;
       }
     }
   }
 
   logger.info('Finished claims post processing');
+}
+
+// This is run once when the the server starts up.
+// Since it is only an update operation it is safe to run
+// on multiple backend instances at the same time.
+export async function runStartupClaimsPostProcessing() {
+  const logger = createScopedLogger('runStartupClaimsPostProcessing');
+
+  logger.info('Checking if any Claims in MINTING state were finalized');
+
+  const mintingClaims = await context.prisma.claim.findMany({
+    where: { status: ClaimStatus.MINTING },
+    select: {
+      id: true,
+      qrHash: true,
+    },
+  });
+
+  if (mintingClaims.length === 0) {
+    logger.info('There are no MINTING Claims waiting to be finalized');
+    return;
+  }
+
+  logger.info(`There are ${mintingClaims.length} claims waiting to be finalized`);
+
+  await runClaimsPostProcessing(mintingClaims);
 }

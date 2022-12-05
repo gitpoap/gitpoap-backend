@@ -20,6 +20,7 @@ import minimist from 'minimist';
 import { startMetricsServer } from './metrics';
 import { setupApp } from './app';
 import { startBatchProcesses } from './batchProcessing';
+import { runStartupClaimsPostProcessing } from './lib/claims';
 
 const main = async () => {
   const logger = createScopedLogger('main');
@@ -58,6 +59,7 @@ const main = async () => {
   startMetricsServer();
 
   void startBatchProcesses();
+  void runStartupClaimsPostProcessing();
 };
 
 void main();

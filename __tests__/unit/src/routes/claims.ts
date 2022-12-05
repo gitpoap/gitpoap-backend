@@ -1075,7 +1075,9 @@ describe('POST /claims', () => {
     );
 
     expect(mockedRunClaimsPostProcessing).toHaveBeenCalledTimes(1);
-    expect(mockedRunClaimsPostProcessing).toHaveBeenCalledWith(claimIds, [redeemCode]);
+    expect(mockedRunClaimsPostProcessing).toHaveBeenCalledWith([
+      { id: claimIds[0], qrHash: redeemCode },
+    ]);
   });
 
   it('Succeeds on multiple claims when one fails', async () => {
@@ -1163,6 +1165,8 @@ describe('POST /claims', () => {
     );
 
     expect(mockedRunClaimsPostProcessing).toHaveBeenCalledTimes(1);
-    expect(mockedRunClaimsPostProcessing).toHaveBeenCalledWith([claimId], [redeemCode]);
+    expect(mockedRunClaimsPostProcessing).toHaveBeenCalledWith([
+      { id: claimId, qrHash: redeemCode },
+    ]);
   });
 });
