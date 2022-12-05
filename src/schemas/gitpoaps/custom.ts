@@ -3,7 +3,7 @@ import { z } from 'zod';
 // Everything is a string since it came from multipart
 export const CreateCustomGitPOAPSchema = z.object({
   projectId: z.string().optional(),
-  organizationId: z.string().optional(),
+  teamId: z.string().optional(),
   name: z.string().nonempty(),
   contributors: z.string().nonempty(),
   description: z.string().nonempty(),
