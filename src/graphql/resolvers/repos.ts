@@ -66,7 +66,7 @@ export class CustomRepoResolver {
           COUNT(DISTINCT g.id)::INTEGER AS "gitPOAPCount",
           COUNT(c.id)::INTEGER AS "mintedGitPOAPCount"
         FROM "Repo" as r
-        INNER JOIN "Organization" AS o ON o.id = r."organizationId"
+        INNER JOIN "GithubOrganization" AS o ON o.id = r."organizationId"
           AND o.name = ${orgName}
         INNER JOIN "Project" AS p ON r."projectId" = p.id
         INNER JOIN "GitPOAP" AS g ON g."projectId" = p.id AND g."isEnabled" IS TRUE
