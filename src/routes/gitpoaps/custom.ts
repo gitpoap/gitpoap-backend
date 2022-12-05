@@ -81,7 +81,7 @@ customGitPOAPsRouter.post(
     }
 
     let project: { id: number } | null = null;
-    let organization: { id: number; name: string } | null = null;
+    let team: { id: number; name: string } | null = null;
 
     /* If a GitPOAPRequest is tied to project */
     if (schemaResult.data.projectId) {
@@ -102,19 +102,19 @@ customGitPOAPsRouter.post(
       }
     }
 
-    /* If GitPOAPRequest is tied to an organization */
-    if (schemaResult.data.organizationId) {
-      const organizationId = parseInt(schemaResult.data.organizationId, 10);
+    /* If GitPOAPRequest is tied to a team */
+    if (schemaResult.data.teamId) {
+      const teamId = parseInt(schemaResult.data.teamId, 10);
       logger.info(
-        `Request to create a new GitPOAPRequest "${schemaResult.data.name}" for organization ${organizationId}`,
+        `Request to create a new GitPOAPRequest "${schemaResult.data.name}" for team ${teamId}`,
       );
-      organization = await context.prisma.organization.findUnique({
-        where: { id: organizationId },
+      team = await context.prisma.team.findUnique({
+        where: { id: teamId },
         select: { id: true, name: true },
       });
 
-      if (organization === null) {
-        const msg = `Failed to find organization with id: ${organizationId}`;
+      if (team === null) {
+        const msg = `Failed to find team with id: ${teamId}`;
         logger.warn(msg);
         return res.status(404).send({ msg });
       }
@@ -149,7 +149,7 @@ customGitPOAPsRouter.post(
         imageUrl: getS3URL(s3configProfile.buckets.gitPOAPRequestImages, imageKey),
         description: schemaResult.data.description,
         project: project ? { connect: { id: project?.id } } : undefined,
-        organization: organization ? { connect: { id: organization?.id } } : undefined,
+        team: team ? { connect: { id: team?.id } } : undefined,
         staffApprovalStatus: StaffApprovalStatus.PENDING,
         contributors: contributors as Prisma.JsonObject,
         address: {
@@ -173,7 +173,7 @@ customGitPOAPsRouter.post(
     void sendGitPOAPRequestConfirmationEmail(emailForm);
 
     logger.info(
-      `Completed request to create a new GitPOAP Request with ID: ${gitPOAPRequest.id} "${schemaResult.data.name}" for project ${project?.id} and organization ${organization?.id}`,
+      `Completed request to create a new GitPOAP Request with ID: ${gitPOAPRequest.id} "${schemaResult.data.name}" for project ${project?.id} and team ${team?.id}`,
     );
 
     return res.status(201).send('CREATED');
@@ -323,7 +323,7 @@ customGitPOAPsRouter.put('/reject/:id', jwtWithStaffAddress(), async (req, res) 
       rejectionReason: schemaResult.data.rejectionReason,
     },
     select: {
-      organization: {
+      team: {
         select: {
           id: true,
           name: true,

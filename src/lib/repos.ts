@@ -10,8 +10,8 @@ async function createRepoHelper(
 ): Promise<Repo | null> {
   const logger = createScopedLogger('createRepoHelper');
 
-  // Add the org if it doesn't already exist
-  const org = await context.prisma.organization.upsert({
+  // Add the github org if it doesn't already exist
+  const org = await context.prisma.githubOrganization.upsert({
     where: {
       githubOrgId: repoInfo.owner.id,
     },

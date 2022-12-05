@@ -8,7 +8,7 @@ import {
   GithubUserRelationsResolver,
   DiscordUserRelationsResolver,
   ProfileRelationsResolver,
-  OrganizationRelationsResolver,
+  GithubOrganizationRelationsResolver,
   RepoRelationsResolver,
   ClaimRelationsResolver,
   GitPOAPRelationsResolver,
@@ -41,12 +41,12 @@ import {
   FindManyProfileResolver,
   GroupByProfileResolver,
   AggregateProfileResolver,
-  /* Auto-generated Organization Resolvers */
-  FindUniqueOrganizationResolver,
-  FindFirstOrganizationResolver,
-  FindManyOrganizationResolver,
-  GroupByOrganizationResolver,
-  AggregateOrganizationResolver,
+  /* Auto-generated GithubOrganization Resolvers */
+  FindUniqueGithubOrganizationResolver,
+  FindFirstGithubOrganizationResolver,
+  FindManyGithubOrganizationResolver,
+  GroupByGithubOrganizationResolver,
+  AggregateGithubOrganizationResolver,
   /* Auto-generated Repo Resolvers */
   FindUniqueRepoResolver,
   FindFirstRepoResolver,
@@ -106,7 +106,7 @@ import {
 } from '@generated/type-graphql';
 import { CustomClaimResolver } from './resolvers/claims';
 import { CustomGitPOAPResolver } from './resolvers/gitpoaps';
-import { CustomOrganizationResolver } from './resolvers/organizations';
+import { CustomOrganizationResolver } from './resolvers/githubOrganizations';
 import { CustomProfileResolver } from './resolvers/profiles';
 import { CustomRepoResolver } from './resolvers/repos';
 import { CustomSearchResolver } from './resolvers/search';
@@ -118,7 +118,7 @@ const allResolvers: NonEmptyArray<ResolverClass> = [
   GithubUserRelationsResolver,
   DiscordUserRelationsResolver,
   ProfileRelationsResolver,
-  OrganizationRelationsResolver,
+  GithubOrganizationRelationsResolver,
   RepoRelationsResolver,
   ClaimRelationsResolver,
   GitPOAPRelationsResolver,
@@ -152,11 +152,11 @@ const allResolvers: NonEmptyArray<ResolverClass> = [
   GroupByProfileResolver,
   AggregateProfileResolver,
   /* Auto-generated Organization READ Resolvers */
-  FindUniqueOrganizationResolver,
-  FindFirstOrganizationResolver,
-  FindManyOrganizationResolver,
-  GroupByOrganizationResolver,
-  AggregateOrganizationResolver,
+  FindUniqueGithubOrganizationResolver,
+  FindFirstGithubOrganizationResolver,
+  FindManyGithubOrganizationResolver,
+  GroupByGithubOrganizationResolver,
+  AggregateGithubOrganizationResolver,
   /* Auto-generated Repo READ Resolvers */
   FindUniqueRepoResolver,
   FindFirstRepoResolver,

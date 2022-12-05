@@ -18,7 +18,7 @@ import { discordRouter } from './routes/oauth/discord';
 import { gitPOAPsRouter } from './routes/gitpoaps';
 import { profilesRouter } from './routes/profiles';
 import { projectsRouter } from './routes/projects';
-import { organizationsRouter } from './routes/organizations';
+import { githubOrganizationsRouter } from './routes/githubOrganizations';
 import { onboardingRouter } from './routes/onboarding';
 import { triggersRouter } from './routes/triggers';
 import { vitalsRouter } from './routes/vitals';
@@ -87,7 +87,7 @@ export async function setupAppWithMiddleware(middleware: RequestHandler[]) {
   app.use('/onboarding', onboardingRouter);
   app.use('/profiles', profilesRouter);
   app.use('/projects', projectsRouter);
-  app.use('/organizations', organizationsRouter);
+  app.use('/organizations', githubOrganizationsRouter);
   app.use('/triggers', triggersRouter);
   app.use('/vitals', vitalsRouter);
 
