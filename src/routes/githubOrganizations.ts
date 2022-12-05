@@ -6,9 +6,9 @@ import { context } from '../context';
 import { getAccessTokenPayloadWithGithubOAuth } from '../types/authTokens';
 import { getRequestLogger } from '../middleware/loggingAndTiming';
 
-export const organizationsRouter = Router();
+export const githubOrganizationsRouter = Router();
 
-organizationsRouter.post('/', jwtWithGitHubOAuth(), async function (req, res) {
+githubOrganizationsRouter.post('/', jwtWithGitHubOAuth(), async function (req, res) {
   const logger = getRequestLogger(req);
 
   const schemaResult = UpdateOrganizationSchema.safeParse(req.body);
@@ -19,9 +19,9 @@ organizationsRouter.post('/', jwtWithGitHubOAuth(), async function (req, res) {
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
-  logger.info(`Request to update organization id ${req.body.id}'s info`);
+  logger.info(`Request to update githubOrganization id ${req.body.id}'s info`);
 
-  const organization = await context.prisma.organization.findUnique({
+  const githubOrganization = await context.prisma.githubOrganization.findUnique({
     where: {
       id: req.body.id,
     },
@@ -29,7 +29,7 @@ organizationsRouter.post('/', jwtWithGitHubOAuth(), async function (req, res) {
       name: true,
     },
   });
-  if (organization === null) {
+  if (githubOrganization === null) {
     const msg = `Organization with id ${req.body.id} not found`;
     logger.warn(msg);
     return res.status(404).send({ msg });
@@ -37,28 +37,28 @@ organizationsRouter.post('/', jwtWithGitHubOAuth(), async function (req, res) {
 
   const { githubHandle, githubOAuthToken } = getAccessTokenPayloadWithGithubOAuth(req.user);
 
-  // Ensure that the (GitHub) authenticated member is an admin of the organization
-  const members = await getGithubOrganizationAdmins(organization.name, githubOAuthToken);
+  // Ensure that the (GitHub) authenticated member is an admin of the githubOrganization
+  const members = await getGithubOrganizationAdmins(githubOrganization.name, githubOAuthToken);
   if (members === null) {
-    const msg = `Failed to lookup admins of ${organization.name} via GitHub`;
+    const msg = `Failed to lookup admins of ${githubOrganization.name} via GitHub`;
     logger.warn(msg);
     return res.status(400).send({ msg });
   }
   if (!members.map((m: { login: string }) => m.login).includes(githubHandle)) {
     logger.warn(
-      `Non-member (GitHub handle: ${githubHandle} of repo ${organization.name} tried to update its data`,
+      `Non-member (GitHub handle: ${githubHandle} of repo ${githubOrganization.name} tried to update its data`,
     );
-    return res.status(401).send({ msg: `You are not a member of ${organization.name}` });
+    return res.status(401).send({ msg: `You are not a member of ${githubOrganization.name}` });
   }
 
-  await context.prisma.organization.update({
+  await context.prisma.githubOrganization.update({
     where: {
       id: req.body.id,
     },
     data: req.body.data,
   });
 
-  logger.debug(`Completed request to update organization id ${req.body.id}'s info`);
+  logger.debug(`Completed request to update githubOrganization id ${req.body.id}'s info`);
 
   return res.status(200).send('UPDATED');
 });
