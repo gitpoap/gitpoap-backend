@@ -262,6 +262,40 @@ type Query {
     take: Int
     skip: Int
   ): [GithubMentionGroupBy!]!
+  aggregateGithubOrganization(
+    where: GithubOrganizationWhereInput
+    orderBy: [GithubOrganizationOrderByWithRelationInput!]
+    cursor: GithubOrganizationWhereUniqueInput
+    take: Int
+    skip: Int
+  ): AggregateGithubOrganization!
+  findFirstGithubOrganization(
+    where: GithubOrganizationWhereInput
+    orderBy: [GithubOrganizationOrderByWithRelationInput!]
+    cursor: GithubOrganizationWhereUniqueInput
+    take: Int
+    skip: Int
+    distinct: [GithubOrganizationScalarFieldEnum!]
+  ): GithubOrganization
+  githubOrganizations(
+    where: GithubOrganizationWhereInput
+    orderBy: [GithubOrganizationOrderByWithRelationInput!]
+    cursor: GithubOrganizationWhereUniqueInput
+    take: Int
+    skip: Int
+    distinct: [GithubOrganizationScalarFieldEnum!]
+  ): [GithubOrganization!]!
+  githubOrganization(
+    where: GithubOrganizationWhereUniqueInput!
+  ): GithubOrganization
+  groupByGithubOrganization(
+    where: GithubOrganizationWhereInput
+    orderBy: [GithubOrganizationOrderByWithAggregationInput!]
+    by: [GithubOrganizationScalarFieldEnum!]!
+    having: GithubOrganizationScalarWhereWithAggregatesInput
+    take: Int
+    skip: Int
+  ): [GithubOrganizationGroupBy!]!
   aggregateGithubPullRequest(
     where: GithubPullRequestWhereInput
     orderBy: [GithubPullRequestOrderByWithRelationInput!]
@@ -328,38 +362,6 @@ type Query {
     take: Int
     skip: Int
   ): [GithubUserGroupBy!]!
-  aggregateOrganization(
-    where: OrganizationWhereInput
-    orderBy: [OrganizationOrderByWithRelationInput!]
-    cursor: OrganizationWhereUniqueInput
-    take: Int
-    skip: Int
-  ): AggregateOrganization!
-  findFirstOrganization(
-    where: OrganizationWhereInput
-    orderBy: [OrganizationOrderByWithRelationInput!]
-    cursor: OrganizationWhereUniqueInput
-    take: Int
-    skip: Int
-    distinct: [OrganizationScalarFieldEnum!]
-  ): Organization
-  organizations(
-    where: OrganizationWhereInput
-    orderBy: [OrganizationOrderByWithRelationInput!]
-    cursor: OrganizationWhereUniqueInput
-    take: Int
-    skip: Int
-    distinct: [OrganizationScalarFieldEnum!]
-  ): [Organization!]!
-  organization(where: OrganizationWhereUniqueInput!): Organization
-  groupByOrganization(
-    where: OrganizationWhereInput
-    orderBy: [OrganizationOrderByWithAggregationInput!]
-    by: [OrganizationScalarFieldEnum!]!
-    having: OrganizationScalarWhereWithAggregatesInput
-    take: Int
-    skip: Int
-  ): [OrganizationGroupBy!]!
   aggregateProfile(
     where: ProfileWhereInput
     orderBy: [ProfileOrderByWithRelationInput!]
@@ -506,7 +508,7 @@ type Query {
     perPage: Float = null
     search: String = null
     sort: String = "alphabetical"
-  ): [Organization!]
+  ): [GithubOrganization!]
   organizationRepos(
     page: Float = null
     perPage: Float = null
@@ -597,12 +599,13 @@ input AddressWhereInput {
   discordUser: DiscordUserRelationFilter
   ensAvatarImageUrl: StringNullableFilter
   ensName: StringNullableFilter
-  memberships: OrganizationMembershipListRelationFilter
+  memberships: MembershipListRelationFilter
   profile: ProfileRelationFilter
   issuedClaims: ClaimListRelationFilter
   mintedClaims: ClaimListRelationFilter
   gitPOAPRequests: GitPOAPRequestListRelationFilter
   createdGitPOAPs: GitPOAPListRelationFilter
+  teams: TeamListRelationFilter
 }
 
 input IntFilter {
@@ -858,8 +861,8 @@ input GitPOAPWhereInput {
   updatedAt: DateTimeFilter
   projectId: IntNullableFilter
   project: ProjectRelationFilter
-  organizationId: IntNullableFilter
-  organization: OrganizationRelationFilter
+  teamId: IntNullableFilter
+  team: TeamRelationFilter
   claims: ClaimListRelationFilter
   poapApprovalStatus: EnumGitPOAPStatusFilter
   isOngoing: BoolFilter
@@ -931,7 +934,7 @@ input RepoWhereInput {
   createdAt: DateTimeFilter
   updatedAt: DateTimeFilter
   organizationId: IntFilter
-  organization: OrganizationRelationFilter
+  organization: GithubOrganizationRelationFilter
   projectId: IntFilter
   project: ProjectRelationFilter
   lastPRUpdatedAt: DateTimeFilter
@@ -940,15 +943,15 @@ input RepoWhereInput {
   githubMentions: GithubMentionListRelationFilter
 }
 
-input OrganizationRelationFilter {
-  is: OrganizationWhereInput
-  isNot: OrganizationWhereInput
+input GithubOrganizationRelationFilter {
+  is: GithubOrganizationWhereInput
+  isNot: GithubOrganizationWhereInput
 }
 
-input OrganizationWhereInput {
-  AND: [OrganizationWhereInput!]
-  OR: [OrganizationWhereInput!]
-  NOT: [OrganizationWhereInput!]
+input GithubOrganizationWhereInput {
+  AND: [GithubOrganizationWhereInput!]
+  OR: [GithubOrganizationWhereInput!]
+  NOT: [GithubOrganizationWhereInput!]
   id: IntFilter
   githubOrgId: IntFilter
   name: StringFilter
@@ -958,131 +961,6 @@ input OrganizationWhereInput {
   twitterHandle: StringNullableFilter
   url: StringNullableFilter
   repos: RepoListRelationFilter
-  memberships: OrganizationMembershipListRelationFilter
-  gitPOAPs: GitPOAPListRelationFilter
-  gitPOAPRequests: GitPOAPRequestListRelationFilter
-}
-
-input OrganizationMembershipListRelationFilter {
-  every: OrganizationMembershipWhereInput
-  some: OrganizationMembershipWhereInput
-  none: OrganizationMembershipWhereInput
-}
-
-input OrganizationMembershipWhereInput {
-  AND: [OrganizationMembershipWhereInput!]
-  OR: [OrganizationMembershipWhereInput!]
-  NOT: [OrganizationMembershipWhereInput!]
-  id: IntFilter
-  createdAt: DateTimeFilter
-  updatedAt: DateTimeFilter
-  organizationId: IntFilter
-  organization: OrganizationRelationFilter
-  addressId: IntFilter
-  address: AddressRelationFilter
-  role: EnumMembershipRoleFilter
-}
-
-input EnumMembershipRoleFilter {
-  equals: MembershipRole
-  in: [MembershipRole!]
-  notIn: [MembershipRole!]
-  not: NestedEnumMembershipRoleFilter
-}
-
-enum MembershipRole {
-  ADMIN
-  OWNER
-  MEMBER
-}
-
-input NestedEnumMembershipRoleFilter {
-  equals: MembershipRole
-  in: [MembershipRole!]
-  notIn: [MembershipRole!]
-  not: NestedEnumMembershipRoleFilter
-}
-
-input GitPOAPListRelationFilter {
-  every: GitPOAPWhereInput
-  some: GitPOAPWhereInput
-  none: GitPOAPWhereInput
-}
-
-input GitPOAPRequestListRelationFilter {
-  every: GitPOAPRequestWhereInput
-  some: GitPOAPRequestWhereInput
-  none: GitPOAPRequestWhereInput
-}
-
-input GitPOAPRequestWhereInput {
-  AND: [GitPOAPRequestWhereInput!]
-  OR: [GitPOAPRequestWhereInput!]
-  NOT: [GitPOAPRequestWhereInput!]
-  id: IntFilter
-  createdAt: DateTimeFilter
-  updatedAt: DateTimeFilter
-  startDate: DateTimeFilter
-  endDate: DateTimeFilter
-  creatorEmailId: IntFilter
-  creatorEmail: EmailRelationFilter
-  name: StringFilter
-  numRequestedCodes: IntFilter
-  imageUrl: StringFilter
-  description: StringFilter
-  projectId: IntNullableFilter
-  project: ProjectRelationFilter
-  organizationId: IntNullableFilter
-  organization: OrganizationRelationFilter
-  contributors: JsonFilter
-  rejectionReason: StringNullableFilter
-  staffApprovalStatus: EnumStaffApprovalStatusFilter
-  addressId: IntFilter
-  address: AddressRelationFilter
-  gitPOAPId: IntNullableFilter
-  GitPOAP: GitPOAPRelationFilter
-}
-
-input JsonFilter {
-  equals: JSON
-  path: [String!]
-  string_contains: String
-  string_starts_with: String
-  string_ends_with: String
-  array_contains: JSON
-  array_starts_with: JSON
-  array_ends_with: JSON
-  lt: JSON
-  lte: JSON
-  gt: JSON
-  gte: JSON
-  not: JSON
-}
-
-# The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
-scalar JSON
-  @specifiedBy(
-    url: "http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf"
-  )
-
-input EnumStaffApprovalStatusFilter {
-  equals: StaffApprovalStatus
-  in: [StaffApprovalStatus!]
-  notIn: [StaffApprovalStatus!]
-  not: NestedEnumStaffApprovalStatusFilter
-}
-
-enum StaffApprovalStatus {
-  APPROVED
-  PENDING
-  REJECTED
-}
-
-input NestedEnumStaffApprovalStatusFilter {
-  equals: StaffApprovalStatus
-  in: [StaffApprovalStatus!]
-  notIn: [StaffApprovalStatus!]
-  not: NestedEnumStaffApprovalStatusFilter
 }
 
 input GithubPullRequestListRelationFilter {
@@ -1201,6 +1079,171 @@ input AddressListRelationFilter {
   some: AddressWhereInput
   none: AddressWhereInput
 }
+
+input GitPOAPListRelationFilter {
+  every: GitPOAPWhereInput
+  some: GitPOAPWhereInput
+  none: GitPOAPWhereInput
+}
+
+input GitPOAPRequestListRelationFilter {
+  every: GitPOAPRequestWhereInput
+  some: GitPOAPRequestWhereInput
+  none: GitPOAPRequestWhereInput
+}
+
+input GitPOAPRequestWhereInput {
+  AND: [GitPOAPRequestWhereInput!]
+  OR: [GitPOAPRequestWhereInput!]
+  NOT: [GitPOAPRequestWhereInput!]
+  id: IntFilter
+  createdAt: DateTimeFilter
+  updatedAt: DateTimeFilter
+  startDate: DateTimeFilter
+  endDate: DateTimeFilter
+  creatorEmailId: IntFilter
+  creatorEmail: EmailRelationFilter
+  name: StringFilter
+  numRequestedCodes: IntFilter
+  imageUrl: StringFilter
+  description: StringFilter
+  projectId: IntNullableFilter
+  project: ProjectRelationFilter
+  team: TeamRelationFilter
+  teamId: IntNullableFilter
+  contributors: JsonFilter
+  rejectionReason: StringNullableFilter
+  staffApprovalStatus: EnumStaffApprovalStatusFilter
+  addressId: IntFilter
+  address: AddressRelationFilter
+  gitPOAPId: IntNullableFilter
+  gitpoap: GitPOAPRelationFilter
+}
+
+input TeamRelationFilter {
+  is: TeamWhereInput
+  isNot: TeamWhereInput
+}
+
+input TeamWhereInput {
+  AND: [TeamWhereInput!]
+  OR: [TeamWhereInput!]
+  NOT: [TeamWhereInput!]
+  id: IntFilter
+  name: StringFilter
+  ownerAddressId: IntFilter
+  ownerAddress: AddressRelationFilter
+  createdAt: DateTimeFilter
+  updatedAt: DateTimeFilter
+  description: StringNullableFilter
+  logoImageUrl: StringFilter
+  memberships: MembershipListRelationFilter
+  gitPOAPs: GitPOAPListRelationFilter
+  gitPOAPRequests: GitPOAPRequestListRelationFilter
+  approvalStatus: EnumStaffApprovalStatusFilter
+}
+
+input MembershipListRelationFilter {
+  every: MembershipWhereInput
+  some: MembershipWhereInput
+  none: MembershipWhereInput
+}
+
+input MembershipWhereInput {
+  AND: [MembershipWhereInput!]
+  OR: [MembershipWhereInput!]
+  NOT: [MembershipWhereInput!]
+  id: IntFilter
+  createdAt: DateTimeFilter
+  updatedAt: DateTimeFilter
+  teamId: IntFilter
+  team: TeamRelationFilter
+  addressId: IntFilter
+  address: AddressRelationFilter
+  role: EnumMembershipRoleFilter
+  acceptanceStatus: EnumMembershipAcceptanceStatusFilter
+}
+
+input EnumMembershipRoleFilter {
+  equals: MembershipRole
+  in: [MembershipRole!]
+  notIn: [MembershipRole!]
+  not: NestedEnumMembershipRoleFilter
+}
+
+enum MembershipRole {
+  ADMIN
+  OWNER
+  MEMBER
+}
+
+input NestedEnumMembershipRoleFilter {
+  equals: MembershipRole
+  in: [MembershipRole!]
+  notIn: [MembershipRole!]
+  not: NestedEnumMembershipRoleFilter
+}
+
+input EnumMembershipAcceptanceStatusFilter {
+  equals: MembershipAcceptanceStatus
+  in: [MembershipAcceptanceStatus!]
+  notIn: [MembershipAcceptanceStatus!]
+  not: NestedEnumMembershipAcceptanceStatusFilter
+}
+
+enum MembershipAcceptanceStatus {
+  ACCEPTED
+  PENDING
+}
+
+input NestedEnumMembershipAcceptanceStatusFilter {
+  equals: MembershipAcceptanceStatus
+  in: [MembershipAcceptanceStatus!]
+  notIn: [MembershipAcceptanceStatus!]
+  not: NestedEnumMembershipAcceptanceStatusFilter
+}
+
+input EnumStaffApprovalStatusFilter {
+  equals: StaffApprovalStatus
+  in: [StaffApprovalStatus!]
+  notIn: [StaffApprovalStatus!]
+  not: NestedEnumStaffApprovalStatusFilter
+}
+
+enum StaffApprovalStatus {
+  APPROVED
+  PENDING
+  REJECTED
+}
+
+input NestedEnumStaffApprovalStatusFilter {
+  equals: StaffApprovalStatus
+  in: [StaffApprovalStatus!]
+  notIn: [StaffApprovalStatus!]
+  not: NestedEnumStaffApprovalStatusFilter
+}
+
+input JsonFilter {
+  equals: JSON
+  path: [String!]
+  string_contains: String
+  string_starts_with: String
+  string_ends_with: String
+  array_contains: JSON
+  array_starts_with: JSON
+  array_ends_with: JSON
+  lt: JSON
+  lte: JSON
+  gt: JSON
+  gte: JSON
+  not: JSON
+}
+
+# The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+scalar JSON
+  @specifiedBy(
+    url: "http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf"
+  )
 
 input EnumGitPOAPStatusFilter {
   equals: GitPOAPStatus
@@ -1345,6 +1388,12 @@ input FeaturedPOAPWhereInput {
   profile: ProfileRelationFilter
 }
 
+input TeamListRelationFilter {
+  every: TeamWhereInput
+  some: TeamWhereInput
+  none: TeamWhereInput
+}
+
 input AddressOrderByWithRelationInput {
   id: SortOrder
   ethAddress: SortOrder
@@ -1357,12 +1406,13 @@ input AddressOrderByWithRelationInput {
   discordUser: DiscordUserOrderByWithRelationInput
   ensAvatarImageUrl: SortOrder
   ensName: SortOrder
-  memberships: OrganizationMembershipOrderByRelationAggregateInput
+  memberships: MembershipOrderByRelationAggregateInput
   profile: ProfileOrderByWithRelationInput
   issuedClaims: ClaimOrderByRelationAggregateInput
   mintedClaims: ClaimOrderByRelationAggregateInput
   gitPOAPRequests: GitPOAPRequestOrderByRelationAggregateInput
   createdGitPOAPs: GitPOAPOrderByRelationAggregateInput
+  teams: TeamOrderByRelationAggregateInput
 }
 
 enum SortOrder {
@@ -1434,7 +1484,7 @@ input DiscordUserOrderByWithRelationInput {
   addresses: AddressOrderByRelationAggregateInput
 }
 
-input OrganizationMembershipOrderByRelationAggregateInput {
+input MembershipOrderByRelationAggregateInput {
   _count: SortOrder
 }
 
@@ -1460,6 +1510,10 @@ input FeaturedPOAPOrderByRelationAggregateInput {
   _count: SortOrder
 }
 
+input TeamOrderByRelationAggregateInput {
+  _count: SortOrder
+}
+
 input AddressWhereUniqueInput {
   id: Int
   ethAddress: String
@@ -1479,13 +1533,13 @@ type Address {
   githubUser: GithubUser
   discordUser: DiscordUser
   memberships(
-    where: OrganizationMembershipWhereInput
-    orderBy: [OrganizationMembershipOrderByWithRelationInput!]
-    cursor: OrganizationMembershipWhereUniqueInput
+    where: MembershipWhereInput
+    orderBy: [MembershipOrderByWithRelationInput!]
+    cursor: MembershipWhereUniqueInput
     take: Int
     skip: Int
-    distinct: [OrganizationMembershipScalarFieldEnum!]
-  ): [OrganizationMembership!]!
+    distinct: [MembershipScalarFieldEnum!]
+  ): [Membership!]!
   profile: Profile
   issuedClaims(
     where: ClaimWhereInput
@@ -1519,6 +1573,14 @@ type Address {
     skip: Int
     distinct: [GitPOAPScalarFieldEnum!]
   ): [GitPOAP!]!
+  teams(
+    where: TeamWhereInput
+    orderBy: [TeamOrderByWithRelationInput!]
+    cursor: TeamWhereUniqueInput
+    take: Int
+    skip: Int
+    distinct: [TeamScalarFieldEnum!]
+  ): [Team!]!
 }
 
 type AddressCount {
@@ -1528,6 +1590,7 @@ type AddressCount {
   authTokens: Int!
   gitPOAPRequests: Int!
   createdGitPOAPs: Int!
+  teams: Int!
 }
 
 type Email {
@@ -1640,7 +1703,7 @@ type GitPOAP {
   createdAt: DateTime!
   updatedAt: DateTime!
   projectId: Int
-  organizationId: Int
+  teamId: Int
   poapApprovalStatus: GitPOAPStatus!
   isOngoing: Boolean!
   canRequestMoreCodes: Boolean!
@@ -1654,7 +1717,7 @@ type GitPOAP {
   gitPOAPRequestId: Int
   _count: GitPOAPCount
   project: Project
-  organization: Organization
+  team: Team
   claims(
     where: ClaimWhereInput
     orderBy: [ClaimOrderByWithRelationInput!]
@@ -1729,7 +1792,7 @@ type Repo {
   projectId: Int!
   lastPRUpdatedAt: DateTime!
   _count: RepoCount
-  organization: Organization!
+  organization: GithubOrganization!
   project: Project!
   githubPullRequests(
     where: GithubPullRequestWhereInput
@@ -1763,7 +1826,7 @@ type RepoCount {
   githubMentions: Int!
 }
 
-type Organization {
+type GithubOrganization {
   id: Int!
   githubOrgId: Int!
   name: String!
@@ -1772,7 +1835,7 @@ type Organization {
   description: String
   twitterHandle: String
   url: String
-  _count: OrganizationCount
+  _count: GithubOrganizationCount
   repos(
     where: RepoWhereInput
     orderBy: [RepoOrderByWithRelationInput!]
@@ -1781,37 +1844,10 @@ type Organization {
     skip: Int
     distinct: [RepoScalarFieldEnum!]
   ): [Repo!]!
-  memberships(
-    where: OrganizationMembershipWhereInput
-    orderBy: [OrganizationMembershipOrderByWithRelationInput!]
-    cursor: OrganizationMembershipWhereUniqueInput
-    take: Int
-    skip: Int
-    distinct: [OrganizationMembershipScalarFieldEnum!]
-  ): [OrganizationMembership!]!
-  gitPOAPs(
-    where: GitPOAPWhereInput
-    orderBy: [GitPOAPOrderByWithRelationInput!]
-    cursor: GitPOAPWhereUniqueInput
-    take: Int
-    skip: Int
-    distinct: [GitPOAPScalarFieldEnum!]
-  ): [GitPOAP!]!
-  gitPOAPRequests(
-    where: GitPOAPRequestWhereInput
-    orderBy: [GitPOAPRequestOrderByWithRelationInput!]
-    cursor: GitPOAPRequestWhereUniqueInput
-    take: Int
-    skip: Int
-    distinct: [GitPOAPRequestScalarFieldEnum!]
-  ): [GitPOAPRequest!]!
 }
 
-type OrganizationCount {
+type GithubOrganizationCount {
   repos: Int!
-  memberships: Int!
-  gitPOAPs: Int!
-  gitPOAPRequests: Int!
 }
 
 input RepoOrderByWithRelationInput {
@@ -1821,7 +1857,7 @@ input RepoOrderByWithRelationInput {
   createdAt: SortOrder
   updatedAt: SortOrder
   organizationId: SortOrder
-  organization: OrganizationOrderByWithRelationInput
+  organization: GithubOrganizationOrderByWithRelationInput
   projectId: SortOrder
   project: ProjectOrderByWithRelationInput
   lastPRUpdatedAt: SortOrder
@@ -1830,7 +1866,7 @@ input RepoOrderByWithRelationInput {
   githubMentions: GithubMentionOrderByRelationAggregateInput
 }
 
-input OrganizationOrderByWithRelationInput {
+input GithubOrganizationOrderByWithRelationInput {
   id: SortOrder
   githubOrgId: SortOrder
   name: SortOrder
@@ -1840,9 +1876,6 @@ input OrganizationOrderByWithRelationInput {
   twitterHandle: SortOrder
   url: SortOrder
   repos: RepoOrderByRelationAggregateInput
-  memberships: OrganizationMembershipOrderByRelationAggregateInput
-  gitPOAPs: GitPOAPOrderByRelationAggregateInput
-  gitPOAPRequests: GitPOAPRequestOrderByRelationAggregateInput
 }
 
 input RepoOrderByRelationAggregateInput {
@@ -1872,207 +1905,6 @@ enum RepoScalarFieldEnum {
   organizationId
   projectId
   lastPRUpdatedAt
-}
-
-type OrganizationMembership {
-  id: Int!
-  createdAt: DateTime!
-  updatedAt: DateTime!
-  organizationId: Int!
-  addressId: Int!
-  role: MembershipRole!
-}
-
-input OrganizationMembershipOrderByWithRelationInput {
-  id: SortOrder
-  createdAt: SortOrder
-  updatedAt: SortOrder
-  organizationId: SortOrder
-  organization: OrganizationOrderByWithRelationInput
-  addressId: SortOrder
-  address: AddressOrderByWithRelationInput
-  role: SortOrder
-}
-
-input OrganizationMembershipWhereUniqueInput {
-  id: Int
-  organizationId_addressId: OrganizationMembershipOrganizationIdAddressIdCompoundUniqueInput
-}
-
-input OrganizationMembershipOrganizationIdAddressIdCompoundUniqueInput {
-  organizationId: Int!
-  addressId: Int!
-}
-
-enum OrganizationMembershipScalarFieldEnum {
-  id
-  createdAt
-  updatedAt
-  organizationId
-  addressId
-  role
-}
-
-input GitPOAPOrderByWithRelationInput {
-  id: SortOrder
-  type: SortOrder
-  name: SortOrder
-  imageUrl: SortOrder
-  description: SortOrder
-  year: SortOrder
-  poapEventId: SortOrder
-  createdAt: SortOrder
-  updatedAt: SortOrder
-  projectId: SortOrder
-  project: ProjectOrderByWithRelationInput
-  organizationId: SortOrder
-  organization: OrganizationOrderByWithRelationInput
-  claims: ClaimOrderByRelationAggregateInput
-  poapApprovalStatus: SortOrder
-  isOngoing: SortOrder
-  canRequestMoreCodes: SortOrder
-  redeemCodes: RedeemCodeOrderByRelationAggregateInput
-  eventId: SortOrder
-  event: EventOrderByWithRelationInput
-  level: SortOrder
-  threshold: SortOrder
-  isPRBased: SortOrder
-  isEnabled: SortOrder
-  creatorAddressId: SortOrder
-  creatorAddress: AddressOrderByWithRelationInput
-  creatorEmailId: SortOrder
-  creatorEmail: EmailOrderByWithRelationInput
-  gitPOAPRequestId: SortOrder
-  gitPOAPRequest: GitPOAPRequestOrderByWithRelationInput
-}
-
-input RedeemCodeOrderByRelationAggregateInput {
-  _count: SortOrder
-}
-
-input EventOrderByWithRelationInput {
-  id: SortOrder
-  createdAt: SortOrder
-  updatedAt: SortOrder
-  startDate: SortOrder
-  endDate: SortOrder
-  name: SortOrder
-  organization: SortOrder
-  description: SortOrder
-  location: SortOrder
-  imageUrl: SortOrder
-  githubHandle: SortOrder
-  twitterHandle: SortOrder
-  discordHandle: SortOrder
-  siteUrl: SortOrder
-  gitPOAPs: GitPOAPOrderByRelationAggregateInput
-}
-
-input GitPOAPRequestOrderByWithRelationInput {
-  id: SortOrder
-  createdAt: SortOrder
-  updatedAt: SortOrder
-  startDate: SortOrder
-  endDate: SortOrder
-  creatorEmailId: SortOrder
-  creatorEmail: EmailOrderByWithRelationInput
-  name: SortOrder
-  numRequestedCodes: SortOrder
-  imageUrl: SortOrder
-  description: SortOrder
-  projectId: SortOrder
-  project: ProjectOrderByWithRelationInput
-  organizationId: SortOrder
-  organization: OrganizationOrderByWithRelationInput
-  contributors: SortOrder
-  rejectionReason: SortOrder
-  staffApprovalStatus: SortOrder
-  addressId: SortOrder
-  address: AddressOrderByWithRelationInput
-  gitPOAPId: SortOrder
-  GitPOAP: GitPOAPOrderByWithRelationInput
-}
-
-input GitPOAPWhereUniqueInput {
-  id: Int
-  poapEventId: Int
-  gitPOAPRequestId: Int
-}
-
-enum GitPOAPScalarFieldEnum {
-  id
-  type
-  name
-  imageUrl
-  description
-  year
-  poapEventId
-  createdAt
-  updatedAt
-  projectId
-  organizationId
-  poapSecret
-  poapApprovalStatus
-  isOngoing
-  canRequestMoreCodes
-  eventId
-  level
-  threshold
-  isPRBased
-  isEnabled
-  creatorAddressId
-  creatorEmailId
-  gitPOAPRequestId
-}
-
-type GitPOAPRequest {
-  id: Int!
-  createdAt: DateTime!
-  updatedAt: DateTime!
-  startDate: DateTime!
-  endDate: DateTime!
-  creatorEmailId: Int!
-  name: String!
-  numRequestedCodes: Int!
-  imageUrl: String!
-  description: String!
-  projectId: Int
-  organizationId: Int
-  contributors: JSON!
-  rejectionReason: String
-  staffApprovalStatus: StaffApprovalStatus!
-  addressId: Int!
-  gitPOAPId: Int
-  creatorEmail: Email!
-  project: Project
-  organization: Organization
-  address: Address!
-  GitPOAP: GitPOAP
-}
-
-input GitPOAPRequestWhereUniqueInput {
-  id: Int
-  gitPOAPId: Int
-}
-
-enum GitPOAPRequestScalarFieldEnum {
-  id
-  createdAt
-  updatedAt
-  startDate
-  endDate
-  creatorEmailId
-  name
-  numRequestedCodes
-  imageUrl
-  description
-  projectId
-  organizationId
-  contributors
-  rejectionReason
-  staffApprovalStatus
-  addressId
-  gitPOAPId
 }
 
 type GithubPullRequest {
@@ -2136,6 +1968,101 @@ input ClaimOrderByWithRelationInput {
   mentionEarnedId: SortOrder
   mentionEarned: GithubMentionOrderByWithRelationInput
   needsRevalidation: SortOrder
+}
+
+input GitPOAPOrderByWithRelationInput {
+  id: SortOrder
+  type: SortOrder
+  name: SortOrder
+  imageUrl: SortOrder
+  description: SortOrder
+  year: SortOrder
+  poapEventId: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  projectId: SortOrder
+  project: ProjectOrderByWithRelationInput
+  teamId: SortOrder
+  team: TeamOrderByWithRelationInput
+  claims: ClaimOrderByRelationAggregateInput
+  poapApprovalStatus: SortOrder
+  isOngoing: SortOrder
+  canRequestMoreCodes: SortOrder
+  redeemCodes: RedeemCodeOrderByRelationAggregateInput
+  eventId: SortOrder
+  event: EventOrderByWithRelationInput
+  level: SortOrder
+  threshold: SortOrder
+  isPRBased: SortOrder
+  isEnabled: SortOrder
+  creatorAddressId: SortOrder
+  creatorAddress: AddressOrderByWithRelationInput
+  creatorEmailId: SortOrder
+  creatorEmail: EmailOrderByWithRelationInput
+  gitPOAPRequestId: SortOrder
+  gitPOAPRequest: GitPOAPRequestOrderByWithRelationInput
+}
+
+input TeamOrderByWithRelationInput {
+  id: SortOrder
+  name: SortOrder
+  ownerAddressId: SortOrder
+  ownerAddress: AddressOrderByWithRelationInput
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  description: SortOrder
+  logoImageUrl: SortOrder
+  memberships: MembershipOrderByRelationAggregateInput
+  gitPOAPs: GitPOAPOrderByRelationAggregateInput
+  gitPOAPRequests: GitPOAPRequestOrderByRelationAggregateInput
+  approvalStatus: SortOrder
+}
+
+input RedeemCodeOrderByRelationAggregateInput {
+  _count: SortOrder
+}
+
+input EventOrderByWithRelationInput {
+  id: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  startDate: SortOrder
+  endDate: SortOrder
+  name: SortOrder
+  organization: SortOrder
+  description: SortOrder
+  location: SortOrder
+  imageUrl: SortOrder
+  githubHandle: SortOrder
+  twitterHandle: SortOrder
+  discordHandle: SortOrder
+  siteUrl: SortOrder
+  gitPOAPs: GitPOAPOrderByRelationAggregateInput
+}
+
+input GitPOAPRequestOrderByWithRelationInput {
+  id: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  startDate: SortOrder
+  endDate: SortOrder
+  creatorEmailId: SortOrder
+  creatorEmail: EmailOrderByWithRelationInput
+  name: SortOrder
+  numRequestedCodes: SortOrder
+  imageUrl: SortOrder
+  description: SortOrder
+  projectId: SortOrder
+  project: ProjectOrderByWithRelationInput
+  team: TeamOrderByWithRelationInput
+  teamId: SortOrder
+  contributors: SortOrder
+  rejectionReason: SortOrder
+  staffApprovalStatus: SortOrder
+  addressId: SortOrder
+  address: AddressOrderByWithRelationInput
+  gitPOAPId: SortOrder
+  gitpoap: GitPOAPOrderByWithRelationInput
 }
 
 input GithubPullRequestOrderByWithRelationInput {
@@ -2341,6 +2268,106 @@ enum GithubIssueScalarFieldEnum {
   githubUserId
 }
 
+input GitPOAPWhereUniqueInput {
+  id: Int
+  poapEventId: Int
+  gitPOAPRequestId: Int
+}
+
+enum GitPOAPScalarFieldEnum {
+  id
+  type
+  name
+  imageUrl
+  description
+  year
+  poapEventId
+  createdAt
+  updatedAt
+  projectId
+  teamId
+  poapSecret
+  poapApprovalStatus
+  isOngoing
+  canRequestMoreCodes
+  eventId
+  level
+  threshold
+  isPRBased
+  isEnabled
+  creatorAddressId
+  creatorEmailId
+  gitPOAPRequestId
+}
+
+type GitPOAPRequest {
+  id: Int!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  startDate: DateTime!
+  endDate: DateTime!
+  creatorEmailId: Int!
+  name: String!
+  numRequestedCodes: Int!
+  imageUrl: String!
+  description: String!
+  projectId: Int
+  teamId: Int
+  contributors: JSON!
+  rejectionReason: String
+  staffApprovalStatus: StaffApprovalStatus!
+  addressId: Int!
+  gitPOAPId: Int
+  creatorEmail: Email!
+  project: Project
+  team: Team
+  address: Address!
+  gitpoap: GitPOAP
+}
+
+type Team {
+  id: Int!
+  name: String!
+  ownerAddressId: Int!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  description: String
+  logoImageUrl: String!
+  approvalStatus: StaffApprovalStatus!
+  _count: TeamCount
+}
+
+type TeamCount {
+  memberships: Int!
+  gitPOAPs: Int!
+  gitPOAPRequests: Int!
+}
+
+input GitPOAPRequestWhereUniqueInput {
+  id: Int
+  gitPOAPId: Int
+}
+
+enum GitPOAPRequestScalarFieldEnum {
+  id
+  createdAt
+  updatedAt
+  startDate
+  endDate
+  creatorEmailId
+  name
+  numRequestedCodes
+  imageUrl
+  description
+  projectId
+  teamId
+  contributors
+  rejectionReason
+  staffApprovalStatus
+  addressId
+  gitPOAPId
+}
+
 type RedeemCode {
   id: Int!
   gitPOAPId: Int!
@@ -2433,6 +2460,48 @@ enum AddressScalarFieldEnum {
   ensName
 }
 
+type Membership {
+  id: Int!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  teamId: Int!
+  addressId: Int!
+  role: MembershipRole!
+  acceptanceStatus: MembershipAcceptanceStatus!
+}
+
+input MembershipOrderByWithRelationInput {
+  id: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  teamId: SortOrder
+  team: TeamOrderByWithRelationInput
+  addressId: SortOrder
+  address: AddressOrderByWithRelationInput
+  role: SortOrder
+  acceptanceStatus: SortOrder
+}
+
+input MembershipWhereUniqueInput {
+  id: Int
+  teamId_addressId: MembershipTeamIdAddressIdCompoundUniqueInput
+}
+
+input MembershipTeamIdAddressIdCompoundUniqueInput {
+  teamId: Int!
+  addressId: Int!
+}
+
+enum MembershipScalarFieldEnum {
+  id
+  createdAt
+  updatedAt
+  teamId
+  addressId
+  role
+  acceptanceStatus
+}
+
 type Profile {
   id: Int!
   addressId: Int!
@@ -2492,6 +2561,21 @@ enum FeaturedPOAPScalarFieldEnum {
   id
   poapTokenId
   profileId
+}
+
+input TeamWhereUniqueInput {
+  id: Int
+}
+
+enum TeamScalarFieldEnum {
+  id
+  name
+  ownerAddressId
+  createdAt
+  updatedAt
+  description
+  logoImageUrl
+  approvalStatus
 }
 
 type AddressGroupBy {
@@ -3370,7 +3454,7 @@ type GitPOAPCountAggregate {
   createdAt: Int!
   updatedAt: Int!
   projectId: Int!
-  organizationId: Int!
+  teamId: Int!
   poapSecret: Int!
   poapApprovalStatus: Int!
   isOngoing: Int!
@@ -3391,7 +3475,7 @@ type GitPOAPAvgAggregate {
   year: Float
   poapEventId: Float
   projectId: Float
-  organizationId: Float
+  teamId: Float
   eventId: Float
   level: Float
   threshold: Float
@@ -3405,7 +3489,7 @@ type GitPOAPSumAggregate {
   year: Int
   poapEventId: Int
   projectId: Int
-  organizationId: Int
+  teamId: Int
   eventId: Int
   level: Int
   threshold: Int
@@ -3425,7 +3509,7 @@ type GitPOAPMinAggregate {
   createdAt: DateTime
   updatedAt: DateTime
   projectId: Int
-  organizationId: Int
+  teamId: Int
   poapSecret: String
   poapApprovalStatus: GitPOAPStatus
   isOngoing: Boolean
@@ -3451,7 +3535,7 @@ type GitPOAPMaxAggregate {
   createdAt: DateTime
   updatedAt: DateTime
   projectId: Int
-  organizationId: Int
+  teamId: Int
   poapSecret: String
   poapApprovalStatus: GitPOAPStatus
   isOngoing: Boolean
@@ -3477,7 +3561,7 @@ type GitPOAPGroupBy {
   createdAt: DateTime!
   updatedAt: DateTime!
   projectId: Int
-  organizationId: Int
+  teamId: Int
   poapSecret: String!
   poapApprovalStatus: GitPOAPStatus!
   isOngoing: Boolean!
@@ -3508,7 +3592,7 @@ input GitPOAPOrderByWithAggregationInput {
   createdAt: SortOrder
   updatedAt: SortOrder
   projectId: SortOrder
-  organizationId: SortOrder
+  teamId: SortOrder
   poapApprovalStatus: SortOrder
   isOngoing: SortOrder
   canRequestMoreCodes: SortOrder
@@ -3538,7 +3622,7 @@ input GitPOAPCountOrderByAggregateInput {
   createdAt: SortOrder
   updatedAt: SortOrder
   projectId: SortOrder
-  organizationId: SortOrder
+  teamId: SortOrder
   poapApprovalStatus: SortOrder
   isOngoing: SortOrder
   canRequestMoreCodes: SortOrder
@@ -3557,7 +3641,7 @@ input GitPOAPAvgOrderByAggregateInput {
   year: SortOrder
   poapEventId: SortOrder
   projectId: SortOrder
-  organizationId: SortOrder
+  teamId: SortOrder
   eventId: SortOrder
   level: SortOrder
   threshold: SortOrder
@@ -3577,7 +3661,7 @@ input GitPOAPMaxOrderByAggregateInput {
   createdAt: SortOrder
   updatedAt: SortOrder
   projectId: SortOrder
-  organizationId: SortOrder
+  teamId: SortOrder
   poapApprovalStatus: SortOrder
   isOngoing: SortOrder
   canRequestMoreCodes: SortOrder
@@ -3602,7 +3686,7 @@ input GitPOAPMinOrderByAggregateInput {
   createdAt: SortOrder
   updatedAt: SortOrder
   projectId: SortOrder
-  organizationId: SortOrder
+  teamId: SortOrder
   poapApprovalStatus: SortOrder
   isOngoing: SortOrder
   canRequestMoreCodes: SortOrder
@@ -3621,7 +3705,7 @@ input GitPOAPSumOrderByAggregateInput {
   year: SortOrder
   poapEventId: SortOrder
   projectId: SortOrder
-  organizationId: SortOrder
+  teamId: SortOrder
   eventId: SortOrder
   level: SortOrder
   threshold: SortOrder
@@ -3644,7 +3728,7 @@ input GitPOAPScalarWhereWithAggregatesInput {
   createdAt: DateTimeWithAggregatesFilter
   updatedAt: DateTimeWithAggregatesFilter
   projectId: IntNullableWithAggregatesFilter
-  organizationId: IntNullableWithAggregatesFilter
+  teamId: IntNullableWithAggregatesFilter
   poapApprovalStatus: EnumGitPOAPStatusWithAggregatesFilter
   isOngoing: BoolWithAggregatesFilter
   canRequestMoreCodes: BoolWithAggregatesFilter
@@ -3718,7 +3802,7 @@ type GitPOAPRequestCountAggregate {
   imageUrl: Int!
   description: Int!
   projectId: Int!
-  organizationId: Int!
+  teamId: Int!
   contributors: Int!
   rejectionReason: Int!
   staffApprovalStatus: Int!
@@ -3732,7 +3816,7 @@ type GitPOAPRequestAvgAggregate {
   creatorEmailId: Float
   numRequestedCodes: Float
   projectId: Float
-  organizationId: Float
+  teamId: Float
   addressId: Float
   gitPOAPId: Float
 }
@@ -3742,7 +3826,7 @@ type GitPOAPRequestSumAggregate {
   creatorEmailId: Int
   numRequestedCodes: Int
   projectId: Int
-  organizationId: Int
+  teamId: Int
   addressId: Int
   gitPOAPId: Int
 }
@@ -3759,7 +3843,7 @@ type GitPOAPRequestMinAggregate {
   imageUrl: String
   description: String
   projectId: Int
-  organizationId: Int
+  teamId: Int
   rejectionReason: String
   staffApprovalStatus: StaffApprovalStatus
   addressId: Int
@@ -3778,7 +3862,7 @@ type GitPOAPRequestMaxAggregate {
   imageUrl: String
   description: String
   projectId: Int
-  organizationId: Int
+  teamId: Int
   rejectionReason: String
   staffApprovalStatus: StaffApprovalStatus
   addressId: Int
@@ -3797,7 +3881,7 @@ type GitPOAPRequestGroupBy {
   imageUrl: String!
   description: String!
   projectId: Int
-  organizationId: Int
+  teamId: Int
   contributors: JSON!
   rejectionReason: String
   staffApprovalStatus: StaffApprovalStatus!
@@ -3822,7 +3906,7 @@ input GitPOAPRequestOrderByWithAggregationInput {
   imageUrl: SortOrder
   description: SortOrder
   projectId: SortOrder
-  organizationId: SortOrder
+  teamId: SortOrder
   contributors: SortOrder
   rejectionReason: SortOrder
   staffApprovalStatus: SortOrder
@@ -3847,7 +3931,7 @@ input GitPOAPRequestCountOrderByAggregateInput {
   imageUrl: SortOrder
   description: SortOrder
   projectId: SortOrder
-  organizationId: SortOrder
+  teamId: SortOrder
   contributors: SortOrder
   rejectionReason: SortOrder
   staffApprovalStatus: SortOrder
@@ -3860,7 +3944,7 @@ input GitPOAPRequestAvgOrderByAggregateInput {
   creatorEmailId: SortOrder
   numRequestedCodes: SortOrder
   projectId: SortOrder
-  organizationId: SortOrder
+  teamId: SortOrder
   addressId: SortOrder
   gitPOAPId: SortOrder
 }
@@ -3877,7 +3961,7 @@ input GitPOAPRequestMaxOrderByAggregateInput {
   imageUrl: SortOrder
   description: SortOrder
   projectId: SortOrder
-  organizationId: SortOrder
+  teamId: SortOrder
   rejectionReason: SortOrder
   staffApprovalStatus: SortOrder
   addressId: SortOrder
@@ -3896,7 +3980,7 @@ input GitPOAPRequestMinOrderByAggregateInput {
   imageUrl: SortOrder
   description: SortOrder
   projectId: SortOrder
-  organizationId: SortOrder
+  teamId: SortOrder
   rejectionReason: SortOrder
   staffApprovalStatus: SortOrder
   addressId: SortOrder
@@ -3908,7 +3992,7 @@ input GitPOAPRequestSumOrderByAggregateInput {
   creatorEmailId: SortOrder
   numRequestedCodes: SortOrder
   projectId: SortOrder
-  organizationId: SortOrder
+  teamId: SortOrder
   addressId: SortOrder
   gitPOAPId: SortOrder
 }
@@ -3928,7 +4012,7 @@ input GitPOAPRequestScalarWhereWithAggregatesInput {
   imageUrl: StringWithAggregatesFilter
   description: StringWithAggregatesFilter
   projectId: IntNullableWithAggregatesFilter
-  organizationId: IntNullableWithAggregatesFilter
+  teamId: IntNullableWithAggregatesFilter
   contributors: JsonWithAggregatesFilter
   rejectionReason: StringNullableWithAggregatesFilter
   staffApprovalStatus: EnumStaffApprovalStatusWithAggregatesFilter
@@ -4302,6 +4386,163 @@ input GithubMentionScalarWhereWithAggregatesInput {
   issueId: IntNullableWithAggregatesFilter
 }
 
+type AggregateGithubOrganization {
+  _count: GithubOrganizationCountAggregate
+  _avg: GithubOrganizationAvgAggregate
+  _sum: GithubOrganizationSumAggregate
+  _min: GithubOrganizationMinAggregate
+  _max: GithubOrganizationMaxAggregate
+}
+
+type GithubOrganizationCountAggregate {
+  id: Int!
+  githubOrgId: Int!
+  name: Int!
+  createdAt: Int!
+  updatedAt: Int!
+  description: Int!
+  twitterHandle: Int!
+  url: Int!
+  _all: Int!
+}
+
+type GithubOrganizationAvgAggregate {
+  id: Float
+  githubOrgId: Float
+}
+
+type GithubOrganizationSumAggregate {
+  id: Int
+  githubOrgId: Int
+}
+
+type GithubOrganizationMinAggregate {
+  id: Int
+  githubOrgId: Int
+  name: String
+  createdAt: DateTime
+  updatedAt: DateTime
+  description: String
+  twitterHandle: String
+  url: String
+}
+
+type GithubOrganizationMaxAggregate {
+  id: Int
+  githubOrgId: Int
+  name: String
+  createdAt: DateTime
+  updatedAt: DateTime
+  description: String
+  twitterHandle: String
+  url: String
+}
+
+input GithubOrganizationWhereUniqueInput {
+  id: Int
+  githubOrgId: Int
+}
+
+enum GithubOrganizationScalarFieldEnum {
+  id
+  githubOrgId
+  name
+  createdAt
+  updatedAt
+  description
+  twitterHandle
+  url
+}
+
+type GithubOrganizationGroupBy {
+  id: Int!
+  githubOrgId: Int!
+  name: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  description: String
+  twitterHandle: String
+  url: String
+  _count: GithubOrganizationCountAggregate
+  _avg: GithubOrganizationAvgAggregate
+  _sum: GithubOrganizationSumAggregate
+  _min: GithubOrganizationMinAggregate
+  _max: GithubOrganizationMaxAggregate
+}
+
+input GithubOrganizationOrderByWithAggregationInput {
+  id: SortOrder
+  githubOrgId: SortOrder
+  name: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  description: SortOrder
+  twitterHandle: SortOrder
+  url: SortOrder
+  _count: GithubOrganizationCountOrderByAggregateInput
+  _avg: GithubOrganizationAvgOrderByAggregateInput
+  _max: GithubOrganizationMaxOrderByAggregateInput
+  _min: GithubOrganizationMinOrderByAggregateInput
+  _sum: GithubOrganizationSumOrderByAggregateInput
+}
+
+input GithubOrganizationCountOrderByAggregateInput {
+  id: SortOrder
+  githubOrgId: SortOrder
+  name: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  description: SortOrder
+  twitterHandle: SortOrder
+  url: SortOrder
+}
+
+input GithubOrganizationAvgOrderByAggregateInput {
+  id: SortOrder
+  githubOrgId: SortOrder
+}
+
+input GithubOrganizationMaxOrderByAggregateInput {
+  id: SortOrder
+  githubOrgId: SortOrder
+  name: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  description: SortOrder
+  twitterHandle: SortOrder
+  url: SortOrder
+}
+
+input GithubOrganizationMinOrderByAggregateInput {
+  id: SortOrder
+  githubOrgId: SortOrder
+  name: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  description: SortOrder
+  twitterHandle: SortOrder
+  url: SortOrder
+}
+
+input GithubOrganizationSumOrderByAggregateInput {
+  id: SortOrder
+  githubOrgId: SortOrder
+}
+
+input GithubOrganizationScalarWhereWithAggregatesInput {
+  AND: [GithubOrganizationScalarWhereWithAggregatesInput!]
+  OR: [GithubOrganizationScalarWhereWithAggregatesInput!]
+  NOT: [GithubOrganizationScalarWhereWithAggregatesInput!]
+  id: IntWithAggregatesFilter
+  githubOrgId: IntWithAggregatesFilter
+  name: StringWithAggregatesFilter
+  createdAt: DateTimeWithAggregatesFilter
+  updatedAt: DateTimeWithAggregatesFilter
+  description: StringNullableWithAggregatesFilter
+  twitterHandle: StringNullableWithAggregatesFilter
+  url: StringNullableWithAggregatesFilter
+}
+
 type AggregateGithubPullRequest {
   _count: GithubPullRequestCountAggregate
   _avg: GithubPullRequestAvgAggregate
@@ -4599,163 +4840,6 @@ input GithubUserScalarWhereWithAggregatesInput {
   githubHandle: StringWithAggregatesFilter
   createdAt: DateTimeWithAggregatesFilter
   updatedAt: DateTimeWithAggregatesFilter
-}
-
-type AggregateOrganization {
-  _count: OrganizationCountAggregate
-  _avg: OrganizationAvgAggregate
-  _sum: OrganizationSumAggregate
-  _min: OrganizationMinAggregate
-  _max: OrganizationMaxAggregate
-}
-
-type OrganizationCountAggregate {
-  id: Int!
-  githubOrgId: Int!
-  name: Int!
-  createdAt: Int!
-  updatedAt: Int!
-  description: Int!
-  twitterHandle: Int!
-  url: Int!
-  _all: Int!
-}
-
-type OrganizationAvgAggregate {
-  id: Float
-  githubOrgId: Float
-}
-
-type OrganizationSumAggregate {
-  id: Int
-  githubOrgId: Int
-}
-
-type OrganizationMinAggregate {
-  id: Int
-  githubOrgId: Int
-  name: String
-  createdAt: DateTime
-  updatedAt: DateTime
-  description: String
-  twitterHandle: String
-  url: String
-}
-
-type OrganizationMaxAggregate {
-  id: Int
-  githubOrgId: Int
-  name: String
-  createdAt: DateTime
-  updatedAt: DateTime
-  description: String
-  twitterHandle: String
-  url: String
-}
-
-input OrganizationWhereUniqueInput {
-  id: Int
-  githubOrgId: Int
-}
-
-enum OrganizationScalarFieldEnum {
-  id
-  githubOrgId
-  name
-  createdAt
-  updatedAt
-  description
-  twitterHandle
-  url
-}
-
-type OrganizationGroupBy {
-  id: Int!
-  githubOrgId: Int!
-  name: String!
-  createdAt: DateTime!
-  updatedAt: DateTime!
-  description: String
-  twitterHandle: String
-  url: String
-  _count: OrganizationCountAggregate
-  _avg: OrganizationAvgAggregate
-  _sum: OrganizationSumAggregate
-  _min: OrganizationMinAggregate
-  _max: OrganizationMaxAggregate
-}
-
-input OrganizationOrderByWithAggregationInput {
-  id: SortOrder
-  githubOrgId: SortOrder
-  name: SortOrder
-  createdAt: SortOrder
-  updatedAt: SortOrder
-  description: SortOrder
-  twitterHandle: SortOrder
-  url: SortOrder
-  _count: OrganizationCountOrderByAggregateInput
-  _avg: OrganizationAvgOrderByAggregateInput
-  _max: OrganizationMaxOrderByAggregateInput
-  _min: OrganizationMinOrderByAggregateInput
-  _sum: OrganizationSumOrderByAggregateInput
-}
-
-input OrganizationCountOrderByAggregateInput {
-  id: SortOrder
-  githubOrgId: SortOrder
-  name: SortOrder
-  createdAt: SortOrder
-  updatedAt: SortOrder
-  description: SortOrder
-  twitterHandle: SortOrder
-  url: SortOrder
-}
-
-input OrganizationAvgOrderByAggregateInput {
-  id: SortOrder
-  githubOrgId: SortOrder
-}
-
-input OrganizationMaxOrderByAggregateInput {
-  id: SortOrder
-  githubOrgId: SortOrder
-  name: SortOrder
-  createdAt: SortOrder
-  updatedAt: SortOrder
-  description: SortOrder
-  twitterHandle: SortOrder
-  url: SortOrder
-}
-
-input OrganizationMinOrderByAggregateInput {
-  id: SortOrder
-  githubOrgId: SortOrder
-  name: SortOrder
-  createdAt: SortOrder
-  updatedAt: SortOrder
-  description: SortOrder
-  twitterHandle: SortOrder
-  url: SortOrder
-}
-
-input OrganizationSumOrderByAggregateInput {
-  id: SortOrder
-  githubOrgId: SortOrder
-}
-
-input OrganizationScalarWhereWithAggregatesInput {
-  AND: [OrganizationScalarWhereWithAggregatesInput!]
-  OR: [OrganizationScalarWhereWithAggregatesInput!]
-  NOT: [OrganizationScalarWhereWithAggregatesInput!]
-  id: IntWithAggregatesFilter
-  githubOrgId: IntWithAggregatesFilter
-  name: StringWithAggregatesFilter
-  createdAt: DateTimeWithAggregatesFilter
-  updatedAt: DateTimeWithAggregatesFilter
-  description: StringNullableWithAggregatesFilter
-  twitterHandle: StringNullableWithAggregatesFilter
-  url: StringNullableWithAggregatesFilter
 }
 
 type AggregateProfile {
@@ -5312,7 +5396,7 @@ type RepoReturnData {
   projectId: Int!
   lastPRUpdatedAt: DateTime!
   _count: RepoCount
-  organization: Organization!
+  organization: GithubOrganization!
   project: Project!
   githubPullRequests(
     where: GithubPullRequestWhereInput
@@ -5352,7 +5436,7 @@ type OrganizationData {
   description: String
   twitterHandle: String
   url: String
-  _count: OrganizationCount
+  _count: GithubOrganizationCount
   repos(
     where: RepoWhereInput
     orderBy: [RepoOrderByWithRelationInput!]
@@ -5361,30 +5445,6 @@ type OrganizationData {
     skip: Int
     distinct: [RepoScalarFieldEnum!]
   ): [Repo!]!
-  memberships(
-    where: OrganizationMembershipWhereInput
-    orderBy: [OrganizationMembershipOrderByWithRelationInput!]
-    cursor: OrganizationMembershipWhereUniqueInput
-    take: Int
-    skip: Int
-    distinct: [OrganizationMembershipScalarFieldEnum!]
-  ): [OrganizationMembership!]!
-  gitPOAPs(
-    where: GitPOAPWhereInput
-    orderBy: [GitPOAPOrderByWithRelationInput!]
-    cursor: GitPOAPWhereUniqueInput
-    take: Int
-    skip: Int
-    distinct: [GitPOAPScalarFieldEnum!]
-  ): [GitPOAP!]!
-  gitPOAPRequests(
-    where: GitPOAPRequestWhereInput
-    orderBy: [GitPOAPRequestOrderByWithRelationInput!]
-    cursor: GitPOAPRequestWhereUniqueInput
-    take: Int
-    skip: Int
-    distinct: [GitPOAPRequestScalarFieldEnum!]
-  ): [GitPOAPRequest!]!
   contributorCount: Float!
   gitPOAPCount: Float!
   mintedGitPOAPCount: Float!

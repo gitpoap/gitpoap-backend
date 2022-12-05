@@ -331,7 +331,7 @@ describe('PUT /gitpoaps/custom/approve/:id', () => {
         year: 2021,
         poapEventId: 1,
         poapSecret: '123423123',
-        organization: undefined,
+        team: undefined,
         project: undefined,
         creatorAddress: {
           connect: { id: addressId },
@@ -478,9 +478,9 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
     contextMock.prisma.gitPOAPRequest.update.mockResolvedValue({
       id: gitPOAPRequestId,
       staffApprovalStatus: StaffApprovalStatus.REJECTED,
-      organization: {
+      team: {
         id: 1,
-        name: 'organization 1',
+        name: 'team 1',
       },
       creatorEmail: {
         email: 'test@gitpoap.io',
@@ -511,7 +511,7 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
         rejectionReason,
       },
       select: {
-        organization: {
+        team: {
           select: {
             id: true,
             name: true,
@@ -539,9 +539,9 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
     contextMock.prisma.gitPOAPRequest.update.mockResolvedValue({
       id: gitPOAPRequestId,
       staffApprovalStatus: StaffApprovalStatus.REJECTED,
-      organization: {
+      team: {
         id: 1,
-        name: 'organization 1',
+        name: 'team 1',
       },
       creatorEmail: {
         emailAddress: burzEmail,
@@ -568,7 +568,7 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
 });
 
 describe('POST /gitpoaps/custom', () => {
-  const assertGitPOAPRequestCreation = (orgId?: number, projectId?: number) => {
+  const assertGitPOAPRequestCreation = (teamId?: number, projectId?: number) => {
     expect(contextMock.prisma.gitPOAPRequest.create).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.gitPOAPRequest.create).toHaveBeenCalledWith({
       data: {
@@ -587,7 +587,7 @@ describe('POST /gitpoaps/custom', () => {
           ensNames: ['burz.eth'],
         },
         address: { connect: { id: addressId } },
-        organization: orgId ? { connect: { id: orgId } } : undefined,
+        team: teamId ? { connect: { id: teamId } } : undefined,
         project: projectId ? { connect: { id: projectId } } : undefined,
       },
     });
@@ -698,7 +698,7 @@ describe('POST /gitpoaps/custom', () => {
     expect(result.body).toEqual({ msg: 'Failed to setup email address' });
   });
 
-  it('Successfully creates a new GitPOAP request with NO project or organization', async () => {
+  it('Successfully creates a new GitPOAP request with NO project or team', async () => {
     mockJwtWithAddress();
 
     contextMock.prisma.gitPOAPRequest.create.mockResolvedValue({
@@ -730,7 +730,7 @@ describe('POST /gitpoaps/custom', () => {
     assertGitPOAPRequestCreation();
   });
 
-  it('Successfully creates a new GitPOAP request with BOTH a project and an organization', async () => {
+  it('Successfully creates a new GitPOAP request with BOTH a project and a team', async () => {
     mockJwtWithAddress();
 
     contextMock.prisma.gitPOAPRequest.create.mockResolvedValue({
@@ -745,7 +745,7 @@ describe('POST /gitpoaps/custom', () => {
     } as any);
 
     contextMock.prisma.project.findUnique.mockResolvedValue({ id: 1 } as any);
-    contextMock.prisma.organization.findUnique.mockResolvedValue({ id: 1 } as any);
+    contextMock.prisma.team.findUnique.mockResolvedValue({ id: 1 } as any);
 
     mockedUpsertEmail.mockResolvedValue({ id: creatorEmailId } as any);
 
@@ -755,7 +755,7 @@ describe('POST /gitpoaps/custom', () => {
       .set('Authorization', `Bearer ${authTokens.accessToken}`)
       .send({
         ...baseGitPOAPRequest,
-        organizationId: '1',
+        teamId: '1',
         projectId: '1',
       });
 
@@ -772,9 +772,9 @@ describe('POST /gitpoaps/custom', () => {
   it('should send gitPOAPRequest submission confirmation email', async () => {
     mockJwtWithAddress();
 
-    contextMock.prisma.organization.findUnique.mockResolvedValue({
+    contextMock.prisma.team.findUnique.mockResolvedValue({
       id: 1,
-      name: 'organization 1',
+      name: 'team 1',
     } as any);
 
     contextMock.prisma.gitPOAPRequest.create.mockResolvedValue({
@@ -804,7 +804,7 @@ describe('POST /gitpoaps/custom', () => {
       .set('Authorization', `Bearer ${authTokens.accessToken}`)
       .send({
         ...baseGitPOAPRequest,
-        organizationId: '1',
+        teamId: '1',
         projectId: '1',
       });
 

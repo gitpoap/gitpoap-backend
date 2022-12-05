@@ -12,7 +12,7 @@ import {
   GithubMention,
   GithubPullRequest,
   GithubUser,
-  Organization,
+  GithubOrganization,
   Prisma,
   Profile,
   Project,
@@ -208,22 +208,22 @@ export class GithubUserFactory {
   };
 }
 
-export class OrganizationFactory {
+export class GithubOrganizationFactory {
   static create = async (
     githubOrgId: number,
     name: string,
     description?: string,
     twitterHandle?: string,
     url?: string,
-  ): Promise<Organization> => {
-    const data: Prisma.OrganizationCreateInput = {
+  ): Promise<GithubOrganization> => {
+    const data: Prisma.GithubOrganizationCreateInput = {
       githubOrgId,
       name,
       description,
       twitterHandle,
       url,
     };
-    const org = await prisma.organization.create({ data });
+    const org = await prisma.githubOrganization.create({ data });
     logger.debug(`Creating organization with id: ${org.id}`);
 
     return org;

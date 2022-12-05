@@ -16,7 +16,7 @@ import {
   GitPOAPFactory,
   GitPOAPRequestFactory,
   GithubUserFactory,
-  OrganizationFactory,
+  GithubOrganizationFactory,
   ProfileFactory,
   ProjectFactory,
   RedeemCodeFactory,
@@ -75,20 +75,20 @@ export const seed = async () => {
   const closestCitibikeProject = await ProjectFactory.create();
   const handcuffsProject = await ProjectFactory.create();
 
-  /* Create Organizations */
-  const org1 = await OrganizationFactory.create(43, 'org43');
-  const org2 = await OrganizationFactory.create(7, 'seven-heaven');
-  const org3 = await OrganizationFactory.create(34343, 'some-other-org');
-  const org4 = await OrganizationFactory.create(
+  /* Create Github Organizations */
+  const org1 = await GithubOrganizationFactory.create(43, 'org43');
+  const org2 = await GithubOrganizationFactory.create(7, 'seven-heaven');
+  const org3 = await GithubOrganizationFactory.create(34343, 'some-other-org');
+  const org4 = await GithubOrganizationFactory.create(
     1,
     'gitpoap',
     'A recognition platform for recognizing and rewarding your contributors through POAPs.',
     'gitpoap',
     'http://gitpoap.io',
   );
-  const org5 = await OrganizationFactory.create(GH_IDS.burz, 'burz'); // real user
-  const org6 = await OrganizationFactory.create(81711181, 'stake-house'); // real org
-  const org7 = await OrganizationFactory.create(GH_IDS.jay, 'peebeejay'); // real user
+  const org5 = await GithubOrganizationFactory.create(GH_IDS.burz, 'burz'); // real user
+  const org6 = await GithubOrganizationFactory.create(81711181, 'stake-house'); // real org
+  const org7 = await GithubOrganizationFactory.create(GH_IDS.jay, 'peebeejay'); // real user
 
   /* Create Repos */
   const gitpoapFeRepo = await RepoFactory.create('gitpoap-fe', 439490658, org4.id, frontendProject.id); // real id
