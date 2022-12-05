@@ -19,7 +19,9 @@ GRANT SELECT ON "GithubPullRequest" TO $PUBLIC_API_USER;
 GRANT SELECT ON "GithubMention" TO $PUBLIC_API_USER;
 GRANT SELECT ON "GitPOAP" TO $PUBLIC_API_USER;
 GRANT SELECT ON "GitPOAPRequest" TO $PUBLIC_API_USER;
-GRANT SELECT ON "Organization" TO $PUBLIC_API_USER;
+GRANT SELECT ON "GithubOrganization" TO $PUBLIC_API_USER;
+GRANT SELECT ON "Team" TO $PUBLIC_API_USER;
+GRANT SELECT ON "Membership" TO $PUBLIC_API_USER;
 -- The Public API can upsert Profiles for Addresses requested that haven't
 -- yet been seen
 GRANT SELECT, INSERT, UPDATE ON "Profile" TO $PUBLIC_API_USER;
