@@ -82,3 +82,5 @@ export const CUSTOM_GITPOAP_MAX_STARTING_CODES = 100;
 export const DISCORD_URL = 'https://discord.com';
 export const DISCORD_AUTH_GRANT_TYPE = 'authorization_code';
 export const DISCORD_AUTH_SCOPE = 'identify';
+
+export const GNOSIS_RPC = 'https://rpc.gnosischain.com/';

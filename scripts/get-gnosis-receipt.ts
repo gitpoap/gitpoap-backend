@@ -4,32 +4,7 @@ config();
 import 'reflect-metadata';
 import { createScopedLogger, updateLogLevel } from '../src/logging';
 import minimist from 'minimist';
-import { ethers } from 'ethers';
-import XPoap from '../abis/XPoap.json';
-import { DateTime } from 'luxon';
-
-const GNOSIS_RPC = 'https://rpc.gnosischain.com/';
-//const GNOSIS_RPC = 'https://rpc.ankr.com/gnosis';
-
-async function lookupGnosisTransaction(txHash: string) {
-  const gnosisProvider = new ethers.providers.JsonRpcProvider(GNOSIS_RPC);
-  const xPoapInterface = new ethers.utils.Interface(XPoap);
-
-  const receipt = await gnosisProvider.getTransactionReceipt(txHash);
-
-  const timestampSeconds = (await gnosisProvider.getBlock(receipt.blockNumber)).timestamp;
-  const timestamp = DateTime.fromSeconds(timestampSeconds).toJSDate();
-
-  console.log(`Timestamp: ${timestamp}`);
-
-  for (const log of receipt.logs) {
-    const event = xPoapInterface.parseLog(log);
-
-    if (event.name === 'EventToken') {
-      console.log(`Token ID: ${event.args.tokenId}`);
-    }
-  }
-}
+import { getPOAPDataFromTransaction } from '../src/external/gnosis';
 
 const main = async () => {
   const logger = createScopedLogger('main');
@@ -46,7 +21,12 @@ const main = async () => {
     return;
   }
 
-  await lookupGnosisTransaction(argv['_'][0]);
+  const data = await getPOAPDataFromTransaction(argv['_'][0]);
+
+  if (data !== null) {
+    console.log(`\nMined at: ${data.minedAt}`);
+    console.log(`POAP Token ID: ${data.poapTokenId}\n`);
+  }
 };
 
 void main();
