@@ -649,11 +649,11 @@ export async function runClaimsPostProcessing(claims: PostProcessingClaimType[])
   while (claims.length > 0) {
     logger.info(`Still waiting for ${claims.length} claim transactions to process`);
 
-    // Wait for 5 seconds
-    await sleep(5);
+    // Wait for 10 seconds
+    await sleep(10);
 
     // Helper function to remove a claim from postprocessing
-    const removeAtIndex = (i: number) => claims.splice(i, i);
+    const removeAtIndex = (i: number) => claims.splice(i, 1);
 
     for (let i = 0; i < claims.length; ++i) {
       if (claims[i].qrHash === null) {
