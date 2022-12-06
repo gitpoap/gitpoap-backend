@@ -24,7 +24,7 @@ const main = async () => {
   const data = await getPOAPDataFromTransaction(argv['_'][0]);
 
   if (data !== null) {
-    console.log(`\nMined at: ${data.minedAt}`);
+    console.log(`\nMinted at: ${data.mintedAt}`);
     console.log(`POAP Token ID: ${data.poapTokenId}\n`);
   }
 };

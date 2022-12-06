@@ -13,6 +13,7 @@ import { upsertEmail } from './emails';
 import { sleep } from '../lib/sleep';
 import { retrieveClaimInfo } from '../external/poap';
 import { DateTime } from 'luxon';
+import { getPOAPDataFromTransaction } from '../external/gnosis';
 
 type GitPOAPs = {
   id: number;
@@ -698,6 +699,24 @@ export async function runClaimsPostProcessing(claims: PostProcessingClaimType[])
         // Move to the next claim by not incrementing i since
         // we've just removed the claim at the current index
         continue;
+      } else if (poapData.tx_status === 'bumped') {
+        const gnosisPOAPData = await getPOAPDataFromTransaction(poapData.tx_hash);
+
+        if (gnosisPOAPData !== null) {
+          await context.prisma.claim.update({
+            where: { id: claims[i].id },
+            data: {
+              status: ClaimStatus.CLAIMED,
+              poapTokenId: gnosisPOAPData.poapTokenId,
+              mintedAt: gnosisPOAPData.mintedAt.toJSDate(),
+            },
+          });
+
+          removeAtIndex(i);
+          // Move to the next claim by not incrementing i since
+          // we've just removed the claim at the current index
+          continue;
+        }
       } else {
         logger.info(`Claim ID ${claims[i].id} is still minting: ${JSON.stringify(poapData)}`);
 
