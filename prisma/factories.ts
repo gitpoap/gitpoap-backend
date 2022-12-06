@@ -209,19 +209,10 @@ export class GithubUserFactory {
 }
 
 export class GithubOrganizationFactory {
-  static create = async (
-    githubOrgId: number,
-    name: string,
-    description?: string,
-    twitterHandle?: string,
-    url?: string,
-  ): Promise<GithubOrganization> => {
+  static create = async (githubOrgId: number, name: string): Promise<GithubOrganization> => {
     const data: Prisma.GithubOrganizationCreateInput = {
       githubOrgId,
       name,
-      description,
-      twitterHandle,
-      url,
     };
     const org = await prisma.githubOrganization.create({ data });
     logger.debug(`Creating organization with id: ${org.id}`);

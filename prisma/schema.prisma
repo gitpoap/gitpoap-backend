@@ -127,15 +127,12 @@ model Membership {
 }
 
 model GithubOrganization {
-  id            Int      @id @default(autoincrement())
-  githubOrgId   Int      @unique
-  name          String   @db.VarChar(50)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  description   String?
-  twitterHandle String?  @db.VarChar(255)
-  url           String?  @db.VarChar(255)
-  repos         Repo[]
+  id          Int      @id @default(autoincrement())
+  githubOrgId Int      @unique
+  name        String   @db.VarChar(50)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  repos       Repo[]
 }
 
 model Team {
@@ -284,7 +281,7 @@ model GitPOAPRequest {
   address             Address             @relation(fields: [addressId], references: [id])
   // TODO: remove after POAP fixes their issues with dates
   gitPOAPId           Int?                @unique
-  gitpoap             GitPOAP?
+  gitPOAP             GitPOAP?
 }
 
 model AuthToken {

@@ -362,6 +362,38 @@ type Query {
     take: Int
     skip: Int
   ): [GithubUserGroupBy!]!
+  aggregateMembership(
+    where: MembershipWhereInput
+    orderBy: [MembershipOrderByWithRelationInput!]
+    cursor: MembershipWhereUniqueInput
+    take: Int
+    skip: Int
+  ): AggregateMembership!
+  findFirstMembership(
+    where: MembershipWhereInput
+    orderBy: [MembershipOrderByWithRelationInput!]
+    cursor: MembershipWhereUniqueInput
+    take: Int
+    skip: Int
+    distinct: [MembershipScalarFieldEnum!]
+  ): Membership
+  memberships(
+    where: MembershipWhereInput
+    orderBy: [MembershipOrderByWithRelationInput!]
+    cursor: MembershipWhereUniqueInput
+    take: Int
+    skip: Int
+    distinct: [MembershipScalarFieldEnum!]
+  ): [Membership!]!
+  membership(where: MembershipWhereUniqueInput!): Membership
+  groupByMembership(
+    where: MembershipWhereInput
+    orderBy: [MembershipOrderByWithAggregationInput!]
+    by: [MembershipScalarFieldEnum!]!
+    having: MembershipScalarWhereWithAggregatesInput
+    take: Int
+    skip: Int
+  ): [MembershipGroupBy!]!
   aggregateProfile(
     where: ProfileWhereInput
     orderBy: [ProfileOrderByWithRelationInput!]
@@ -458,6 +490,38 @@ type Query {
     take: Int
     skip: Int
   ): [RepoGroupBy!]!
+  aggregateTeam(
+    where: TeamWhereInput
+    orderBy: [TeamOrderByWithRelationInput!]
+    cursor: TeamWhereUniqueInput
+    take: Int
+    skip: Int
+  ): AggregateTeam!
+  findFirstTeam(
+    where: TeamWhereInput
+    orderBy: [TeamOrderByWithRelationInput!]
+    cursor: TeamWhereUniqueInput
+    take: Int
+    skip: Int
+    distinct: [TeamScalarFieldEnum!]
+  ): Team
+  teams(
+    where: TeamWhereInput
+    orderBy: [TeamOrderByWithRelationInput!]
+    cursor: TeamWhereUniqueInput
+    take: Int
+    skip: Int
+    distinct: [TeamScalarFieldEnum!]
+  ): [Team!]!
+  team(where: TeamWhereUniqueInput!): Team
+  groupByTeam(
+    where: TeamWhereInput
+    orderBy: [TeamOrderByWithAggregationInput!]
+    by: [TeamScalarFieldEnum!]!
+    having: TeamScalarWhereWithAggregatesInput
+    take: Int
+    skip: Int
+  ): [TeamGroupBy!]!
   totalClaims: Float!
   lastMonthClaims: Float!
   userClaims(address: String!): [FullClaimData!]
@@ -957,9 +1021,6 @@ input GithubOrganizationWhereInput {
   name: StringFilter
   createdAt: DateTimeFilter
   updatedAt: DateTimeFilter
-  description: StringNullableFilter
-  twitterHandle: StringNullableFilter
-  url: StringNullableFilter
   repos: RepoListRelationFilter
 }
 
@@ -1117,7 +1178,7 @@ input GitPOAPRequestWhereInput {
   addressId: IntFilter
   address: AddressRelationFilter
   gitPOAPId: IntNullableFilter
-  gitpoap: GitPOAPRelationFilter
+  gitPOAP: GitPOAPRelationFilter
 }
 
 input TeamRelationFilter {
@@ -1832,9 +1893,6 @@ type GithubOrganization {
   name: String!
   createdAt: DateTime!
   updatedAt: DateTime!
-  description: String
-  twitterHandle: String
-  url: String
   _count: GithubOrganizationCount
   repos(
     where: RepoWhereInput
@@ -1872,9 +1930,6 @@ input GithubOrganizationOrderByWithRelationInput {
   name: SortOrder
   createdAt: SortOrder
   updatedAt: SortOrder
-  description: SortOrder
-  twitterHandle: SortOrder
-  url: SortOrder
   repos: RepoOrderByRelationAggregateInput
 }
 
@@ -2062,7 +2117,7 @@ input GitPOAPRequestOrderByWithRelationInput {
   addressId: SortOrder
   address: AddressOrderByWithRelationInput
   gitPOAPId: SortOrder
-  gitpoap: GitPOAPOrderByWithRelationInput
+  gitPOAP: GitPOAPOrderByWithRelationInput
 }
 
 input GithubPullRequestOrderByWithRelationInput {
@@ -2322,7 +2377,7 @@ type GitPOAPRequest {
   project: Project
   team: Team
   address: Address!
-  gitpoap: GitPOAP
+  gitPOAP: GitPOAP
 }
 
 type Team {
@@ -4400,9 +4455,6 @@ type GithubOrganizationCountAggregate {
   name: Int!
   createdAt: Int!
   updatedAt: Int!
-  description: Int!
-  twitterHandle: Int!
-  url: Int!
   _all: Int!
 }
 
@@ -4422,9 +4474,6 @@ type GithubOrganizationMinAggregate {
   name: String
   createdAt: DateTime
   updatedAt: DateTime
-  description: String
-  twitterHandle: String
-  url: String
 }
 
 type GithubOrganizationMaxAggregate {
@@ -4433,9 +4482,6 @@ type GithubOrganizationMaxAggregate {
   name: String
   createdAt: DateTime
   updatedAt: DateTime
-  description: String
-  twitterHandle: String
-  url: String
 }
 
 input GithubOrganizationWhereUniqueInput {
@@ -4449,9 +4495,6 @@ enum GithubOrganizationScalarFieldEnum {
   name
   createdAt
   updatedAt
-  description
-  twitterHandle
-  url
 }
 
 type GithubOrganizationGroupBy {
@@ -4460,9 +4503,6 @@ type GithubOrganizationGroupBy {
   name: String!
   createdAt: DateTime!
   updatedAt: DateTime!
-  description: String
-  twitterHandle: String
-  url: String
   _count: GithubOrganizationCountAggregate
   _avg: GithubOrganizationAvgAggregate
   _sum: GithubOrganizationSumAggregate
@@ -4476,9 +4516,6 @@ input GithubOrganizationOrderByWithAggregationInput {
   name: SortOrder
   createdAt: SortOrder
   updatedAt: SortOrder
-  description: SortOrder
-  twitterHandle: SortOrder
-  url: SortOrder
   _count: GithubOrganizationCountOrderByAggregateInput
   _avg: GithubOrganizationAvgOrderByAggregateInput
   _max: GithubOrganizationMaxOrderByAggregateInput
@@ -4492,9 +4529,6 @@ input GithubOrganizationCountOrderByAggregateInput {
   name: SortOrder
   createdAt: SortOrder
   updatedAt: SortOrder
-  description: SortOrder
-  twitterHandle: SortOrder
-  url: SortOrder
 }
 
 input GithubOrganizationAvgOrderByAggregateInput {
@@ -4508,9 +4542,6 @@ input GithubOrganizationMaxOrderByAggregateInput {
   name: SortOrder
   createdAt: SortOrder
   updatedAt: SortOrder
-  description: SortOrder
-  twitterHandle: SortOrder
-  url: SortOrder
 }
 
 input GithubOrganizationMinOrderByAggregateInput {
@@ -4519,9 +4550,6 @@ input GithubOrganizationMinOrderByAggregateInput {
   name: SortOrder
   createdAt: SortOrder
   updatedAt: SortOrder
-  description: SortOrder
-  twitterHandle: SortOrder
-  url: SortOrder
 }
 
 input GithubOrganizationSumOrderByAggregateInput {
@@ -4538,9 +4566,6 @@ input GithubOrganizationScalarWhereWithAggregatesInput {
   name: StringWithAggregatesFilter
   createdAt: DateTimeWithAggregatesFilter
   updatedAt: DateTimeWithAggregatesFilter
-  description: StringNullableWithAggregatesFilter
-  twitterHandle: StringNullableWithAggregatesFilter
-  url: StringNullableWithAggregatesFilter
 }
 
 type AggregateGithubPullRequest {
@@ -4840,6 +4865,182 @@ input GithubUserScalarWhereWithAggregatesInput {
   githubHandle: StringWithAggregatesFilter
   createdAt: DateTimeWithAggregatesFilter
   updatedAt: DateTimeWithAggregatesFilter
+}
+
+type AggregateMembership {
+  _count: MembershipCountAggregate
+  _avg: MembershipAvgAggregate
+  _sum: MembershipSumAggregate
+  _min: MembershipMinAggregate
+  _max: MembershipMaxAggregate
+}
+
+type MembershipCountAggregate {
+  id: Int!
+  createdAt: Int!
+  updatedAt: Int!
+  teamId: Int!
+  addressId: Int!
+  role: Int!
+  acceptanceStatus: Int!
+  _all: Int!
+}
+
+type MembershipAvgAggregate {
+  id: Float
+  teamId: Float
+  addressId: Float
+}
+
+type MembershipSumAggregate {
+  id: Int
+  teamId: Int
+  addressId: Int
+}
+
+type MembershipMinAggregate {
+  id: Int
+  createdAt: DateTime
+  updatedAt: DateTime
+  teamId: Int
+  addressId: Int
+  role: MembershipRole
+  acceptanceStatus: MembershipAcceptanceStatus
+}
+
+type MembershipMaxAggregate {
+  id: Int
+  createdAt: DateTime
+  updatedAt: DateTime
+  teamId: Int
+  addressId: Int
+  role: MembershipRole
+  acceptanceStatus: MembershipAcceptanceStatus
+}
+
+type MembershipGroupBy {
+  id: Int!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  teamId: Int!
+  addressId: Int!
+  role: MembershipRole!
+  acceptanceStatus: MembershipAcceptanceStatus!
+  _count: MembershipCountAggregate
+  _avg: MembershipAvgAggregate
+  _sum: MembershipSumAggregate
+  _min: MembershipMinAggregate
+  _max: MembershipMaxAggregate
+}
+
+input MembershipOrderByWithAggregationInput {
+  id: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  teamId: SortOrder
+  addressId: SortOrder
+  role: SortOrder
+  acceptanceStatus: SortOrder
+  _count: MembershipCountOrderByAggregateInput
+  _avg: MembershipAvgOrderByAggregateInput
+  _max: MembershipMaxOrderByAggregateInput
+  _min: MembershipMinOrderByAggregateInput
+  _sum: MembershipSumOrderByAggregateInput
+}
+
+input MembershipCountOrderByAggregateInput {
+  id: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  teamId: SortOrder
+  addressId: SortOrder
+  role: SortOrder
+  acceptanceStatus: SortOrder
+}
+
+input MembershipAvgOrderByAggregateInput {
+  id: SortOrder
+  teamId: SortOrder
+  addressId: SortOrder
+}
+
+input MembershipMaxOrderByAggregateInput {
+  id: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  teamId: SortOrder
+  addressId: SortOrder
+  role: SortOrder
+  acceptanceStatus: SortOrder
+}
+
+input MembershipMinOrderByAggregateInput {
+  id: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  teamId: SortOrder
+  addressId: SortOrder
+  role: SortOrder
+  acceptanceStatus: SortOrder
+}
+
+input MembershipSumOrderByAggregateInput {
+  id: SortOrder
+  teamId: SortOrder
+  addressId: SortOrder
+}
+
+input MembershipScalarWhereWithAggregatesInput {
+  AND: [MembershipScalarWhereWithAggregatesInput!]
+  OR: [MembershipScalarWhereWithAggregatesInput!]
+  NOT: [MembershipScalarWhereWithAggregatesInput!]
+  id: IntWithAggregatesFilter
+  createdAt: DateTimeWithAggregatesFilter
+  updatedAt: DateTimeWithAggregatesFilter
+  teamId: IntWithAggregatesFilter
+  addressId: IntWithAggregatesFilter
+  role: EnumMembershipRoleWithAggregatesFilter
+  acceptanceStatus: EnumMembershipAcceptanceStatusWithAggregatesFilter
+}
+
+input EnumMembershipRoleWithAggregatesFilter {
+  equals: MembershipRole
+  in: [MembershipRole!]
+  notIn: [MembershipRole!]
+  not: NestedEnumMembershipRoleWithAggregatesFilter
+  _count: NestedIntFilter
+  _min: NestedEnumMembershipRoleFilter
+  _max: NestedEnumMembershipRoleFilter
+}
+
+input NestedEnumMembershipRoleWithAggregatesFilter {
+  equals: MembershipRole
+  in: [MembershipRole!]
+  notIn: [MembershipRole!]
+  not: NestedEnumMembershipRoleWithAggregatesFilter
+  _count: NestedIntFilter
+  _min: NestedEnumMembershipRoleFilter
+  _max: NestedEnumMembershipRoleFilter
+}
+
+input EnumMembershipAcceptanceStatusWithAggregatesFilter {
+  equals: MembershipAcceptanceStatus
+  in: [MembershipAcceptanceStatus!]
+  notIn: [MembershipAcceptanceStatus!]
+  not: NestedEnumMembershipAcceptanceStatusWithAggregatesFilter
+  _count: NestedIntFilter
+  _min: NestedEnumMembershipAcceptanceStatusFilter
+  _max: NestedEnumMembershipAcceptanceStatusFilter
+}
+
+input NestedEnumMembershipAcceptanceStatusWithAggregatesFilter {
+  equals: MembershipAcceptanceStatus
+  in: [MembershipAcceptanceStatus!]
+  notIn: [MembershipAcceptanceStatus!]
+  not: NestedEnumMembershipAcceptanceStatusWithAggregatesFilter
+  _count: NestedIntFilter
+  _min: NestedEnumMembershipAcceptanceStatusFilter
+  _max: NestedEnumMembershipAcceptanceStatusFilter
 }
 
 type AggregateProfile {
@@ -5300,6 +5501,147 @@ input RepoScalarWhereWithAggregatesInput {
   lastPRUpdatedAt: DateTimeWithAggregatesFilter
 }
 
+type AggregateTeam {
+  _count: TeamCountAggregate
+  _avg: TeamAvgAggregate
+  _sum: TeamSumAggregate
+  _min: TeamMinAggregate
+  _max: TeamMaxAggregate
+}
+
+type TeamCountAggregate {
+  id: Int!
+  name: Int!
+  ownerAddressId: Int!
+  createdAt: Int!
+  updatedAt: Int!
+  description: Int!
+  logoImageUrl: Int!
+  approvalStatus: Int!
+  _all: Int!
+}
+
+type TeamAvgAggregate {
+  id: Float
+  ownerAddressId: Float
+}
+
+type TeamSumAggregate {
+  id: Int
+  ownerAddressId: Int
+}
+
+type TeamMinAggregate {
+  id: Int
+  name: String
+  ownerAddressId: Int
+  createdAt: DateTime
+  updatedAt: DateTime
+  description: String
+  logoImageUrl: String
+  approvalStatus: StaffApprovalStatus
+}
+
+type TeamMaxAggregate {
+  id: Int
+  name: String
+  ownerAddressId: Int
+  createdAt: DateTime
+  updatedAt: DateTime
+  description: String
+  logoImageUrl: String
+  approvalStatus: StaffApprovalStatus
+}
+
+type TeamGroupBy {
+  id: Int!
+  name: String!
+  ownerAddressId: Int!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  description: String
+  logoImageUrl: String!
+  approvalStatus: StaffApprovalStatus!
+  _count: TeamCountAggregate
+  _avg: TeamAvgAggregate
+  _sum: TeamSumAggregate
+  _min: TeamMinAggregate
+  _max: TeamMaxAggregate
+}
+
+input TeamOrderByWithAggregationInput {
+  id: SortOrder
+  name: SortOrder
+  ownerAddressId: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  description: SortOrder
+  logoImageUrl: SortOrder
+  approvalStatus: SortOrder
+  _count: TeamCountOrderByAggregateInput
+  _avg: TeamAvgOrderByAggregateInput
+  _max: TeamMaxOrderByAggregateInput
+  _min: TeamMinOrderByAggregateInput
+  _sum: TeamSumOrderByAggregateInput
+}
+
+input TeamCountOrderByAggregateInput {
+  id: SortOrder
+  name: SortOrder
+  ownerAddressId: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  description: SortOrder
+  logoImageUrl: SortOrder
+  approvalStatus: SortOrder
+}
+
+input TeamAvgOrderByAggregateInput {
+  id: SortOrder
+  ownerAddressId: SortOrder
+}
+
+input TeamMaxOrderByAggregateInput {
+  id: SortOrder
+  name: SortOrder
+  ownerAddressId: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  description: SortOrder
+  logoImageUrl: SortOrder
+  approvalStatus: SortOrder
+}
+
+input TeamMinOrderByAggregateInput {
+  id: SortOrder
+  name: SortOrder
+  ownerAddressId: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  description: SortOrder
+  logoImageUrl: SortOrder
+  approvalStatus: SortOrder
+}
+
+input TeamSumOrderByAggregateInput {
+  id: SortOrder
+  ownerAddressId: SortOrder
+}
+
+input TeamScalarWhereWithAggregatesInput {
+  AND: [TeamScalarWhereWithAggregatesInput!]
+  OR: [TeamScalarWhereWithAggregatesInput!]
+  NOT: [TeamScalarWhereWithAggregatesInput!]
+  id: IntWithAggregatesFilter
+  name: StringWithAggregatesFilter
+  ownerAddressId: IntWithAggregatesFilter
+  createdAt: DateTimeWithAggregatesFilter
+  updatedAt: DateTimeWithAggregatesFilter
+  description: StringNullableWithAggregatesFilter
+  logoImageUrl: StringWithAggregatesFilter
+  approvalStatus: EnumStaffApprovalStatusWithAggregatesFilter
+}
+
 type FullClaimData {
   claim: Claim!
   event: POAPEvent!
@@ -5433,9 +5775,6 @@ type OrganizationData {
   name: String!
   createdAt: DateTime!
   updatedAt: DateTime!
-  description: String
-  twitterHandle: String
-  url: String
   _count: GithubOrganizationCount
   repos(
     where: RepoWhereInput
