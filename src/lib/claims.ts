@@ -655,11 +655,14 @@ export async function runClaimsPostProcessing(claims: PostProcessingClaimType[])
     // Helper function to remove a claim from postprocessing
     const removeAtIndex = (i: number) => claims.splice(i, 1);
 
-    for (let i = 0; i < claims.length; ++i) {
+    let i = 0;
+    while (i < claims.length) {
       if (claims[i].qrHash === null) {
         logger.error(`Claim ID ${claims[i].id} has status MINTING but qrHash is null`);
         removeAtIndex(i);
-        break;
+        // Move to the next claim by not incrementing i since
+        // we've just removed the claim at the current index
+        continue;
       }
 
       // TypeScript can't tell that we removed the null qrHashes above...
@@ -667,14 +670,18 @@ export async function runClaimsPostProcessing(claims: PostProcessingClaimType[])
       if (poapData === null) {
         logger.error(`Failed to retrieve claim info for Claim ID: ${claims[i].id}`);
         removeAtIndex(i);
-        break;
+        // Move to the next claim by not incrementing i since
+        // we've just removed the claim at the current index
+        continue;
       }
 
       if (poapData.tx_status === 'passed') {
         if (!('token' in poapData.result)) {
           logger.error("No 'token' field in POAP response for Claim after tx_status='passed'");
           removeAtIndex(i);
-          break;
+          // Move to the next claim by not incrementing i since
+          // we've just removed the claim at the current index
+          continue;
         }
 
         // Set the new poapTokenId now that the TX is finalized
@@ -688,7 +695,12 @@ export async function runClaimsPostProcessing(claims: PostProcessingClaimType[])
         });
 
         removeAtIndex(i);
-        break;
+        // Move to the next claim by not incrementing i since
+        // we've just removed the claim at the current index
+        continue;
+      } else {
+        // Move to the next claim
+        ++i;
       }
     }
   }
