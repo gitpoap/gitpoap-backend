@@ -19,7 +19,7 @@ githubOrganizationsRouter.post('/', jwtWithGitHubOAuth(), async function (req, r
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
-  logger.info(`Request to update githubOrganization id ${req.body.id}'s info`);
+  logger.info(`Request to update GithubOrganization id ${req.body.id}'s info`);
 
   const githubOrganization = await context.prisma.githubOrganization.findUnique({
     where: {
@@ -37,7 +37,7 @@ githubOrganizationsRouter.post('/', jwtWithGitHubOAuth(), async function (req, r
 
   const { githubHandle, githubOAuthToken } = getAccessTokenPayloadWithGithubOAuth(req.user);
 
-  // Ensure that the (GitHub) authenticated member is an admin of the githubOrganization
+  // Ensure that the (GitHub) authenticated member is an admin of the GithubOrganization
   const members = await getGithubOrganizationAdmins(githubOrganization.name, githubOAuthToken);
   if (members === null) {
     const msg = `Failed to lookup admins of ${githubOrganization.name} via GitHub`;
@@ -58,7 +58,7 @@ githubOrganizationsRouter.post('/', jwtWithGitHubOAuth(), async function (req, r
     data: req.body.data,
   });
 
-  logger.debug(`Completed request to update githubOrganization id ${req.body.id}'s info`);
+  logger.debug(`Completed request to update GithubOrganization id ${req.body.id}'s info`);
 
   return res.status(200).send('UPDATED');
 });
