@@ -699,6 +699,8 @@ export async function runClaimsPostProcessing(claims: PostProcessingClaimType[])
         // we've just removed the claim at the current index
         continue;
       } else {
+        logger.info(`Claim ID ${claims[i].id} is still minting: ${JSON.stringify(poapData)}`);
+
         // Move to the next claim
         ++i;
       }
