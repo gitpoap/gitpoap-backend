@@ -3,6 +3,7 @@ import { context } from '../context';
 import { RepoData } from './claims';
 import { GitPOAPStatus, Repo } from '@generated/type-graphql';
 import { getGithubRepository, getGithubRepositoryById, OctokitRepoItem } from '../external/github';
+import { upsertGithubOrganization } from './githubOrganizations';
 
 async function createRepoHelper(
   repoInfo: OctokitRepoItem,
@@ -11,16 +12,7 @@ async function createRepoHelper(
   const logger = createScopedLogger('createRepoHelper');
 
   // Add the github org if it doesn't already exist
-  const org = await context.prisma.githubOrganization.upsert({
-    where: {
-      githubOrgId: repoInfo.owner.id,
-    },
-    update: {},
-    create: {
-      githubOrgId: repoInfo.owner.id,
-      name: repoInfo.owner.login,
-    },
-  });
+  const org = await upsertGithubOrganization(repoInfo.owner.id, repoInfo.owner.login);
 
   try {
     return await context.prisma.repo.create({
