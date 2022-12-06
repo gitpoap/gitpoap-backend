@@ -79,13 +79,7 @@ export const seed = async () => {
   const org1 = await GithubOrganizationFactory.create(43, 'org43');
   const org2 = await GithubOrganizationFactory.create(7, 'seven-heaven');
   const org3 = await GithubOrganizationFactory.create(34343, 'some-other-org');
-  const org4 = await GithubOrganizationFactory.create(
-    1,
-    'gitpoap',
-    'A recognition platform for recognizing and rewarding your contributors through POAPs.',
-    'gitpoap',
-    'http://gitpoap.io',
-  );
+  const org4 = await GithubOrganizationFactory.create(1, 'gitpoap');
   const org5 = await GithubOrganizationFactory.create(GH_IDS.burz, 'burz'); // real user
   const org6 = await GithubOrganizationFactory.create(81711181, 'stake-house'); // real org
   const org7 = await GithubOrganizationFactory.create(GH_IDS.jay, 'peebeejay'); // real user
