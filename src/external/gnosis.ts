@@ -21,7 +21,7 @@ async function getTimestampForBlock(blockNumber: number) {
 }
 
 type GnosisPOAPMintData = {
-  minedAt: DateTime;
+  mintedAt: DateTime;
   poapTokenId: string;
 };
 
@@ -48,7 +48,7 @@ export async function getPOAPDataFromTransaction(
         logger.info(`Transaction '${txHash}' has been mined!`);
 
         return {
-          minedAt: await getTimestampForBlock(txReceipt.blockNumber),
+          mintedAt: await getTimestampForBlock(txReceipt.blockNumber),
           poapTokenId: logEvent.args.tokenId.toString(),
         };
       }
