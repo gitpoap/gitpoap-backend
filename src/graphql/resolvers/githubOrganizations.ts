@@ -32,7 +32,7 @@ export class CustomOrganizationResolver {
   ): Promise<OrganizationData | null> {
     const logger = createScopedLogger('GQL organizationData');
 
-    logger.info(`Request data for githubOrganization: ${orgId ?? orgName}`);
+    logger.info(`Request data for GithubOrganization: ${orgId ?? orgName}`);
 
     const endTimer = gqlRequestDurationSeconds.startTimer('organizationData');
 
@@ -62,12 +62,12 @@ export class CustomOrganizationResolver {
     `;
 
     if (results.length === 0) {
-      logger.warn(`Failed to find githubOrganization: ${orgId ?? orgName}`);
+      logger.warn(`Failed to find GithubOrganization: ${orgId ?? orgName}`);
       endTimer({ success: 0 });
       return null;
     }
 
-    logger.debug(`Completed request data for githubOrganization: ${orgId ?? orgName}`);
+    logger.debug(`Completed request data for GithubOrganization: ${orgId ?? orgName}`);
 
     endTimer({ success: 1 });
 
@@ -134,7 +134,7 @@ export class CustomOrganizationResolver {
     });
 
     logger.info(
-      `Request for all githubOrganizations using sort ${sort}, search '${search}' with ${perPage} results per page and page ${page}`,
+      `Request for all GithubOrganizations using sort ${sort}, search '${search}' with ${perPage} results per page and page ${page}`,
     );
 
     endTimer({ success: 1 });
@@ -153,7 +153,7 @@ export class CustomOrganizationResolver {
     const logger = createScopedLogger('GQL organizationRepos');
 
     logger.info(
-      `Request for all repos in githubOrganization ${orgId} using sort ${sort}, with ${perPage} results per page and page ${page}`,
+      `Request for all repos in GithubOrganization ${orgId} using sort ${sort}, with ${perPage} results per page and page ${page}`,
     );
 
     const endTimer = gqlRequestDurationSeconds.startTimer('allRepos');
@@ -208,7 +208,7 @@ export class CustomOrganizationResolver {
     `;
 
     logger.info(
-      `Request for all repos in githubOrganization ${orgId} using sort ${sort}, with ${perPage} results per page and page ${page}`,
+      `Request for all repos in GithubOrganization ${orgId} using sort ${sort}, with ${perPage} results per page and page ${page}`,
     );
 
     endTimer({ success: 1 });
