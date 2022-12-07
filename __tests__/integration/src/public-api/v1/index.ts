@@ -184,28 +184,32 @@ describe('public-api/v1/github/user/:githubHandle/gitpoaps', () => {
       expect(data).toHaveLength(0);
     });
 
-    it("Doesn't return UNAPPROVED GitPOAP Claims when status equals 'unclaimed'", async () => {
-      // Temporarily mark GitPOAP ID 18 as UNAPPROVED
-      await context.prisma.gitPOAP.update({
-        where: { id: 18 },
-        data: { poapApprovalStatus: GitPOAPStatus.UNAPPROVED },
-      });
+    it(
+      "Doesn't return UNAPPROVED GitPOAP Claims when status equals 'unclaimed'",
+      async () => {
+        // Temporarily mark GitPOAP ID 18 as UNAPPROVED
+        await context.prisma.gitPOAP.update({
+          where: { id: 18 },
+          data: { poapApprovalStatus: GitPOAPStatus.UNAPPROVED },
+        });
 
-      const response = await fetch(
-        `${PUBLIC_API_URL}/v1/github/user/${GH_HANDLES.kayleen}/gitpoaps?status=unclaimed`,
-      );
+        const response = await fetch(
+          `${PUBLIC_API_URL}/v1/github/user/${GH_HANDLES.kayleen}/gitpoaps?status=unclaimed`,
+        );
 
-      await context.prisma.gitPOAP.update({
-        where: { id: 18 },
-        data: { poapApprovalStatus: GitPOAPStatus.DEPRECATED },
-      });
+        await context.prisma.gitPOAP.update({
+          where: { id: 18 },
+          data: { poapApprovalStatus: GitPOAPStatus.DEPRECATED },
+        });
 
-      expect(response.status).toBeLessThan(400);
+        expect(response.status).toBeLessThan(400);
 
-      const data = await response.json();
+        const data = await response.json();
 
-      expect(data).toHaveLength(0);
-    });
+        expect(data).toHaveLength(0);
+      },
+      10 * MILLISECONDS_PER_SECOND,
+    );
   });
 
   it("Returns all known user's GitPOAPs when no status parameter is provided", async () => {
