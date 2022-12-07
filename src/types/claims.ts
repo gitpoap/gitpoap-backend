@@ -4,6 +4,8 @@ export type FoundClaim = {
   gitPOAPName: string;
   githubHandle: string | null;
   emailId: number | null;
+  poapEventId: number;
+  mintedAddress: string;
 };
 
 export type ClaimData = {

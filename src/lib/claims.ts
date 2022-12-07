@@ -11,9 +11,9 @@ import { MINIMUM_REMAINING_REDEEM_CODES, REDEEM_CODE_STEP_SIZE } from '../consta
 import { requestPOAPCodes } from '../external/poap';
 import { upsertEmail } from './emails';
 import { sleep } from '../lib/sleep';
-import { retrieveClaimInfo } from '../external/poap';
+import { retrieveClaimInfo, retrieveUsersPOAPs } from '../external/poap';
 import { DateTime } from 'luxon';
-import { getPOAPDataFromTransaction } from '../external/gnosis';
+import { POAPMintData, getPOAPDataFromTransaction } from '../external/gnosis';
 
 type GitPOAPs = {
   id: number;
@@ -639,9 +639,66 @@ export async function ensureRedeemCodeThreshold(gitPOAP: MinimalGitPOAPForRedeem
   }
 }
 
+async function getClaimMintData(
+  claimId: number,
+  txHash: string,
+  mintedAddress: string,
+  poapEventId: number,
+): Promise<POAPMintData | null> {
+  const logger = createScopedLogger('getClaimMintData');
+
+  const gnosisData = await getPOAPDataFromTransaction(txHash);
+  if (gnosisData !== null) {
+    logger.info(`Retrieved mint data for Claim ID ${claimId} from Gnosis`);
+    return gnosisData;
+  }
+
+  logger.warn(`Failed to get Claim ID ${claimId} result from transaction ${txHash}`);
+
+  // If we couldn't retrieve the POAP's info via the transaction hash specified
+  // via the POAP API, it's possible the POAP's transaction was "bumped" but the
+  // older transaction went through. In this case, let's check the addresses' POAPs
+  // in case we can find the resulting POAP (i.e. one with the same POAP Event ID)
+
+  const poaps = await retrieveUsersPOAPs(mintedAddress);
+  if (poaps === null) {
+    logger.error(`Failed to retrieve POAPs for address ${mintedAddress}`);
+    return null;
+  }
+
+  const candidates: POAPMintData[] = [];
+  for (const poap of poaps) {
+    if (poap.event.id === poapEventId) {
+      logger.info(`Found candidate POAP ID ${poap.tokenId} for Claim ID ${claimId}`);
+
+      candidates.push({
+        mintedAt: DateTime.fromISO(poap.created.replace(' ', 'T')),
+        poapTokenId: poap.tokenId,
+      });
+    }
+  }
+
+  if (candidates.length === 0) {
+    logger.warn(`There are no candidates for Claim ID ${claimId} on address ${mintedAddress}`);
+    return null;
+  } else if (candidates.length > 1) {
+    logger.error(
+      `There are ${candidates.length} POAPs for POAP Event ID ${poapEventId} on address ${mintedAddress}`,
+    );
+    return null;
+  }
+
+  return candidates[0];
+}
+
 type PostProcessingClaimType = {
   id: number;
   qrHash: string | null;
+  gitPOAP: {
+    id: number;
+    poapEventId: number;
+  };
+  mintedAddress: { ethAddress: string } | null;
 };
 
 export async function runClaimsPostProcessing(claims: PostProcessingClaimType[]) {
@@ -665,9 +722,18 @@ export async function runClaimsPostProcessing(claims: PostProcessingClaimType[])
         // we've just removed the claim at the current index
         continue;
       }
+      if (claims[i].mintedAddress === null) {
+        logger.error(`Claim ID ${claims[i].id} has status MINTING but mintedAddress is null`);
+        removeAtIndex(i);
+        // Move to the next claim by not incrementing i since
+        // we've just removed the claim at the current index
+        continue;
+      }
+      // TypeScript can't tell that we removed the nulls above...
+      const qrHash = claims[i].qrHash as string;
+      const mintedAddress = (claims[i].mintedAddress as { ethAddress: string }).ethAddress;
 
-      // TypeScript can't tell that we removed the null qrHashes above...
-      const poapData = await retrieveClaimInfo(claims[i].qrHash as string);
+      const poapData = await retrieveClaimInfo(qrHash);
       if (poapData === null) {
         logger.error(`Failed to retrieve claim info for Claim ID: ${claims[i].id}`);
         removeAtIndex(i);
@@ -676,39 +742,55 @@ export async function runClaimsPostProcessing(claims: PostProcessingClaimType[])
         continue;
       }
 
-      if (poapData.tx_status === 'passed') {
-        if (!('token' in poapData.result)) {
-          logger.error("No 'token' field in POAP response for Claim after tx_status='passed'");
-          removeAtIndex(i);
-          // Move to the next claim by not incrementing i since
-          // we've just removed the claim at the current index
-          continue;
-        }
+      // This can happen if the server accidentally restarts RIGHT before we call the POAP
+      // API to mint the token (This is VERY unlikely to happen, but we've seen it once.
+      if (poapData.tx_status === '') {
+        logger.warn(
+          `Found a Claim (ID: ${claims[i].id} in MINTING that was not submitted to POAP API`,
+        );
 
-        // Set the new poapTokenId now that the TX is finalized
         await context.prisma.claim.update({
           where: { id: claims[i].id },
           data: {
-            status: ClaimStatus.CLAIMED,
-            poapTokenId: poapData.result.token.toString(),
-            mintedAt: DateTime.fromISO(poapData.claimed_date).toJSDate(),
+            status: ClaimStatus.UNCLAIMED,
+            qrHash: null,
+            mintedAddress: { disconnect: true },
           },
         });
+        // We should save the RedeemCode we didn't use
+        try {
+          await context.prisma.redeemCode.create({
+            data: {
+              gitPOAPId: claims[i].gitPOAP.id,
+              code: qrHash,
+            },
+          });
+        } catch (err) {
+          // This might happen if both servers try to create at the same time (not an issue)
+          logger.warn(`Couldn't recreate RedeemCode '${qrHash}' from Claim ID ${claims[i].id}`);
+        }
 
         removeAtIndex(i);
         // Move to the next claim by not incrementing i since
         // we've just removed the claim at the current index
         continue;
-      } else if (poapData.tx_status === 'bumped') {
-        const gnosisPOAPData = await getPOAPDataFromTransaction(poapData.tx_hash);
+      }
 
-        if (gnosisPOAPData !== null) {
+      if (poapData.tx_status === 'passed' || poapData.tx_status === 'bumped') {
+        const mintData = await getClaimMintData(
+          claims[i].id,
+          poapData.tx_hash,
+          mintedAddress,
+          claims[i].gitPOAP.poapEventId,
+        );
+
+        if (mintData !== null) {
           await context.prisma.claim.update({
             where: { id: claims[i].id },
             data: {
               status: ClaimStatus.CLAIMED,
-              poapTokenId: gnosisPOAPData.poapTokenId,
-              mintedAt: gnosisPOAPData.mintedAt.toJSDate(),
+              poapTokenId: mintData.poapTokenId,
+              mintedAt: mintData.mintedAt.toJSDate(),
             },
           });
 
@@ -717,12 +799,12 @@ export async function runClaimsPostProcessing(claims: PostProcessingClaimType[])
           // we've just removed the claim at the current index
           continue;
         }
-      } else {
-        logger.info(`Claim ID ${claims[i].id} is still minting: ${JSON.stringify(poapData)}`);
-
-        // Move to the next claim
-        ++i;
       }
+
+      logger.info(`Claim ID ${claims[i].id} is still minting: ${JSON.stringify(poapData)}`);
+
+      // Move to the next claim
+      ++i;
     }
   }
 
@@ -742,6 +824,17 @@ export async function runStartupClaimsPostProcessing() {
     select: {
       id: true,
       qrHash: true,
+      mintedAddress: {
+        select: {
+          ethAddress: true,
+        },
+      },
+      gitPOAP: {
+        select: {
+          id: true,
+          poapEventId: true,
+        },
+      },
     },
   });
 
