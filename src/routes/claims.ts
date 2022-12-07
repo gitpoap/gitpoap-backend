@@ -60,9 +60,7 @@ claimsRouter.post('/', jwtWithAddress(), async function (req, res) {
 
   for (const claimId of claimIds) {
     const claim = await context.prisma.claim.findUnique({
-      where: {
-        id: claimId,
-      },
+      where: { id: claimId },
       include: {
         githubUser: {
           select: {
@@ -149,6 +147,8 @@ claimsRouter.post('/', jwtWithAddress(), async function (req, res) {
       gitPOAPName: claim.gitPOAP.name,
       githubHandle: claim.githubUser?.githubHandle ?? null,
       emailId: claim.emailId,
+      poapEventId: claim.gitPOAP.poapEventId,
+      mintedAddress: ethAddress,
     });
     qrHashes.push(poapData.qr_hash);
 
@@ -197,6 +197,11 @@ claimsRouter.post('/', jwtWithAddress(), async function (req, res) {
     claimedIds.map((id, i) => ({
       id,
       qrHash: qrHashes[i],
+      gitPOAP: {
+        id: foundClaims[i].gitPOAPId,
+        poapEventId: foundClaims[i].poapEventId,
+      },
+      mintedAddress: { ethAddress: foundClaims[i].mintedAddress },
     })),
   );
 });
