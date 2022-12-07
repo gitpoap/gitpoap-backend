@@ -77,6 +77,7 @@ const issue = {
 const claimId = 234;
 const gitPOAPId = 744;
 const gitPOAPName = 'Wow you arrrrr great';
+const poapEventId = 9420384;
 const claim: ClaimData = {
   id: claimId,
   githubUser: {
@@ -999,12 +1000,47 @@ describe('POST /claims', () => {
     );
   });
 
+  const expectSendInternalClaimMessage = () => {
+    expect(mockedSendInternalClaimMessage).toHaveBeenCalledTimes(1);
+    expect(mockedSendInternalClaimMessage).toHaveBeenCalledWith(
+      [
+        {
+          claimId,
+          gitPOAPId,
+          gitPOAPName,
+          githubHandle: null,
+          emailId,
+          mintedAddress: address,
+          poapEventId,
+        },
+      ],
+      address,
+      ensName,
+    );
+  };
+
+  const expectRunClaimsPostProcessing = () => {
+    expect(mockedRunClaimsPostProcessing).toHaveBeenCalledTimes(1);
+    expect(mockedRunClaimsPostProcessing).toHaveBeenCalledWith([
+      {
+        id: claimId,
+        qrHash: redeemCode,
+        gitPOAP: {
+          id: gitPOAPId,
+          poapEventId,
+        },
+        mintedAddress: { ethAddress: address },
+      },
+    ]);
+  };
+
   it('Succeeds when POAP API redeem call completes', async () => {
     mockJwtWithAddress();
     const gitPOAP = {
       id: gitPOAPId,
       name: gitPOAPName,
       isEnabled: true,
+      poapEventId,
     };
     contextMock.prisma.claim.findUnique.mockResolvedValue({
       status: ClaimStatus.UNCLAIMED,
@@ -1059,25 +1095,9 @@ describe('POST /claims', () => {
     expect(mockedEnsureRedeemCodeThreshold).toHaveBeenCalledTimes(1);
     expect(mockedEnsureRedeemCodeThreshold).toHaveBeenCalledWith(gitPOAP);
 
-    expect(mockedSendInternalClaimMessage).toHaveBeenCalledTimes(1);
-    expect(mockedSendInternalClaimMessage).toHaveBeenCalledWith(
-      [
-        {
-          claimId,
-          gitPOAPId,
-          gitPOAPName,
-          githubHandle: null,
-          emailId,
-        },
-      ],
-      address,
-      ensName,
-    );
+    expectSendInternalClaimMessage();
 
-    expect(mockedRunClaimsPostProcessing).toHaveBeenCalledTimes(1);
-    expect(mockedRunClaimsPostProcessing).toHaveBeenCalledWith([
-      { id: claimIds[0], qrHash: redeemCode },
-    ]);
+    expectRunClaimsPostProcessing();
   });
 
   it('Succeeds on multiple claims when one fails', async () => {
@@ -1086,6 +1106,7 @@ describe('POST /claims', () => {
       id: gitPOAPId,
       name: gitPOAPName,
       isEnabled: true,
+      poapEventId,
     };
     contextMock.prisma.claim.findUnique.mockResolvedValueOnce(null);
     contextMock.prisma.claim.findUnique.mockResolvedValueOnce({
@@ -1149,24 +1170,8 @@ describe('POST /claims', () => {
     expect(mockedEnsureRedeemCodeThreshold).toHaveBeenCalledTimes(1);
     expect(mockedEnsureRedeemCodeThreshold).toHaveBeenCalledWith(gitPOAP);
 
-    expect(mockedSendInternalClaimMessage).toHaveBeenCalledTimes(1);
-    expect(mockedSendInternalClaimMessage).toHaveBeenCalledWith(
-      [
-        {
-          claimId,
-          gitPOAPId,
-          gitPOAPName,
-          githubHandle: null,
-          emailId,
-        },
-      ],
-      address,
-      ensName,
-    );
+    expectSendInternalClaimMessage();
 
-    expect(mockedRunClaimsPostProcessing).toHaveBeenCalledTimes(1);
-    expect(mockedRunClaimsPostProcessing).toHaveBeenCalledWith([
-      { id: claimId, qrHash: redeemCode },
-    ]);
+    expectRunClaimsPostProcessing();
   });
 });

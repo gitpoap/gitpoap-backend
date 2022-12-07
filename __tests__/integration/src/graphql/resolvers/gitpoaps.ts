@@ -84,7 +84,7 @@ describe('CustomClaimResolver', () => {
 
     expect(data.userPOAPs.poaps).toHaveLength(1);
     expect(data.userPOAPs.poaps[0].event.name).toEqual(event27305.name);
-  });
+  }, 10000);
 
   it('userPOAPs - alphabetical', async () => {
     const data = await client.request(gql`
@@ -145,7 +145,7 @@ describe('CustomClaimResolver', () => {
     expect(data.userPOAPs.gitPOAPs[0].event.name).toEqual(event36576.name);
 
     expect(data.userPOAPs.poaps).toHaveLength(0);
-  });
+  }, 10000);
 
   it('repoGitPOAPs - date', async () => {
     const data = await client.request(gql`
