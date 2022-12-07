@@ -20,14 +20,12 @@ async function getTimestampForBlock(blockNumber: number) {
   return DateTime.fromSeconds(blockInfo.timestamp);
 }
 
-type GnosisPOAPMintData = {
+export type POAPMintData = {
   mintedAt: DateTime;
   poapTokenId: string;
 };
 
-export async function getPOAPDataFromTransaction(
-  txHash: string,
-): Promise<GnosisPOAPMintData | null> {
+export async function getPOAPDataFromTransaction(txHash: string): Promise<POAPMintData | null> {
   const logger = createScopedLogger('getPOAPDataFromTransaction');
 
   logger.info(`Checking if '${txHash}' has been mined for a POAP on Gnosis`);
