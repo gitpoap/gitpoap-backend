@@ -41,7 +41,8 @@
     "poap-to-gitpoap": "APP_NAME=poap-to-gitpoap ts-node-dev ./scripts/poap-to-gitpoap.ts",
     "validate-codes": "APP_NAME=validate-codes ts-node-dev ./scripts/validate-codes.ts",
     "force-check-for-new-codes": "APP_NAME=force-check-for-new-codes ts-node-dev ./scripts/force-check-for-new-codes.ts",
-    "get-gnosis-receipt": "APP_NAME=get-gnosis-receipt ts-node-dev ./scripts/get-gnosis-receipt.ts"
+    "get-gnosis-receipt": "APP_NAME=get-gnosis-receipt ts-node-dev ./scripts/get-gnosis-receipt.ts",
+    "get-mint-status": "APP_NAME=get-mint-status ts-node-dev ./scripts/get-mint-status.ts"
   },
   "devDependencies": {
     "@faker-js/faker": "^7.6.0",
