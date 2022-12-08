@@ -10,5 +10,6 @@ export default {
   clearMocks: true,
   roots: ['<rootDir>/__tests__'],
   modulePathIgnorePatterns: ['<rootDir>/dist/', '<rootDir>/aws/', '/node_modules/'],
-  setupFiles: ['./__tests__/setup.ts', 'dotenv/config'],
+  setupFiles: ['dotenv/config'],
+  setupFilesAfterEnv: ['./__tests__/setup.ts'],
 };
