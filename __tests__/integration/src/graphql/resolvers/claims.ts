@@ -84,5 +84,5 @@ describe('CustomClaimResolver', () => {
     });
 
     expect(data.userClaims).toHaveLength(0);
-  }, 10000);
+  });
 });
