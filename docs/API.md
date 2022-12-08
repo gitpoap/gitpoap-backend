@@ -144,29 +144,6 @@ Data:
 Note that for the admin functionality of this endpoint requires an address-based JWT where the authenticated user is an admin of GitPOAP,
 as defined by [`ADMIN_ADDRESSES` at `src/constants.ts`](https://github.com/gitpoap/gitpoap-backend/blob/main/src/constants.ts).
 
-## Update Organization
-
-`POST /organizations`
-
-Data:
-
-```json
-{
-  "id": 4,
-  "data": {
-    "description": "we do stuff",
-    "url": null
-  }
-}
-```
-
-Note that `"data"` can accept multiple nullable fields to update.
-
-
-Note that this endpoint requires an address-based JWT to be provided where the user is logged into GitHub
-(i.e. both `githubId` and `githubHandle` are non-null) and that the authenticated user must be an admin
-(not necessarily public) of the organization whose info they are trying to update.
-
 ## Upload GitPOAP Codes
 
 `POST /gitpoaps/codes`
