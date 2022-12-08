@@ -23,20 +23,21 @@ import { getAccessTokenPayload } from '../../types/authTokens';
 import { sendInternalGitPOAPRequestMessage } from '../../external/slack';
 import { convertContributorsFromSchema, createClaimsForContributors } from '../../lib/gitpoaps';
 import {
+  chooseGitPOAPRequestDates,
   chooseNumberOfRequestedCodes,
   updateGitPOAPRequestStatus,
   uploadGitPOAPRequestImage,
   validateContributorsString,
 } from '../../lib/gitpoapRequests';
 import { getRequestLogger } from '../../middleware/loggingAndTiming';
-import { GITPOAP_ISSUER_EMAIL, GITPOAP_ROOT_URL } from '../../constants';
+import { GITPOAP_ISSUER_EMAIL, GITPOAP_ROOT_URL, POAP_DATE_FORMAT } from '../../constants';
 import { upsertEmail } from '../../lib/emails';
 import {
   sendGitPOAPRequestConfirmationEmail,
   sendGitPOAPRequestRejectionEmail,
 } from '../../external/postmark';
 import { GitPOAPRequestEmailForm } from '../../types/gitpoaps';
-import { formatDateToString } from './utils';
+import { formatDateToReadableString } from './utils';
 import { isAddressAStaffMember } from '../../lib/staff';
 
 export const customGitPOAPsRouter = Router();
@@ -167,8 +168,8 @@ customGitPOAPsRouter.post(
       name: gitPOAPRequest.name,
       imageUrl: gitPOAPRequest.imageUrl,
       description: gitPOAPRequest.description,
-      startDate: formatDateToString(gitPOAPRequest.startDate),
-      endDate: formatDateToString(gitPOAPRequest.endDate),
+      startDate: formatDateToReadableString(gitPOAPRequest.startDate),
+      endDate: formatDateToReadableString(gitPOAPRequest.endDate),
     };
     void sendGitPOAPRequestConfirmationEmail(emailForm);
 
@@ -221,18 +222,15 @@ customGitPOAPsRouter.put('/approve/:id', jwtWithStaffAddress(), async (req, res)
 
   logger.info(`Marking GitPOAP Request with ID:${gitPOAPRequestId} as APPROVED.`);
 
-  // TODO: switch to using the actual dates from GitPOAPRequest after POAP fixes
-  // their date issues
-  const startDate = DateTime.now();
-  const endDate = startDate.plus({ years: 1 });
+  const { startDate, endDate, expiryDate } = chooseGitPOAPRequestDates();
 
   const secretCode = generatePOAPSecret();
   const poapInfo = await createPOAPEvent({
     name: gitPOAPRequest.name,
     description: gitPOAPRequest.description,
-    start_date: startDate.toFormat('yyyy-MM-dd'),
-    end_date: endDate.toFormat('yyyy-MM-dd'),
-    expiry_date: endDate.plus({ years: 1 }).toFormat('yyyy-MM-dd'),
+    start_date: startDate.toFormat(POAP_DATE_FORMAT),
+    end_date: endDate.toFormat(POAP_DATE_FORMAT),
+    expiry_date: expiryDate.toFormat(POAP_DATE_FORMAT),
     event_url: GITPOAP_ROOT_URL,
     imageName: getKeyFromS3URL(gitPOAPRequest.imageUrl),
     imageBuffer,
@@ -344,8 +342,8 @@ customGitPOAPsRouter.put('/reject/:id', jwtWithStaffAddress(), async (req, res) 
     name: gitPOAPRequest.name,
     imageUrl: gitPOAPRequest.imageUrl,
     description: gitPOAPRequest.description,
-    startDate: formatDateToString(gitPOAPRequest.startDate),
-    endDate: formatDateToString(gitPOAPRequest.endDate),
+    startDate: formatDateToReadableString(gitPOAPRequest.startDate),
+    endDate: formatDateToReadableString(gitPOAPRequest.endDate),
   };
   void sendGitPOAPRequestRejectionEmail(emailForm);
 

@@ -4,6 +4,7 @@ import { retrievePOAPEventInfo } from '../../external/poap';
 import { createScopedLogger } from '../../logging';
 import { GitPOAPResultType, GitPOAPEventResultType } from './types';
 import { getEarnedAt } from '../../lib/claims';
+import { POAP_DATE_FORMAT } from '../../constants';
 
 type Claim = {
   poapTokenId: string | null;
@@ -90,8 +91,10 @@ export const mapClaimsToGitPOAPResults = async (
       description: poapEventData.description,
       imageUrl: poapEventData.image_url,
       repositories: repositories ?? [],
-      earnedAt: DateTime.fromJSDate(getEarnedAt(claim)).toFormat('yyyy-MM-dd'),
-      mintedAt: claim.mintedAt ? DateTime.fromJSDate(claim.mintedAt).toFormat('yyyy-MM-dd') : null,
+      earnedAt: DateTime.fromJSDate(getEarnedAt(claim)).toFormat(POAP_DATE_FORMAT),
+      mintedAt: claim.mintedAt
+        ? DateTime.fromJSDate(claim.mintedAt).toFormat(POAP_DATE_FORMAT)
+        : null,
       needsRevalidation: claim.needsRevalidation,
       isDeprecated: claim.gitPOAP.poapApprovalStatus === GitPOAPStatus.DEPRECATED,
     });
