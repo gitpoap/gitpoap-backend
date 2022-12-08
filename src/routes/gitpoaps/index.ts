@@ -24,10 +24,14 @@ import { upsertRedeemCode } from '../../lib/codes';
 import { generatePOAPSecret } from '../../lib/secrets';
 import { customGitPOAPsRouter } from './custom';
 import { isAddressAStaffMember } from '../../lib/staff';
-import { convertContributorsFromSchema, createClaimsForContributors } from '../../lib/gitpoaps';
+import {
+  chooseGitPOAPDates,
+  convertContributorsFromSchema,
+  createClaimsForContributors,
+} from '../../lib/gitpoaps';
 import { ensureRedeemCodeThreshold } from '../../lib/claims';
 import { getRequestLogger } from '../../middleware/loggingAndTiming';
-import { GITPOAP_ISSUER_EMAIL } from '../../constants';
+import { GITPOAP_ISSUER_EMAIL, POAP_DATE_FORMAT } from '../../constants';
 
 export const gitPOAPsRouter = Router();
 
@@ -126,6 +130,8 @@ gitPOAPsRouter.post(
       return res.status(400).send({ msg });
     }
 
+    const { startDate, endDate, expiryDate } = chooseGitPOAPDates(year);
+
     // Create a secret code of the form "[0-9]{6}" that will be used to
     // modify the event and allow minting of POAPs
     const secretCode = generatePOAPSecret();
@@ -134,9 +140,9 @@ gitPOAPsRouter.post(
     const poapInfo = await createPOAPEvent({
       name,
       description: schemaResult.data.description,
-      start_date: schemaResult.data.startDate,
-      end_date: schemaResult.data.endDate,
-      expiry_date: schemaResult.data.expiryDate,
+      start_date: startDate.toFormat(POAP_DATE_FORMAT),
+      end_date: endDate.toFormat(POAP_DATE_FORMAT),
+      expiry_date: expiryDate.toFormat(POAP_DATE_FORMAT),
       event_url: schemaResult.data.eventUrl,
       imageName: req.file.originalname,
       imageBuffer: req.file.buffer,

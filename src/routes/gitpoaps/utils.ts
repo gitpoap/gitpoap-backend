@@ -9,5 +9,5 @@ export const generateGitPOAPLink = (gitPOAPId: number): string => {
   return `${GITPOAP_ROOT_URL}/gp/${gitPOAPId}`;
 };
 
-export const formatDateToString = (date: Date): string =>
+export const formatDateToReadableString = (date: Date): string =>
   DateTime.fromJSDate(date).toFormat('yyyy LLL dd');
