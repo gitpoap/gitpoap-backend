@@ -92,3 +92,14 @@ export function validateContributorsString(contributorsString: string) {
 
   return contributors;
 }
+
+export function chooseGitPOAPRequestDates() {
+  // TODO: switch to using the actual dates from GitPOAPRequest
+  // after POAP fixes their date issues
+  const startDate = DateTime.utc();
+  return {
+    startDate,
+    endDate: startDate.plus({ years: 1 }),
+    expiryDate: startDate.plus({ years: 2 }),
+  };
+}

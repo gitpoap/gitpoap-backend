@@ -7,7 +7,7 @@ import { lookupLastRun, updateLastRun } from './batchProcessing';
 import { backloadGithubPullRequestData } from './pullRequests';
 import { GitPOAPRequestEmailForm } from '../types/gitpoaps';
 import { sendGitPOAPRequestLiveEmail } from '../external/postmark';
-import { formatDateToString } from '../routes/gitpoaps/utils';
+import { formatDateToReadableString } from '../routes/gitpoaps/utils';
 
 // The name of the row in the BatchTiming table used for checking for new codes
 const CHECK_FOR_CODES_BATCH_TIMING_KEY = 'check-for-codes';
@@ -234,10 +234,10 @@ export async function checkGitPOAPForNewCodesWithApprovalEmail(
             imageUrl: gitPOAP.imageUrl,
             description: gitPOAP.description,
             startDate: gitPOAP.gitPOAPRequest?.startDate
-              ? formatDateToString(gitPOAP.gitPOAPRequest?.startDate)
+              ? formatDateToReadableString(gitPOAP.gitPOAPRequest?.startDate)
               : '',
             endDate: gitPOAP.gitPOAPRequest?.endDate
-              ? formatDateToString(gitPOAP.gitPOAPRequest?.endDate)
+              ? formatDateToReadableString(gitPOAP.gitPOAPRequest?.endDate)
               : '',
           };
           void sendGitPOAPRequestLiveEmail(emailForm);

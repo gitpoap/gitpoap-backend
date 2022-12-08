@@ -10,6 +10,7 @@ import {
 import { GitPOAPContributorsSchema } from '../schemas/gitpoaps';
 import { GitPOAPContributors } from '../types/gitpoaps';
 import { z } from 'zod';
+import { DateTime } from 'luxon';
 
 export const convertGitPOAPRequestToGitPOAP = async (
   gitPOAPRequest: GitPOAPRequest,
@@ -96,4 +97,26 @@ export function createClaimsForContributors(
   }
 
   return countContributors(contributors);
+}
+
+export function chooseGitPOAPDates(year: number) {
+  if (DateTime.utc().year === year) {
+    return {
+      startDate: DateTime.utc(year, 1, 1),
+      endDate: DateTime.utc(year, 12, 31),
+      expiryDate: DateTime.utc(year + 1, 12, 31),
+    };
+  } else {
+    // TODO: switch to using the actual dates for year
+    // after POAP fixes their date issues!
+    //
+    // In the meantime let's just use the dates that allow
+    // for the expiry furthest into the future
+    const startDate = DateTime.utc();
+    return {
+      startDate,
+      endDate: startDate.plus({ years: 1 }),
+      expiryDate: startDate.plus({ years: 2 }),
+    };
+  }
 }

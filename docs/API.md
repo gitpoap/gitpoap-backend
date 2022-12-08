@@ -64,9 +64,6 @@ for convenience):
   }, // This should be a JSON string
   "name": "GitPOAP Contributor 2022",
   "description": "You contributed to GitPOAP in 2022!\nCongrats, you are a super cool person!",
-  "startDate": "01-Jan-2022",
-  "endDate": "31-Dec-2022",
-  "expiryDate": "31-Jan-2023",
   "year": 2022,
   "eventUrl": "https://github.com/gitpoap/gitpoap-backend",
   "numRequestedCodes": 10,
@@ -86,9 +83,6 @@ to create a project, or for an existing project:
   }, // This should be a JSON string
   "name": "GitPOAP Contributor 2022",
   "description": "You contributed to GitPOAP in 2022!\nCongrats, you are a super cool person!",
-  "startDate": "01-Jan-2022",
-  "endDate": "31-Dec-2022",
-  "expiryDate": "31-Jan-2023",
   "year": 2022,
   "eventUrl": "https://github.com/gitpoap/gitpoap-backend",
   "numRequestedCodes": 10,
@@ -369,8 +363,8 @@ for convenience):
     "ensNames": ["burz.eth"]
   }, // Note that all of the fields in this object are optional and it should be a JSON string
   "description": "You contributed to Custom GitPOAPs in 2022!\nCongrats, you are a super cool person!",
-  "startDate": "01-Jan-2022",
-  "endDate": "31-Dec-2022",
+  "startDate": "2022-11-04",
+  "endDate": "2022-11-06"
 }
 ```
 
