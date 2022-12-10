@@ -118,6 +118,7 @@ import {
   AggregateMembershipResolver,
 } from '@generated/type-graphql';
 import { CustomClaimResolver } from './resolvers/claims';
+import { CustomEmailResolver } from './resolvers/emails';
 import { CustomGitPOAPResolver } from './resolvers/gitpoaps';
 import { CustomOrganizationResolver } from './resolvers/githubOrganizations';
 import { CustomProfileResolver } from './resolvers/profiles';
@@ -240,6 +241,7 @@ const allResolvers: NonEmptyArray<ResolverClass> = [
   AggregateMembershipResolver,
   /* ~~ Custom resolvers ~~ */
   CustomClaimResolver,
+  CustomEmailResolver,
   CustomGitPOAPResolver,
   CustomOrganizationResolver,
   CustomProfileResolver,
