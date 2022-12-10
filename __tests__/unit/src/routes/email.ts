@@ -18,7 +18,12 @@ jest.mock('../../../../src/lib/emails', () => ({
 }));
 jest.mock('../../../../src/logging');
 jest.mock('../../../../src/external/postmark');
-jest.mock('../../../../src/lib/authTokens');
+jest.mock('../../../../src/lib/authTokens', () => ({
+  __esModule: true,
+  ...(<any>jest.requireActual('../../../../src/lib/authTokens')),
+  generateAuthTokensWithChecks: jest.fn(),
+  updateAuthTokenGeneration: jest.fn(),
+}));
 
 const mockedUpsertUnverifiedEmail = jest.mocked(upsertUnverifiedEmail, true);
 const mockedSendVerificationEmail = jest.mocked(sendVerificationEmail, true);

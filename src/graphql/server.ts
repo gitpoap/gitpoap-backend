@@ -9,6 +9,7 @@ import { verify } from 'jsonwebtoken';
 import { FRONTEND_JWT_SECRET, JWT_SECRET } from '../environment';
 import { AccessTokenPayload, getAccessTokenPayload } from '../types/authTokens';
 import { RequestHandler } from 'express';
+import { getValidatedAccessTokenPayload } from '../lib/authTokens';
 
 export async function createGQLServer(): Promise<RequestHandler> {
   const gqlSchema = await createAndEmitSchema();
@@ -52,9 +53,15 @@ export async function createGQLServer(): Promise<RequestHandler> {
     let userAccessTokenPayload: AccessTokenPayload | null = null;
     if (gqlAccessTokens.user !== null) {
       try {
-        userAccessTokenPayload = getAccessTokenPayload(verify(gqlAccessTokens.user, JWT_SECRET));
+        const basePayload = getAccessTokenPayload(verify(gqlAccessTokens.user, JWT_SECRET));
+        const validatedPayload = getValidatedAccessTokenPayload(basePayload.authTokenId);
+        if (validatedPayload !== null) {
+          userAccessTokenPayload = { ...basePayload, ...validatedPayload };
+        } else {
+          logger.debug('User access token is no longer valid');
+        }
       } catch (err) {
-        logger.debug(`User access token is invalid: ${err}`);
+        logger.debug(`User access token is malformed: ${err}`);
       }
     }
 
