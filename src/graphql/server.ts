@@ -54,7 +54,7 @@ export async function createGQLServer(): Promise<RequestHandler> {
     if (gqlAccessTokens.user !== null) {
       try {
         const basePayload = getAccessTokenPayload(verify(gqlAccessTokens.user, JWT_SECRET));
-        const validatedPayload = getValidatedAccessTokenPayload(basePayload.authTokenId);
+        const validatedPayload = await getValidatedAccessTokenPayload(basePayload.authTokenId);
         if (validatedPayload !== null) {
           userAccessTokenPayload = { ...basePayload, ...validatedPayload };
         } else {

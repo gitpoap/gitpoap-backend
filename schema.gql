@@ -525,6 +525,7 @@ type Query {
   totalClaims: Float!
   lastMonthClaims: Float!
   userClaims(address: String!): [FullClaimData!]
+  userEmail: UserEmail
   totalGitPOAPs: Float!
   lastMonthGitPOAPs: Float!
   gitPOAPEvent(id: Float!): FullGitPOAPEventData
@@ -5661,6 +5662,11 @@ type POAPEvent {
   end_date: String!
   expiry_date: String!
   supply: Float!
+}
+
+type UserEmail {
+  emailAddress: String
+  isValidated: Boolean!
 }
 
 type FullGitPOAPEventData {

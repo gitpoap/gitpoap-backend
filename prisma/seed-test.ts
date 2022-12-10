@@ -70,14 +70,14 @@ export const seed = async () => {
   const validatedEmail = await EmailFactory.create('validated@gitpoap.io', undefined, 'testtoken3', true, DateTime.now().minus({ day: 1 }).toJSDate());
 
   /* Create Address */
-  const addressJay = await AddressFactory.create(ADDRESSES.jay, jay.id);
+  const addressJay = await AddressFactory.create(ADDRESSES.jay, jay.id, jayEmail.id);
   const addressBurz = await AddressFactory.create(ADDRESSES.burz, burz.id);
   const addressBurz2 = await AddressFactory.create(ADDRESSES.burz2, burz2.id);
   const addressColfax = await AddressFactory.create(ADDRESSES.colfax, colfax.id);
   const addressVitalik = await AddressFactory.create(ADDRESSES.vitalik, vitalik.id);
   const addressAldo = await AddressFactory.create(ADDRESSES.aldo, aldo.id);
-  const addressTyler = await AddressFactory.create(ADDRESSES.tyler, tyler.id);
-  const addressKayleen = await AddressFactory.create(ADDRESSES.kayleen, kayleen.id);
+  const addressTyler = await AddressFactory.create(ADDRESSES.tyler, tyler.id, unvalidatedEmail.id);
+  const addressKayleen = await AddressFactory.create(ADDRESSES.kayleen, kayleen.id, validatedEmail.id);
   const addressRandom1 = await AddressFactory.create(ADDRESSES.random, undefined, teamEmail.id);
   const addressRandom2 = await AddressFactory.create(ADDRESSES.random2);
 
