@@ -21,7 +21,12 @@ jest.mock('../../../../../src/logging');
 jest.mock('../../../../../src/external/github');
 jest.mock('../../../../../src/lib/githubUsers');
 jest.mock('../../../../../src/lib/addresses');
-jest.mock('../../../../../src/lib/authTokens');
+jest.mock('../../../../../src/lib/authTokens', () => ({
+  __esModule: true,
+  ...(<any>jest.requireActual('../../../../../src/lib/authTokens')),
+  generateAuthTokensWithChecks: jest.fn(),
+  updateAuthTokenGeneration: jest.fn(),
+}));
 
 const mockedRequestGithubOAuthToken = jest.mocked(requestGithubOAuthToken, true);
 const mockedGetGithubCurrentUserInfo = jest.mocked(getGithubCurrentUserInfo, true);
@@ -210,6 +215,7 @@ describe('DELETE /oauth/github', () => {
               select: {
                 githubId: true,
                 githubHandle: true,
+                githubOAuthToken: true,
               },
             },
             discordUser: {
