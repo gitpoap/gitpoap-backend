@@ -4,39 +4,32 @@ import { graphqlHTTP } from 'express-graphql';
 import { verify } from 'jsonwebtoken';
 import { FRONTEND_JWT_SECRET, JWT_SECRET } from '../../../../src/environment';
 import set from 'lodash/set';
+import { getValidatedAccessTokenPayload } from '../../../../src/lib/authTokens';
 
 jest.mock('../../../../src/logging');
 jest.mock('express-graphql');
 jest.mock('jsonwebtoken');
 jest.mock('lodash/set');
+jest.mock('../../../../src/lib/authTokens');
 
 const mockedGraphqlHTTP = jest.mocked(graphqlHTTP, true);
 const mockedGraphqlHTTPHandler = jest.fn();
 const mockedVerify = jest.mocked(verify, true);
 const mockedSet = jest.mocked(set, true);
-
-const genMockedReq = (method: string, path: string) => ({
-  method,
-  path,
-  get: jest.fn(),
-});
-const genMockedRes = () => {
-  const send = jest.fn();
-  const status = jest.fn();
-
-  status.mockReturnValue({
-    send,
-  });
-
-  return {
-    status,
-  };
-};
+const mockedGetValidatedAccessTokenPayload = jest.mocked(getValidatedAccessTokenPayload, true);
 
 describe('createGQLServer', () => {
   beforeEach(() => {
     mockedGraphqlHTTP.mockReturnValue(mockedGraphqlHTTPHandler);
   });
+
+  const genMockedReq = (method: string, path: string) => ({ method, path, get: jest.fn() });
+  const genMockedRes = () => {
+    const send = jest.fn();
+    const status = jest.fn();
+    status.mockReturnValue({ send });
+    return { status };
+  };
 
   it('Skips checking frontend auth on DEV for graphiql', async () => {
     const handler = await createGQLServer();
@@ -153,7 +146,7 @@ describe('createGQLServer', () => {
     expect(mockedGraphqlHTTPHandler).toHaveBeenCalledTimes(1);
   });
 
-  it('Succeeds when frontend token is valid but not user token is invalid', async () => {
+  it('Succeeds when frontend token is valid but user token has bad signer', async () => {
     const { handler, mockedReq, mockedRes } = await genGeneralSetup();
 
     const frontendToken = 'foobar';
@@ -187,7 +180,7 @@ describe('createGQLServer', () => {
     expect(mockedGraphqlHTTPHandler).toHaveBeenCalledTimes(1);
   });
 
-  it('Succeeds when frontend token is valid but not user token is malformed', async () => {
+  it('Succeeds when frontend token is valid but user token is malformed', async () => {
     const { handler, mockedReq, mockedRes } = await genGeneralSetup();
 
     const frontendToken = 'foobar';
@@ -221,6 +214,41 @@ describe('createGQLServer', () => {
     expect(mockedGraphqlHTTPHandler).toHaveBeenCalledTimes(1);
   });
 
+  it('Succeeds when frontend token is valid but user token is invalid', async () => {
+    const { handler, mockedReq, mockedRes } = await genGeneralSetup();
+
+    const frontendToken = 'foobar';
+    const userToken = 'yay';
+    mockedReq.get.mockReturnValue(
+      JSON.stringify({
+        frontend: frontendToken,
+        user: userToken,
+      }),
+    );
+    mockedVerify
+      .mockImplementationOnce(() => true)
+      .mockImplementationOnce(() => ({
+        foo: 'bar',
+      }));
+    mockedGetValidatedAccessTokenPayload.mockResolvedValue(null);
+
+    handler(mockedReq as any, mockedRes as any, () => ({}));
+
+    expect(mockedReq.get).toHaveBeenCalledTimes(1);
+    expect(mockedReq.get).toHaveBeenCalledWith('authorization');
+
+    expect(mockedRes.status).toHaveBeenCalledTimes(0);
+
+    expect(mockedVerify).toHaveBeenCalledTimes(2);
+    expect(mockedVerify).toHaveBeenNthCalledWith(1, frontendToken, FRONTEND_JWT_SECRET);
+    expect(mockedVerify).toHaveBeenNthCalledWith(2, userToken, JWT_SECRET);
+
+    expect(mockedSet).toHaveBeenCalledTimes(1);
+    expect(mockedSet).toHaveBeenCalledWith(mockedReq, 'user', null);
+
+    expect(mockedGraphqlHTTPHandler).toHaveBeenCalledTimes(1);
+  });
+
   it('Succeeds when frontend token is valid and user token is valid', async () => {
     const { handler, mockedReq, mockedRes } = await genGeneralSetup();
 
@@ -232,10 +260,7 @@ describe('createGQLServer', () => {
         user: userToken,
       }),
     );
-    const userPayload = {
-      authTokenId: 2,
-      addressId: 342,
-      address: '0xfoo',
+    const validatedPayload = {
       ensName: null,
       ensAvatarImageUrl: null,
       githubId: null,
@@ -244,7 +269,14 @@ describe('createGQLServer', () => {
       discordHandle: null,
       emailId: null,
     };
+    const userPayload = {
+      authTokenId: 2,
+      addressId: 342,
+      address: '0xfoo',
+      ...validatedPayload,
+    };
     mockedVerify.mockImplementationOnce(() => true).mockImplementationOnce(() => userPayload);
+    mockedGetValidatedAccessTokenPayload.mockResolvedValue(validatedPayload as any);
 
     handler(mockedReq as any, mockedRes as any, () => ({}));
 

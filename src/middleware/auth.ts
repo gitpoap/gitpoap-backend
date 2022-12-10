@@ -1,5 +1,4 @@
 import jwt from 'express-jwt';
-import { context } from '../context';
 import set from 'lodash/set';
 import { getAccessTokenPayload, getAccessTokenPayloadWithGithubOAuth } from '../types/authTokens';
 import { RequestHandler } from 'express';
@@ -9,6 +8,7 @@ import { GITPOAP_BOT_APP_ID } from '../constants';
 import { getGithubAuthenticatedApp } from '../external/github';
 import { captureException } from '../lib/sentry';
 import { isAddressAStaffMember } from '../lib/staff';
+import { getValidatedAccessTokenPayload } from '../lib/authTokens';
 
 export const jwtMiddleware = jwt({ secret: JWT_SECRET as string, algorithms: ['HS256'] });
 
@@ -40,54 +40,20 @@ export function jwtWithAddress() {
         return;
       }
 
-      const tokenInfo = await context.prisma.authToken.findUnique({
-        where: { id: authTokenId },
-        select: {
-          id: true,
-          address: {
-            select: {
-              ensName: true,
-              ensAvatarImageUrl: true,
-              githubUser: {
-                select: {
-                  githubId: true,
-                  githubHandle: true,
-                },
-              },
-              discordUser: {
-                select: {
-                  discordId: true,
-                  discordHandle: true,
-                },
-              },
-              email: {
-                select: {
-                  id: true,
-                  isValidated: true,
-                },
-              },
-            },
-          },
-        },
-      });
-      if (tokenInfo === null) {
+      const validatedAccessTokenPayload = await getValidatedAccessTokenPayload(authTokenId);
+      if (validatedAccessTokenPayload === null) {
         next({ status: 401, msg: 'Not logged in with address' });
         return;
       }
 
-      let emailId: number | null = null;
-      if (tokenInfo.address.email !== null) {
-        emailId = tokenInfo.address.email.isValidated ? tokenInfo.address.email.id : null;
-      }
-
       // Update the nullable fields in case they've updated in the DB
-      set(req, 'user.ensName', tokenInfo.address.ensName);
-      set(req, 'user.ensAvatarImageUrl', tokenInfo.address.ensAvatarImageUrl);
-      set(req, 'user.githubId', tokenInfo.address.githubUser?.githubId ?? null);
-      set(req, 'user.githubHandle', tokenInfo.address.githubUser?.githubHandle ?? null);
-      set(req, 'user.discordId', tokenInfo.address.discordUser?.discordId ?? null);
-      set(req, 'user.discordHandle', tokenInfo.address.discordUser?.discordHandle ?? null);
-      set(req, 'user.emailId', emailId);
+      set(req, 'user.ensName', validatedAccessTokenPayload.ensName);
+      set(req, 'user.ensAvatarImageUrl', validatedAccessTokenPayload.ensAvatarImageUrl);
+      set(req, 'user.githubId', validatedAccessTokenPayload.githubId);
+      set(req, 'user.githubHandle', validatedAccessTokenPayload.githubHandle);
+      set(req, 'user.discordId', validatedAccessTokenPayload.discordId);
+      set(req, 'user.discordHandle', validatedAccessTokenPayload.discordHandle);
+      set(req, 'user.emailId', validatedAccessTokenPayload.emailId);
 
       next();
     };
@@ -142,65 +108,26 @@ export function jwtWithGitHubOAuth() {
         return;
       }
 
-      const tokenInfo = await context.prisma.authToken.findUnique({
-        where: { id: authTokenId },
-        select: {
-          address: {
-            select: {
-              ensName: true,
-              ensAvatarImageUrl: true,
-              githubUser: {
-                select: {
-                  githubId: true,
-                  githubHandle: true,
-                  githubOAuthToken: true,
-                },
-              },
-              discordUser: {
-                select: {
-                  discordId: true,
-                  discordHandle: true,
-                  discordOAuthToken: true,
-                },
-              },
-              email: {
-                select: {
-                  id: true,
-                  isValidated: true,
-                },
-              },
-            },
-          },
-        },
-      });
-      if (tokenInfo === null) {
+      const validatedAccessTokenPayload = await getValidatedAccessTokenPayload(authTokenId);
+      if (validatedAccessTokenPayload === null) {
         next({ status: 401, msg: 'Not logged in with address' });
         return;
       }
-      if (
-        tokenInfo.address.githubUser === null ||
-        tokenInfo.address.githubUser.githubOAuthToken === null
-      ) {
+      if (validatedAccessTokenPayload.githubOAuthToken === null) {
         next({ status: 401, msg: 'Not logged into GitHub' });
         return;
       }
 
-      set(req, 'user.githubId', tokenInfo.address.githubUser.githubId);
-      set(req, 'user.githubHandle', tokenInfo.address.githubUser.githubHandle);
-      set(req, 'user.githubOAuthToken', tokenInfo.address.githubUser.githubOAuthToken);
-
-      set(req, 'user.discordId', tokenInfo.address.discordUser?.discordId ?? null);
-      set(req, 'user.discordHandle', tokenInfo.address.discordUser?.discordHandle ?? null);
-
-      let emailId: number | null = null;
-      if (tokenInfo.address.email !== null) {
-        emailId = tokenInfo.address.email.isValidated ? tokenInfo.address.email.id : null;
-      }
+      set(req, 'user.githubId', validatedAccessTokenPayload.githubId);
+      set(req, 'user.githubHandle', validatedAccessTokenPayload.githubHandle);
+      set(req, 'user.githubOAuthToken', validatedAccessTokenPayload.githubOAuthToken);
 
       // Update the nullable values in case they've updated in the DB
-      set(req, 'user.ensName', tokenInfo.address.ensName);
-      set(req, 'user.ensAvatarImageUrl', tokenInfo.address.ensAvatarImageUrl);
-      set(req, 'user.emailId', emailId);
+      set(req, 'user.ensName', validatedAccessTokenPayload.ensName);
+      set(req, 'user.ensAvatarImageUrl', validatedAccessTokenPayload.ensAvatarImageUrl);
+      set(req, 'user.discordId', validatedAccessTokenPayload.discordId);
+      set(req, 'user.discordHandle', validatedAccessTokenPayload.discordHandle);
+      set(req, 'user.emailId', validatedAccessTokenPayload.emailId);
 
       next();
     };
