@@ -8,6 +8,9 @@ import { gqlRequestDurationSeconds } from '../../metrics';
 class UserEmail {
   @Field(() => String, { nullable: true })
   emailAddress: string | null;
+
+  @Field(() => Boolean)
+  isValidated: boolean;
 }
 
 @Resolver(() => Email)
@@ -22,25 +25,26 @@ export class CustomEmailResolver {
     const endTimer = gqlRequestDurationSeconds.startTimer('lastMonthContributors');
 
     if (userAccessTokenPayload === null) {
+      logger.error('Route passed AuthRoles.Address authorization without user payload set');
       endTimer({ success: 0 });
       return null;
     }
 
-    if (userAccessTokenPayload.emailId === null) {
-      logger.debug("Completed request for user's email address");
-      endTimer({ success: 1 });
-      return { emailAddress: null };
-    }
-
     const emailData = await prisma.email.findUnique({
-      where: { id: userAccessTokenPayload.emailId },
-      select: { emailAddress: true },
+      where: { addressId: userAccessTokenPayload.addressId },
+      select: {
+        emailAddress: true,
+        isValidated: true,
+      },
     });
 
     endTimer({ success: 1 });
 
     logger.debug("Completed request for user's email address");
 
-    return { emailAddress: emailData?.emailAddress };
+    return {
+      emailAddress: emailData?.emailAddress ?? null,
+      isValidated: emailData?.isValidated ?? false,
+    };
   }
 }
