@@ -38,7 +38,7 @@ describe('createGQLServer', () => {
 
     const mockedReq = genMockedReq('GET', '/');
 
-    handler(mockedReq as any, {} as any, () => ({}));
+    await handler(mockedReq as any, {} as any, () => ({}));
 
     expect(mockedGraphqlHTTPHandler).toHaveBeenCalledTimes(1);
 
@@ -62,7 +62,7 @@ describe('createGQLServer', () => {
 
     mockedReq.get.mockReturnValue(undefined);
 
-    handler(mockedReq as any, mockedRes as any, () => ({}));
+    await handler(mockedReq as any, mockedRes as any, () => ({}));
 
     expect(mockedGraphqlHTTPHandler).toHaveBeenCalledTimes(0);
 
@@ -78,7 +78,7 @@ describe('createGQLServer', () => {
 
     mockedReq.get.mockReturnValue('{');
 
-    handler(mockedReq as any, mockedRes as any, () => ({}));
+    await handler(mockedReq as any, mockedRes as any, () => ({}));
 
     expect(mockedReq.get).toHaveBeenCalledTimes(1);
     expect(mockedReq.get).toHaveBeenCalledWith('authorization');
@@ -105,7 +105,7 @@ describe('createGQLServer', () => {
       throw new Error('error');
     });
 
-    handler(mockedReq as any, mockedRes as any, () => ({}));
+    await handler(mockedReq as any, mockedRes as any, () => ({}));
 
     expect(mockedReq.get).toHaveBeenCalledTimes(1);
     expect(mockedReq.get).toHaveBeenCalledWith('authorization');
@@ -130,7 +130,7 @@ describe('createGQLServer', () => {
       }),
     );
 
-    handler(mockedReq as any, mockedRes as any, () => ({}));
+    await handler(mockedReq as any, mockedRes as any, () => ({}));
 
     expect(mockedReq.get).toHaveBeenCalledTimes(1);
     expect(mockedReq.get).toHaveBeenCalledWith('authorization');
@@ -163,7 +163,7 @@ describe('createGQLServer', () => {
         throw new Error('error');
       });
 
-    handler(mockedReq as any, mockedRes as any, () => ({}));
+    await handler(mockedReq as any, mockedRes as any, () => ({}));
 
     expect(mockedReq.get).toHaveBeenCalledTimes(1);
     expect(mockedReq.get).toHaveBeenCalledWith('authorization');
@@ -197,7 +197,7 @@ describe('createGQLServer', () => {
         foo: 'bar',
       }));
 
-    handler(mockedReq as any, mockedRes as any, () => ({}));
+    await handler(mockedReq as any, mockedRes as any, () => ({}));
 
     expect(mockedReq.get).toHaveBeenCalledTimes(1);
     expect(mockedReq.get).toHaveBeenCalledWith('authorization');
@@ -232,7 +232,7 @@ describe('createGQLServer', () => {
       }));
     mockedGetValidatedAccessTokenPayload.mockResolvedValue(null);
 
-    handler(mockedReq as any, mockedRes as any, () => ({}));
+    await handler(mockedReq as any, mockedRes as any, () => ({}));
 
     expect(mockedReq.get).toHaveBeenCalledTimes(1);
     expect(mockedReq.get).toHaveBeenCalledWith('authorization');
@@ -267,18 +267,19 @@ describe('createGQLServer', () => {
       githubHandle: null,
       discordId: null,
       discordHandle: null,
-      emailId: null,
+      emailId: 5,
     };
     const userPayload = {
       authTokenId: 2,
       addressId: 342,
       address: '0xfoo',
       ...validatedPayload,
+      emailId: null,
     };
     mockedVerify.mockImplementationOnce(() => true).mockImplementationOnce(() => userPayload);
     mockedGetValidatedAccessTokenPayload.mockResolvedValue(validatedPayload as any);
 
-    handler(mockedReq as any, mockedRes as any, () => ({}));
+    await handler(mockedReq as any, mockedRes as any, () => ({}));
 
     expect(mockedReq.get).toHaveBeenCalledTimes(1);
     expect(mockedReq.get).toHaveBeenCalledWith('authorization');
@@ -290,7 +291,10 @@ describe('createGQLServer', () => {
     expect(mockedVerify).toHaveBeenNthCalledWith(2, userToken, JWT_SECRET);
 
     expect(mockedSet).toHaveBeenCalledTimes(1);
-    expect(mockedSet).toHaveBeenCalledWith(mockedReq, 'user', userPayload);
+    expect(mockedSet).toHaveBeenCalledWith(mockedReq, 'user', {
+      ...userPayload,
+      ...validatedPayload,
+    });
 
     expect(mockedGraphqlHTTPHandler).toHaveBeenCalledTimes(1);
   });
