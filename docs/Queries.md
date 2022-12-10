@@ -1016,6 +1016,7 @@ To retrieve the logged-in user's email address:
 {
   userEmail {
     emailAddress
+    isValidated
   }
 }
 ```
@@ -1026,7 +1027,8 @@ that returns data like:
 {
   "data": {
     "userEmail": {
-      "emailAddress": "burz@gitpoap.io"
+      "emailAddress": "burz@gitpoap.io",
+      "isValidated": true
     }
   }
 }

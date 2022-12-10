@@ -8,21 +8,25 @@ describe('CustomClaimResolver', () => {
   const client = getGraphQLClient();
 
   it('totalClaims', async () => {
-    const data = await client.request(gql`
-      {
-        totalClaims
-      }
-    `);
+    const data = await client.request(
+      gql`
+        {
+          totalClaims
+        }
+      `,
+    );
 
     expect(data.totalClaims).toEqual(16);
   });
 
   it('lastMonthClaims', async () => {
-    const data = await client.request(gql`
-      {
-        lastMonthClaims
-      }
-    `);
+    const data = await client.request(
+      gql`
+        {
+          lastMonthClaims
+        }
+      `,
+    );
 
     expect(data.lastMonthClaims).toEqual(1);
   });
