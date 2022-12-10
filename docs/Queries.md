@@ -1007,3 +1007,27 @@ that returns data like:
   }
 }
 ```
+
+## Logged-in User's Email
+
+To retrieve the logged-in user's email address:
+
+```graphql
+{
+  userEmail {
+    emailAddress
+  }
+}
+```
+
+that returns data like:
+
+```json
+{
+  "data": {
+    "userEmail": {
+      "emailAddress": "burz@gitpoap.io"
+    }
+  }
+}
+```
