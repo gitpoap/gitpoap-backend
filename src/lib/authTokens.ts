@@ -289,3 +289,69 @@ export async function updateAuthTokenGeneration(authTokenId: number) {
     },
   });
 }
+
+type ValidatedAccessTokenPayload = {
+  ensName: string | null;
+  ensAvatarImageUrl: string | null;
+  githubId: number | null;
+  githubHandle: string | null;
+  githubOAuthToken: string | null;
+  discordId: string | null;
+  discordHandle: string | null;
+  emailId: number | null;
+};
+
+export async function getValidatedAccessTokenPayload(
+  authTokenId: number,
+): Promise<ValidatedAccessTokenPayload | null> {
+  const tokenInfo = await context.prisma.authToken.findUnique({
+    where: { id: authTokenId },
+    select: {
+      id: true,
+      address: {
+        select: {
+          ensName: true,
+          ensAvatarImageUrl: true,
+          githubUser: {
+            select: {
+              githubId: true,
+              githubHandle: true,
+              githubOAuthToken: true,
+            },
+          },
+          discordUser: {
+            select: {
+              discordId: true,
+              discordHandle: true,
+            },
+          },
+          email: {
+            select: {
+              id: true,
+              isValidated: true,
+            },
+          },
+        },
+      },
+    },
+  });
+  if (tokenInfo === null) {
+    return null;
+  }
+
+  let emailId: number | null = null;
+  if (tokenInfo.address.email !== null) {
+    emailId = tokenInfo.address.email.isValidated ? tokenInfo.address.email.id : null;
+  }
+
+  return {
+    ensName: tokenInfo.address.ensName,
+    ensAvatarImageUrl: tokenInfo.address.ensAvatarImageUrl,
+    githubId: tokenInfo.address.githubUser?.githubId ?? null,
+    githubHandle: tokenInfo.address.githubUser?.githubHandle ?? null,
+    githubOAuthToken: tokenInfo.address.githubUser?.githubOAuthToken ?? null,
+    discordId: tokenInfo.address.discordUser?.discordId ?? null,
+    discordHandle: tokenInfo.address.discordUser?.discordHandle ?? null,
+    emailId,
+  };
+}
