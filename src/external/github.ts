@@ -27,9 +27,11 @@ export type OctokitPullItem = OctokitResponseData<PullsAPI['get']>;
 
 export type OctokitRepoItem = OctokitResponseData<ReposAPI['get']>;
 
-export type OctokitResponseData<T> = T extends (...arg0: any) => Promise<any>
-  ? Awaited<ReturnType<T>>['data']
-  : T;
+export type OctokitResponseData<T> = T extends (...args: any[]) => Promise<infer U>
+  ? U extends { data: unknown }
+    ? U['data']
+    : never
+  : never;
 
 async function responseHandler<T>(responsePromise: Promise<any>): Promise<T | null> {
   const logger = createScopedLogger('responseHandler');
