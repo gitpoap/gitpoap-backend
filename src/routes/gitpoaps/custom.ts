@@ -332,6 +332,7 @@ customGitPOAPsRouter.put('/reject/:id', jwtWithStaffAddress(), async (req, res) 
           emailAddress: true,
         },
       },
+      rejectionReason: true,
     },
   });
 
@@ -342,7 +343,7 @@ customGitPOAPsRouter.put('/reject/:id', jwtWithStaffAddress(), async (req, res) 
     name: gitPOAPRequest.name,
     imageUrl: gitPOAPRequest.imageUrl,
     description: gitPOAPRequest.description,
-    rejectionReason: gitPOAPRequest?.rejectionReason ?? '',
+    rejectionReason: updatedGitPOAPRequest?.rejectionReason ?? '',
     startDate: formatDateToReadableString(gitPOAPRequest.startDate),
     endDate: formatDateToReadableString(gitPOAPRequest.endDate),
   };
