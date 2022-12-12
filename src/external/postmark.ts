@@ -184,6 +184,7 @@ export const sendGitPOAPRequestEmail = async (
       gitpoap_name: formData.name,
       gitpoap_image: formData.imageUrl,
       gitpoap_description: formData.description,
+      gitpoap_rejection_reason: formData.rejectionReason,
       gitpoap_link: link,
       gitpoap_start_date: formData.startDate,
       gitpoap_end_date: formData.startDate,
