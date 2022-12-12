@@ -13,11 +13,15 @@ import {
   GithubPullRequest,
   GithubUser,
   GithubOrganization,
+  Membership,
   Prisma,
   Profile,
   Project,
   RedeemCode,
   Repo,
+  Team,
+  MembershipRole,
+  MembershipAcceptanceStatus,
 } from '@prisma/client';
 import { POAPEvent } from '../src/types/poap';
 import { createScopedLogger } from '../src/logging';
@@ -628,5 +632,40 @@ export class GitPOAPRequestFactory {
     logger.debug(`Creating GitPOAPRequest with ID: ${gitPOAPRequest.id}`);
 
     return gitPOAPRequest;
+  };
+}
+
+export class TeamFactory {
+  static create = async (name: string, addressId: number, logoImageUrl?: string): Promise<Team> => {
+    const data: Prisma.TeamCreateInput = {
+      name,
+      ownerAddress: { connect: { id: addressId } },
+      logoImageUrl:
+        logoImageUrl || 'https://1000logos.net/wp-content/uploads/2021/05/Gmail-logo.png',
+      description: 'This is a test team',
+    };
+    const team = await prisma.team.create({ data });
+    logger.debug(`Creating Team with ID: ${team.id}`);
+
+    return team;
+  };
+}
+
+export class MembershipFactory {
+  static create = async (
+    teamId: number,
+    addressId: number,
+    acceptanceStatus?: MembershipAcceptanceStatus,
+  ): Promise<Membership> => {
+    const data: Prisma.MembershipCreateInput = {
+      team: { connect: { id: teamId } },
+      address: { connect: { id: addressId } },
+      role: MembershipRole.ADMIN,
+      acceptanceStatus: acceptanceStatus || MembershipAcceptanceStatus.ACCEPTED,
+    };
+    const membership = await prisma.membership.create({ data });
+    logger.debug(`Creating Membership with ID: ${membership.id}`);
+
+    return membership;
   };
 }
