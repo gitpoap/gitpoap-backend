@@ -14,12 +14,10 @@ export type GitPOAPRequestEmailForm = {
   email: string;
   name: string;
   description: string;
+  rejectionReason?: string;
   imageUrl: string;
   startDate: string;
   endDate: string;
-};
-export type GitPOAPRequestRejectionEmailForm = GitPOAPRequestEmailForm & {
-  rejectionReason: string;
 };
 
 export enum GitPOAPRequestEmailAlias {
