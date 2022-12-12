@@ -18,6 +18,9 @@ export type GitPOAPRequestEmailForm = {
   startDate: string;
   endDate: string;
 };
+export type GitPOAPRequestRejectionEmailForm = GitPOAPRequestEmailForm & {
+  rejectionReason: string;
+};
 
 export enum GitPOAPRequestEmailAlias {
   RECEIVED = 'cg-received',
