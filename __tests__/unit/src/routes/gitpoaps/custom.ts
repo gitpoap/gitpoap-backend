@@ -485,6 +485,7 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
       creatorEmail: {
         email: 'test@gitpoap.io',
       },
+      rejectionReason: 'You did a terrible job with this. SHAME',
     } as any);
 
     const authTokens = genAuthTokens(STAFF_ADDRESSES[0]);
@@ -522,6 +523,7 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
             emailAddress: true,
           },
         },
+        rejectionReason: true,
       },
     });
   });
@@ -546,6 +548,7 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
       creatorEmail: {
         emailAddress: burzEmail,
       },
+      rejectionReason: null,
     } as any);
 
     const authTokens = genAuthTokens(STAFF_ADDRESSES[0]);
@@ -560,6 +563,7 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
       email: burzEmail,
       name: 'foobar-name',
       description: 'foobar-description',
+      rejectionReason: '',
       imageUrl: getS3URL('gitpoap-request-images-test', 'foobar.png-123456789000'),
       startDate: DateTime.fromISO('2021-01-01').toFormat('yyyy LLL dd'),
       endDate: DateTime.fromISO('2021-01-10').toFormat('yyyy LLL dd'),
