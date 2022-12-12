@@ -36,7 +36,7 @@ import {
   sendGitPOAPRequestConfirmationEmail,
   sendGitPOAPRequestRejectionEmail,
 } from '../../external/postmark';
-import { GitPOAPRequestEmailForm, GitPOAPRequestRejectionEmailForm } from '../../types/gitpoaps';
+import { GitPOAPRequestEmailForm } from '../../types/gitpoaps';
 import { formatDateToReadableString } from './utils';
 import { isAddressAStaffMember } from '../../lib/staff';
 
@@ -336,7 +336,7 @@ customGitPOAPsRouter.put('/reject/:id', jwtWithStaffAddress(), async (req, res) 
   });
 
   /* Send CG request rejection email */
-  const emailForm: GitPOAPRequestRejectionEmailForm = {
+  const emailForm: GitPOAPRequestEmailForm = {
     id: gitPOAPRequest.id,
     email: updatedGitPOAPRequest.creatorEmail.emailAddress,
     name: gitPOAPRequest.name,
