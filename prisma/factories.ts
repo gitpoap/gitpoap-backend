@@ -1,4 +1,9 @@
-import { ClaimStatus, GitPOAPStatus } from '@generated/type-graphql';
+import {
+  ClaimStatus,
+  GitPOAPStatus,
+  MembershipRole,
+  MembershipAcceptanceStatus,
+} from '@generated/type-graphql';
 import {
   Address,
   StaffApprovalStatus,
@@ -18,6 +23,7 @@ import {
   Project,
   RedeemCode,
   Repo,
+  Team,
 } from '@prisma/client';
 import { POAPEvent } from '../src/types/poap';
 import { createScopedLogger } from '../src/logging';
@@ -628,5 +634,57 @@ export class GitPOAPRequestFactory {
     logger.debug(`Creating GitPOAPRequest with ID: ${gitPOAPRequest.id}`);
 
     return gitPOAPRequest;
+  };
+}
+
+export class TeamFactory {
+  static create = async (
+    name: string,
+    description: string,
+    ownerAddressId: number,
+    logoImageUrl: string,
+  ): Promise<Team> => {
+    const data: Prisma.TeamCreateInput = {
+      name,
+      description,
+      ownerAddress: {
+        connect: {
+          id: ownerAddressId,
+        },
+      },
+      logoImageUrl,
+    };
+    const team = await prisma.team.create({ data });
+    logger.debug(`Creating Team with ID: ${team.id}`);
+
+    return team;
+  };
+}
+
+export class MembershipFactory {
+  static create = async (
+    teamId: number,
+    addressId: number,
+    role: MembershipRole,
+    acceptanceStatus: MembershipAcceptanceStatus,
+  ): Promise<MembershipFactory> => {
+    const data: Prisma.MembershipCreateInput = {
+      team: {
+        connect: {
+          id: teamId,
+        },
+      },
+      address: {
+        connect: {
+          id: addressId,
+        },
+      },
+      role,
+      acceptanceStatus,
+    };
+    const membership = await prisma.membership.create({ data });
+    logger.debug(`Creating Membership with ID: ${membership.id}`);
+
+    return membership;
   };
 }
