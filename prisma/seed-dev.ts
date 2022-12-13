@@ -6,7 +6,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 import 'reflect-metadata';
-import { ClaimStatus, GitPOAPStatus } from '@generated/type-graphql';
+import { ClaimStatus, GitPOAPStatus, MembershipRole, MembershipAcceptanceStatus } from '@generated/type-graphql';
 import { faker } from '@faker-js/faker';
 import {
   AddressFactory,
@@ -21,6 +21,8 @@ import {
   ProjectFactory,
   RedeemCodeFactory,
   RepoFactory,
+  TeamFactory,
+  MembershipFactory,
 } from './factories';
 import { DateTime } from 'luxon';
 import { ADDRESSES, GH_HANDLES, GH_IDS } from './constants';
@@ -326,6 +328,44 @@ export const seed = async () => {
       emails: ['aldo@gitpoap.io', 'burz@gitpoap.io', 'jay@gitpoap.io'],
     },
   });
+
+  /* Create Teams */
+  const gitpoapTeam = await TeamFactory.create(
+    'GitPoap team',
+    'A POAP is a digital collectible created as an NFT that represents an action taken by the owner.',
+    addressColfax.id,
+    getS3URL('gitpoap-team-logo-test', 'gitpoap-team-logo-test.png-1634321850.778'),
+  );
+  const gitpoapDevTeam = await TeamFactory.create(
+    'GitPoap dev team',
+    'The dev team at GitPoap',
+    addressJay.id,
+    getS3URL('gitpoap-dev-team-logo-test', 'gitpoap-dev-team-logo.png-16661532343.423'),
+  );
+  const ethereumTeam = await TeamFactory.create(
+    'Ethereum team',
+    'Ethereum is a decentralized, open-source blockchain with smart contract functionality. Ether is the native cryptocurrency of the platform.',
+    addressVitalik.id,
+    getS3URL('ethereum-team-logo-test', 'ethereum-team-logo.png-166635645643.437'),
+  );
+  const team1 = await TeamFactory.create(faker.company.bs(), faker.lorem.sentence(), addressBurz.id, faker.image.dataUri());
+  const team2 = await TeamFactory.create(faker.company.bs(), faker.lorem.sentence(), addressTyler.id, faker.image.dataUri());
+  const team3 = await TeamFactory.create(faker.company.bs(), faker.lorem.sentence(), addressBurz.id, faker.image.dataUri());
+  const team4 = await TeamFactory.create(faker.company.bs(), faker.lorem.sentence(), addressKayleen.id, faker.image.dataUri());
+  const team5 = await TeamFactory.create(faker.company.bs(), faker.lorem.sentence(), addressAldo.id, faker.image.dataUri());
+
+  /* Create Memberships */
+  const membership1 = await MembershipFactory.create(gitpoapTeam.id, addressTyler.id, MembershipRole.MEMBER, MembershipAcceptanceStatus.ACCEPTED);
+  const membership2 = await MembershipFactory.create(gitpoapDevTeam.id, addressJay.id, MembershipRole.OWNER, MembershipAcceptanceStatus.PENDING);
+  const membership3 = await MembershipFactory.create(ethereumTeam.id, addressColfax.id, MembershipRole.ADMIN, MembershipAcceptanceStatus.PENDING);
+  const membership4 = await MembershipFactory.create(gitpoapDevTeam.id, addressTyler.id, MembershipRole.MEMBER, MembershipAcceptanceStatus.ACCEPTED);
+  const membership5 = await MembershipFactory.create(ethereumTeam.id, addressTyler.id, MembershipRole.MEMBER, MembershipAcceptanceStatus.ACCEPTED);
+  const membership6 = await MembershipFactory.create(gitpoapDevTeam.id, addressAldo.id, MembershipRole.ADMIN, MembershipAcceptanceStatus.PENDING);
+  const membership7 = await MembershipFactory.create(gitpoapTeam.id, addressAldo.id, MembershipRole.OWNER, MembershipAcceptanceStatus.PENDING);
+  const membership8 = await MembershipFactory.create(ethereumTeam.id, addressAldo.id, MembershipRole.ADMIN, MembershipAcceptanceStatus.ACCEPTED);
+  const membership9 = await MembershipFactory.create(gitpoapTeam.id, addressBurz.id, MembershipRole.ADMIN, MembershipAcceptanceStatus.PENDING);
+  const membership10 = await MembershipFactory.create(gitpoapDevTeam.id, addressBurz.id, MembershipRole.MEMBER, MembershipAcceptanceStatus.ACCEPTED);
+  const membership11 = await MembershipFactory.create(ethereumTeam.id, addressKayleen.id, MembershipRole.OWNER, MembershipAcceptanceStatus.PENDING);
 
   console.log('DB Seeding complete. ');
 };
