@@ -142,7 +142,7 @@ export async function createNewClaimsForRepoContribution(
 
   const years = Object.keys(yearlyGitPOAPsMap);
 
-  logger.debug(`Found ${years.length} years with GitPOAPs`);
+  logger.info(`Found ${years.length} years with GitPOAPs`);
 
   const claims = [];
   for (const year of years) {
@@ -150,12 +150,13 @@ export async function createNewClaimsForRepoContribution(
 
     const contributionCount = await countContributionsForClaim(githubUser, repos, gitPOAPs[0]);
 
-    logger.debug(
+    logger.info(
       `GithubUser ID ${githubUser.id} has ${contributionCount} Contributions in year ${year}`,
     );
 
     // Skip if there are no PRs for this year
     if (contributionCount === 0) {
+      logger.info(`Skipping for GithubUser ID ${githubUser.id} since no contributions found.`);
       continue;
     }
 
