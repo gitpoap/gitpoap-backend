@@ -20,7 +20,7 @@ class UserMemberships {
 }
 
 @Resolver(() => Membership)
-export class MembershipResolver {
+export class CustomMembershipResolver {
   @Query(() => UserMemberships, { nullable: true })
   async userMemberships(
     @Ctx() { prisma }: Context,
