@@ -1,9 +1,7 @@
 import { Arg, Ctx, Field, ObjectType, Resolver, Query } from 'type-graphql';
 import { Profile as ProfileValue, GithubUser as GithubUserValue } from '@generated/type-graphql';
-import { createScopedLogger } from '../../logging';
-import { gqlRequestDurationSeconds } from '../../metrics';
 import { resolveENS } from '../../lib/ens';
-import { AuthContext } from '../auth';
+import { AuthLoggingContext } from '../middleware';
 import { GithubUser, Profile } from '@prisma/client';
 
 @ObjectType()
@@ -18,30 +16,26 @@ class SearchResults {
 @Resolver()
 export class CustomSearchResolver {
   @Query(() => SearchResults)
-  async search(@Ctx() { prisma }: AuthContext, @Arg('text') text: string): Promise<SearchResults> {
-    const logger = createScopedLogger('GQL search');
-
+  async search(
+    @Ctx() { prisma, logger }: AuthLoggingContext,
+    @Arg('text') text: string,
+  ): Promise<SearchResults> {
     logger.info(`Request to search for "${text}"`);
-
-    const endTimer = gqlRequestDurationSeconds.startTimer('search');
 
     if (text.length < 2) {
       logger.info('Skipping search for less than two characters');
-      endTimer({ success: 1 });
       return {
         githubUsers: [],
         profiles: [],
       };
     }
 
-    const matchText = `%${text}%`;
+    const contains = `%${text}%`;
+    const mode = 'insensitive';
 
     const githubUsers = await prisma.githubUser.findMany({
       where: {
-        githubHandle: {
-          contains: matchText,
-          mode: 'insensitive',
-        },
+        githubHandle: { contains, mode },
       },
     });
 
@@ -49,28 +43,9 @@ export class CustomSearchResolver {
       distinct: ['id'],
       where: {
         OR: [
-          {
-            address: {
-              ensName: {
-                contains: matchText,
-                mode: 'insensitive',
-              },
-            },
-          },
-          {
-            name: {
-              contains: matchText,
-              mode: 'insensitive',
-            },
-          },
-          {
-            address: {
-              ethAddress: {
-                contains: matchText,
-                mode: 'insensitive',
-              },
-            },
-          },
+          { address: { ensName: { contains, mode } } },
+          { name: { contains, mode } },
+          { address: { ethAddress: { contains, mode } } },
         ],
       },
     });
@@ -83,9 +58,7 @@ export class CustomSearchResolver {
       if (address !== null) {
         const profile = await prisma.profile.findFirst({
           where: {
-            address: {
-              ethAddress: address.toLowerCase(),
-            },
+            address: { ethAddress: address.toLowerCase() },
           },
         });
 
@@ -97,13 +70,6 @@ export class CustomSearchResolver {
       }
     }
 
-    logger.debug(`Completed request to search for "${text}"`);
-
-    endTimer({ success: 1 });
-
-    return {
-      githubUsers,
-      profiles,
-    };
+    return { githubUsers, profiles };
   }
 }

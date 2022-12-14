@@ -4,9 +4,7 @@ import {
   GithubOrganization,
   GithubOrganizationOrderByWithRelationInput,
 } from '@generated/type-graphql';
-import { Context } from '../../context';
-import { createScopedLogger } from '../../logging';
-import { gqlRequestDurationSeconds } from '../../metrics';
+import { AuthLoggingContext } from '../middleware';
 import { Prisma } from '@prisma/client';
 import { RepoReturnData } from './repos';
 
@@ -26,19 +24,14 @@ class OrganizationData extends GithubOrganization {
 export class CustomOrganizationResolver {
   @Query(() => OrganizationData, { nullable: true })
   async organizationData(
-    @Ctx() { prisma }: Context,
+    @Ctx() { prisma, logger }: AuthLoggingContext,
     @Arg('orgId', { defaultValue: null }) orgId?: number,
     @Arg('orgName', { defaultValue: null }) orgName?: string,
   ): Promise<OrganizationData | null> {
-    const logger = createScopedLogger('GQL organizationData');
-
     logger.info(`Request data for GithubOrganization: ${orgId ?? orgName}`);
-
-    const endTimer = gqlRequestDurationSeconds.startTimer('organizationData');
 
     if (!orgId && !orgName) {
       logger.warn('Either an "orgId" or an "orgName" must be provided');
-      endTimer({ success: 0 });
       return null;
     }
 
@@ -63,32 +56,23 @@ export class CustomOrganizationResolver {
 
     if (results.length === 0) {
       logger.warn(`Failed to find GithubOrganization: ${orgId ?? orgName}`);
-      endTimer({ success: 0 });
       return null;
     }
-
-    logger.debug(`Completed request data for GithubOrganization: ${orgId ?? orgName}`);
-
-    endTimer({ success: 1 });
 
     return results[0];
   }
 
   @Query(() => [GithubOrganization], { nullable: true })
   async allOrganizations(
-    @Ctx() { prisma }: Context,
+    @Ctx() { prisma, logger }: AuthLoggingContext,
     @Arg('sort', { defaultValue: 'alphabetical' }) sort: string,
     @Arg('search', { defaultValue: null }) search?: string,
     @Arg('perPage', { defaultValue: null }) perPage?: number,
     @Arg('page', { defaultValue: null }) page?: number,
   ): Promise<GithubOrganization[] | null> {
-    const logger = createScopedLogger('GQL allOrganizations');
-
     logger.info(
       `Request for all organizations using sort ${sort}, search '${search}' with ${perPage} results per page and page ${page}`,
     );
-
-    const endTimer = gqlRequestDurationSeconds.startTimer('allOrganizations');
 
     let orderBy: GithubOrganizationOrderByWithRelationInput;
     switch (sort) {
@@ -104,59 +88,45 @@ export class CustomOrganizationResolver {
         break;
       default:
         logger.warn(`Unknown value provided for sort: ${sort}`);
-        endTimer({ success: 0 });
         return null;
     }
 
     if ((page === null || perPage === null) && page !== perPage) {
       logger.warn('"page" and "perPage" must be specified together');
-      endTimer({ success: 0 });
       return null;
     }
 
     if (search && search.length < 2) {
       logger.debug('"search" must has more than 2 characters');
-      endTimer({ success: 0 });
       return null;
     }
 
     let where: Prisma.GithubOrganizationWhereInput | undefined;
-    if (search)
+    if (search) {
       where = {
         name: { contains: search, mode: 'insensitive' },
       };
+    }
 
-    const results = await prisma.githubOrganization.findMany({
+    return await prisma.githubOrganization.findMany({
       orderBy,
       skip: page ? (page - 1) * <number>perPage : undefined,
       take: perPage ?? undefined,
       where,
     });
-
-    logger.info(
-      `Request for all GithubOrganizations using sort ${sort}, search '${search}' with ${perPage} results per page and page ${page}`,
-    );
-
-    endTimer({ success: 1 });
-
-    return results;
   }
 
   @Query(() => [RepoReturnData], { nullable: true })
   async organizationRepos(
-    @Ctx() { prisma }: Context,
+    @Ctx() { prisma, logger }: AuthLoggingContext,
     @Arg('orgId') orgId: number,
     @Arg('sort', { defaultValue: 'alphabetical' }) sort?: string,
     @Arg('perPage', { defaultValue: null }) perPage?: number,
     @Arg('page', { defaultValue: null }) page?: number,
   ): Promise<RepoReturnData[] | null> {
-    const logger = createScopedLogger('GQL organizationRepos');
-
     logger.info(
       `Request for all repos in GithubOrganization ${orgId} using sort ${sort}, with ${perPage} results per page and page ${page}`,
     );
-
-    const endTimer = gqlRequestDurationSeconds.startTimer('allRepos');
 
     let orderBy;
     switch (sort) {
@@ -174,13 +144,11 @@ export class CustomOrganizationResolver {
         break;
       default:
         logger.warn(`Unknown value provided for sort: ${sort}`);
-        endTimer({ success: 0 });
         return null;
     }
 
     if ((page === null || perPage === null) && page !== perPage) {
       logger.warn('"page" and "perPage" must be specified together');
-      endTimer({ success: 0 });
       return null;
     }
 
@@ -188,7 +156,7 @@ export class CustomOrganizationResolver {
       ? Prisma.sql`OFFSET ${(page - 1) * <number>perPage} ROWS FETCH NEXT ${perPage} ROWS ONLY`
       : Prisma.empty;
 
-    const results = await prisma.$queryRaw<RepoReturnData[]>`
+    return await prisma.$queryRaw<RepoReturnData[]>`
       SELECT r.*,
         COUNT(DISTINCT c."githubUserId")::INTEGER AS "contributorCount",
         COUNT(DISTINCT g.id)::INTEGER AS "gitPOAPCount",
@@ -206,13 +174,5 @@ export class CustomOrganizationResolver {
       ORDER BY ${orderBy}
       ${pagination}
     `;
-
-    logger.info(
-      `Request for all repos in GithubOrganization ${orgId} using sort ${sort}, with ${perPage} results per page and page ${page}`,
-    );
-
-    endTimer({ success: 1 });
-
-    return results;
   }
 }
