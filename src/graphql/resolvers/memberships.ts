@@ -105,17 +105,17 @@ export class MembershipResolver {
   }
 
   @Mutation(() => Membership)
-  async addNewMember(
+  async addNewMembership(
     @Ctx() { prisma }: Context,
     @Arg('teamId') teamId: number,
     @Arg('address') address: string,
     @Arg('role') role: MembershipRole,
   ): Promise<Membership | null> {
-    const logger = createScopedLogger('GQL addNewMember');
+    const logger = createScopedLogger('GQL addNewMembership');
 
-    logger.info(`Request for adding a new member to ${teamId} for address ${address}`);
+    logger.info(`Request for adding a new membership to team ${teamId} for address ${address}`);
 
-    const endTimer = gqlRequestDurationSeconds.startTimer('addNewMember');
+    const endTimer = gqlRequestDurationSeconds.startTimer('addNewMembership');
 
     const teamRecord = await prisma.team.findUnique({
       where: {
@@ -165,7 +165,67 @@ export class MembershipResolver {
     });
 
     logger.debug(
-      `Completed request for for adding a new member to ${teamId} for address ${address}`,
+      `Completed request for for adding a new membership to team ${teamId} for address ${address}`,
+    );
+
+    endTimer({ success: 1 });
+
+    return result;
+  }
+
+  @Mutation(() => Membership)
+  async removeMembership(
+    @Ctx() { prisma }: Context,
+    @Arg('teamId') teamId: number,
+    @Arg('address') address: string,
+  ): Promise<Membership | null> {
+    const logger = createScopedLogger('GQL removeMembership');
+
+    logger.info(`Request for removing a membership from team ${teamId} for address ${address}`);
+
+    const endTimer = gqlRequestDurationSeconds.startTimer('removeMembership');
+
+    const teamRecord = await prisma.team.findUnique({
+      where: {
+        id: teamId,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (teamRecord === null) {
+      logger.debug(`Completed request for removing a membership from teamId: ${teamId}`);
+      endTimer({ success: 1 });
+      return null;
+    }
+
+    const addressRecord = await prisma.address.findUnique({
+      where: {
+        ethAddress: address.toLowerCase(),
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (addressRecord === null) {
+      logger.debug(`Completed request for removing a membership for address: ${address}`);
+      endTimer({ success: 1 });
+      return null;
+    }
+
+    const result = await prisma.membership.delete({
+      where: {
+        teamId_addressId: {
+          teamId,
+          addressId: addressRecord.id,
+        },
+      },
+    });
+
+    logger.debug(
+      `Completed request for removing a membership from team ${teamId} for address ${address}`,
     );
 
     endTimer({ success: 1 });
