@@ -3,7 +3,7 @@ import {
   Membership,
   MembershipOrderByWithRelationInput,
   MembershipRole,
-  StaffApprovalStatus,
+  MembershipAcceptanceStatus,
 } from '@generated/type-graphql';
 import { Context } from '../../context';
 import { resolveENS } from '../../lib/ens';
@@ -108,7 +108,7 @@ export class MembershipResolver {
   async addNewMembership(
     @Ctx() { prisma }: Context,
     @Arg('teamId') teamId: number,
-    @Arg('address') address: string,
+    @Arg('address') address: string, // once we implement gql auth, we don't need this arg
     @Arg('role') role: MembershipRole,
   ): Promise<Membership | null> {
     const logger = createScopedLogger('GQL addNewMembership');
@@ -127,8 +127,8 @@ export class MembershipResolver {
     });
 
     if (teamRecord === null) {
-      logger.debug(`Completed request for adding a new membership for teamId: ${teamId}`);
-      endTimer({ success: 1 });
+      logger.warn(`Team not found for teamId: ${teamId}`);
+      endTimer({ success: 0 });
       return null;
     }
 
@@ -142,8 +142,8 @@ export class MembershipResolver {
     });
 
     if (addressRecord === null) {
-      logger.debug(`Completed request for adding a new membership for address: ${address}`);
-      endTimer({ success: 1 });
+      logger.warn(`Address not found for address: ${address}`);
+      endTimer({ success: 0 });
       return null;
     }
 
@@ -160,7 +160,7 @@ export class MembershipResolver {
           },
         },
         role,
-        acceptanceStatus: StaffApprovalStatus.PENDING,
+        acceptanceStatus: MembershipAcceptanceStatus.PENDING,
       },
     });
 
@@ -177,7 +177,7 @@ export class MembershipResolver {
   async removeMembership(
     @Ctx() { prisma }: Context,
     @Arg('teamId') teamId: number,
-    @Arg('address') address: string,
+    @Arg('address') address: string, // once we implement gql auth, we don't need this arg
   ): Promise<Membership | null> {
     const logger = createScopedLogger('GQL removeMembership');
 
@@ -195,8 +195,8 @@ export class MembershipResolver {
     });
 
     if (teamRecord === null) {
-      logger.debug(`Completed request for removing a membership from teamId: ${teamId}`);
-      endTimer({ success: 1 });
+      logger.warn(`Team not found for teamId: ${teamId}`);
+      endTimer({ success: 0 });
       return null;
     }
 
@@ -210,8 +210,8 @@ export class MembershipResolver {
     });
 
     if (addressRecord === null) {
-      logger.debug(`Completed request for removing a membership for address: ${address}`);
-      endTimer({ success: 1 });
+      logger.warn(`Address not found for address: ${address}`);
+      endTimer({ success: 0 });
       return null;
     }
 
@@ -226,6 +226,72 @@ export class MembershipResolver {
 
     logger.debug(
       `Completed request for removing a membership from team ${teamId} for address ${address}`,
+    );
+
+    endTimer({ success: 1 });
+
+    return result;
+  }
+
+  @Mutation(() => Membership)
+  async updateMembershipStatus(
+    @Ctx() { prisma }: Context,
+    @Arg('teamId') teamId: number,
+    @Arg('address') address: string, // once we implement gql auth, we don't need this arg
+    @Arg('acceptanceStatus') acceptanceStatus: MembershipAcceptanceStatus,
+  ): Promise<Membership | null> {
+    const logger = createScopedLogger('GQL updateMembershipStatus');
+
+    logger.info(
+      `Request for updating a membership acceptanceStatus in team ${teamId} for address ${address} to acceptanceStatus ${acceptanceStatus}`,
+    );
+
+    const endTimer = gqlRequestDurationSeconds.startTimer('updateMembershipStatus');
+
+    const teamRecord = await prisma.team.findUnique({
+      where: {
+        id: teamId,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (teamRecord === null) {
+      logger.warn(`Team not found for teamId: ${teamId}`);
+      endTimer({ success: 0 });
+      return null;
+    }
+
+    const addressRecord = await prisma.address.findUnique({
+      where: {
+        ethAddress: address.toLowerCase(),
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (addressRecord === null) {
+      logger.warn(`Address not found for address: ${address}`);
+      endTimer({ success: 0 });
+      return null;
+    }
+
+    const result = await prisma.membership.update({
+      where: {
+        teamId_addressId: {
+          teamId,
+          addressId: addressRecord.id,
+        },
+      },
+      data: {
+        acceptanceStatus,
+      },
+    });
+
+    logger.debug(
+      `Completed request for updating a membership acceptanceStatus in team ${teamId} for address ${address} to acceptanceStatus ${acceptanceStatus}`,
     );
 
     endTimer({ success: 1 });
