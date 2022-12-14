@@ -187,7 +187,7 @@ export async function sendInternalClaimByMentionMessage(
     }
 
     const earnerLink = createGithubUserLink(claim.githubUser.githubHandle);
-    const gitPOAPLink = createGitPOAPLinkForClaim(claim.id, claim.gitPOAP.name);
+    const gitPOAPLink = createGitPOAPLinkForClaim(claim.gitPOAP.id, claim.gitPOAP.name);
     msg += `\n* GitHub User: ${earnerLink} earned ${gitPOAPLink}`;
   }
 
