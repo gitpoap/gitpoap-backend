@@ -1,12 +1,10 @@
 import { Arg, Ctx, Field, ObjectType, Resolver, Query } from 'type-graphql';
 import { Claim, GitPOAP } from '@generated/type-graphql';
 import { getLastMonthStartDatetime } from './util';
-import { Context } from '../../context';
+import { AuthLoggingContext } from '../middleware';
 import { POAPEvent, POAPToken } from '../../types/poap';
 import { resolveENS } from '../../lib/ens';
 import { retrievePOAPEventInfo, retrievePOAPTokenInfo } from '../../external/poap';
-import { createScopedLogger } from '../../logging';
-import { gqlRequestDurationSeconds } from '../../metrics';
 import { GitPOAPReturnData, splitUsersPOAPs } from '../../lib/poaps';
 import { countContributionsForClaim } from '../../lib/contributions';
 import { Address, ClaimStatus, GitPOAPStatus, GitPOAPType, Prisma, Profile } from '@prisma/client';
@@ -168,36 +166,20 @@ export async function addPRCountData(
 @Resolver(() => GitPOAP)
 export class CustomGitPOAPResolver {
   @Query(() => Number)
-  async totalGitPOAPs(@Ctx() { prisma }: Context): Promise<number> {
-    const logger = createScopedLogger('GQL totalGitPOAPs');
-
+  async totalGitPOAPs(@Ctx() { prisma, logger }: AuthLoggingContext): Promise<number> {
     logger.info('Request for total number of GitPOAPs');
 
-    const endTimer = gqlRequestDurationSeconds.startTimer('totalGitPOAPs');
-
-    const result = await prisma.gitPOAP.count({
+    return await prisma.gitPOAP.count({
       where: {
         isEnabled: true,
-        NOT: {
-          poapApprovalStatus: GitPOAPStatus.UNAPPROVED,
-        },
+        NOT: { poapApprovalStatus: GitPOAPStatus.UNAPPROVED },
       },
     });
-
-    logger.debug('Completed request for total number of GitPOAPs');
-
-    endTimer({ success: 1 });
-
-    return result;
   }
 
   @Query(() => Number)
-  async lastMonthGitPOAPs(@Ctx() { prisma }: Context): Promise<number> {
-    const logger = createScopedLogger('GQL lastMonthGitPOAPs');
-
+  async lastMonthGitPOAPs(@Ctx() { prisma, logger }: AuthLoggingContext): Promise<number> {
     logger.info('Request for the count of GitPOAPs created last month');
-
-    const endTimer = gqlRequestDurationSeconds.startTimer('lastMonthGitPOAPs');
 
     const result = await prisma.gitPOAP.aggregate({
       _count: {
@@ -212,62 +194,44 @@ export class CustomGitPOAPResolver {
       },
     });
 
-    logger.debug('Completed request for the count of GitPOAPs created last month');
-
-    endTimer({ success: 1 });
-
     return result._count.id;
   }
 
   @Query(() => FullGitPOAPEventData, { nullable: true })
   async gitPOAPEvent(
-    @Ctx() { prisma }: Context,
+    @Ctx() { prisma, logger }: AuthLoggingContext,
     @Arg('id') id: number,
   ): Promise<FullGitPOAPEventData | null> {
-    const logger = createScopedLogger('GQL gitPOAPEvent');
-
     logger.info(`Request for info about GitPOAP ${id}`);
-
-    const endTimer = gqlRequestDurationSeconds.startTimer('gitPOAPEvent');
 
     const gitPOAP = await prisma.gitPOAP.findUnique({
       where: { id },
     });
     if (gitPOAP === null) {
       logger.warn(`Failed to find GitPOAP with id: ${id}`);
-      endTimer({ success: 0 });
       return null;
     }
 
     const event = await retrievePOAPEventInfo(gitPOAP.poapEventId);
     if (event === null) {
       logger.error(`Failed to query event ${gitPOAP.poapEventId} data from POAP API`);
-      endTimer({ success: 0 });
       return null;
     }
-
-    logger.debug(`Completed request for info about GitPOAP ${id}`);
-
-    endTimer({ success: 1 });
 
     return { gitPOAP, event };
   }
 
   @Query(() => UserPOAPs, { nullable: true })
   async userPOAPs(
-    @Ctx() {}: Context,
+    @Ctx() { logger }: AuthLoggingContext,
     @Arg('address') address: string,
     @Arg('sort', { defaultValue: 'date' }) sort: string,
     @Arg('perPage', { defaultValue: null }) perPage?: number,
     @Arg('page', { defaultValue: null }) page?: number,
   ): Promise<UserPOAPs | null> {
-    const logger = createScopedLogger('GQL userPOAPs');
-
     logger.info(
       `Request for POAPs for address ${address} using sort ${sort}, with ${perPage} results per page and page ${page}`,
     );
-
-    const endTimer = gqlRequestDurationSeconds.startTimer('userPOAPs');
 
     switch (sort) {
       case 'date':
@@ -276,12 +240,10 @@ export class CustomGitPOAPResolver {
         break;
       default:
         logger.warn(`Unknown value provided for sort: ${sort}`);
-        endTimer({ success: 0 });
         return null;
     }
     if ((page === null || perPage === null) && page !== perPage) {
       logger.warn('"page" and "perPage" must be specified together');
-      endTimer({ success: 0 });
       return null;
     }
 
@@ -289,14 +251,12 @@ export class CustomGitPOAPResolver {
     const resolvedAddress = await resolveENS(address);
     if (resolvedAddress === null) {
       logger.warn('The address provided is invalid');
-      endTimer({ success: 0 });
       return null;
     }
 
     const splitResult = await splitUsersPOAPs(resolvedAddress);
     if (splitResult === null) {
       logger.error(`Failed to split Profile ${resolvedAddress}'s POAPs`);
-      endTimer({ success: 0 });
       return null;
     }
     const { gitPOAPsOnly, poapsOnly } = splitResult;
@@ -335,12 +295,6 @@ export class CustomGitPOAPResolver {
       });
     }
 
-    logger.debug(
-      `Completed request for POAPs for address ${address} using sort ${sort}, with ${perPage} results per page and page ${page}`,
-    );
-
-    endTimer({ success: 1 });
-
     if (page) {
       const index = (page - 1) * <number>perPage;
       return {
@@ -361,19 +315,15 @@ export class CustomGitPOAPResolver {
 
   @Query(() => RepoGitPOAPs, { nullable: true })
   async repoGitPOAPs(
-    @Ctx() { prisma }: Context,
+    @Ctx() { prisma, logger }: AuthLoggingContext,
     @Arg('repoId') repoId: number,
     @Arg('sort', { defaultValue: 'date' }) sort: string,
     @Arg('perPage', { defaultValue: null }) perPage?: number,
     @Arg('page', { defaultValue: null }) page?: number,
   ): Promise<RepoGitPOAPs | null> {
-    const logger = createScopedLogger('GQL repoGitPOAPs');
-
     logger.info(
       `Request for POAPs for repoId ${repoId} using sort ${sort}, with ${perPage} results per page and page ${page}`,
     );
-
-    const endTimer = gqlRequestDurationSeconds.startTimer('repoGitPOAPs');
 
     switch (sort) {
       case 'date':
@@ -382,28 +332,22 @@ export class CustomGitPOAPResolver {
         break;
       default:
         logger.warn(`Unknown value provided for sort: ${sort}`);
-        endTimer({ success: 0 });
         return null;
     }
     if ((page === null || perPage === null) && page !== perPage) {
       logger.warn('"page" and "perPage" must be specified together');
-      endTimer({ success: 0 });
       return null;
     }
 
     const repo = await prisma.repo.findUnique({
-      where: {
-        id: repoId,
-      },
+      where: { id: repoId },
       select: {
         project: {
           select: {
             gitPOAPs: {
               where: {
                 isEnabled: true,
-                NOT: {
-                  poapApprovalStatus: GitPOAPStatus.UNAPPROVED,
-                },
+                NOT: { poapApprovalStatus: GitPOAPStatus.UNAPPROVED },
               },
             },
           },
@@ -458,12 +402,6 @@ export class CustomGitPOAPResolver {
       });
     }
 
-    logger.debug(
-      `Completed request for POAPs for repoId ${repoId} using sort ${sort}, with ${perPage} results per page and page ${page}`,
-    );
-
-    endTimer({ success: 1 });
-
     if (page) {
       const index = (page - 1) * <number>perPage;
       return {
@@ -480,14 +418,10 @@ export class CustomGitPOAPResolver {
 
   @Query(() => [GitPOAPWithClaimsCount], { nullable: true })
   async mostClaimedGitPOAPs(
-    @Ctx() { prisma }: Context,
+    @Ctx() { prisma, logger }: AuthLoggingContext,
     @Arg('count', { defaultValue: 10 }) count: number,
   ): Promise<GitPOAPWithClaimsCount[] | null> {
-    const logger = createScopedLogger('GQL mostClaimedGitPOAPs');
-
     logger.info(`Request for ${count} most claimed GitPOAPs`);
-
-    const endTimer = gqlRequestDurationSeconds.startTimer('mostClaimedGitPOAPs');
 
     type ResultType = GitPOAP & {
       claimsCount: number;
@@ -514,36 +448,26 @@ export class CustomGitPOAPResolver {
       const event = await retrievePOAPEventInfo(gitPOAP.poapEventId);
       if (event === null) {
         logger.error(`Failed to query event ${gitPOAP.poapEventId} data from POAP API`);
-        endTimer({ success: 0 });
         return null;
       }
 
       finalResults.push({ gitPOAP, event, claimsCount });
     }
 
-    logger.debug(`Completed request for ${count} most claimed GitPOAPs`);
-
-    endTimer({ success: 1 });
-
     return finalResults;
   }
 
   @Query(() => UserFeaturedPOAPs, { nullable: true })
   async profileFeaturedPOAPs(
-    @Ctx() { prisma }: Context,
+    @Ctx() { prisma, logger }: AuthLoggingContext,
     @Arg('address') address: string,
   ): Promise<UserFeaturedPOAPs | null> {
-    const logger = createScopedLogger('GQL profileFeaturedPOAPs');
-
     logger.info(`Request for the featured POAPs for address: ${address}`);
-
-    const endTimer = gqlRequestDurationSeconds.startTimer('profileFeaturedPOAPs');
 
     // Resolve ENS if provided
     const resolvedAddress = await resolveENS(address);
     if (resolvedAddress === null) {
       logger.warn('The address provided is invalid');
-      endTimer({ success: 0 });
       return null;
     }
 
@@ -554,38 +478,27 @@ export class CustomGitPOAPResolver {
 
     const profile = await prisma.profile.findFirst({
       where: {
-        address: {
-          ethAddress: resolvedAddress.toLowerCase(),
-        },
+        address: { ethAddress: resolvedAddress.toLowerCase() },
       },
-      select: {
-        id: true,
-      },
+      select: { id: true },
     });
     if (profile === null) {
       logger.debug("Completed request early for unknown profile's featured POAPs");
-      endTimer({ success: 1 });
       return results;
     }
 
     const poaps = await prisma.featuredPOAP.findMany({
-      where: {
-        profileId: profile.id,
-      },
+      where: { profileId: profile.id },
     });
-
     for (const poap of poaps) {
       const poapData = await retrievePOAPTokenInfo(poap.poapTokenId);
       if (poapData === null) {
         logger.error(`Failed to query POAP ${poap.poapTokenId} data from POAP API`);
-        endTimer({ success: 0 });
         return null;
       }
 
       const claim = await prisma.claim.findUnique({
-        where: {
-          poapTokenId: poap.poapTokenId,
-        },
+        where: { poapTokenId: poap.poapTokenId },
       });
 
       if (claim !== null) {
@@ -598,32 +511,23 @@ export class CustomGitPOAPResolver {
       }
     }
 
-    logger.debug(`Completed request for the featured POAPs for address: ${address}`);
-
-    endTimer({ success: 1 });
-
     return results;
   }
 
   @Query(() => Holders, { nullable: true })
   async gitPOAPHolders(
-    @Ctx() { prisma }: Context,
+    @Ctx() { prisma, logger }: AuthLoggingContext,
     @Arg('gitPOAPId') gitPOAPId: number,
     @Arg('sort', { defaultValue: 'claim-date' }) sort: string,
     @Arg('perPage', { defaultValue: null }) perPage?: number,
     @Arg('page', { defaultValue: null }) page?: number,
   ): Promise<Holders | null> {
-    const logger = createScopedLogger('GQL gitPOAPHolders');
-
     logger.info(
       `Request for holders of GitPOAP ${gitPOAPId} using sort ${sort}, with ${perPage} results per page and page ${page}`,
     );
 
-    const endTimer = gqlRequestDurationSeconds.startTimer('gitPOAPHolders');
-
     if ((page === null || perPage === null) && page !== perPage) {
       logger.warn('"page" and "perPage" must be specified together');
-      endTimer({ success: 0 });
       return null;
     }
 
@@ -653,7 +557,6 @@ export class CustomGitPOAPResolver {
         break;
       default:
         logger.warn(`Unknown value provided for sort: ${sort}`);
-        endTimer({ success: 0 });
         return null;
     }
 
@@ -682,7 +585,7 @@ export class CustomGitPOAPResolver {
       `,
     ]);
 
-    const holders = {
+    return {
       totalHolders: results[0],
       holders: results[1].map(r => ({
         profileId: r.id,
@@ -697,13 +600,5 @@ export class CustomGitPOAPResolver {
         ensAvatarImageUrl: r.ensAvatarImageUrl,
       })),
     };
-
-    logger.debug(
-      `Completed request for holders of GitPOAP ${gitPOAPId} using sort ${sort}, with ${perPage} results per page and page ${page}`,
-    );
-
-    endTimer({ success: 1 });
-
-    return holders;
   }
 }

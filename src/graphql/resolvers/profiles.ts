@@ -1,10 +1,8 @@
 import { Arg, Ctx, Field, ObjectType, Resolver, Query } from 'type-graphql';
 import { ClaimStatus, FeaturedPOAP, Profile } from '@generated/type-graphql';
-import { Context } from '../../context';
+import { AuthLoggingContext } from '../middleware';
 import { resolveAddressInternal } from '../../external/ens';
 import { resolveENS, resolveENSAvatar } from '../../lib/ens';
-import { createScopedLogger } from '../../logging';
-import { gqlRequestDurationSeconds } from '../../metrics';
 import { getLastMonthStartDatetime } from './util';
 import { upsertProfile } from '../../lib/profiles';
 
@@ -68,12 +66,8 @@ class ProfileWithClaimsCount {
 @Resolver(() => Profile)
 export class CustomProfileResolver {
   @Query(() => Number)
-  async totalContributors(@Ctx() { prisma }: Context): Promise<number> {
-    const logger = createScopedLogger('GQL totalContributors');
-
+  async totalContributors(@Ctx() { prisma, logger }: AuthLoggingContext): Promise<number> {
     logger.info('Request for total contributors');
-
-    const endTimer = gqlRequestDurationSeconds.startTimer('totalContributors');
 
     const result: { count: number }[] = await prisma.$queryRaw`
       SELECT COUNT(DISTINCT c."mintedAddressId")::INTEGER
@@ -82,20 +76,12 @@ export class CustomProfileResolver {
         AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
     `;
 
-    logger.debug('Completed request for total contributors');
-
-    endTimer({ success: 1 });
-
     return result[0].count;
   }
 
   @Query(() => Number)
-  async lastMonthContributors(@Ctx() { prisma }: Context): Promise<number> {
-    const logger = createScopedLogger('GQL lastMonthContributors');
-
+  async lastMonthContributors(@Ctx() { prisma, logger }: AuthLoggingContext): Promise<number> {
     logger.info("Request for last month's contributors");
-
-    const endTimer = gqlRequestDurationSeconds.startTimer('lastMonthContributors');
 
     const result: { count: number }[] = await prisma.$queryRaw`
       SELECT COUNT(DISTINCT c."mintedAddressId")::INTEGER
@@ -105,36 +91,25 @@ export class CustomProfileResolver {
         AND c."mintedAt" > ${getLastMonthStartDatetime()}
     `;
 
-    logger.debug("Completed request for last month's contributors");
-
-    endTimer({ success: 1 });
-
     return result[0].count;
   }
 
   @Query(() => NullableProfile, { nullable: true })
   async profileData(
-    @Ctx() { prisma }: Context,
+    @Ctx() { prisma, logger }: AuthLoggingContext,
     @Arg('address') addressOrEns: string,
   ): Promise<NullableProfile | null> {
-    const logger = createScopedLogger('GQL profileData');
-
-    logger.info(`Request data for address: ${addressOrEns}`);
-
-    const endTimer = gqlRequestDurationSeconds.startTimer('profileData');
+    logger.info(`Request Profile data for address: ${addressOrEns}`);
 
     // Resolve ENS if provided
     const resolvedAddress = await resolveENS(addressOrEns);
     if (resolvedAddress === null) {
-      endTimer({ success: 0 });
       return null;
     }
 
     let result = await prisma.profile.findFirst({
       where: {
-        address: {
-          ethAddress: resolvedAddress.toLowerCase(),
-        },
+        address: { ethAddress: resolvedAddress.toLowerCase() },
       },
       include: {
         featuredPOAPs: true,
@@ -143,9 +118,7 @@ export class CustomProfileResolver {
             ensName: true,
             ensAvatarImageUrl: true,
             githubUser: {
-              select: {
-                githubHandle: true,
-              },
+              select: { githubHandle: true },
             },
           },
         },
@@ -182,9 +155,6 @@ export class CustomProfileResolver {
           featuredPOAPs: [],
         };
 
-        logger.debug(`Completed request for profile data for address: ${addressOrEns}`);
-        endTimer({ success: 1 });
-
         return resultWithEns;
       }
 
@@ -199,30 +169,21 @@ export class CustomProfileResolver {
       }
     }
 
-    const resultWithEns: NullableProfile = {
+    return {
       ...result,
       address: resolvedAddress,
       ensName: result.address.ensName,
       ensAvatarImageUrl: result.address.ensAvatarImageUrl,
       githubHandle: result.address.githubUser?.githubHandle ?? result.githubHandle,
     };
-
-    logger.debug(`Completed request for profile data for address: ${addressOrEns}`);
-    endTimer({ success: 1 });
-
-    return resultWithEns;
   }
 
   @Query(() => [ProfileWithClaimsCount])
   async mostHonoredContributors(
-    @Ctx() { prisma }: Context,
+    @Ctx() { prisma, logger }: AuthLoggingContext,
     @Arg('count', { defaultValue: 10 }) count: number,
   ): Promise<ProfileWithClaimsCount[]> {
-    const logger = createScopedLogger('GQL mostHonoredContributors');
-
     logger.info(`Request for ${count} most honored contributors`);
-
-    const endTimer = gqlRequestDurationSeconds.startTimer('mostHonoredContributors');
 
     type ResultType = Profile & {
       claimsCount: number;
@@ -247,27 +208,19 @@ export class CustomProfileResolver {
       finalResults.push({ profile, claimsCount });
     }
 
-    logger.debug(`Completed request for ${count} most honored contributors`);
-
-    endTimer({ success: 1 });
-
     return finalResults;
   }
 
   @Query(() => [ProfileWithClaimsCount], { nullable: true })
   async repoMostHonoredContributors(
-    @Ctx() { prisma }: Context,
+    @Ctx() { prisma, logger }: AuthLoggingContext,
     @Arg('repoId') repoId: number,
     @Arg('perPage', { defaultValue: 6 }) perPage?: number,
     @Arg('page', { defaultValue: 1 }) page?: number,
   ): Promise<ProfileWithClaimsCount[]> {
-    const logger = createScopedLogger('GQL repoMostHonoredContributors');
-
     logger.info(
       `Request for repo ${repoId}'s most honored contributors, with ${perPage} results per page and page ${page}`,
     );
-
-    const endTimer = gqlRequestDurationSeconds.startTimer('repoMostHonoredContributors');
 
     type ResultType = Profile & {
       claimsCount: number;
@@ -295,12 +248,6 @@ export class CustomProfileResolver {
 
       finalResults.push({ profile, claimsCount });
     }
-
-    logger.debug(
-      `Completed request for repo ${repoId}'s most honored contributors, with ${perPage} results per page and page ${page}`,
-    );
-
-    endTimer({ success: 1 });
 
     return finalResults;
   }

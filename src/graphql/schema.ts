@@ -3,6 +3,7 @@ import { printSchema } from 'graphql/utilities';
 import { format } from 'prettier';
 import { buildSchema, NonEmptyArray } from 'type-graphql';
 import { authChecker } from './auth';
+import { loggingAndTimingMiddleware } from './middleware';
 
 import {
   /* Auto-generated Relation Resolvers */
@@ -249,15 +250,14 @@ const allResolvers: NonEmptyArray<ResolverClass> = [
   CustomSearchResolver,
 ];
 
-const createSchema = async () =>
-  await buildSchema({
+export const createAndEmitSchema = async () => {
+  const schema = await buildSchema({
     resolvers: allResolvers,
     validate: false,
     authChecker,
+    globalMiddlewares: [loggingAndTimingMiddleware],
   });
 
-export const createAndEmitSchema = async () => {
-  const schema = await createSchema();
   const schemaText = printSchema(schema, { commentDescriptions: true });
   const prettySchema = format(schemaText, { parser: 'graphql' });
   writeFileSync('schema.gql', prettySchema, 'utf8');

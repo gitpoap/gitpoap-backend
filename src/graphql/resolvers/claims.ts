@@ -1,10 +1,8 @@
 import { Arg, Ctx, Field, ObjectType, Resolver, Query } from 'type-graphql';
 import { Claim } from '@generated/type-graphql';
-import { Context } from '../../context';
+import { AuthLoggingContext } from '../middleware';
 import { POAPEvent } from '../../types/poap';
 import { retrievePOAPEventInfo } from '../../external/poap';
-import { createScopedLogger } from '../../logging';
-import { gqlRequestDurationSeconds } from '../../metrics';
 import { getLastMonthStartDatetime } from './util';
 import { ClaimStatus, GitPOAPStatus, Prisma } from '@prisma/client';
 
@@ -20,33 +18,17 @@ class FullClaimData {
 @Resolver(() => Claim)
 export class CustomClaimResolver {
   @Query(() => Number)
-  async totalClaims(@Ctx() { prisma }: Context): Promise<number> {
-    const logger = createScopedLogger('GQL totalClaims');
-
+  async totalClaims(@Ctx() { prisma, logger }: AuthLoggingContext): Promise<number> {
     logger.info('Request for total number of Claims');
 
-    const endTimer = gqlRequestDurationSeconds.startTimer('totalClaims');
-
-    const result = await prisma.claim.count({
-      where: {
-        status: ClaimStatus.CLAIMED,
-      },
+    return await prisma.claim.count({
+      where: { status: ClaimStatus.CLAIMED },
     });
-
-    logger.debug('Completed request for total number of Claims');
-
-    endTimer({ success: 1 });
-
-    return result;
   }
 
   @Query(() => Number)
-  async lastMonthClaims(@Ctx() { prisma }: Context): Promise<number> {
-    const logger = createScopedLogger('GQL lastMonthClaims');
-
+  async lastMonthClaims(@Ctx() { prisma, logger }: AuthLoggingContext): Promise<number> {
     logger.info('Request for the count of Claims made in the last month');
-
-    const endTimer = gqlRequestDurationSeconds.startTimer('lastMonthClaims');
 
     const result = await prisma.claim.aggregate({
       _count: {
@@ -58,23 +40,15 @@ export class CustomClaimResolver {
       },
     });
 
-    logger.debug('Completed request for the count of Claims made in the last month');
-
-    endTimer({ success: 1 });
-
     return result._count.id;
   }
 
   @Query(() => [FullClaimData], { nullable: true })
   async userClaims(
-    @Ctx() { prisma }: Context,
+    @Ctx() { prisma, logger }: AuthLoggingContext,
     @Arg('address') address: string,
   ): Promise<FullClaimData[] | null> {
-    const logger = createScopedLogger('GQL userClaims');
-
     logger.info(`Request for the claims for address: ${address}`);
-
-    const endTimer = gqlRequestDurationSeconds.startTimer('userClaims');
 
     const addressRecord = await prisma.address.findUnique({
       where: {
@@ -89,8 +63,6 @@ export class CustomClaimResolver {
     });
 
     if (addressRecord === null) {
-      logger.debug(`Completed request for the claims for address: ${address}`);
-      endTimer({ success: 1 });
       return [];
     }
 
@@ -129,9 +101,7 @@ export class CustomClaimResolver {
           },
         ],
         gitPOAP: {
-          NOT: {
-            poapApprovalStatus: GitPOAPStatus.UNAPPROVED,
-          },
+          NOT: { poapApprovalStatus: GitPOAPStatus.UNAPPROVED },
           isEnabled: true,
         },
       },
@@ -156,7 +126,6 @@ export class CustomClaimResolver {
 
       if (eventData === null) {
         logger.error(`Failed to query event ${gitPOAP.poapEventId} data from POAP API`);
-        endTimer({ success: 0 });
         return null;
       }
 
@@ -170,10 +139,6 @@ export class CustomClaimResolver {
         event: eventData,
       });
     }
-
-    logger.debug(`Completed request for the claims for address: ${address}`);
-
-    endTimer({ success: 1 });
 
     return results;
   }
