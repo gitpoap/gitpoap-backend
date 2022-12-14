@@ -156,7 +156,9 @@ export async function createNewClaimsForRepoContribution(
 
     // Skip if there are no PRs for this year
     if (contributionCount === 0) {
-      logger.info(`Skipping for GithubUser ID ${githubUser.id} since no contributions found.`);
+      logger.info(
+        `Skipping for GithubUser ID ${githubUser.id} for year ${year} since no contributions found.`,
+      );
       continue;
     }
 
