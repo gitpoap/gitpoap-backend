@@ -20,28 +20,26 @@ const ENS_AVATAR_MAX_CHECK_FREQUENCY_HOURS = 6;
 
 export async function upsertENSNameInDB(ethAddress: string, ensName: string | null) {
   const logger = createScopedLogger('upsertENSNameInDB');
-  const ethAddressLower = ethAddress.toLowerCase();
 
   if (!utils.isAddress(ethAddress)) {
     logger.error(`Invalid Ethereum address ${ethAddress}`);
     return null;
   }
 
+  const ethAddressLower = ethAddress.toLowerCase();
+
   try {
     const existingAddress = await context.prisma.address.findUnique({
       where: { ethAddress: ethAddressLower },
+      select: { id: true },
     });
 
     /* If an existing address is found, then update the ENS name. */
     if (existingAddress) {
-      const updatedAddress = await context.prisma.address.update({
-        where: { ethAddress: ethAddressLower },
+      return await context.prisma.address.update({
+        where: { id: existingAddress.id },
         data: { ensName },
       });
-
-      await upsertProfileForAddressId(updatedAddress.id);
-
-      return updatedAddress;
     }
 
     /* If no existing address is found, then create a new address with the ENS name. */
@@ -61,24 +59,54 @@ export async function upsertENSNameInDB(ethAddress: string, ensName: string | nu
   }
 }
 
-async function upsertENSAvatarInDB(address: string, avatarURL: string | null) {
-  const addressLower = address.toLowerCase();
+async function upsertENSAvatarInDB(
+  ethAddress: string,
+  ensName: string,
+  ensAvatarImageUrl: string | null,
+) {
+  const logger = createScopedLogger('upsertENSAvatarInDB');
 
-  const addressRecord = await context.prisma.address.upsert({
-    where: { ethAddress: addressLower },
-    update: { ensAvatarImageUrl: avatarURL },
-    create: { ethAddress: addressLower, ensAvatarImageUrl: avatarURL },
-  });
+  if (!utils.isAddress(ethAddress)) {
+    logger.error(`Invalid Ethereum address ${ethAddress}`);
+    return;
+  }
 
-  await context.prisma.profile.upsert({
-    where: {
-      addressId: addressRecord.id,
-    },
-    update: {},
-    create: {
-      addressId: addressRecord.id,
-    },
-  });
+  const ethAddressLower = ethAddress.toLowerCase();
+
+  try {
+    const existingAddress = await context.prisma.address.findUnique({
+      where: { ethAddress: ethAddressLower },
+      select: { id: true },
+    });
+
+    /* If an existing address is found, then update the ENS avatar. */
+    if (existingAddress) {
+      await context.prisma.address.update({
+        where: { id: existingAddress.id },
+        data: { ensAvatarImageUrl },
+      });
+      return;
+    }
+
+    /* If no existing address is found, then create a new address with the ENS avatar. */
+    const address = await context.prisma.address.upsert({
+      where: { ethAddress: ethAddressLower },
+      update: { ensAvatarImageUrl },
+      create: {
+        ethAddress: ethAddressLower,
+        ensName,
+        ensAvatarImageUrl,
+      },
+    });
+
+    await upsertProfileForAddressId(address.id);
+  } catch (e) {
+    logger.error(
+      `Error upserting ENS avatar ${ensAvatarImageUrl} for ${ethAddress} (${ensName}): ${e}`,
+    );
+    captureException(e, { ethAddress, ensName, ensAvatarImageUrl });
+    return;
+  }
 }
 
 async function updateENSNameLastChecked(address: string) {
@@ -162,7 +190,7 @@ export async function resolveENSAvatar(
     }
   }
 
-  await upsertENSAvatarInDB(addressLower, avatarURL);
+  await upsertENSAvatarInDB(addressLower, ensName, avatarURL);
 }
 
 type ResolveExtraArgs = {
