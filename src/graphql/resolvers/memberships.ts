@@ -1,5 +1,10 @@
-import { Arg, Ctx, Field, ObjectType, Resolver, Query } from 'type-graphql';
-import { Membership, MembershipOrderByWithRelationInput } from '@generated/type-graphql';
+import { Arg, Ctx, Field, ObjectType, Resolver, Query, Mutation } from 'type-graphql';
+import {
+  Membership,
+  MembershipOrderByWithRelationInput,
+  MembershipRole,
+  StaffApprovalStatus,
+} from '@generated/type-graphql';
 import { Context } from '../../context';
 import { resolveENS } from '../../lib/ens';
 import { createScopedLogger } from '../../logging';
@@ -92,6 +97,75 @@ export class MembershipResolver {
 
     logger.debug(
       `Completed request for POAPs for address ${address} using sort ${sort}, with ${perPage} results per page and page ${page}`,
+    );
+
+    endTimer({ success: 1 });
+
+    return result;
+  }
+
+  @Mutation(() => Membership)
+  async addNewMember(
+    @Ctx() { prisma }: Context,
+    @Arg('teamId') teamId: number,
+    @Arg('address') address: string,
+    @Arg('role') role: MembershipRole,
+  ): Promise<Membership | null> {
+    const logger = createScopedLogger('GQL addNewMember');
+
+    logger.info(`Request for adding a new member to ${teamId} for address ${address}`);
+
+    const endTimer = gqlRequestDurationSeconds.startTimer('addNewMember');
+
+    const teamRecord = await prisma.team.findUnique({
+      where: {
+        id: teamId,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (teamRecord === null) {
+      logger.debug(`Completed request for adding a new membership for teamId: ${teamId}`);
+      endTimer({ success: 1 });
+      return null;
+    }
+
+    const addressRecord = await prisma.address.findUnique({
+      where: {
+        ethAddress: address.toLowerCase(),
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (addressRecord === null) {
+      logger.debug(`Completed request for adding a new membership for address: ${address}`);
+      endTimer({ success: 1 });
+      return null;
+    }
+
+    const result = await prisma.membership.create({
+      data: {
+        team: {
+          connect: {
+            id: teamId,
+          },
+        },
+        address: {
+          connect: {
+            ethAddress: address,
+          },
+        },
+        role,
+        acceptanceStatus: StaffApprovalStatus.PENDING,
+      },
+    });
+
+    logger.debug(
+      `Completed request for for adding a new member to ${teamId} for address ${address}`,
     );
 
     endTimer({ success: 1 });
