@@ -6,7 +6,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 import 'reflect-metadata';
-import { ClaimStatus, GitPOAPStatus } from '@generated/type-graphql';
+import { ClaimStatus, GitPOAPStatus, MembershipAcceptanceStatus, MembershipRole } from '@generated/type-graphql';
 import {
   AddressFactory,
   ClaimFactory,
@@ -22,6 +22,8 @@ import {
   RepoFactory,
   EmailFactory,
   GitPOAPRequestFactory,
+  TeamFactory,
+  MembershipFactory,
 } from './factories';
 import { DateTime } from 'luxon';
 import { ADDRESSES, GH_HANDLES, GH_IDS } from './constants';
@@ -323,6 +325,60 @@ export const seed = async () => {
       emails: ['aldo@gitpoap.io', 'burz@gitpoap.io', 'jay@gitpoap.io'],
     },
   });
+
+  /* Create Teams */
+  const gitpoapTeam = await TeamFactory.create(
+    'GitPoap team',
+    'A POAP is a digital collectible created as an NFT that represents an action taken by the owner.',
+    addressColfax.id,
+    getS3URL('gitpoap-team-logo-test', 'gitpoap-team-logo-test.png-1634321850.778'),
+  );
+  const gitpoapDevTeam = await TeamFactory.create(
+    'GitPoap dev team',
+    'The dev team at GitPoap',
+    addressJay.id,
+    getS3URL('gitpoap-dev-team-logo-test', 'gitpoap-dev-team-logo.png-16661532343.423'),
+  );
+  const ethereumTeam = await TeamFactory.create(
+    'Ethereum team',
+    'Ethereum is a decentralized, open-source blockchain with smart contract functionality. Ether is the native cryptocurrency of the platform.',
+    addressVitalik.id,
+    getS3URL('ethereum-team-logo-test', 'ethereum-team-logo.png-166635645643.437'),
+  );
+
+  /* Create Memberships */
+  const membership1 = await MembershipFactory.create(
+    gitpoapTeam.id,
+    addressTyler.id,
+    MembershipRole.MEMBER,
+    MembershipAcceptanceStatus.ACCEPTED,
+    DateTime.fromISO('2022-01-30').toJSDate(),
+  );
+  const membership2 = await MembershipFactory.create(gitpoapDevTeam.id, addressJay.id, MembershipRole.OWNER, MembershipAcceptanceStatus.PENDING);
+  const membership3 = await MembershipFactory.create(ethereumTeam.id, addressColfax.id, MembershipRole.ADMIN, MembershipAcceptanceStatus.PENDING);
+  const membership4 = await MembershipFactory.create(
+    gitpoapDevTeam.id,
+    addressTyler.id,
+    MembershipRole.MEMBER,
+    MembershipAcceptanceStatus.ACCEPTED,
+    DateTime.fromISO('2022-04-20').toJSDate(),
+  );
+  const membership5 = await MembershipFactory.create(
+    ethereumTeam.id,
+    addressTyler.id,
+    MembershipRole.MEMBER,
+    MembershipAcceptanceStatus.ACCEPTED,
+    DateTime.fromISO('2021-11-25').toJSDate(),
+  );
+  const membership6 = await MembershipFactory.create(gitpoapDevTeam.id, addressAldo.id, MembershipRole.ADMIN, MembershipAcceptanceStatus.PENDING);
+  const membership7 = await MembershipFactory.create(gitpoapTeam.id, addressAldo.id, MembershipRole.OWNER, MembershipAcceptanceStatus.PENDING);
+  const membership8 = await MembershipFactory.create(
+    ethereumTeam.id,
+    addressAldo.id,
+    MembershipRole.ADMIN,
+    MembershipAcceptanceStatus.ACCEPTED,
+    DateTime.fromISO('2022-12-15').toJSDate(),
+  );
 
   console.log('DB Seeding complete. ');
 };
