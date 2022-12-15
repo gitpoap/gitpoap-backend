@@ -220,7 +220,7 @@ export class MembershipResolver {
   ): Promise<Membership | null> {
     const logger = createScopedLogger('GQL removeMembership');
 
-    logger.info(`Request for removing a membership from team ${teamId} for address ${address}`);
+    logger.info(`Request to remove a membership from team ${teamId} for address ${address}`);
 
     const endTimer = gqlRequestDurationSeconds.startTimer('removeMembership');
 
@@ -264,7 +264,7 @@ export class MembershipResolver {
     });
 
     logger.debug(
-      `Completed request for removing a membership from team ${teamId} for address ${address}`,
+      `Completed request to remove a membership from team ${teamId} for address ${address}`,
     );
 
     endTimer({ success: 1 });
@@ -280,7 +280,7 @@ export class MembershipResolver {
   ): Promise<Membership | null> {
     const logger = createScopedLogger('GQL acceptMembership');
 
-    logger.info(`Request for accepting a membership to team ${teamId} for address ${address}`);
+    logger.info(`Request to accept a membership to team ${teamId} for address ${address}`);
 
     const endTimer = gqlRequestDurationSeconds.startTimer('acceptMembership');
 
@@ -314,7 +314,7 @@ export class MembershipResolver {
       return null;
     }
 
-    const membershipRecord = await prisma.membership.findUnique({
+    const membership = await prisma.membership.findUnique({
       where: {
         teamId_addressId: {
           teamId,
@@ -323,13 +323,13 @@ export class MembershipResolver {
       },
     });
 
-    if (membershipRecord === null) {
+    if (membership === null) {
       logger.warn(`Membership not found for team ${teamId} address: ${address}`);
       endTimer({ success: 0 });
       return null;
     }
 
-    if (membershipRecord.acceptanceStatus !== MembershipAcceptanceStatus.PENDING) {
+    if (membership.acceptanceStatus !== MembershipAcceptanceStatus.PENDING) {
       logger.warn(`Membership is already accepted: ${address}`);
       endTimer({ success: 0 });
       return null;
@@ -349,7 +349,7 @@ export class MembershipResolver {
     });
 
     logger.debug(
-      `Completed request for accepting a membership to team ${teamId} for address ${address}`,
+      `Completed request to accept a membership to team ${teamId} for address ${address}`,
     );
 
     endTimer({ success: 1 });
