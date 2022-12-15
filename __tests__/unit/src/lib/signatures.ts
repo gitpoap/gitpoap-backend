@@ -2,7 +2,7 @@ import { isSignatureValid } from '../../../../src/lib/signatures';
 import { utils } from 'ethers';
 import { DateTime } from 'luxon';
 import { ADDRESSES } from '../../../../prisma/constants';
-import { SIGNATURE_TTL_MINUTES } from '../../../../src/constants';
+import { SIGNATURE_TTL_DAYS } from '../../../../src/constants';
 
 jest.mock('ethers', () => ({
   utils: {
@@ -21,7 +21,7 @@ describe('isSignatureValid', () => {
   });
 
   it('Returns false if the signature is too old', () => {
-    const oldTime = DateTime.now().minus({ minutes: SIGNATURE_TTL_MINUTES + 2 });
+    const oldTime = DateTime.now().minus({ days: SIGNATURE_TTL_DAYS + 2 });
 
     const signatureData = genSigData(oldTime.toSeconds() * 1000.0);
 
