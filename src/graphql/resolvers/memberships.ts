@@ -9,6 +9,9 @@ import { AuthLoggingContext } from '../middleware';
 class UserMemberships {
   @Field(() => [Membership])
   memberships: Membership[];
+
+  @Field()
+  error: Error | null;
 }
 
 @ObjectType()
@@ -38,8 +41,18 @@ enum MembershipSort {
   ACCEPTANCE_STATUS = 'acceptance_status',
 }
 
+enum MembershipErrorMessage {
+  NOT_AUTHENTICATED = 'Not authenticated',
+  NOT_AUTHORIZED = 'Not authorized',
+  ADDRESS_NOT_FOUND = 'Address not found',
+  TEAM_NOT_FOUND = 'Team not found',
+  PAGE_NOT_SPECIFIED = 'page not specified',
+  MEMBERSHIP_NOT_FOUND = 'Membership not found',
+  ALREADY_ACCEPTED = 'Already accepted',
+}
+
 interface Error {
-  message: string;
+  message: MembershipErrorMessage;
 }
 
 @Resolver(() => Membership)
@@ -48,12 +61,17 @@ export class MembershipResolver {
   @Query(() => UserMemberships, { nullable: true })
   async userMemberships(
     @Ctx() { prisma, userAccessTokenPayload, logger }: AuthLoggingContext,
-  ): Promise<UserMemberships | null> {
+  ): Promise<UserMemberships> {
     logger.info(`Request for Memberships for address`);
 
     if (userAccessTokenPayload === null) {
       logger.error('Route passed AuthRoles.Address authorization without user payload set');
-      return null;
+      return {
+        memberships: [],
+        error: {
+          message: MembershipErrorMessage.NOT_AUTHENTICATED,
+        },
+      };
     }
 
     const memberships = await prisma.membership.findMany({
@@ -68,6 +86,7 @@ export class MembershipResolver {
 
     return {
       memberships,
+      error: null,
     };
   }
 
@@ -90,7 +109,7 @@ export class MembershipResolver {
         totalCount: 0,
         memberships: [],
         error: {
-          message: 'Not authenticated',
+          message: MembershipErrorMessage.NOT_AUTHENTICATED,
         },
       };
     }
@@ -129,7 +148,7 @@ export class MembershipResolver {
         totalCount: 0,
         memberships: [],
         error: {
-          message: '"page" and "perPage" must be specified together',
+          message: MembershipErrorMessage.PAGE_NOT_SPECIFIED,
         },
       };
     }
@@ -148,7 +167,7 @@ export class MembershipResolver {
         totalCount: 0,
         memberships: [],
         error: {
-          message: 'Team not found',
+          message: MembershipErrorMessage.TEAM_NOT_FOUND,
         },
       };
     }
@@ -161,7 +180,7 @@ export class MembershipResolver {
         totalCount: 0,
         memberships: [],
         error: {
-          message: 'Not authorized',
+          message: MembershipErrorMessage.NOT_AUTHORIZED,
         },
       };
     }
@@ -210,7 +229,7 @@ export class MembershipResolver {
       return {
         membership: null,
         error: {
-          message: 'Not authenticated',
+          message: MembershipErrorMessage.NOT_AUTHENTICATED,
         },
       };
     }
@@ -230,7 +249,7 @@ export class MembershipResolver {
       return {
         membership: null,
         error: {
-          message: `Team not found for teamId: ${teamId}`,
+          message: MembershipErrorMessage.TEAM_NOT_FOUND,
         },
       };
     }
@@ -242,7 +261,7 @@ export class MembershipResolver {
       return {
         membership: null,
         error: {
-          message: 'Not authorized',
+          message: MembershipErrorMessage.NOT_AUTHORIZED,
         },
       };
     }
@@ -261,7 +280,7 @@ export class MembershipResolver {
       return {
         membership: null,
         error: {
-          message: `Address not found for address: ${address}`,
+          message: MembershipErrorMessage.ADDRESS_NOT_FOUND,
         },
       };
     }
@@ -307,7 +326,7 @@ export class MembershipResolver {
       return {
         membership: null,
         error: {
-          message: 'Not authenticated',
+          message: MembershipErrorMessage.NOT_AUTHENTICATED,
         },
       };
     }
@@ -327,7 +346,7 @@ export class MembershipResolver {
       return {
         membership: null,
         error: {
-          message: `Team not found for teamId: ${teamId}`,
+          message: MembershipErrorMessage.TEAM_NOT_FOUND,
         },
       };
     }
@@ -339,7 +358,7 @@ export class MembershipResolver {
       return {
         membership: null,
         error: {
-          message: 'Not authorized',
+          message: MembershipErrorMessage.NOT_AUTHORIZED,
         },
       };
     }
@@ -358,7 +377,7 @@ export class MembershipResolver {
       return {
         membership: null,
         error: {
-          message: `Address not found for address: ${address}`,
+          message: MembershipErrorMessage.ADDRESS_NOT_FOUND,
         },
       };
     }
@@ -395,7 +414,7 @@ export class MembershipResolver {
       return {
         membership: null,
         error: {
-          message: 'Not authenticated',
+          message: MembershipErrorMessage.NOT_AUTHENTICATED,
         },
       };
     }
@@ -414,7 +433,7 @@ export class MembershipResolver {
       return {
         membership: null,
         error: {
-          message: `Team not found for teamId: ${teamId}`,
+          message: MembershipErrorMessage.TEAM_NOT_FOUND,
         },
       };
     }
@@ -433,7 +452,7 @@ export class MembershipResolver {
       return {
         membership: null,
         error: {
-          message: `Address not found for address: ${userAccessTokenPayload.address}`,
+          message: MembershipErrorMessage.ADDRESS_NOT_FOUND,
         },
       };
     }
@@ -454,7 +473,7 @@ export class MembershipResolver {
       return {
         membership: null,
         error: {
-          message: `Membership not found for team ${teamId} address: ${userAccessTokenPayload.address}`,
+          message: MembershipErrorMessage.MEMBERSHIP_NOT_FOUND,
         },
       };
     }
@@ -464,7 +483,7 @@ export class MembershipResolver {
       return {
         membership: null,
         error: {
-          message: `Membership is already accepted: ${userAccessTokenPayload.address}`,
+          message: MembershipErrorMessage.ALREADY_ACCEPTED,
         },
       };
     }
