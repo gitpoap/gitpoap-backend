@@ -6,33 +6,9 @@ import { AuthRoles } from '../auth';
 import { AuthLoggingContext } from '../middleware';
 
 @ObjectType()
-class UserMemberships {
-  @Field(() => [Membership])
-  memberships: Membership[];
-
+class Error {
   @Field()
-  error: Error | null;
-}
-
-@ObjectType()
-class TeamMemberships {
-  @Field()
-  totalCount: number;
-
-  @Field(() => [Membership])
-  memberships: Membership[];
-
-  @Field()
-  error: Error | null;
-}
-
-@ObjectType()
-class MembershipMutationPayload {
-  @Field(() => Membership)
-  membership: Membership | null;
-
-  @Field()
-  error: Error | null;
+  message: string;
 }
 
 enum MembershipSort {
@@ -51,8 +27,34 @@ enum MembershipErrorMessage {
   ALREADY_ACCEPTED = 'Already accepted',
 }
 
-interface Error {
-  message: MembershipErrorMessage;
+@ObjectType()
+class UserMemberships {
+  @Field(() => [Membership])
+  memberships: Membership[];
+
+  @Field(() => Error)
+  error: Error | null;
+}
+
+@ObjectType()
+class TeamMemberships {
+  @Field()
+  totalCount: number;
+
+  @Field(() => [Membership])
+  memberships: Membership[];
+
+  @Field(() => Error)
+  error: Error | null;
+}
+
+@ObjectType()
+class MembershipMutationPayload {
+  @Field(() => Membership)
+  membership: Membership | null;
+
+  @Field(() => Error)
+  error: Error | null;
 }
 
 @Resolver(() => Membership)
