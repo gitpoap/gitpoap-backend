@@ -21,10 +21,40 @@ class TeamMemberships {
   memberships: Membership[];
 }
 
+@ObjectType()
+class AddMembershipPayload {
+  @Field(() => Membership)
+  membership: Membership | null;
+
+  @Field()
+  errors: AddMembershipError;
+}
+
 enum MembershipSort {
   DATE = 'date',
   ROLE = 'role',
   ACCEPTANCE_STATUS = 'acceptance_status',
+}
+
+type AddMembershipError = UserNameTaken | TeamNotFound | AddressNotFound | null;
+
+type UserNameTaken = UserError & {
+  message: string;
+  path: string;
+  suggestion: string;
+};
+
+interface UserError {
+  message: string;
+  path: string;
+}
+
+interface TeamNotFound {
+  message: string;
+}
+
+interface AddressNotFound {
+  message: string;
 }
 
 @Resolver(() => Membership)
@@ -144,12 +174,12 @@ export class MembershipResolver {
     };
   }
 
-  @Mutation(() => Membership)
+  @Mutation(() => AddMembershipPayload)
   async addNewMembership(
     @Ctx() { prisma }: Context,
     @Arg('teamId') teamId: number,
     @Arg('address') address: string,
-  ): Promise<Membership | null> {
+  ): Promise<AddMembershipPayload> {
     const logger = createScopedLogger('GQL addNewMembership');
 
     logger.info(`Request to add user with address: ${address} as a member to team ${teamId}`);
@@ -168,7 +198,12 @@ export class MembershipResolver {
     if (team === null) {
       logger.warn(`Team not found for teamId: ${teamId}`);
       endTimer({ success: 0 });
-      return null;
+      return {
+        membership: null,
+        errors: {
+          message: `Team not found for teamId: ${teamId}`,
+        },
+      };
     }
 
     const addressRecord = await prisma.address.findUnique({
@@ -183,10 +218,15 @@ export class MembershipResolver {
     if (addressRecord === null) {
       logger.warn(`Address not found for address: ${address}`);
       endTimer({ success: 0 });
-      return null;
+      return {
+        membership: null,
+        errors: {
+          message: `Address not found for address: ${address}`,
+        },
+      };
     }
 
-    const result = await prisma.membership.create({
+    const membership = await prisma.membership.create({
       data: {
         team: {
           connect: {
@@ -209,7 +249,10 @@ export class MembershipResolver {
 
     endTimer({ success: 1 });
 
-    return result;
+    return {
+      membership,
+      errors: null,
+    };
   }
 
   @Mutation(() => Membership)
