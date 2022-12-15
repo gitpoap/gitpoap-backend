@@ -5838,9 +5838,5 @@ type UserMemberships {
 type Mutation {
   addNewMembership(role: String!, address: String!, teamId: Float!): Membership!
   removeMembership(address: String!, teamId: Float!): Membership!
-  updateMembershipStatus(
-    acceptanceStatus: String!
-    address: String!
-    teamId: Float!
-  ): Membership!
+  acceptMembership(address: String!, teamId: Float!): Membership!
 }
