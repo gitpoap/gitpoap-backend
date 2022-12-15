@@ -590,12 +590,13 @@ type Query {
     repoId: Float!
   ): [ProfileWithClaimsCount!]
   search(text: String!): SearchResults!
-  userMemberships(
+  userMemberships(address: String!): UserMemberships
+  teamMemberships(
     page: Float = null
     perPage: Float = null
     sort: String = "date"
-    address: String!
-  ): UserMemberships
+    teamId: Float!
+  ): TeamMemberships
 }
 
 type AggregateAddress {
@@ -1230,6 +1231,7 @@ input MembershipWhereInput {
   address: AddressRelationFilter
   role: EnumMembershipRoleFilter
   acceptanceStatus: EnumMembershipAcceptanceStatusFilter
+  joinedOn: DateTimeNullableFilter
 }
 
 input EnumMembershipRoleFilter {
@@ -2530,6 +2532,7 @@ type Membership {
   addressId: Int!
   role: MembershipRole!
   acceptanceStatus: MembershipAcceptanceStatus!
+  joinedOn: DateTime
 }
 
 input MembershipOrderByWithRelationInput {
@@ -2542,6 +2545,7 @@ input MembershipOrderByWithRelationInput {
   address: AddressOrderByWithRelationInput
   role: SortOrder
   acceptanceStatus: SortOrder
+  joinedOn: SortOrder
 }
 
 input MembershipWhereUniqueInput {
@@ -2562,6 +2566,7 @@ enum MembershipScalarFieldEnum {
   addressId
   role
   acceptanceStatus
+  joinedOn
 }
 
 type Profile {
@@ -4890,6 +4895,7 @@ type MembershipCountAggregate {
   addressId: Int!
   role: Int!
   acceptanceStatus: Int!
+  joinedOn: Int!
   _all: Int!
 }
 
@@ -4913,6 +4919,7 @@ type MembershipMinAggregate {
   addressId: Int
   role: MembershipRole
   acceptanceStatus: MembershipAcceptanceStatus
+  joinedOn: DateTime
 }
 
 type MembershipMaxAggregate {
@@ -4923,6 +4930,7 @@ type MembershipMaxAggregate {
   addressId: Int
   role: MembershipRole
   acceptanceStatus: MembershipAcceptanceStatus
+  joinedOn: DateTime
 }
 
 type MembershipGroupBy {
@@ -4933,6 +4941,7 @@ type MembershipGroupBy {
   addressId: Int!
   role: MembershipRole!
   acceptanceStatus: MembershipAcceptanceStatus!
+  joinedOn: DateTime
   _count: MembershipCountAggregate
   _avg: MembershipAvgAggregate
   _sum: MembershipSumAggregate
@@ -4948,6 +4957,7 @@ input MembershipOrderByWithAggregationInput {
   addressId: SortOrder
   role: SortOrder
   acceptanceStatus: SortOrder
+  joinedOn: SortOrder
   _count: MembershipCountOrderByAggregateInput
   _avg: MembershipAvgOrderByAggregateInput
   _max: MembershipMaxOrderByAggregateInput
@@ -4963,6 +4973,7 @@ input MembershipCountOrderByAggregateInput {
   addressId: SortOrder
   role: SortOrder
   acceptanceStatus: SortOrder
+  joinedOn: SortOrder
 }
 
 input MembershipAvgOrderByAggregateInput {
@@ -4979,6 +4990,7 @@ input MembershipMaxOrderByAggregateInput {
   addressId: SortOrder
   role: SortOrder
   acceptanceStatus: SortOrder
+  joinedOn: SortOrder
 }
 
 input MembershipMinOrderByAggregateInput {
@@ -4989,6 +5001,7 @@ input MembershipMinOrderByAggregateInput {
   addressId: SortOrder
   role: SortOrder
   acceptanceStatus: SortOrder
+  joinedOn: SortOrder
 }
 
 input MembershipSumOrderByAggregateInput {
@@ -5008,6 +5021,7 @@ input MembershipScalarWhereWithAggregatesInput {
   addressId: IntWithAggregatesFilter
   role: EnumMembershipRoleWithAggregatesFilter
   acceptanceStatus: EnumMembershipAcceptanceStatusWithAggregatesFilter
+  joinedOn: DateTimeNullableWithAggregatesFilter
 }
 
 input EnumMembershipRoleWithAggregatesFilter {
@@ -5831,12 +5845,16 @@ type SearchResults {
 }
 
 type UserMemberships {
-  totalMembershipCount: Float!
+  memberships: [Membership!]!
+}
+
+type TeamMemberships {
+  totalCount: Float!
   memberships: [Membership!]!
 }
 
 type Mutation {
-  addNewMembership(role: String!, address: String!, teamId: Float!): Membership!
+  addNewMembership(address: String!, teamId: Float!): Membership!
   removeMembership(address: String!, teamId: Float!): Membership!
   acceptMembership(address: String!, teamId: Float!): Membership!
 }

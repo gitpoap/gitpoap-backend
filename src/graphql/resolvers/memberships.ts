@@ -1,6 +1,7 @@
 import { Arg, Ctx, Field, ObjectType, Resolver, Query, Mutation } from 'type-graphql';
 import { Membership, MembershipOrderByWithRelationInput } from '@generated/type-graphql';
 import { MembershipAcceptanceStatus, MembershipRole } from '@prisma/client';
+import { DateTime } from 'luxon';
 import { Context } from '../../context';
 import { createScopedLogger } from '../../logging';
 import { gqlRequestDurationSeconds } from '../../metrics';
@@ -76,7 +77,7 @@ export class MembershipResolver {
     switch (sort) {
       case MembershipSort.DATE:
         orderBy = {
-          createdAt: 'desc',
+          joinedOn: 'desc',
         };
         break;
       case MembershipSort.ROLE:
@@ -343,6 +344,7 @@ export class MembershipResolver {
       },
       data: {
         acceptanceStatus: MembershipAcceptanceStatus.ACCEPTED,
+        joinedOn: DateTime.now().toJSDate(),
       },
     });
 

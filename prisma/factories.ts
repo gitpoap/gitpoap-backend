@@ -667,6 +667,7 @@ export class MembershipFactory {
     addressId: number,
     role: MembershipRole,
     acceptanceStatus: MembershipAcceptanceStatus,
+    joinedOn?: Date,
   ): Promise<MembershipFactory> => {
     const data: Prisma.MembershipCreateInput = {
       team: {
@@ -681,6 +682,7 @@ export class MembershipFactory {
       },
       role,
       acceptanceStatus,
+      joinedOn,
     };
     const membership = await prisma.membership.create({ data });
     logger.debug(`Creating Membership with ID: ${membership.id}`);
