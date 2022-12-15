@@ -1,28 +1,18 @@
 import { Arg, Ctx, Field, ObjectType, Resolver, Query, Mutation } from 'type-graphql';
 import { Membership, MembershipOrderByWithRelationInput } from '@generated/type-graphql';
-import { MembershipAcceptanceStatus } from '@prisma/client';
+import { MembershipAcceptanceStatus, MembershipRole } from '@prisma/client';
 import { Context } from '../../context';
-import { resolveENS } from '../../lib/ens';
 import { createScopedLogger } from '../../logging';
 import { gqlRequestDurationSeconds } from '../../metrics';
 
 @ObjectType()
 class UserMemberships {
-  @Field()
-  totalMembershipCount: number;
-
   @Field(() => [Membership])
   memberships: Membership[];
 }
 
-enum MembershipRole {
-  ADMIN = 'ADMIN',
-  OWNER = 'OWNER',
-  MEMBER = 'MEMBER',
-}
-
 @Resolver(() => Membership)
-export class CustomMembershipResolver {
+export class MembershipResolver {
   @Query(() => UserMemberships, { nullable: true })
   async userMemberships(
     @Ctx() { prisma }: Context,
@@ -64,23 +54,6 @@ export class CustomMembershipResolver {
       endTimer({ success: 0 });
       return null;
     }
-
-    // Resolve ENS if provided
-    const resolvedAddress = await resolveENS(address);
-    if (resolvedAddress === null) {
-      logger.warn('The address provided is invalid');
-      endTimer({ success: 0 });
-      return null;
-    }
-
-    const totalMembershipCount = await prisma.membership.count({
-      where: {
-        address: {
-          ethAddress: address.toLowerCase(),
-        },
-      },
-    });
-
     const memberships = await prisma.membership.findMany({
       orderBy,
       skip: page ? (page - 1) * <number>perPage : undefined,
@@ -93,13 +66,12 @@ export class CustomMembershipResolver {
     });
 
     logger.debug(
-      `Completed request for POAPs for address ${address} using sort ${sort}, with ${perPage} results per page and page ${page}`,
+      `Completed request for Memberships for address ${address} using sort ${sort}, with ${perPage} results per page and page ${page}`,
     );
 
     endTimer({ success: 1 });
 
     return {
-      totalMembershipCount,
       memberships,
     };
   }
@@ -108,16 +80,15 @@ export class CustomMembershipResolver {
   async addNewMembership(
     @Ctx() { prisma }: Context,
     @Arg('teamId') teamId: number,
-    @Arg('address') address: string, // once we implement gql auth, we don't need this arg
-    @Arg('role') role: MembershipRole,
+    @Arg('address') address: string,
   ): Promise<Membership | null> {
     const logger = createScopedLogger('GQL addNewMembership');
 
-    logger.info(`Request for adding a new membership to team ${teamId} for address ${address}`);
+    logger.info(`Request to add user with address: ${address} as a member to team ${teamId}`);
 
     const endTimer = gqlRequestDurationSeconds.startTimer('addNewMembership');
 
-    const teamRecord = await prisma.team.findUnique({
+    const team = await prisma.team.findUnique({
       where: {
         id: teamId,
       },
@@ -126,7 +97,7 @@ export class CustomMembershipResolver {
       },
     });
 
-    if (teamRecord === null) {
+    if (team === null) {
       logger.warn(`Team not found for teamId: ${teamId}`);
       endTimer({ success: 0 });
       return null;
@@ -159,13 +130,13 @@ export class CustomMembershipResolver {
             ethAddress: address.toLowerCase(),
           },
         },
-        role,
+        role: MembershipRole.ADMIN,
         acceptanceStatus: MembershipAcceptanceStatus.PENDING,
       },
     });
 
     logger.debug(
-      `Completed request for for adding a new membership to team ${teamId} for address ${address}`,
+      `Completed request to add user with address: ${address} as a member to team ${teamId}`,
     );
 
     endTimer({ success: 1 });
@@ -177,7 +148,7 @@ export class CustomMembershipResolver {
   async removeMembership(
     @Ctx() { prisma }: Context,
     @Arg('teamId') teamId: number,
-    @Arg('address') address: string, // once we implement gql auth, we don't need this arg
+    @Arg('address') address: string,
   ): Promise<Membership | null> {
     const logger = createScopedLogger('GQL removeMembership');
 
@@ -185,7 +156,7 @@ export class CustomMembershipResolver {
 
     const endTimer = gqlRequestDurationSeconds.startTimer('removeMembership');
 
-    const teamRecord = await prisma.team.findUnique({
+    const team = await prisma.team.findUnique({
       where: {
         id: teamId,
       },
@@ -194,7 +165,7 @@ export class CustomMembershipResolver {
       },
     });
 
-    if (teamRecord === null) {
+    if (team === null) {
       logger.warn(`Team not found for teamId: ${teamId}`);
       endTimer({ success: 0 });
       return null;
@@ -245,7 +216,7 @@ export class CustomMembershipResolver {
 
     const endTimer = gqlRequestDurationSeconds.startTimer('acceptMembership');
 
-    const teamRecord = await prisma.team.findUnique({
+    const team = await prisma.team.findUnique({
       where: {
         id: teamId,
       },
@@ -254,7 +225,7 @@ export class CustomMembershipResolver {
       },
     });
 
-    if (teamRecord === null) {
+    if (team === null) {
       logger.warn(`Team not found for teamId: ${teamId}`);
       endTimer({ success: 0 });
       return null;
