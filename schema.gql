@@ -590,7 +590,7 @@ type Query {
     repoId: Float!
   ): [ProfileWithClaimsCount!]
   search(text: String!): SearchResults!
-  userMemberships(address: String!): UserMemberships
+  userMemberships: UserMemberships
   teamMemberships(
     page: Float = null
     perPage: Float = null
@@ -5846,15 +5846,26 @@ type SearchResults {
 
 type UserMemberships {
   memberships: [Membership!]!
+  error: Error!
+}
+
+type Error {
+  message: String!
 }
 
 type TeamMemberships {
   totalCount: Float!
   memberships: [Membership!]!
+  error: Error!
 }
 
 type Mutation {
-  addNewMembership(address: String!, teamId: Float!): Membership!
-  removeMembership(address: String!, teamId: Float!): Membership!
-  acceptMembership(address: String!, teamId: Float!): Membership!
+  addNewMembership(address: String!, teamId: Float!): MembershipMutationPayload!
+  removeMembership(address: String!, teamId: Float!): MembershipMutationPayload!
+  acceptMembership(teamId: Float!): MembershipMutationPayload!
+}
+
+type MembershipMutationPayload {
+  membership: Membership!
+  error: Error!
 }
