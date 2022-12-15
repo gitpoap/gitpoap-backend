@@ -22,12 +22,12 @@ class TeamMemberships {
 }
 
 @ObjectType()
-class AddMembershipPayload {
+class MembershipMutationPayload {
   @Field(() => Membership)
   membership: Membership | null;
 
   @Field()
-  errors: AddMembershipError;
+  error: Error | null;
 }
 
 enum MembershipSort {
@@ -36,24 +36,7 @@ enum MembershipSort {
   ACCEPTANCE_STATUS = 'acceptance_status',
 }
 
-type AddMembershipError = UserNameTaken | TeamNotFound | AddressNotFound | null;
-
-type UserNameTaken = UserError & {
-  message: string;
-  path: string;
-  suggestion: string;
-};
-
-interface UserError {
-  message: string;
-  path: string;
-}
-
-interface TeamNotFound {
-  message: string;
-}
-
-interface AddressNotFound {
+interface Error {
   message: string;
 }
 
@@ -174,12 +157,12 @@ export class MembershipResolver {
     };
   }
 
-  @Mutation(() => AddMembershipPayload)
+  @Mutation(() => MembershipMutationPayload)
   async addNewMembership(
     @Ctx() { prisma }: Context,
     @Arg('teamId') teamId: number,
     @Arg('address') address: string,
-  ): Promise<AddMembershipPayload> {
+  ): Promise<MembershipMutationPayload> {
     const logger = createScopedLogger('GQL addNewMembership');
 
     logger.info(`Request to add user with address: ${address} as a member to team ${teamId}`);
@@ -200,7 +183,7 @@ export class MembershipResolver {
       endTimer({ success: 0 });
       return {
         membership: null,
-        errors: {
+        error: {
           message: `Team not found for teamId: ${teamId}`,
         },
       };
@@ -220,7 +203,7 @@ export class MembershipResolver {
       endTimer({ success: 0 });
       return {
         membership: null,
-        errors: {
+        error: {
           message: `Address not found for address: ${address}`,
         },
       };
@@ -251,16 +234,16 @@ export class MembershipResolver {
 
     return {
       membership,
-      errors: null,
+      error: null,
     };
   }
 
-  @Mutation(() => Membership)
+  @Mutation(() => MembershipMutationPayload)
   async removeMembership(
     @Ctx() { prisma }: Context,
     @Arg('teamId') teamId: number,
     @Arg('address') address: string,
-  ): Promise<Membership | null> {
+  ): Promise<MembershipMutationPayload> {
     const logger = createScopedLogger('GQL removeMembership');
 
     logger.info(`Request to remove a membership from team ${teamId} for address ${address}`);
@@ -279,7 +262,12 @@ export class MembershipResolver {
     if (team === null) {
       logger.warn(`Team not found for teamId: ${teamId}`);
       endTimer({ success: 0 });
-      return null;
+      return {
+        membership: null,
+        error: {
+          message: `Team not found for teamId: ${teamId}`,
+        },
+      };
     }
 
     const addressRecord = await prisma.address.findUnique({
@@ -294,10 +282,15 @@ export class MembershipResolver {
     if (addressRecord === null) {
       logger.warn(`Address not found for address: ${address}`);
       endTimer({ success: 0 });
-      return null;
+      return {
+        membership: null,
+        error: {
+          message: `Address not found for address: ${address}`,
+        },
+      };
     }
 
-    const result = await prisma.membership.delete({
+    const membership = await prisma.membership.delete({
       where: {
         teamId_addressId: {
           teamId,
@@ -312,15 +305,18 @@ export class MembershipResolver {
 
     endTimer({ success: 1 });
 
-    return result;
+    return {
+      membership,
+      error: null,
+    };
   }
 
-  @Mutation(() => Membership)
+  @Mutation(() => MembershipMutationPayload)
   async acceptMembership(
     @Ctx() { prisma }: Context,
     @Arg('teamId') teamId: number,
     @Arg('address') address: string, // once we implement gql auth, we don't need this arg
-  ): Promise<Membership | null> {
+  ): Promise<MembershipMutationPayload> {
     const logger = createScopedLogger('GQL acceptMembership');
 
     logger.info(`Request to accept a membership to team ${teamId} for address ${address}`);
@@ -339,7 +335,12 @@ export class MembershipResolver {
     if (team === null) {
       logger.warn(`Team not found for teamId: ${teamId}`);
       endTimer({ success: 0 });
-      return null;
+      return {
+        membership: null,
+        error: {
+          message: `Team not found for teamId: ${teamId}`,
+        },
+      };
     }
 
     const addressRecord = await prisma.address.findUnique({
@@ -354,7 +355,12 @@ export class MembershipResolver {
     if (addressRecord === null) {
       logger.warn(`Address not found for address: ${address}`);
       endTimer({ success: 0 });
-      return null;
+      return {
+        membership: null,
+        error: {
+          message: `Address not found for address: ${address}`,
+        },
+      };
     }
 
     const membership = await prisma.membership.findUnique({
@@ -369,13 +375,23 @@ export class MembershipResolver {
     if (membership === null) {
       logger.warn(`Membership not found for team ${teamId} address: ${address}`);
       endTimer({ success: 0 });
-      return null;
+      return {
+        membership: null,
+        error: {
+          message: `Membership not found for team ${teamId} address: ${address}`,
+        },
+      };
     }
 
     if (membership.acceptanceStatus !== MembershipAcceptanceStatus.PENDING) {
       logger.warn(`Membership is already accepted: ${address}`);
       endTimer({ success: 0 });
-      return null;
+      return {
+        membership: null,
+        error: {
+          message: `Membership is already accepted: ${address}`,
+        },
+      };
     }
 
     const result = await prisma.membership.update({
@@ -397,6 +413,9 @@ export class MembershipResolver {
 
     endTimer({ success: 1 });
 
-    return result;
+    return {
+      membership: result,
+      error: null,
+    };
   }
 }
