@@ -355,16 +355,46 @@ export const seed = async () => {
   const team5 = await TeamFactory.create(faker.company.bs(), faker.lorem.sentence(), addressAldo.id, faker.image.dataUri());
 
   /* Create Memberships */
-  const membership1 = await MembershipFactory.create(gitpoapTeam.id, addressTyler.id, MembershipRole.MEMBER, MembershipAcceptanceStatus.ACCEPTED);
+  const membership1 = await MembershipFactory.create(
+    gitpoapTeam.id,
+    addressTyler.id,
+    MembershipRole.MEMBER,
+    MembershipAcceptanceStatus.ACCEPTED,
+    faker.date.between('2020-01-01T00:00:00.000Z', '2023-01-01T00:00:00.000Z'),
+  );
   const membership2 = await MembershipFactory.create(gitpoapDevTeam.id, addressJay.id, MembershipRole.OWNER, MembershipAcceptanceStatus.PENDING);
   const membership3 = await MembershipFactory.create(ethereumTeam.id, addressColfax.id, MembershipRole.ADMIN, MembershipAcceptanceStatus.PENDING);
-  const membership4 = await MembershipFactory.create(gitpoapDevTeam.id, addressTyler.id, MembershipRole.MEMBER, MembershipAcceptanceStatus.ACCEPTED);
-  const membership5 = await MembershipFactory.create(ethereumTeam.id, addressTyler.id, MembershipRole.MEMBER, MembershipAcceptanceStatus.ACCEPTED);
+  const membership4 = await MembershipFactory.create(
+    gitpoapDevTeam.id,
+    addressTyler.id,
+    MembershipRole.MEMBER,
+    MembershipAcceptanceStatus.ACCEPTED,
+    faker.date.between('2020-01-01T00:00:00.000Z', '2023-01-01T00:00:00.000Z'),
+  );
+  const membership5 = await MembershipFactory.create(
+    ethereumTeam.id,
+    addressTyler.id,
+    MembershipRole.MEMBER,
+    MembershipAcceptanceStatus.ACCEPTED,
+    faker.date.between('2020-01-01T00:00:00.000Z', '2023-01-01T00:00:00.000Z'),
+  );
   const membership6 = await MembershipFactory.create(gitpoapDevTeam.id, addressAldo.id, MembershipRole.ADMIN, MembershipAcceptanceStatus.PENDING);
   const membership7 = await MembershipFactory.create(gitpoapTeam.id, addressAldo.id, MembershipRole.OWNER, MembershipAcceptanceStatus.PENDING);
-  const membership8 = await MembershipFactory.create(ethereumTeam.id, addressAldo.id, MembershipRole.ADMIN, MembershipAcceptanceStatus.ACCEPTED);
+  const membership8 = await MembershipFactory.create(
+    ethereumTeam.id,
+    addressAldo.id,
+    MembershipRole.ADMIN,
+    MembershipAcceptanceStatus.ACCEPTED,
+    faker.date.between('2020-01-01T00:00:00.000Z', '2023-01-01T00:00:00.000Z'),
+  );
   const membership9 = await MembershipFactory.create(gitpoapTeam.id, addressBurz.id, MembershipRole.ADMIN, MembershipAcceptanceStatus.PENDING);
-  const membership10 = await MembershipFactory.create(gitpoapDevTeam.id, addressBurz.id, MembershipRole.MEMBER, MembershipAcceptanceStatus.ACCEPTED);
+  const membership10 = await MembershipFactory.create(
+    gitpoapDevTeam.id,
+    addressBurz.id,
+    MembershipRole.MEMBER,
+    MembershipAcceptanceStatus.ACCEPTED,
+    faker.date.between('2020-01-01T00:00:00.000Z', '2023-01-01T00:00:00.000Z'),
+  );
   const membership11 = await MembershipFactory.create(ethereumTeam.id, addressKayleen.id, MembershipRole.OWNER, MembershipAcceptanceStatus.PENDING);
 
   console.log('DB Seeding complete. ');

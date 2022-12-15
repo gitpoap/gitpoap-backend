@@ -122,6 +122,7 @@ model Membership {
   address          Address                    @relation(fields: [addressId], references: [id])
   role             MembershipRole
   acceptanceStatus MembershipAcceptanceStatus
+  joinedOn         DateTime?
 
   @@unique([teamId, addressId])
 }
