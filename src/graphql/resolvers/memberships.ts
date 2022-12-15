@@ -11,36 +11,82 @@ class UserMemberships {
   memberships: Membership[];
 }
 
+@ObjectType()
+class TeamMemberships {
+  @Field()
+  totalCount: number;
+
+  @Field(() => [Membership])
+  memberships: Membership[];
+}
+
+enum MembershipSort {
+  DATE = 'date',
+  ROLE = 'role',
+  ACCEPTANCE_STATUS = 'acceptance_status',
+}
+
 @Resolver(() => Membership)
 export class MembershipResolver {
   @Query(() => UserMemberships, { nullable: true })
   async userMemberships(
     @Ctx() { prisma }: Context,
     @Arg('address') address: string,
-    @Arg('sort', { defaultValue: 'date' }) sort: string,
-    @Arg('perPage', { defaultValue: null }) perPage?: number,
-    @Arg('page', { defaultValue: null }) page?: number,
   ): Promise<UserMemberships | null> {
     const logger = createScopedLogger('GQL userMemberships');
 
-    logger.info(
-      `Request for Memberships for address ${address} using sort ${sort}, with ${perPage} results per page and page ${page}`,
-    );
+    logger.info(`Request for Memberships for address ${address}`);
 
     const endTimer = gqlRequestDurationSeconds.startTimer('userMemberships');
 
+    const memberships = await prisma.membership.findMany({
+      where: {
+        address: {
+          ethAddress: address.toLowerCase(),
+        },
+      },
+    });
+
+    logger.debug(`Completed request for Memberships for address ${address}`);
+
+    endTimer({ success: 1 });
+
+    return {
+      memberships,
+    };
+  }
+
+  @Query(() => TeamMemberships, { nullable: true })
+  async teamMemberships(
+    @Ctx() { prisma }: Context,
+    @Arg('teamId') teamId: number,
+    @Arg('sort', { defaultValue: MembershipSort.DATE }) sort: MembershipSort,
+    @Arg('perPage', { defaultValue: null }) perPage?: number,
+    @Arg('page', { defaultValue: null }) page?: number,
+  ): Promise<TeamMemberships | null> {
+    const logger = createScopedLogger('GQL teamMemberships');
+
+    logger.info(
+      `Request for Memberships for team ${teamId} using sort ${sort}, with ${perPage} results per page and page ${page}`,
+    );
+
+    const endTimer = gqlRequestDurationSeconds.startTimer('teamMemberships');
+
     let orderBy: MembershipOrderByWithRelationInput | undefined = undefined;
     switch (sort) {
-      case 'date':
+      case MembershipSort.DATE:
         orderBy = {
           createdAt: 'desc',
         };
         break;
-      case 'team':
+      case MembershipSort.ROLE:
         orderBy = {
-          team: {
-            name: 'asc',
-          },
+          role: 'asc',
+        };
+        break;
+      case MembershipSort.ACCEPTANCE_STATUS:
+        orderBy = {
+          acceptanceStatus: 'asc',
         };
         break;
       default:
@@ -54,24 +100,45 @@ export class MembershipResolver {
       endTimer({ success: 0 });
       return null;
     }
+    const team = await prisma.team.findUnique({
+      where: {
+        id: teamId,
+      },
+    });
+
+    if (team === null) {
+      logger.warn('Team not found');
+      endTimer({ success: 0 });
+      return null;
+    }
+
+    const totalCount = await prisma.membership.count({
+      where: {
+        team: {
+          id: teamId,
+        },
+      },
+    });
+
     const memberships = await prisma.membership.findMany({
       orderBy,
       skip: page ? (page - 1) * <number>perPage : undefined,
       take: perPage ?? undefined,
       where: {
-        address: {
-          ethAddress: address.toLowerCase(),
+        team: {
+          id: teamId,
         },
       },
     });
 
     logger.debug(
-      `Completed request for Memberships for address ${address} using sort ${sort}, with ${perPage} results per page and page ${page}`,
+      `Completed request for Memberships for team ${teamId} using sort ${sort}, with ${perPage} results per page and page ${page}`,
     );
 
     endTimer({ success: 1 });
 
     return {
+      totalCount,
       memberships,
     };
   }
