@@ -2,8 +2,8 @@ import { Arg, Ctx, Field, ObjectType, Resolver, Query, Mutation } from 'type-gra
 import {
   Membership,
   MembershipOrderByWithRelationInput,
-  MembershipRole,
-  MembershipAcceptanceStatus,
+  // MembershipRole,
+  // MembershipAcceptanceStatus,
 } from '@generated/type-graphql';
 import { Context } from '../../context';
 import { resolveENS } from '../../lib/ens';
@@ -17,6 +17,17 @@ class UserMemberships {
 
   @Field(() => [Membership])
   memberships: Membership[];
+}
+
+enum MembershipAcceptanceStatus {
+  ACCEPTED = 'ACCEPTED',
+  PENDING = 'PENDING',
+}
+
+enum MembershipRole {
+  ADMIN = 'ADMIN',
+  OWNER = 'OWNER',
+  MEMBER = 'MEMBER',
 }
 
 @Resolver(() => Membership)
