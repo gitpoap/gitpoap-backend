@@ -1,10 +1,9 @@
-import { Arg, Ctx, Field, ObjectType, Resolver, Query, Mutation } from 'type-graphql';
+import { Authorized, Arg, Ctx, Field, ObjectType, Resolver, Query, Mutation } from 'type-graphql';
 import { Membership, MembershipOrderByWithRelationInput } from '@generated/type-graphql';
 import { MembershipAcceptanceStatus, MembershipRole } from '@prisma/client';
 import { DateTime } from 'luxon';
-import { Context } from '../../context';
-import { createScopedLogger } from '../../logging';
-import { gqlRequestDurationSeconds } from '../../metrics';
+import { AuthRoles } from '../auth';
+import { AuthLoggingContext } from '../middleware';
 
 @ObjectType()
 class UserMemberships {
@@ -19,6 +18,9 @@ class TeamMemberships {
 
   @Field(() => [Membership])
   memberships: Membership[];
+
+  @Field()
+  error: Error | null;
 }
 
 @ObjectType()
@@ -42,49 +44,56 @@ interface Error {
 
 @Resolver(() => Membership)
 export class MembershipResolver {
+  @Authorized(AuthRoles.Address)
   @Query(() => UserMemberships, { nullable: true })
   async userMemberships(
-    @Ctx() { prisma }: Context,
-    @Arg('address') address: string,
+    @Ctx() { prisma, userAccessTokenPayload, logger }: AuthLoggingContext,
   ): Promise<UserMemberships | null> {
-    const logger = createScopedLogger('GQL userMemberships');
+    logger.info(`Request for Memberships for address`);
 
-    logger.info(`Request for Memberships for address ${address}`);
-
-    const endTimer = gqlRequestDurationSeconds.startTimer('userMemberships');
+    if (userAccessTokenPayload === null) {
+      logger.error('Route passed AuthRoles.Address authorization without user payload set');
+      return null;
+    }
 
     const memberships = await prisma.membership.findMany({
       where: {
         address: {
-          ethAddress: address.toLowerCase(),
+          ethAddress: userAccessTokenPayload.address.toLowerCase(),
         },
       },
     });
 
-    logger.debug(`Completed request for Memberships for address ${address}`);
-
-    endTimer({ success: 1 });
+    logger.debug(`Completed request for Memberships for address ${userAccessTokenPayload.address}`);
 
     return {
       memberships,
     };
   }
 
+  @Authorized(AuthRoles.Address)
   @Query(() => TeamMemberships, { nullable: true })
   async teamMemberships(
-    @Ctx() { prisma }: Context,
+    @Ctx() { prisma, userAccessTokenPayload, logger }: AuthLoggingContext,
     @Arg('teamId') teamId: number,
     @Arg('sort', { defaultValue: MembershipSort.DATE }) sort: MembershipSort,
     @Arg('perPage', { defaultValue: null }) perPage?: number,
     @Arg('page', { defaultValue: null }) page?: number,
-  ): Promise<TeamMemberships | null> {
-    const logger = createScopedLogger('GQL teamMemberships');
-
+  ): Promise<TeamMemberships> {
     logger.info(
       `Request for Memberships for team ${teamId} using sort ${sort}, with ${perPage} results per page and page ${page}`,
     );
 
-    const endTimer = gqlRequestDurationSeconds.startTimer('teamMemberships');
+    if (userAccessTokenPayload === null) {
+      logger.error('Route passed AuthRoles.Address authorization without user payload set');
+      return {
+        totalCount: 0,
+        memberships: [],
+        error: {
+          message: 'Not authenticated',
+        },
+      };
+    }
 
     let orderBy: MembershipOrderByWithRelationInput | undefined = undefined;
     switch (sort) {
@@ -105,25 +114,56 @@ export class MembershipResolver {
         break;
       default:
         logger.warn(`Unknown value provided for sort: ${sort}`);
-        endTimer({ success: 0 });
-        return null;
+        return {
+          totalCount: 0,
+          memberships: [],
+          error: {
+            message: `Unknown value provided for sort: ${sort}`,
+          },
+        };
     }
 
     if ((page === null || perPage === null) && page !== perPage) {
       logger.warn('"page" and "perPage" must be specified together');
-      endTimer({ success: 0 });
-      return null;
+      return {
+        totalCount: 0,
+        memberships: [],
+        error: {
+          message: '"page" and "perPage" must be specified together',
+        },
+      };
     }
     const team = await prisma.team.findUnique({
       where: {
         id: teamId,
       },
+      select: {
+        ownerAddress: true,
+      },
     });
 
     if (team === null) {
       logger.warn('Team not found');
-      endTimer({ success: 0 });
-      return null;
+      return {
+        totalCount: 0,
+        memberships: [],
+        error: {
+          message: 'Team not found',
+        },
+      };
+    }
+
+    if (
+      team.ownerAddress.ethAddress.toLowerCase() !== userAccessTokenPayload.address.toLowerCase()
+    ) {
+      logger.warn('Not a team owner');
+      return {
+        totalCount: 0,
+        memberships: [],
+        error: {
+          message: 'Not authorized',
+        },
+      };
     }
 
     const totalCount = await prisma.membership.count({
@@ -149,25 +189,31 @@ export class MembershipResolver {
       `Completed request for Memberships for team ${teamId} using sort ${sort}, with ${perPage} results per page and page ${page}`,
     );
 
-    endTimer({ success: 1 });
-
     return {
       totalCount,
       memberships,
+      error: null,
     };
   }
 
+  @Authorized(AuthRoles.Address)
   @Mutation(() => MembershipMutationPayload)
   async addNewMembership(
-    @Ctx() { prisma }: Context,
+    @Ctx() { prisma, userAccessTokenPayload, logger }: AuthLoggingContext,
     @Arg('teamId') teamId: number,
     @Arg('address') address: string,
   ): Promise<MembershipMutationPayload> {
-    const logger = createScopedLogger('GQL addNewMembership');
-
     logger.info(`Request to add user with address: ${address} as a member to team ${teamId}`);
 
-    const endTimer = gqlRequestDurationSeconds.startTimer('addNewMembership');
+    if (userAccessTokenPayload === null) {
+      logger.error('Route passed AuthRoles.Address authorization without user payload set');
+      return {
+        membership: null,
+        error: {
+          message: 'Not authenticated',
+        },
+      };
+    }
 
     const team = await prisma.team.findUnique({
       where: {
@@ -175,16 +221,28 @@ export class MembershipResolver {
       },
       select: {
         id: true,
+        ownerAddress: true,
       },
     });
 
     if (team === null) {
       logger.warn(`Team not found for teamId: ${teamId}`);
-      endTimer({ success: 0 });
       return {
         membership: null,
         error: {
           message: `Team not found for teamId: ${teamId}`,
+        },
+      };
+    }
+
+    if (
+      team.ownerAddress.ethAddress.toLowerCase() !== userAccessTokenPayload.address.toLowerCase()
+    ) {
+      logger.warn('Not a team owner');
+      return {
+        membership: null,
+        error: {
+          message: 'Not authorized',
         },
       };
     }
@@ -200,7 +258,6 @@ export class MembershipResolver {
 
     if (addressRecord === null) {
       logger.warn(`Address not found for address: ${address}`);
-      endTimer({ success: 0 });
       return {
         membership: null,
         error: {
@@ -230,25 +287,30 @@ export class MembershipResolver {
       `Completed request to add user with address: ${address} as a member to team ${teamId}`,
     );
 
-    endTimer({ success: 1 });
-
     return {
       membership,
       error: null,
     };
   }
 
+  @Authorized(AuthRoles.Address)
   @Mutation(() => MembershipMutationPayload)
   async removeMembership(
-    @Ctx() { prisma }: Context,
+    @Ctx() { prisma, userAccessTokenPayload, logger }: AuthLoggingContext,
     @Arg('teamId') teamId: number,
     @Arg('address') address: string,
   ): Promise<MembershipMutationPayload> {
-    const logger = createScopedLogger('GQL removeMembership');
-
     logger.info(`Request to remove a membership from team ${teamId} for address ${address}`);
 
-    const endTimer = gqlRequestDurationSeconds.startTimer('removeMembership');
+    if (userAccessTokenPayload === null) {
+      logger.error('Route passed AuthRoles.Address authorization without user payload set');
+      return {
+        membership: null,
+        error: {
+          message: 'Not authenticated',
+        },
+      };
+    }
 
     const team = await prisma.team.findUnique({
       where: {
@@ -256,16 +318,28 @@ export class MembershipResolver {
       },
       select: {
         id: true,
+        ownerAddress: true,
       },
     });
 
     if (team === null) {
       logger.warn(`Team not found for teamId: ${teamId}`);
-      endTimer({ success: 0 });
       return {
         membership: null,
         error: {
           message: `Team not found for teamId: ${teamId}`,
+        },
+      };
+    }
+
+    if (
+      team.ownerAddress.ethAddress.toLowerCase() !== userAccessTokenPayload.address.toLowerCase()
+    ) {
+      logger.warn('Not a team owner');
+      return {
+        membership: null,
+        error: {
+          message: 'Not authorized',
         },
       };
     }
@@ -281,7 +355,6 @@ export class MembershipResolver {
 
     if (addressRecord === null) {
       logger.warn(`Address not found for address: ${address}`);
-      endTimer({ success: 0 });
       return {
         membership: null,
         error: {
@@ -303,25 +376,29 @@ export class MembershipResolver {
       `Completed request to remove a membership from team ${teamId} for address ${address}`,
     );
 
-    endTimer({ success: 1 });
-
     return {
       membership,
       error: null,
     };
   }
 
+  @Authorized(AuthRoles.Address)
   @Mutation(() => MembershipMutationPayload)
   async acceptMembership(
-    @Ctx() { prisma }: Context,
+    @Ctx() { prisma, userAccessTokenPayload, logger }: AuthLoggingContext,
     @Arg('teamId') teamId: number,
-    @Arg('address') address: string, // once we implement gql auth, we don't need this arg
   ): Promise<MembershipMutationPayload> {
-    const logger = createScopedLogger('GQL acceptMembership');
+    logger.info(`Request to accept a membership to team ${teamId}`);
 
-    logger.info(`Request to accept a membership to team ${teamId} for address ${address}`);
-
-    const endTimer = gqlRequestDurationSeconds.startTimer('acceptMembership');
+    if (userAccessTokenPayload === null) {
+      logger.error('Route passed AuthRoles.Address authorization without user payload set');
+      return {
+        membership: null,
+        error: {
+          message: 'Not authenticated',
+        },
+      };
+    }
 
     const team = await prisma.team.findUnique({
       where: {
@@ -334,7 +411,6 @@ export class MembershipResolver {
 
     if (team === null) {
       logger.warn(`Team not found for teamId: ${teamId}`);
-      endTimer({ success: 0 });
       return {
         membership: null,
         error: {
@@ -345,7 +421,7 @@ export class MembershipResolver {
 
     const addressRecord = await prisma.address.findUnique({
       where: {
-        ethAddress: address.toLowerCase(),
+        ethAddress: userAccessTokenPayload.address.toLowerCase(),
       },
       select: {
         id: true,
@@ -353,12 +429,11 @@ export class MembershipResolver {
     });
 
     if (addressRecord === null) {
-      logger.warn(`Address not found for address: ${address}`);
-      endTimer({ success: 0 });
+      logger.warn(`Address not found for address: ${userAccessTokenPayload.address}`);
       return {
         membership: null,
         error: {
-          message: `Address not found for address: ${address}`,
+          message: `Address not found for address: ${userAccessTokenPayload.address}`,
         },
       };
     }
@@ -373,23 +448,23 @@ export class MembershipResolver {
     });
 
     if (membership === null) {
-      logger.warn(`Membership not found for team ${teamId} address: ${address}`);
-      endTimer({ success: 0 });
+      logger.warn(
+        `Membership not found for team ${teamId} address: ${userAccessTokenPayload.address}`,
+      );
       return {
         membership: null,
         error: {
-          message: `Membership not found for team ${teamId} address: ${address}`,
+          message: `Membership not found for team ${teamId} address: ${userAccessTokenPayload.address}`,
         },
       };
     }
 
     if (membership.acceptanceStatus !== MembershipAcceptanceStatus.PENDING) {
-      logger.warn(`Membership is already accepted: ${address}`);
-      endTimer({ success: 0 });
+      logger.warn(`Membership is already accepted: ${userAccessTokenPayload.address}`);
       return {
         membership: null,
         error: {
-          message: `Membership is already accepted: ${address}`,
+          message: `Membership is already accepted: ${userAccessTokenPayload.address}`,
         },
       };
     }
@@ -408,10 +483,8 @@ export class MembershipResolver {
     });
 
     logger.debug(
-      `Completed request to accept a membership to team ${teamId} for address ${address}`,
+      `Completed request to accept a membership to team ${teamId} for address ${userAccessTokenPayload.address}`,
     );
-
-    endTimer({ success: 1 });
 
     return {
       membership: result,
