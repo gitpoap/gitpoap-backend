@@ -125,7 +125,7 @@ import { CustomOrganizationResolver } from './resolvers/githubOrganizations';
 import { CustomProfileResolver } from './resolvers/profiles';
 import { CustomRepoResolver } from './resolvers/repos';
 import { CustomSearchResolver } from './resolvers/search';
-import { CustomMembershipResolver } from './resolvers/memberships';
+import { MembershipResolver } from './resolvers/memberships';
 
 type ResolverClass = { new (...args: any[]): any };
 
@@ -249,7 +249,7 @@ const allResolvers: NonEmptyArray<ResolverClass> = [
   CustomProfileResolver,
   CustomRepoResolver,
   CustomSearchResolver,
-  CustomMembershipResolver,
+  MembershipResolver,
 ];
 
 export const createAndEmitSchema = async () => {
