@@ -1,6 +1,6 @@
 import { utils } from 'ethers';
 import { DateTime } from 'luxon';
-import { SIGNATURE_TTL_MINUTES } from '../constants';
+import { SIGNATURE_TTL_DAYS } from '../constants';
 import { createScopedLogger } from '../logging';
 import { SignatureDataSchema } from '../schemas/signatures';
 import { z } from 'zod';
@@ -19,7 +19,7 @@ export function isSignatureValid(
 
   const createdAt = DateTime.fromSeconds(signatureData.createdAt / 1000.0);
 
-  if (createdAt.plus({ minutes: SIGNATURE_TTL_MINUTES }) < DateTime.now()) {
+  if (createdAt.plus({ days: SIGNATURE_TTL_DAYS }) < DateTime.now()) {
     logger.debug('Rejected expired signature');
     return false;
   }
