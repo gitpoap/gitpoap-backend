@@ -1,10 +1,6 @@
 import { Arg, Ctx, Field, ObjectType, Resolver, Query, Mutation } from 'type-graphql';
-import {
-  Membership,
-  MembershipOrderByWithRelationInput,
-  // MembershipRole,
-  // MembershipAcceptanceStatus,
-} from '@generated/type-graphql';
+import { Membership, MembershipOrderByWithRelationInput } from '@generated/type-graphql';
+import { MembershipAcceptanceStatus } from '@prisma/client';
 import { Context } from '../../context';
 import { resolveENS } from '../../lib/ens';
 import { createScopedLogger } from '../../logging';
@@ -17,11 +13,6 @@ class UserMemberships {
 
   @Field(() => [Membership])
   memberships: Membership[];
-}
-
-enum MembershipAcceptanceStatus {
-  ACCEPTED = 'ACCEPTED',
-  PENDING = 'PENDING',
 }
 
 enum MembershipRole {
@@ -82,26 +73,21 @@ export class CustomMembershipResolver {
       return null;
     }
 
-    const result: UserMemberships = {
-      totalMembershipCount: 0,
-      memberships: [],
-    };
-
-    result.totalMembershipCount = await prisma.membership.count({
+    const totalMembershipCount = await prisma.membership.count({
       where: {
         address: {
-          ethAddress: address,
+          ethAddress: address.toLowerCase(),
         },
       },
     });
 
-    result.memberships = await prisma.membership.findMany({
+    const memberships = await prisma.membership.findMany({
       orderBy,
       skip: page ? (page - 1) * <number>perPage : undefined,
       take: perPage ?? undefined,
       where: {
         address: {
-          ethAddress: address,
+          ethAddress: address.toLowerCase(),
         },
       },
     });
@@ -112,7 +98,10 @@ export class CustomMembershipResolver {
 
     endTimer({ success: 1 });
 
-    return result;
+    return {
+      totalMembershipCount,
+      memberships,
+    };
   }
 
   @Mutation(() => Membership)
@@ -167,7 +156,7 @@ export class CustomMembershipResolver {
         },
         address: {
           connect: {
-            ethAddress: address,
+            ethAddress: address.toLowerCase(),
           },
         },
         role,
@@ -245,19 +234,16 @@ export class CustomMembershipResolver {
   }
 
   @Mutation(() => Membership)
-  async updateMembershipStatus(
+  async acceptMembership(
     @Ctx() { prisma }: Context,
     @Arg('teamId') teamId: number,
     @Arg('address') address: string, // once we implement gql auth, we don't need this arg
-    @Arg('acceptanceStatus') acceptanceStatus: MembershipAcceptanceStatus,
   ): Promise<Membership | null> {
-    const logger = createScopedLogger('GQL updateMembershipStatus');
+    const logger = createScopedLogger('GQL acceptMembership');
 
-    logger.info(
-      `Request for updating a membership acceptanceStatus in team ${teamId} for address ${address} to acceptanceStatus ${acceptanceStatus}`,
-    );
+    logger.info(`Request for accepting a membership to team ${teamId} for address ${address}`);
 
-    const endTimer = gqlRequestDurationSeconds.startTimer('updateMembershipStatus');
+    const endTimer = gqlRequestDurationSeconds.startTimer('acceptMembership');
 
     const teamRecord = await prisma.team.findUnique({
       where: {
@@ -289,6 +275,27 @@ export class CustomMembershipResolver {
       return null;
     }
 
+    const membershipRecord = await prisma.membership.findUnique({
+      where: {
+        teamId_addressId: {
+          teamId,
+          addressId: addressRecord.id,
+        },
+      },
+    });
+
+    if (membershipRecord === null) {
+      logger.warn(`Membership not found for team ${teamId} address: ${address}`);
+      endTimer({ success: 0 });
+      return null;
+    }
+
+    if (membershipRecord.acceptanceStatus !== MembershipAcceptanceStatus.PENDING) {
+      logger.warn(`Membership is already accepted: ${address}`);
+      endTimer({ success: 0 });
+      return null;
+    }
+
     const result = await prisma.membership.update({
       where: {
         teamId_addressId: {
@@ -297,12 +304,12 @@ export class CustomMembershipResolver {
         },
       },
       data: {
-        acceptanceStatus,
+        acceptanceStatus: MembershipAcceptanceStatus.ACCEPTED,
       },
     });
 
     logger.debug(
-      `Completed request for updating a membership acceptanceStatus in team ${teamId} for address ${address} to acceptanceStatus ${acceptanceStatus}`,
+      `Completed request for accepting a membership to team ${teamId} for address ${address}`,
     );
 
     endTimer({ success: 1 });
