@@ -590,6 +590,12 @@ type Query {
     repoId: Float!
   ): [ProfileWithClaimsCount!]
   search(text: String!): SearchResults!
+  userMemberships(
+    page: Float = null
+    perPage: Float = null
+    sort: String = "date"
+    address: String!
+  ): UserMemberships
 }
 
 type AggregateAddress {
@@ -5822,4 +5828,19 @@ type ProfileWithClaimsCount {
 type SearchResults {
   githubUsers: [GithubUser!]!
   profiles: [Profile!]!
+}
+
+type UserMemberships {
+  totalMembershipCount: Float!
+  memberships: [Membership!]!
+}
+
+type Mutation {
+  addNewMembership(role: String!, address: String!, teamId: Float!): Membership!
+  removeMembership(address: String!, teamId: Float!): Membership!
+  updateMembershipStatus(
+    acceptanceStatus: String!
+    address: String!
+    teamId: Float!
+  ): Membership!
 }
