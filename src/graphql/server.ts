@@ -16,9 +16,9 @@ export async function createGQLServer(): Promise<RequestHandler> {
     schema: gqlSchema,
     context: {
       ...context,
-      userAccessTokenPayload: req.user !== null ? getAccessTokenPayload(req.user) : null,
+      userAccessTokenPayload: req.user ? getAccessTokenPayload(req.user) : null,
     },
-    graphiql: true,
+    graphiql: { headerEditorEnabled: true },
   }));
 
   return async (req, res) => {
