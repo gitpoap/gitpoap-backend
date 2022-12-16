@@ -16,7 +16,6 @@ enum MembershipErrorMessage {
   NOT_AUTHORIZED = 'Not authorized',
   ADDRESS_NOT_FOUND = 'Address not found',
   TEAM_NOT_FOUND = 'Team not found',
-  INVALID_SORT = 'Invalid sort',
   PAGE_NOT_SPECIFIED = 'page not specified',
   MEMBERSHIP_NOT_FOUND = 'Membership not found',
   ALREADY_ACCEPTED = 'Already accepted',
@@ -108,9 +107,6 @@ export class MembershipResolver {
           acceptanceStatus: 'asc',
         };
         break;
-      default:
-        logger.warn(`Unknown value provided for sort: ${sort}`);
-        throw new Error(MembershipErrorMessage.INVALID_SORT);
     }
 
     if ((page === null || perPage === null) && page !== perPage) {
