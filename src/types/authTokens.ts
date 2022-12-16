@@ -30,32 +30,36 @@ const membershipSet = new Set<MembershipRole>([
 
 function isAccessTokenPayloadBase(payload: any): boolean {
   if (
-    payload &&
-    typeof payload === 'object' &&
-    'authTokenId' in payload &&
-    typeof payload.authTokenId === 'number' &&
-    'addressId' in payload &&
-    typeof payload.addressId === 'number' &&
-    'address' in payload &&
-    typeof payload.address === 'string' &&
-    'ensName' in payload &&
-    isStringOrNull(payload.ensName) &&
-    'ensAvatarImageUrl' in payload &&
-    isStringOrNull(payload.ensAvatarImageUrl) &&
-    'memberships' in payload &&
-    Array.isArray(payload.memberships)
+    !(
+      payload &&
+      typeof payload === 'object' &&
+      'authTokenId' in payload &&
+      typeof payload.authTokenId === 'number' &&
+      'addressId' in payload &&
+      typeof payload.addressId === 'number' &&
+      'address' in payload &&
+      typeof payload.address === 'string' &&
+      'ensName' in payload &&
+      isStringOrNull(payload.ensName) &&
+      'ensAvatarImageUrl' in payload &&
+      isStringOrNull(payload.ensAvatarImageUrl) &&
+      'memberships' in payload &&
+      Array.isArray(payload.memberships)
+    )
   ) {
-    for (const membership of payload.memberships) {
-      if (
-        !(
-          'teamId' in membership &&
-          typeof payload.teamId === 'number' &&
-          'role' in membership &&
-          membershipSet.has(payload.role)
-        )
-      ) {
-        return false;
-      }
+    return false;
+  }
+
+  for (const membership of payload.memberships) {
+    if (
+      !(
+        'teamId' in membership &&
+        typeof payload.teamId === 'number' &&
+        'role' in membership &&
+        membershipSet.has(payload.role)
+      )
+    ) {
+      return false;
     }
   }
 
