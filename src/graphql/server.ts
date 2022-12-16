@@ -1,4 +1,4 @@
-import { graphqlHTTP } from 'express-graphql';
+import { createHandler } from 'graphql-http';
 import { createAndEmitSchema } from './schema';
 import { context } from '../context';
 import { getGQLAccessToken } from './accessTokens';
@@ -13,14 +13,13 @@ import { renderGraphiQL } from './graphiql';
 
 export async function createGQLServer(): Promise<RequestHandler> {
   const gqlSchema = await createAndEmitSchema();
-  const gqlHandler = graphqlHTTP((req: any) => ({
+  const gqlHandler = createHandler({
     schema: gqlSchema,
-    context: {
+    context: (req: any) => ({
       ...context,
       userAccessTokenPayload: req.user ? getAccessTokenPayload(req.user) : null,
-    },
-    graphiql: false,
-  }));
+    }),
+  });
 
   return async (req, res) => {
     const logger = createScopedLogger('gqlServerHandler');
