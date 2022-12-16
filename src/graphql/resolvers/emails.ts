@@ -2,6 +2,7 @@ import { Authorized, Ctx, Field, ObjectType, Resolver, Query } from 'type-graphq
 import { Email } from '@generated/type-graphql';
 import { AuthRoles } from '../auth';
 import { AuthLoggingContext } from '../middleware';
+import { InternalError } from '../errors';
 
 @ObjectType()
 class UserEmail {
@@ -21,7 +22,7 @@ export class CustomEmailResolver {
 
     if (userAccessTokenPayload === null) {
       logger.error('Route passed AuthRoles.Address authorization without user payload set');
-      throw new Error('Internal server error');
+      throw InternalError;
     }
 
     const emailData = await prisma.email.findUnique({
