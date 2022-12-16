@@ -68,6 +68,7 @@ const genAuthTokens = setupGenAuthTokens({
   address,
   ensName,
   ensAvatarImageUrl,
+  memberships: [],
   githubId: null,
   githubHandle: null,
   discordId: null,

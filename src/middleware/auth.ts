@@ -49,6 +49,7 @@ export function jwtWithAddress() {
       // Update the nullable fields in case they've updated in the DB
       set(req, 'user.ensName', validatedAccessTokenPayload.ensName);
       set(req, 'user.ensAvatarImageUrl', validatedAccessTokenPayload.ensAvatarImageUrl);
+      set(req, 'user.memberships', validatedAccessTokenPayload.memberships);
       set(req, 'user.githubId', validatedAccessTokenPayload.githubId);
       set(req, 'user.githubHandle', validatedAccessTokenPayload.githubHandle);
       set(req, 'user.discordId', validatedAccessTokenPayload.discordId);
@@ -125,6 +126,7 @@ export function jwtWithGitHubOAuth() {
       // Update the nullable values in case they've updated in the DB
       set(req, 'user.ensName', validatedAccessTokenPayload.ensName);
       set(req, 'user.ensAvatarImageUrl', validatedAccessTokenPayload.ensAvatarImageUrl);
+      set(req, 'user.memberships', validatedAccessTokenPayload.memberships);
       set(req, 'user.discordId', validatedAccessTokenPayload.discordId);
       set(req, 'user.discordHandle', validatedAccessTokenPayload.discordHandle);
       set(req, 'user.emailId', validatedAccessTokenPayload.emailId);

@@ -68,6 +68,7 @@ describe('generateAuthTokensWithChecks', () => {
         address: ethAddress,
         ensName,
         ensAvatarImageUrl,
+        memberships: [],
         githubId: expectedGithubId,
         githubHandle: expectedGithubHandle,
         discordId: expectedDiscordId,
@@ -87,6 +88,7 @@ describe('generateAuthTokensWithChecks', () => {
       ethAddress,
       ensName,
       ensAvatarImageUrl,
+      memberships: [],
       githubUser: null,
       discordUser: null,
       email: null,
@@ -105,6 +107,7 @@ describe('generateAuthTokensWithChecks', () => {
       ethAddress,
       ensName,
       ensAvatarImageUrl,
+      memberships: [],
       githubUser: {
         id: githubUserId,
         githubId,
@@ -135,6 +138,7 @@ describe('generateAuthTokensWithChecks', () => {
       ethAddress,
       ensName,
       ensAvatarImageUrl,
+      memberships: [],
       githubUser: {
         id: githubUserId,
         githubId,
@@ -160,6 +164,7 @@ describe('generateAuthTokensWithChecks', () => {
       ethAddress,
       ensName,
       ensAvatarImageUrl,
+      memberships: [],
       githubUser: null,
       discordUser: null,
       email: null,
@@ -178,6 +183,7 @@ describe('generateAuthTokensWithChecks', () => {
       ethAddress,
       ensName,
       ensAvatarImageUrl,
+      memberships: [],
       githubUser: null,
       discordUser: {
         id: discordUserId,
@@ -208,6 +214,7 @@ describe('generateAuthTokensWithChecks', () => {
       ethAddress,
       ensName,
       ensAvatarImageUrl,
+      memberships: [],
       githubUser: null,
       discordUser: {
         id: discordUserId,
@@ -233,6 +240,7 @@ describe('generateAuthTokensWithChecks', () => {
       ethAddress,
       ensName,
       ensAvatarImageUrl,
+      memberships: [],
       githubUser: null,
       discordUser: null,
       email: {
@@ -252,6 +260,7 @@ describe('generateAuthTokensWithChecks', () => {
       ethAddress,
       ensName,
       ensAvatarImageUrl,
+      memberships: [],
       githubUser: null,
       discordUser: null,
       email: {
