@@ -2,7 +2,6 @@ declare global {
   namespace NodeJS {
     interface ProcessEnv {
       JWT_SECRET: string;
-      FRONTEND_JWT_SECRET: string;
 
       NODE_ENV: string;
 

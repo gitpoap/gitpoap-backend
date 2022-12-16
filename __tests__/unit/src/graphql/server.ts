@@ -2,9 +2,10 @@ import '../../../../__mocks__/src/logging';
 import { createGQLServer } from '../../../../src/graphql/server';
 import { graphqlHTTP } from 'express-graphql';
 import { verify } from 'jsonwebtoken';
-import { FRONTEND_JWT_SECRET, JWT_SECRET } from '../../../../src/environment';
+import { JWT_SECRET } from '../../../../src/environment';
 import set from 'lodash/set';
 import { getValidatedAccessTokenPayload } from '../../../../src/lib/authTokens';
+import { MembershipRole } from '@prisma/client';
 
 jest.mock('../../../../src/logging');
 jest.mock('express-graphql');
@@ -31,7 +32,7 @@ describe('createGQLServer', () => {
     return { status };
   };
 
-  it('Skips checking frontend auth on DEV for graphiql', async () => {
+  it('Skips checking auth for graphiql', async () => {
     const handler = await createGQLServer();
 
     expect(mockedGraphqlHTTP).toHaveBeenCalledTimes(1);
@@ -91,16 +92,31 @@ describe('createGQLServer', () => {
     expect(mockedGraphqlHTTPHandler).toHaveBeenCalledTimes(0);
   });
 
-  it('Fails when the authorization is missing fields', async () => {
+  it('Succeeds without user token specified', async () => {
     const { handler, mockedReq, mockedRes } = await genGeneralSetup();
 
-    const frontendToken = 'foobar';
-    mockedReq.get.mockReturnValue(
-      JSON.stringify({
-        frontend: frontendToken,
-        user: null,
-      }),
-    );
+    mockedReq.get.mockReturnValue(JSON.stringify({ user: null }));
+
+    await handler(mockedReq as any, mockedRes as any, () => ({}));
+
+    expect(mockedReq.get).toHaveBeenCalledTimes(1);
+    expect(mockedReq.get).toHaveBeenCalledWith('authorization');
+
+    expect(mockedRes.status).toHaveBeenCalledTimes(0);
+
+    expect(mockedVerify).toHaveBeenCalledTimes(0);
+
+    expect(mockedSet).toHaveBeenCalledTimes(1);
+    expect(mockedSet).toHaveBeenCalledWith(mockedReq, 'user', null);
+
+    expect(mockedGraphqlHTTPHandler).toHaveBeenCalledTimes(1);
+  });
+
+  it('Succeeds when user token has bad signer', async () => {
+    const { handler, mockedReq, mockedRes } = await genGeneralSetup();
+
+    const userToken = 'yay';
+    mockedReq.get.mockReturnValue(JSON.stringify({ user: userToken }));
     mockedVerify.mockImplementationOnce(() => {
       throw new Error('error');
     });
@@ -110,25 +126,23 @@ describe('createGQLServer', () => {
     expect(mockedReq.get).toHaveBeenCalledTimes(1);
     expect(mockedReq.get).toHaveBeenCalledWith('authorization');
 
-    expect(mockedRes.status).toHaveBeenCalledTimes(1);
-    expect(mockedRes.status).toHaveBeenCalledWith(401);
+    expect(mockedRes.status).toHaveBeenCalledTimes(0);
 
     expect(mockedVerify).toHaveBeenCalledTimes(1);
-    expect(mockedVerify).toHaveBeenCalledWith(frontendToken, FRONTEND_JWT_SECRET);
+    expect(mockedVerify).toHaveBeenCalledWith(userToken, JWT_SECRET);
 
-    expect(mockedGraphqlHTTPHandler).toHaveBeenCalledTimes(0);
+    expect(mockedSet).toHaveBeenCalledTimes(1);
+    expect(mockedSet).toHaveBeenCalledWith(mockedReq, 'user', null);
+
+    expect(mockedGraphqlHTTPHandler).toHaveBeenCalledTimes(1);
   });
 
-  it('Succeeds when frontend token is valid without user token specified', async () => {
+  it('Succeeds when user token is malformed', async () => {
     const { handler, mockedReq, mockedRes } = await genGeneralSetup();
 
-    const frontendToken = 'foobar';
-    mockedReq.get.mockReturnValue(
-      JSON.stringify({
-        frontend: frontendToken,
-        user: null,
-      }),
-    );
+    const userToken = 'yay';
+    mockedReq.get.mockReturnValue(JSON.stringify({ user: userToken }));
+    mockedVerify.mockImplementationOnce(() => ({ foo: 'bar' }));
 
     await handler(mockedReq as any, mockedRes as any, () => ({}));
 
@@ -138,7 +152,7 @@ describe('createGQLServer', () => {
     expect(mockedRes.status).toHaveBeenCalledTimes(0);
 
     expect(mockedVerify).toHaveBeenCalledTimes(1);
-    expect(mockedVerify).toHaveBeenCalledWith(frontendToken, FRONTEND_JWT_SECRET);
+    expect(mockedVerify).toHaveBeenCalledWith(userToken, JWT_SECRET);
 
     expect(mockedSet).toHaveBeenCalledTimes(1);
     expect(mockedSet).toHaveBeenCalledWith(mockedReq, 'user', null);
@@ -146,90 +160,12 @@ describe('createGQLServer', () => {
     expect(mockedGraphqlHTTPHandler).toHaveBeenCalledTimes(1);
   });
 
-  it('Succeeds when frontend token is valid but user token has bad signer', async () => {
+  it('Succeeds when user token is invalid', async () => {
     const { handler, mockedReq, mockedRes } = await genGeneralSetup();
 
-    const frontendToken = 'foobar';
     const userToken = 'yay';
-    mockedReq.get.mockReturnValue(
-      JSON.stringify({
-        frontend: frontendToken,
-        user: userToken,
-      }),
-    );
-    mockedVerify
-      .mockImplementationOnce(() => true)
-      .mockImplementationOnce(() => {
-        throw new Error('error');
-      });
-
-    await handler(mockedReq as any, mockedRes as any, () => ({}));
-
-    expect(mockedReq.get).toHaveBeenCalledTimes(1);
-    expect(mockedReq.get).toHaveBeenCalledWith('authorization');
-
-    expect(mockedRes.status).toHaveBeenCalledTimes(0);
-
-    expect(mockedVerify).toHaveBeenCalledTimes(2);
-    expect(mockedVerify).toHaveBeenNthCalledWith(1, frontendToken, FRONTEND_JWT_SECRET);
-    expect(mockedVerify).toHaveBeenNthCalledWith(2, userToken, JWT_SECRET);
-
-    expect(mockedSet).toHaveBeenCalledTimes(1);
-    expect(mockedSet).toHaveBeenCalledWith(mockedReq, 'user', null);
-
-    expect(mockedGraphqlHTTPHandler).toHaveBeenCalledTimes(1);
-  });
-
-  it('Succeeds when frontend token is valid but user token is malformed', async () => {
-    const { handler, mockedReq, mockedRes } = await genGeneralSetup();
-
-    const frontendToken = 'foobar';
-    const userToken = 'yay';
-    mockedReq.get.mockReturnValue(
-      JSON.stringify({
-        frontend: frontendToken,
-        user: userToken,
-      }),
-    );
-    mockedVerify
-      .mockImplementationOnce(() => true)
-      .mockImplementationOnce(() => ({
-        foo: 'bar',
-      }));
-
-    await handler(mockedReq as any, mockedRes as any, () => ({}));
-
-    expect(mockedReq.get).toHaveBeenCalledTimes(1);
-    expect(mockedReq.get).toHaveBeenCalledWith('authorization');
-
-    expect(mockedRes.status).toHaveBeenCalledTimes(0);
-
-    expect(mockedVerify).toHaveBeenCalledTimes(2);
-    expect(mockedVerify).toHaveBeenNthCalledWith(1, frontendToken, FRONTEND_JWT_SECRET);
-    expect(mockedVerify).toHaveBeenNthCalledWith(2, userToken, JWT_SECRET);
-
-    expect(mockedSet).toHaveBeenCalledTimes(1);
-    expect(mockedSet).toHaveBeenCalledWith(mockedReq, 'user', null);
-
-    expect(mockedGraphqlHTTPHandler).toHaveBeenCalledTimes(1);
-  });
-
-  it('Succeeds when frontend token is valid but user token is invalid', async () => {
-    const { handler, mockedReq, mockedRes } = await genGeneralSetup();
-
-    const frontendToken = 'foobar';
-    const userToken = 'yay';
-    mockedReq.get.mockReturnValue(
-      JSON.stringify({
-        frontend: frontendToken,
-        user: userToken,
-      }),
-    );
-    mockedVerify
-      .mockImplementationOnce(() => true)
-      .mockImplementationOnce(() => ({
-        foo: 'bar',
-      }));
+    mockedReq.get.mockReturnValue(JSON.stringify({ user: userToken }));
+    mockedVerify.mockImplementationOnce(() => ({ foo: 'bar' }));
     mockedGetValidatedAccessTokenPayload.mockResolvedValue(null);
 
     await handler(mockedReq as any, mockedRes as any, () => ({}));
@@ -239,9 +175,8 @@ describe('createGQLServer', () => {
 
     expect(mockedRes.status).toHaveBeenCalledTimes(0);
 
-    expect(mockedVerify).toHaveBeenCalledTimes(2);
-    expect(mockedVerify).toHaveBeenNthCalledWith(1, frontendToken, FRONTEND_JWT_SECRET);
-    expect(mockedVerify).toHaveBeenNthCalledWith(2, userToken, JWT_SECRET);
+    expect(mockedVerify).toHaveBeenCalledTimes(1);
+    expect(mockedVerify).toHaveBeenCalledWith(userToken, JWT_SECRET);
 
     expect(mockedSet).toHaveBeenCalledTimes(1);
     expect(mockedSet).toHaveBeenCalledWith(mockedReq, 'user', null);
@@ -249,20 +184,15 @@ describe('createGQLServer', () => {
     expect(mockedGraphqlHTTPHandler).toHaveBeenCalledTimes(1);
   });
 
-  it('Succeeds when frontend token is valid and user token is valid', async () => {
+  it('Succeeds when user token is valid', async () => {
     const { handler, mockedReq, mockedRes } = await genGeneralSetup();
 
-    const frontendToken = 'foobar';
     const userToken = 'yay';
-    mockedReq.get.mockReturnValue(
-      JSON.stringify({
-        frontend: frontendToken,
-        user: userToken,
-      }),
-    );
+    mockedReq.get.mockReturnValue(JSON.stringify({ user: userToken }));
     const validatedPayload = {
       ensName: null,
       ensAvatarImageUrl: null,
+      memberships: [{ teamId: 3, role: MembershipRole.ADMIN }],
       githubId: null,
       githubHandle: null,
       discordId: null,
@@ -274,9 +204,10 @@ describe('createGQLServer', () => {
       addressId: 342,
       address: '0xfoo',
       ...validatedPayload,
+      memberships: [],
       emailId: null,
     };
-    mockedVerify.mockImplementationOnce(() => true).mockImplementationOnce(() => userPayload);
+    mockedVerify.mockImplementationOnce(() => userPayload);
     mockedGetValidatedAccessTokenPayload.mockResolvedValue(validatedPayload as any);
 
     await handler(mockedReq as any, mockedRes as any, () => ({}));
@@ -286,9 +217,8 @@ describe('createGQLServer', () => {
 
     expect(mockedRes.status).toHaveBeenCalledTimes(0);
 
-    expect(mockedVerify).toHaveBeenCalledTimes(2);
-    expect(mockedVerify).toHaveBeenNthCalledWith(1, frontendToken, FRONTEND_JWT_SECRET);
-    expect(mockedVerify).toHaveBeenNthCalledWith(2, userToken, JWT_SECRET);
+    expect(mockedVerify).toHaveBeenCalledTimes(1);
+    expect(mockedVerify).toHaveBeenCalledWith(userToken, JWT_SECRET);
 
     expect(mockedSet).toHaveBeenCalledTimes(1);
     expect(mockedSet).toHaveBeenCalledWith(mockedReq, 'user', {

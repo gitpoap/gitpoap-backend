@@ -1,19 +1,15 @@
 import { sign } from 'jsonwebtoken';
-import { FRONTEND_JWT_SECRET, JWT_SECRET } from '../../../src/environment';
-import { GQLAccessTokens } from '../../../src/graphql/accessTokens';
+import { JWT_SECRET } from '../../../src/environment';
+import { GQLAccessToken } from '../../../src/graphql/accessTokens';
 import { GraphQLClient } from 'graphql-request';
 
-function genFrontendToken() {
-  return sign({}, FRONTEND_JWT_SECRET);
-}
-
-export function genGQLAccessTokens(userPayload?: Record<string, any>): GQLAccessTokens {
+export function genGQLAccessTokens(userPayload?: Record<string, any>): GQLAccessToken {
   let user: string | null = null;
   if (userPayload !== undefined) {
     user = sign(userPayload, JWT_SECRET);
   }
 
-  return { frontend: genFrontendToken(), user };
+  return { user };
 }
 
 export function getGraphQLClient(userPayload?: Record<string, any>) {
