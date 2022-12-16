@@ -31,6 +31,7 @@ const membershipSet = new Set<MembershipRole>([
 function isAccessTokenPayloadBase(payload: any): boolean {
   if (
     payload &&
+    typeof payload === 'object' &&
     'authTokenId' in payload &&
     typeof payload.authTokenId === 'number' &&
     'addressId' in payload &&
