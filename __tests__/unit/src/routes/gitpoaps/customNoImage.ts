@@ -66,6 +66,7 @@ function genAuthTokens(
     someAddress ?? address,
     ensName,
     ensAvatarImageUrl,
+    [],
     someGithubId ?? null,
     githubHandle ?? null,
     someDiscordId ?? null,
