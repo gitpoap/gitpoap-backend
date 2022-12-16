@@ -132,6 +132,7 @@ function genAuthTokens(someAddress?: string) {
     someAddress ?? address,
     ensName,
     ensAvatarImageUrl,
+    [],
     githubId,
     githubHandle,
     discordId,

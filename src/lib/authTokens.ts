@@ -2,13 +2,19 @@ import { context } from '../context';
 import { JWT_EXP_TIME_SECONDS } from '../constants';
 import { sign } from 'jsonwebtoken';
 import { JWT_SECRET } from '../environment';
-import { AccessTokenPayload, RefreshTokenPayload, UserAuthTokens } from '../types/authTokens';
+import {
+  AccessTokenPayload,
+  RefreshTokenPayload,
+  Memberships,
+  UserAuthTokens,
+} from '../types/authTokens';
 import { createScopedLogger } from '../logging';
 import { isGithubTokenValidForUser } from '../external/github';
 import { isDiscordTokenValidForUser } from '../external/discord';
 import { removeGithubUsersGithubOAuthToken } from '../lib/githubUsers';
 import { removeDiscordUsersDiscordOAuthToken } from '../lib/discordUsers';
 import { removeGithubLoginForAddress, removeDiscordLoginForAddress } from '../lib/addresses';
+import { MembershipAcceptanceStatus } from '@prisma/client';
 
 async function createAuthToken(addressId: number) {
   return await context.prisma.authToken.create({
@@ -48,6 +54,15 @@ async function createAuthToken(addressId: number) {
             select: {
               id: true,
               isValidated: true,
+            },
+          },
+          memberships: {
+            where: {
+              acceptanceStatus: MembershipAcceptanceStatus.ACCEPTED,
+            },
+            select: {
+              teamId: true,
+              role: true,
             },
           },
         },
@@ -161,6 +176,7 @@ export function generateAuthTokens(
   address: string,
   ensName: string | null,
   ensAvatarImageUrl: string | null,
+  memberships: Memberships,
   githubId: number | null,
   githubHandle: string | null,
   discordId: string | null,
@@ -173,6 +189,7 @@ export function generateAuthTokens(
     address,
     ensName,
     ensAvatarImageUrl,
+    memberships,
     githubId,
     githubHandle,
     discordId,
@@ -201,6 +218,7 @@ type CheckAddressType = {
   ethAddress: string;
   ensName: string | null;
   ensAvatarImageUrl: string | null;
+  memberships: Memberships;
   githubUser: CheckGithubUserType | null;
   discordUser: CheckDiscordUserType | null;
   email: CheckEmailType | null;
@@ -226,6 +244,7 @@ export async function generateAuthTokensWithChecks(
     address.ethAddress,
     address.ensName,
     address.ensAvatarImageUrl,
+    address.memberships,
     githubId,
     githubHandle,
     discordId,
@@ -284,6 +303,15 @@ export async function updateAuthTokenGeneration(authTokenId: number) {
               isValidated: true,
             },
           },
+          memberships: {
+            where: {
+              acceptanceStatus: MembershipAcceptanceStatus.ACCEPTED,
+            },
+            select: {
+              teamId: true,
+              role: true,
+            },
+          },
         },
       },
     },
@@ -293,6 +321,7 @@ export async function updateAuthTokenGeneration(authTokenId: number) {
 type ValidatedAccessTokenPayload = {
   ensName: string | null;
   ensAvatarImageUrl: string | null;
+  memberships: Memberships;
   githubId: number | null;
   githubHandle: string | null;
   githubOAuthToken: string | null;
@@ -331,6 +360,15 @@ export async function getValidatedAccessTokenPayload(
               isValidated: true,
             },
           },
+          memberships: {
+            where: {
+              acceptanceStatus: MembershipAcceptanceStatus.ACCEPTED,
+            },
+            select: {
+              teamId: true,
+              role: true,
+            },
+          },
         },
       },
     },
@@ -347,6 +385,7 @@ export async function getValidatedAccessTokenPayload(
   return {
     ensName: tokenInfo.address.ensName,
     ensAvatarImageUrl: tokenInfo.address.ensAvatarImageUrl,
+    memberships: tokenInfo.address.memberships,
     githubId: tokenInfo.address.githubUser?.githubId ?? null,
     githubHandle: tokenInfo.address.githubUser?.githubHandle ?? null,
     githubOAuthToken: tokenInfo.address.githubUser?.githubOAuthToken ?? null,

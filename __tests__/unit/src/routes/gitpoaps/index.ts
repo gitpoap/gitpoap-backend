@@ -54,6 +54,7 @@ function genAuthTokens(someAddress?: string) {
     someAddress ?? address,
     ensName,
     ensAvatarImageUrl,
+    [],
     null,
     null,
     null,
