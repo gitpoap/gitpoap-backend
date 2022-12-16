@@ -18,9 +18,7 @@ describe('GraphQL Server', () => {
 
   it('Accepts requests with user=null', async () => {
     const client = new GraphQLClient('http://server:3001/graphql', {
-      headers: {
-        authorization: JSON.stringify({ user: null }),
-      },
+      headers: { authorization: 'Bearer null' },
     });
 
     return expect(
@@ -38,11 +36,7 @@ describe('GraphQL Server', () => {
 
   it('Accepts requests with malformed user token', async () => {
     const client = new GraphQLClient('http://server:3001/graphql', {
-      headers: {
-        authorization: JSON.stringify({
-          user: 'lkjalskdjflkajsldkfj',
-        }),
-      },
+      headers: { authorization: 'Bearer lkjalskdjflkajsldkfj' },
     });
 
     return expect(
