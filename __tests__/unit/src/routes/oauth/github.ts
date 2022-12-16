@@ -16,6 +16,7 @@ import {
   updateAuthTokenGeneration,
 } from '../../../../../src/lib/authTokens';
 import { setupGenAuthTokens } from '../../../../../__mocks__/src/lib/authTokens';
+import { MembershipAcceptanceStatus } from '@prisma/client';
 
 jest.mock('../../../../../src/logging');
 jest.mock('../../../../../src/external/github');
@@ -65,6 +66,7 @@ const genAuthTokens = setupGenAuthTokens({
   address,
   ensName,
   ensAvatarImageUrl,
+  memberships: [],
   githubId,
   githubHandle,
   discordHandle: null,
@@ -228,6 +230,15 @@ describe('DELETE /oauth/github', () => {
               select: {
                 id: true,
                 isValidated: true,
+              },
+            },
+            memberships: {
+              where: {
+                acceptanceStatus: MembershipAcceptanceStatus.ACCEPTED,
+              },
+              select: {
+                teamId: true,
+                role: true,
               },
             },
           },

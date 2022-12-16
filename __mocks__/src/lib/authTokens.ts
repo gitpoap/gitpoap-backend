@@ -1,4 +1,8 @@
-import { AccessTokenPayload, RefreshTokenPayload } from '../../../src/types/authTokens';
+import {
+  AccessTokenPayload,
+  Memberships,
+  RefreshTokenPayload,
+} from '../../../src/types/authTokens';
 import { sign } from 'jsonwebtoken';
 import { JWT_SECRET } from '../../../src/environment';
 import { JWT_EXP_TIME_SECONDS } from '../../../src/constants';
@@ -16,6 +20,7 @@ type SetupGenAuthTokensArgs = {
   address: string;
   ensName: string | null;
   ensAvatarImageUrl: string | null;
+  memberships: Memberships;
   githubId: number | null;
   githubHandle: string | null;
   discordId: string | null;
@@ -30,6 +35,7 @@ export function setupGenAuthTokens({
   address,
   ensName,
   ensAvatarImageUrl,
+  memberships,
   githubId,
   githubHandle,
   discordId,
@@ -49,6 +55,7 @@ export function setupGenAuthTokens({
       address,
       ensName,
       ensAvatarImageUrl,
+      memberships,
       githubId: extras?.hasGithub ? githubId : null,
       githubHandle: extras?.hasGithub ? githubHandle : null,
       discordId: extras?.hasDiscord ? discordId : null,

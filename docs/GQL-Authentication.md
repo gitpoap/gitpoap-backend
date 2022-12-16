@@ -56,3 +56,26 @@ There are two roles available:
 * `AuthRoles.Staff` This requires a valid JWT token be set for `user` in the
     `Authorization` HTTP header, and the user that this token corresponds to be a
     staff member of GitPOAP
+
+To check if a user is has a specific role on a team, one can use something like:
+```typescript
+  // This will not allow access if user = null in the `Authorization` header
+  @Authorized(AuthRoles.Address)
+  @Query(() => String)
+  async someRoute(@Ctx() { prisma, userAccessTokenPayload }: AuthContext) {
+    // Note that this case should not be possible since the Address role is required
+    if (userAccessTokenPayload === null) {
+      logger.error('Route passed AuthRoles.Address authorization without user payload set');
+      return null;
+    }
+
+    if (!userAccessTokenPayload.memberships.some((membership) => (
+        membership.teamId === SOME_TEAM_ID && membership.role === MembershipRole.ADMIN
+    ))) {
+      logger.warn(`User is not a member of ${SOME_TEAM_ID}`);
+      return null;
+    }
+
+    // The route can now use the payload as it sees fit
+  }
+```

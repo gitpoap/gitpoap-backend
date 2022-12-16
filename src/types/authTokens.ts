@@ -1,3 +1,5 @@
+import { MembershipRole } from '@prisma/client';
+
 function isNumberOrNull(field: any): boolean {
   return typeof field === 'number' || field === null;
 }
@@ -6,16 +8,28 @@ function isStringOrNull(field: any): boolean {
   return typeof field === 'string' || field === null;
 }
 
+export type Memberships = {
+  teamId: number;
+  role: MembershipRole;
+}[];
+
 type AccessTokenPayloadBase = {
   authTokenId: number;
   addressId: number;
   address: string;
   ensName: string | null;
   ensAvatarImageUrl: string | null;
+  memberships: Memberships;
 };
 
+const membershipSet = new Set<MembershipRole>([
+  MembershipRole.ADMIN,
+  MembershipRole.OWNER,
+  MembershipRole.MEMBER,
+]);
+
 function isAccessTokenPayloadBase(payload: any): boolean {
-  return (
+  if (
     payload &&
     'authTokenId' in payload &&
     typeof payload.authTokenId === 'number' &&
@@ -26,8 +40,25 @@ function isAccessTokenPayloadBase(payload: any): boolean {
     'ensName' in payload &&
     isStringOrNull(payload.ensName) &&
     'ensAvatarImageUrl' in payload &&
-    isStringOrNull(payload.ensAvatarImageUrl)
-  );
+    isStringOrNull(payload.ensAvatarImageUrl) &&
+    'memberships' in payload &&
+    Array.isArray(payload.memberships)
+  ) {
+    for (const membership of payload.memberships) {
+      if (
+        !(
+          'teamId' in membership &&
+          typeof payload.teamId === 'number' &&
+          'role' in membership &&
+          membershipSet.has(payload.role)
+        )
+      ) {
+        return false;
+      }
+    }
+  }
+
+  return true;
 }
 
 export type AccessTokenPayload = AccessTokenPayloadBase & {
