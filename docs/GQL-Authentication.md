@@ -3,13 +3,13 @@
 To use GQL for any non-logged in user, requests should be sent with an
 `Authorization` HTTP header like:
 ```typescript
-  req.headers['Authorization'] = JSON.stringify({ user: null });
+  req.headers['Authorization'] = 'Bearer null'
 ```
 On the other hand, if the frontend also has a JWT token for a logged-in user, this
 should be provided with the authentication, so that the backend can use this for
 user-specific GQL queries and mutations:
 ```typescript
-  req.headers['Authorization'] = JSON.stringify({ user: USER_JWT_TOKEN });
+  req.headers['Authorization'] = `Bearer ${USER_JWT_TOKEN}`;
 ```
 
 ## Writing User-specific GQL Routes:

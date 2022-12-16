@@ -66,7 +66,7 @@ export function renderGraphiQL() {
               url: 'https://api.gitpoap.io/graphql',
             },
             {
-              headers: { Authorization: JSON.stringify({ user: null }) },
+              headers: { Authorization: 'Bearer null' },
             },
           ),
           defaultEditorToolsVisibility: true,
