@@ -6,3 +6,4 @@ notes
 prisma/dbml
 *.csv
 *.txt
+public/

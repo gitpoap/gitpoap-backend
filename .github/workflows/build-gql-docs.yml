@@ -1,0 +1,28 @@
+# This workflow will buid the GQL API documentation on main
+
+name: Deploy GQL API Docs
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy-gql-docs:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install spectaql
+        run: yarn global add spectaql
+
+      - name: Build site with spectaql
+        run: npx spectaql .spectaql-config.yml
+
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: public
