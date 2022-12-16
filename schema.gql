@@ -5846,17 +5846,11 @@ type SearchResults {
 
 type UserMemberships {
   memberships: [Membership!]!
-  error: Error!
-}
-
-type Error {
-  message: String!
 }
 
 type TeamMemberships {
-  totalCount: Float!
+  total: Float!
   memberships: [Membership!]!
-  error: Error!
 }
 
 type Mutation {
@@ -5867,5 +5861,4 @@ type Mutation {
 
 type MembershipMutationPayload {
   membership: Membership!
-  error: Error!
 }
