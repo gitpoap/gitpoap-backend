@@ -129,6 +129,8 @@ export const getBucketFromS3URL = (imageUrl: string) => {
 };
 
 export const getObjectFromS3 = async (bucket: string, key: string) => {
+  const logger = createScopedLogger('getObjectFromS3');
+
   try {
     return await s3.send(
       new GetObjectCommand({
@@ -137,7 +139,7 @@ export const getObjectFromS3 = async (bucket: string, key: string) => {
       }),
     );
   } catch (e) {
-    console.warn(e);
+    logger.warn(`Error from S3: ${e}`);
     captureException(e, {
       service: 's3',
       function: 'getObjectFromS3',
