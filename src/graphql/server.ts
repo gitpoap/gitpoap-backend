@@ -10,6 +10,7 @@ import { RequestHandler, Router } from 'express';
 import { getValidatedAccessTokenPayload } from '../lib/authTokens';
 import { renderGraphiQL } from './graphiql';
 import basicAuth from 'express-basic-auth';
+import { InvalidAuthError, MissingAuthError } from './errors';
 
 export async function setupGQLContext(req: any) {
   const logger = createScopedLogger('setupGQLContext');
@@ -17,7 +18,7 @@ export async function setupGQLContext(req: any) {
   const authorization = req.headers['authorization'];
   if (authorization === undefined) {
     logger.warn('User attempted to hit GQL endpoints without authorization');
-    throw new Error('No authorization provided');
+    throw MissingAuthError;
   }
 
   // Parse the GQL access token
@@ -26,7 +27,7 @@ export async function setupGQLContext(req: any) {
     gqlAccessToken = getGQLAccessToken(JSON.parse(authorization));
   } catch (err) {
     logger.warn(`GQL access token is invalid: ${err}`);
-    throw new Error('GQL access token is invalid');
+    throw InvalidAuthError;
   }
 
   // Set the user token if it exists

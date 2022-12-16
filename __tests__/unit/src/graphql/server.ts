@@ -5,6 +5,7 @@ import { JWT_SECRET } from '../../../../src/environment';
 import { getValidatedAccessTokenPayload } from '../../../../src/lib/authTokens';
 import { MembershipRole } from '@prisma/client';
 import { context } from '../../../../src/context';
+import { ErrorText } from '../../../../src/graphql/errors';
 
 jest.mock('../../../../src/logging');
 jest.mock('jsonwebtoken');
@@ -17,13 +18,13 @@ describe('setupGQLContext', () => {
   it('Fails when no auth header is provided', async () => {
     const mockedReq = { headers: {} };
 
-    return expect(setupGQLContext(mockedReq)).rejects.toThrow('No authorization provided');
+    return expect(setupGQLContext(mockedReq)).rejects.toThrow(ErrorText.MissingAuth);
   });
 
   it('Fails when the authorization is invalid JSON', async () => {
     const mockedReq = { headers: { authorization: '{' } };
 
-    return expect(setupGQLContext(mockedReq)).rejects.toThrow(/GQL access token is invalid/);
+    return expect(setupGQLContext(mockedReq)).rejects.toThrow(ErrorText.InvalidAuth);
   });
 
   it('Succeeds without user token specified', async () => {
