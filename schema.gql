@@ -525,7 +525,7 @@ type Query {
   totalClaims: Float!
   lastMonthClaims: Float!
   userClaims(address: String!): [FullClaimData!]
-  userEmail: UserEmail
+  userEmail: UserEmail!
   totalGitPOAPs: Float!
   lastMonthGitPOAPs: Float!
   gitPOAPEvent(id: Float!): FullGitPOAPEventData

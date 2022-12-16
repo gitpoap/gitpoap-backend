@@ -1,6 +1,6 @@
 import '../../../../__mocks__/src/logging';
 import { createGQLServer } from '../../../../src/graphql/server';
-import { graphqlHTTP } from 'express-graphql';
+import { createHandler } from 'graphql-http/lib/use/express';
 import { verify } from 'jsonwebtoken';
 import { JWT_SECRET } from '../../../../src/environment';
 import set from 'lodash/set';
@@ -8,20 +8,20 @@ import { getValidatedAccessTokenPayload } from '../../../../src/lib/authTokens';
 import { MembershipRole } from '@prisma/client';
 
 jest.mock('../../../../src/logging');
-jest.mock('express-graphql');
+jest.mock('graphql-http/lib/use/express');
 jest.mock('jsonwebtoken');
 jest.mock('lodash/set');
 jest.mock('../../../../src/lib/authTokens');
 
-const mockedGraphqlHTTP = jest.mocked(graphqlHTTP, true);
-const mockedGraphqlHTTPHandler = jest.fn();
+const mockedCreateHandler = jest.mocked(createHandler, true);
+const mockedHandler = jest.fn();
 const mockedVerify = jest.mocked(verify, true);
 const mockedSet = jest.mocked(set, true);
 const mockedGetValidatedAccessTokenPayload = jest.mocked(getValidatedAccessTokenPayload, true);
 
 describe('createGQLServer', () => {
   beforeEach(() => {
-    mockedGraphqlHTTP.mockReturnValue(mockedGraphqlHTTPHandler);
+    mockedCreateHandler.mockReturnValue(mockedHandler);
   });
 
   const genMockedReq = (method: string, path: string) => ({ method, path, get: jest.fn() });
@@ -35,13 +35,13 @@ describe('createGQLServer', () => {
   it('Skips checking auth for graphiql', async () => {
     const handler = await createGQLServer();
 
-    expect(mockedGraphqlHTTP).toHaveBeenCalledTimes(1);
+    expect(mockedCreateHandler).toHaveBeenCalledTimes(1);
 
     const mockedReq = genMockedReq('GET', '/');
 
     await handler(mockedReq as any, {} as any, () => ({}));
 
-    expect(mockedGraphqlHTTPHandler).toHaveBeenCalledTimes(1);
+    expect(mockedHandler).toHaveBeenCalledTimes(1);
 
     expect(mockedReq.get).toHaveBeenCalledTimes(0);
   });
@@ -53,7 +53,7 @@ describe('createGQLServer', () => {
       mockedRes: genMockedRes(),
     };
 
-    expect(mockedGraphqlHTTP).toHaveBeenCalledTimes(1);
+    expect(mockedCreateHandler).toHaveBeenCalledTimes(1);
 
     return values;
   };
@@ -65,7 +65,7 @@ describe('createGQLServer', () => {
 
     await handler(mockedReq as any, mockedRes as any, () => ({}));
 
-    expect(mockedGraphqlHTTPHandler).toHaveBeenCalledTimes(0);
+    expect(mockedHandler).toHaveBeenCalledTimes(0);
 
     expect(mockedReq.get).toHaveBeenCalledTimes(1);
     expect(mockedReq.get).toHaveBeenCalledWith('authorization');
@@ -89,7 +89,7 @@ describe('createGQLServer', () => {
 
     expect(mockedVerify).toHaveBeenCalledTimes(0);
 
-    expect(mockedGraphqlHTTPHandler).toHaveBeenCalledTimes(0);
+    expect(mockedHandler).toHaveBeenCalledTimes(0);
   });
 
   it('Succeeds without user token specified', async () => {
@@ -109,7 +109,7 @@ describe('createGQLServer', () => {
     expect(mockedSet).toHaveBeenCalledTimes(1);
     expect(mockedSet).toHaveBeenCalledWith(mockedReq, 'user', null);
 
-    expect(mockedGraphqlHTTPHandler).toHaveBeenCalledTimes(1);
+    expect(mockedHandler).toHaveBeenCalledTimes(1);
   });
 
   it('Succeeds when user token has bad signer', async () => {
@@ -134,7 +134,7 @@ describe('createGQLServer', () => {
     expect(mockedSet).toHaveBeenCalledTimes(1);
     expect(mockedSet).toHaveBeenCalledWith(mockedReq, 'user', null);
 
-    expect(mockedGraphqlHTTPHandler).toHaveBeenCalledTimes(1);
+    expect(mockedHandler).toHaveBeenCalledTimes(1);
   });
 
   it('Succeeds when user token is malformed', async () => {
@@ -157,7 +157,7 @@ describe('createGQLServer', () => {
     expect(mockedSet).toHaveBeenCalledTimes(1);
     expect(mockedSet).toHaveBeenCalledWith(mockedReq, 'user', null);
 
-    expect(mockedGraphqlHTTPHandler).toHaveBeenCalledTimes(1);
+    expect(mockedHandler).toHaveBeenCalledTimes(1);
   });
 
   it('Succeeds when user token is invalid', async () => {
@@ -181,7 +181,7 @@ describe('createGQLServer', () => {
     expect(mockedSet).toHaveBeenCalledTimes(1);
     expect(mockedSet).toHaveBeenCalledWith(mockedReq, 'user', null);
 
-    expect(mockedGraphqlHTTPHandler).toHaveBeenCalledTimes(1);
+    expect(mockedHandler).toHaveBeenCalledTimes(1);
   });
 
   it('Succeeds when user token is valid', async () => {
@@ -226,6 +226,6 @@ describe('createGQLServer', () => {
       ...validatedPayload,
     });
 
-    expect(mockedGraphqlHTTPHandler).toHaveBeenCalledTimes(1);
+    expect(mockedHandler).toHaveBeenCalledTimes(1);
   });
 });

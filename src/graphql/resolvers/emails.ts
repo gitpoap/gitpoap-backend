@@ -15,13 +15,13 @@ class UserEmail {
 @Resolver(() => Email)
 export class CustomEmailResolver {
   @Authorized(AuthRoles.Address)
-  @Query(() => UserEmail, { nullable: true })
+  @Query(() => UserEmail)
   async userEmail(@Ctx() { prisma, userAccessTokenPayload, logger }: AuthLoggingContext) {
     logger.info("Request for logged-in user's email");
 
     if (userAccessTokenPayload === null) {
       logger.error('Route passed AuthRoles.Address authorization without user payload set');
-      return null;
+      throw new Error('Internal server error');
     }
 
     const emailData = await prisma.email.findUnique({
