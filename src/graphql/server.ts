@@ -9,6 +9,7 @@ import { JWT_SECRET } from '../environment';
 import { AccessTokenPayload, getAccessTokenPayload } from '../types/authTokens';
 import { RequestHandler } from 'express';
 import { getValidatedAccessTokenPayload } from '../lib/authTokens';
+import { renderGraphiQL } from './graphiql';
 
 export async function createGQLServer(): Promise<RequestHandler> {
   const gqlSchema = await createAndEmitSchema();
@@ -18,7 +19,7 @@ export async function createGQLServer(): Promise<RequestHandler> {
       ...context,
       userAccessTokenPayload: req.user ? getAccessTokenPayload(req.user) : null,
     },
-    graphiql: { headerEditorEnabled: true },
+    graphiql: false,
   }));
 
   return async (req, res) => {
@@ -26,8 +27,7 @@ export async function createGQLServer(): Promise<RequestHandler> {
 
     // Allow graphiql without auth
     if (req.method === 'GET' && req.path === '/') {
-      gqlHandler(req, res);
-      return;
+      return res.setHeader('Content-Type', 'text/html').send(renderGraphiQL());
     }
 
     const authorization = req.get('authorization');
