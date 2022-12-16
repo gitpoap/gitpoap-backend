@@ -14,7 +14,7 @@ import { isDiscordTokenValidForUser } from '../external/discord';
 import { removeGithubUsersGithubOAuthToken } from '../lib/githubUsers';
 import { removeDiscordUsersDiscordOAuthToken } from '../lib/discordUsers';
 import { removeGithubLoginForAddress, removeDiscordLoginForAddress } from '../lib/addresses';
-import { MembershipAcceptanceStatus } from '@prisma/client';
+import { MembershipAcceptanceStatus, MembershipRole } from '@prisma/client';
 
 async function createAuthToken(addressId: number) {
   return await context.prisma.authToken.create({
@@ -393,4 +393,14 @@ export async function getValidatedAccessTokenPayload(
     discordHandle: tokenInfo.address.discordUser?.discordHandle ?? null,
     emailId,
   };
+}
+
+export function hasMembership(
+  accessTokenPayload: AccessTokenPayload,
+  teamId: number,
+  role?: MembershipRole,
+) {
+  return accessTokenPayload.memberships.some(
+    membership => membership.teamId === teamId && (role === undefined || membership.role === role),
+  );
 }
