@@ -55,6 +55,7 @@ function mockJwtWithAddress() {
       ensName,
       ensAvatarImageUrl,
       email: null,
+      memberships: [],
     },
   } as any);
 }
@@ -255,6 +256,7 @@ describe('DELETE /oauth/github', () => {
         ensAvatarImageUrl,
         email: null,
         githubUser: null,
+        memberships: [],
       },
     } as any);
 
@@ -281,6 +283,7 @@ describe('DELETE /oauth/github', () => {
           githubId,
           githubHandle,
         },
+        memberships: [],
       },
     } as any);
     const nextGeneration = authTokenGeneration + 1;
