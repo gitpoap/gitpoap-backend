@@ -25,6 +25,7 @@ enum MembershipErrorMessage {
   PAGE_NOT_SPECIFIED = 'page not specified',
   MEMBERSHIP_NOT_FOUND = 'Membership not found',
   ALREADY_ACCEPTED = 'Already accepted',
+  DB_ERROR = 'Database error',
 }
 
 @ObjectType()
@@ -287,22 +288,32 @@ export class MembershipResolver {
       };
     }
 
-    const membership = await prisma.membership.create({
-      data: {
-        team: {
-          connect: {
-            id: teamId,
+    let membership: Membership;
+    try {
+      membership = await prisma.membership.create({
+        data: {
+          team: {
+            connect: {
+              id: teamId,
+            },
           },
-        },
-        address: {
-          connect: {
-            ethAddress: address.toLowerCase(),
+          address: {
+            connect: {
+              ethAddress: address.toLowerCase(),
+            },
           },
+          role: MembershipRole.ADMIN,
+          acceptanceStatus: MembershipAcceptanceStatus.PENDING,
         },
-        role: MembershipRole.ADMIN,
-        acceptanceStatus: MembershipAcceptanceStatus.PENDING,
-      },
-    });
+      });
+    } catch {
+      return {
+        membership: null,
+        error: {
+          message: MembershipErrorMessage.DB_ERROR,
+        },
+      };
+    }
 
     logger.debug(
       `Completed request to add user with address: ${address} as a member to team ${teamId}`,
@@ -384,14 +395,42 @@ export class MembershipResolver {
       };
     }
 
-    const membership = await prisma.membership.delete({
+    const membership = await prisma.membership.findUnique({
       where: {
         teamId_addressId: {
-          teamId,
           addressId: addressRecord.id,
+          teamId,
         },
       },
     });
+
+    if (membership === null) {
+      logger.warn(`Membership not found for address: ${address} in team ${teamId}`);
+      return {
+        membership: null,
+        error: {
+          message: MembershipErrorMessage.MEMBERSHIP_NOT_FOUND,
+        },
+      };
+    }
+
+    try {
+      await prisma.membership.delete({
+        where: {
+          teamId_addressId: {
+            teamId,
+            addressId: addressRecord.id,
+          },
+        },
+      });
+    } catch {
+      return {
+        membership: null,
+        error: {
+          message: MembershipErrorMessage.DB_ERROR,
+        },
+      };
+    }
 
     logger.debug(
       `Completed request to remove a membership from team ${teamId} for address ${address}`,
@@ -490,18 +529,28 @@ export class MembershipResolver {
       };
     }
 
-    const result = await prisma.membership.update({
-      where: {
-        teamId_addressId: {
-          teamId,
-          addressId: addressRecord.id,
+    let result: Membership;
+    try {
+      result = await prisma.membership.update({
+        where: {
+          teamId_addressId: {
+            teamId,
+            addressId: addressRecord.id,
+          },
         },
-      },
-      data: {
-        acceptanceStatus: MembershipAcceptanceStatus.ACCEPTED,
-        joinedOn: DateTime.now().toJSDate(),
-      },
-    });
+        data: {
+          acceptanceStatus: MembershipAcceptanceStatus.ACCEPTED,
+          joinedOn: DateTime.now().toJSDate(),
+        },
+      });
+    } catch {
+      return {
+        membership: null,
+        error: {
+          message: MembershipErrorMessage.DB_ERROR,
+        },
+      };
+    }
 
     logger.debug(
       `Completed request to accept a membership to team ${teamId} for address ${userAccessTokenPayload.address}`,
