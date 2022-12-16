@@ -1,6 +1,5 @@
 import { gql } from 'graphql-request';
 import { GraphQLClient } from 'graphql-request';
-import { sign } from 'jsonwebtoken';
 
 describe('GraphQL Server', () => {
   it('Prevents requests without authentication', async () => {
@@ -17,12 +16,31 @@ describe('GraphQL Server', () => {
     ).rejects.toThrow();
   });
 
-  it('Prevents requests from non-FE sources', async () => {
+  it('Accepts requests with user=null', async () => {
+    const client = new GraphQLClient('http://server:3001/graphql', {
+      headers: {
+        authorization: JSON.stringify({ user: null }),
+      },
+    });
+
+    return expect(
+      client.request(
+        gql`
+          {
+            totalClaims
+          }
+        `,
+      ),
+    ).resolves.toEqual({
+      totalClaims: 16,
+    });
+  });
+
+  it('Accepts requests with malformed user token', async () => {
     const client = new GraphQLClient('http://server:3001/graphql', {
       headers: {
         authorization: JSON.stringify({
-          frontend: sign({}, 'not-the-real-jwt-secret'),
-          user: null,
+          user: 'lkjalskdjflkajsldkfj',
         }),
       },
     });
@@ -35,6 +53,8 @@ describe('GraphQL Server', () => {
           }
         `,
       ),
-    ).rejects.toThrow();
+    ).resolves.toEqual({
+      totalClaims: 16,
+    });
   });
 });

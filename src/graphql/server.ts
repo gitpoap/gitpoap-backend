@@ -1,12 +1,11 @@
 import { graphqlHTTP } from 'express-graphql';
 import { createAndEmitSchema } from './schema';
 import { context } from '../context';
-import { IS_PROD } from '../constants';
-import { getGQLAccessTokens } from './accessTokens';
+import { getGQLAccessToken } from './accessTokens';
 import set from 'lodash/set';
 import { createScopedLogger } from '../logging';
 import { verify } from 'jsonwebtoken';
-import { FRONTEND_JWT_SECRET, JWT_SECRET } from '../environment';
+import { JWT_SECRET } from '../environment';
 import { AccessTokenPayload, getAccessTokenPayload } from '../types/authTokens';
 import { RequestHandler } from 'express';
 import { getValidatedAccessTokenPayload } from '../lib/authTokens';
@@ -19,15 +18,14 @@ export async function createGQLServer(): Promise<RequestHandler> {
       ...context,
       userAccessTokenPayload: req.user !== null ? getAccessTokenPayload(req.user) : null,
     },
-    // Allow graphiql outside of PROD
-    graphiql: !IS_PROD,
+    graphiql: true,
   }));
 
   return async (req, res) => {
     const logger = createScopedLogger('gqlServerHandler');
 
-    // Allow graphiql outside of PROD
-    if (!IS_PROD && req.method === 'GET' && req.path === '/') {
+    // Allow graphiql without auth
+    if (req.method === 'GET' && req.path === '/') {
       gqlHandler(req, res);
       return;
     }
@@ -38,22 +36,20 @@ export async function createGQLServer(): Promise<RequestHandler> {
       return res.status(401).send({ msg: 'No authorization provided' });
     }
 
-    // Authenticate the frontend token
-    let gqlAccessTokens;
+    // Parse the GQL access token
+    let gqlAccessToken;
     try {
-      gqlAccessTokens = getGQLAccessTokens(JSON.parse(authorization));
-
-      verify(gqlAccessTokens.frontend, FRONTEND_JWT_SECRET);
+      gqlAccessToken = getGQLAccessToken(JSON.parse(authorization));
     } catch (err) {
-      logger.warn(`Frontend authentication token is invalid: ${err}`);
-      return res.status(401).send({ msg: 'Frontend token is invalid' });
+      logger.warn(`GQL access token is invalid: ${err}`);
+      return res.status(401).send({ msg: 'GQL access token is invalid' });
     }
 
     // Set the user token if it exists
     let userAccessTokenPayload: AccessTokenPayload | null = null;
-    if (gqlAccessTokens.user !== null) {
+    if (gqlAccessToken.user !== null) {
       try {
-        const basePayload = getAccessTokenPayload(verify(gqlAccessTokens.user, JWT_SECRET));
+        const basePayload = getAccessTokenPayload(verify(gqlAccessToken.user, JWT_SECRET));
         const validatedPayload = await getValidatedAccessTokenPayload(basePayload.authTokenId);
         if (validatedPayload !== null) {
           userAccessTokenPayload = { ...basePayload, ...validatedPayload };
