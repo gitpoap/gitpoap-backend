@@ -23,7 +23,7 @@ A user-specific GQL route can be written like:
     // Note that this case should not be possible since the Address role is required
     if (userAccessTokenPayload === null) {
       logger.error('Route passed AuthRoles.Address authorization without user payload set');
-      throw new Error('Internal server error');
+      throw InternalError;
     }
 
     // The route can now use the payload as it sees fit
@@ -41,12 +41,12 @@ To check if a user is has a specific role on a team, one can use something like:
 ```typescript
   // This will not allow access if user = null in the `Authorization` header
   @Authorized(AuthRoles.Address)
-  @Query(() => String)
+  @Query(() => String, { nullable: true })
   async someRoute(@Ctx() { prisma, userAccessTokenPayload }: AuthContext) {
     // Note that this case should not be possible since the Address role is required
     if (userAccessTokenPayload === null) {
       logger.error('Route passed AuthRoles.Address authorization without user payload set');
-      throw new Error('Internal server error');
+      throw InternalError;
     }
 
     if (!hasMembership(userAccessTokenPayload, SOME_TEAM_ID, MembershipRole.ADMIN)) {
