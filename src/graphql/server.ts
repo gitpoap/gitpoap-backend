@@ -1,7 +1,6 @@
 import { createHandler } from 'graphql-http/lib/use/express';
 import { createAndEmitSchema } from './schema';
 import { context } from '../context';
-import { getGQLAccessToken } from './accessTokens';
 import { createScopedLogger } from '../logging';
 import { verify } from 'jsonwebtoken';
 import { GRAPHIQL_PASSWORD, JWT_SECRET } from '../environment';
@@ -11,6 +10,19 @@ import { getValidatedAccessTokenPayload } from '../lib/authTokens';
 import { renderGraphiQL } from './graphiql';
 import basicAuth from 'express-basic-auth';
 import { InvalidAuthError, MissingAuthError } from './errors';
+
+function parseGQLAuthorization(value: string): string | null {
+  const logger = createScopedLogger('parseGQLAuthorization');
+
+  const parts = value.split(' ');
+
+  if (parts.length !== 2 || parts[0] !== 'Bearer') {
+    logger.warn('GQL access token is invalid');
+    throw InvalidAuthError;
+  }
+
+  return parts[1] === 'null' ? null : parts[1];
+}
 
 export async function setupGQLContext(req: any) {
   const logger = createScopedLogger('setupGQLContext');
@@ -22,19 +34,13 @@ export async function setupGQLContext(req: any) {
   }
 
   // Parse the GQL access token
-  let gqlAccessToken;
-  try {
-    gqlAccessToken = getGQLAccessToken(JSON.parse(authorization));
-  } catch (err) {
-    logger.warn(`GQL access token is invalid: ${err}`);
-    throw InvalidAuthError;
-  }
+  const userAccessToken = parseGQLAuthorization(authorization);
 
   // Set the user token if it exists
   let userAccessTokenPayload: AccessTokenPayload | null = null;
-  if (gqlAccessToken.user !== null) {
+  if (userAccessToken !== null) {
     try {
-      const basePayload = getAccessTokenPayload(verify(gqlAccessToken.user, JWT_SECRET));
+      const basePayload = getAccessTokenPayload(verify(userAccessToken, JWT_SECRET));
       const validatedPayload = await getValidatedAccessTokenPayload(basePayload.authTokenId);
       if (validatedPayload !== null) {
         userAccessTokenPayload = { ...basePayload, ...validatedPayload };

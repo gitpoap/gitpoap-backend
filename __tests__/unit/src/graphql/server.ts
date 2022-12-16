@@ -29,7 +29,7 @@ describe('setupGQLContext', () => {
 
   it('Succeeds without user token specified', async () => {
     const mockedReq = {
-      headers: { authorization: JSON.stringify({ user: null }) },
+      headers: { authorization: 'Bearer null' },
     };
 
     expect(await setupGQLContext(mockedReq)).toEqual({
@@ -43,7 +43,7 @@ describe('setupGQLContext', () => {
   it('Succeeds when user token has bad signer', async () => {
     const user = 'yay';
     const mockedReq = {
-      headers: { authorization: JSON.stringify({ user }) },
+      headers: { authorization: `Bearer ${user}` },
     };
     mockedVerify.mockImplementationOnce(() => {
       throw new Error('error');
@@ -61,7 +61,7 @@ describe('setupGQLContext', () => {
   it('Succeeds when user token is malformed', async () => {
     const user = 'yay';
     const mockedReq = {
-      headers: { authorization: JSON.stringify({ user }) },
+      headers: { authorization: `Bearer ${user}` },
     };
     mockedVerify.mockImplementationOnce(() => ({ foo: 'bar' }));
 
@@ -77,7 +77,7 @@ describe('setupGQLContext', () => {
   it('Succeeds when user token is invalid', async () => {
     const user = 'yay';
     const mockedReq = {
-      headers: { authorization: JSON.stringify({ user }) },
+      headers: { authorization: `Bearer ${user}` },
     };
     mockedVerify.mockImplementationOnce(() => ({ foo: 'bar' }));
     mockedGetValidatedAccessTokenPayload.mockResolvedValue(null);
@@ -94,7 +94,7 @@ describe('setupGQLContext', () => {
   it('Succeeds when user token is valid', async () => {
     const user = 'yay';
     const mockedReq = {
-      headers: { authorization: JSON.stringify({ user }) },
+      headers: { authorization: `Bearer ${user}` },
     };
     const validatedPayload = {
       ensName: null,
