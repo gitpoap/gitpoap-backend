@@ -20,7 +20,7 @@ enum MembershipErrorMessage {
   PAGE_NOT_SPECIFIED = 'page not specified',
   MEMBERSHIP_NOT_FOUND = 'Membership not found',
   ALREADY_ACCEPTED = 'Already accepted',
-  DB_ERROR = 'Database error',
+  ALREADY_EXISTS = 'Already Exists',
 }
 
 @ObjectType()
@@ -215,6 +215,20 @@ export class MembershipResolver {
     if (addressRecord === null) {
       logger.warn(`Address not found for address: ${address}`);
       throw new Error(MembershipErrorMessage.ADDRESS_NOT_FOUND);
+    }
+
+    const membershipRecord = await prisma.membership.findUnique({
+      where: {
+        teamId_addressId: {
+          teamId,
+          addressId: addressRecord.id,
+        },
+      },
+    });
+
+    if (membershipRecord !== null) {
+      logger.warn(`Membership for address ${address} in team ${teamId} already exists`);
+      throw new Error(MembershipErrorMessage.ALREADY_EXISTS);
     }
 
     const membership = await prisma.membership.create({
