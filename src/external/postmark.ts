@@ -54,7 +54,7 @@ const sendEmailWithTemplateHandler = async <T extends Record<string, string | nu
 
     return response;
   } catch (e) {
-    console.error(`Failed to send template email - ${e}`);
+    logger.error(`Failed to send template email - ${e}`);
     return null;
   }
 };
@@ -79,7 +79,7 @@ const sendTextEmailHandler = async ({ to, from, subject, textBody }: SendTextEma
 
     return response;
   } catch (e) {
-    console.error(`Failed to send text email - ${e}`);
+    logger.error(`Failed to send text email - ${e}`);
     return null;
   }
 };

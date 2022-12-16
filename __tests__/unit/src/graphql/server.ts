@@ -1,194 +1,100 @@
 import '../../../../__mocks__/src/logging';
-import { createGQLServer } from '../../../../src/graphql/server';
-import { createHandler } from 'graphql-http/lib/use/express';
+import { setupGQLContext } from '../../../../src/graphql/server';
 import { verify } from 'jsonwebtoken';
 import { JWT_SECRET } from '../../../../src/environment';
-import set from 'lodash/set';
 import { getValidatedAccessTokenPayload } from '../../../../src/lib/authTokens';
 import { MembershipRole } from '@prisma/client';
+import { context } from '../../../../src/context';
 
 jest.mock('../../../../src/logging');
-jest.mock('graphql-http/lib/use/express');
 jest.mock('jsonwebtoken');
-jest.mock('lodash/set');
 jest.mock('../../../../src/lib/authTokens');
 
-const mockedCreateHandler = jest.mocked(createHandler, true);
-const mockedHandler = jest.fn();
 const mockedVerify = jest.mocked(verify, true);
-const mockedSet = jest.mocked(set, true);
 const mockedGetValidatedAccessTokenPayload = jest.mocked(getValidatedAccessTokenPayload, true);
 
-describe('createGQLServer', () => {
-  beforeEach(() => {
-    mockedCreateHandler.mockReturnValue(mockedHandler);
-  });
-
-  const genMockedReq = (method: string, path: string) => ({ method, path, get: jest.fn() });
-  const genMockedRes = () => {
-    const send = jest.fn();
-    const status = jest.fn();
-    status.mockReturnValue({ send });
-    return { status };
-  };
-
-  it('Skips checking auth for graphiql', async () => {
-    const handler = await createGQLServer();
-
-    expect(mockedCreateHandler).toHaveBeenCalledTimes(1);
-
-    const mockedReq = genMockedReq('GET', '/');
-
-    await handler(mockedReq as any, {} as any, () => ({}));
-
-    expect(mockedHandler).toHaveBeenCalledTimes(1);
-
-    expect(mockedReq.get).toHaveBeenCalledTimes(0);
-  });
-
-  const genGeneralSetup = async () => {
-    const values = {
-      handler: await createGQLServer(),
-      mockedReq: genMockedReq('POST', '/'),
-      mockedRes: genMockedRes(),
-    };
-
-    expect(mockedCreateHandler).toHaveBeenCalledTimes(1);
-
-    return values;
-  };
-
+describe('setupGQLContext', () => {
   it('Fails when no auth header is provided', async () => {
-    const { handler, mockedReq, mockedRes } = await genGeneralSetup();
+    const mockedReq = { headers: {} };
 
-    mockedReq.get.mockReturnValue(undefined);
-
-    await handler(mockedReq as any, mockedRes as any, () => ({}));
-
-    expect(mockedHandler).toHaveBeenCalledTimes(0);
-
-    expect(mockedReq.get).toHaveBeenCalledTimes(1);
-    expect(mockedReq.get).toHaveBeenCalledWith('authorization');
-
-    expect(mockedRes.status).toHaveBeenCalledTimes(1);
-    expect(mockedRes.status).toHaveBeenCalledWith(401);
+    return expect(setupGQLContext(mockedReq)).rejects.toThrow('No authorization provided');
   });
 
   it('Fails when the authorization is invalid JSON', async () => {
-    const { handler, mockedReq, mockedRes } = await genGeneralSetup();
+    const mockedReq = { headers: { authorization: '{' } };
 
-    mockedReq.get.mockReturnValue('{');
-
-    await handler(mockedReq as any, mockedRes as any, () => ({}));
-
-    expect(mockedReq.get).toHaveBeenCalledTimes(1);
-    expect(mockedReq.get).toHaveBeenCalledWith('authorization');
-
-    expect(mockedRes.status).toHaveBeenCalledTimes(1);
-    expect(mockedRes.status).toHaveBeenCalledWith(401);
-
-    expect(mockedVerify).toHaveBeenCalledTimes(0);
-
-    expect(mockedHandler).toHaveBeenCalledTimes(0);
+    return expect(setupGQLContext(mockedReq)).rejects.toThrow(/GQL access token is invalid/);
   });
 
   it('Succeeds without user token specified', async () => {
-    const { handler, mockedReq, mockedRes } = await genGeneralSetup();
+    const mockedReq = {
+      headers: { authorization: JSON.stringify({ user: null }) },
+    };
 
-    mockedReq.get.mockReturnValue(JSON.stringify({ user: null }));
-
-    await handler(mockedReq as any, mockedRes as any, () => ({}));
-
-    expect(mockedReq.get).toHaveBeenCalledTimes(1);
-    expect(mockedReq.get).toHaveBeenCalledWith('authorization');
-
-    expect(mockedRes.status).toHaveBeenCalledTimes(0);
+    expect(await setupGQLContext(mockedReq)).toEqual({
+      ...context,
+      userAccessTokenPayload: null,
+    });
 
     expect(mockedVerify).toHaveBeenCalledTimes(0);
-
-    expect(mockedSet).toHaveBeenCalledTimes(1);
-    expect(mockedSet).toHaveBeenCalledWith(mockedReq, 'user', null);
-
-    expect(mockedHandler).toHaveBeenCalledTimes(1);
   });
 
   it('Succeeds when user token has bad signer', async () => {
-    const { handler, mockedReq, mockedRes } = await genGeneralSetup();
-
-    const userToken = 'yay';
-    mockedReq.get.mockReturnValue(JSON.stringify({ user: userToken }));
+    const user = 'yay';
+    const mockedReq = {
+      headers: { authorization: JSON.stringify({ user }) },
+    };
     mockedVerify.mockImplementationOnce(() => {
       throw new Error('error');
     });
 
-    await handler(mockedReq as any, mockedRes as any, () => ({}));
-
-    expect(mockedReq.get).toHaveBeenCalledTimes(1);
-    expect(mockedReq.get).toHaveBeenCalledWith('authorization');
-
-    expect(mockedRes.status).toHaveBeenCalledTimes(0);
+    expect(await setupGQLContext(mockedReq)).toEqual({
+      ...context,
+      userAccessTokenPayload: null,
+    });
 
     expect(mockedVerify).toHaveBeenCalledTimes(1);
-    expect(mockedVerify).toHaveBeenCalledWith(userToken, JWT_SECRET);
-
-    expect(mockedSet).toHaveBeenCalledTimes(1);
-    expect(mockedSet).toHaveBeenCalledWith(mockedReq, 'user', null);
-
-    expect(mockedHandler).toHaveBeenCalledTimes(1);
+    expect(mockedVerify).toHaveBeenCalledWith(user, JWT_SECRET);
   });
 
   it('Succeeds when user token is malformed', async () => {
-    const { handler, mockedReq, mockedRes } = await genGeneralSetup();
-
-    const userToken = 'yay';
-    mockedReq.get.mockReturnValue(JSON.stringify({ user: userToken }));
+    const user = 'yay';
+    const mockedReq = {
+      headers: { authorization: JSON.stringify({ user }) },
+    };
     mockedVerify.mockImplementationOnce(() => ({ foo: 'bar' }));
 
-    await handler(mockedReq as any, mockedRes as any, () => ({}));
-
-    expect(mockedReq.get).toHaveBeenCalledTimes(1);
-    expect(mockedReq.get).toHaveBeenCalledWith('authorization');
-
-    expect(mockedRes.status).toHaveBeenCalledTimes(0);
+    expect(await setupGQLContext(mockedReq)).toEqual({
+      ...context,
+      userAccessTokenPayload: null,
+    });
 
     expect(mockedVerify).toHaveBeenCalledTimes(1);
-    expect(mockedVerify).toHaveBeenCalledWith(userToken, JWT_SECRET);
-
-    expect(mockedSet).toHaveBeenCalledTimes(1);
-    expect(mockedSet).toHaveBeenCalledWith(mockedReq, 'user', null);
-
-    expect(mockedHandler).toHaveBeenCalledTimes(1);
+    expect(mockedVerify).toHaveBeenCalledWith(user, JWT_SECRET);
   });
 
   it('Succeeds when user token is invalid', async () => {
-    const { handler, mockedReq, mockedRes } = await genGeneralSetup();
-
-    const userToken = 'yay';
-    mockedReq.get.mockReturnValue(JSON.stringify({ user: userToken }));
+    const user = 'yay';
+    const mockedReq = {
+      headers: { authorization: JSON.stringify({ user }) },
+    };
     mockedVerify.mockImplementationOnce(() => ({ foo: 'bar' }));
     mockedGetValidatedAccessTokenPayload.mockResolvedValue(null);
 
-    await handler(mockedReq as any, mockedRes as any, () => ({}));
-
-    expect(mockedReq.get).toHaveBeenCalledTimes(1);
-    expect(mockedReq.get).toHaveBeenCalledWith('authorization');
-
-    expect(mockedRes.status).toHaveBeenCalledTimes(0);
+    expect(await setupGQLContext(mockedReq)).toEqual({
+      ...context,
+      userAccessTokenPayload: null,
+    });
 
     expect(mockedVerify).toHaveBeenCalledTimes(1);
-    expect(mockedVerify).toHaveBeenCalledWith(userToken, JWT_SECRET);
-
-    expect(mockedSet).toHaveBeenCalledTimes(1);
-    expect(mockedSet).toHaveBeenCalledWith(mockedReq, 'user', null);
-
-    expect(mockedHandler).toHaveBeenCalledTimes(1);
+    expect(mockedVerify).toHaveBeenCalledWith(user, JWT_SECRET);
   });
 
   it('Succeeds when user token is valid', async () => {
-    const { handler, mockedReq, mockedRes } = await genGeneralSetup();
-
-    const userToken = 'yay';
-    mockedReq.get.mockReturnValue(JSON.stringify({ user: userToken }));
+    const user = 'yay';
+    const mockedReq = {
+      headers: { authorization: JSON.stringify({ user }) },
+    };
     const validatedPayload = {
       ensName: null,
       ensAvatarImageUrl: null,
@@ -210,22 +116,12 @@ describe('createGQLServer', () => {
     mockedVerify.mockImplementationOnce(() => userPayload);
     mockedGetValidatedAccessTokenPayload.mockResolvedValue(validatedPayload as any);
 
-    await handler(mockedReq as any, mockedRes as any, () => ({}));
-
-    expect(mockedReq.get).toHaveBeenCalledTimes(1);
-    expect(mockedReq.get).toHaveBeenCalledWith('authorization');
-
-    expect(mockedRes.status).toHaveBeenCalledTimes(0);
-
-    expect(mockedVerify).toHaveBeenCalledTimes(1);
-    expect(mockedVerify).toHaveBeenCalledWith(userToken, JWT_SECRET);
-
-    expect(mockedSet).toHaveBeenCalledTimes(1);
-    expect(mockedSet).toHaveBeenCalledWith(mockedReq, 'user', {
-      ...userPayload,
-      ...validatedPayload,
+    expect(await setupGQLContext(mockedReq)).toEqual({
+      ...context,
+      userAccessTokenPayload: {
+        ...userPayload,
+        ...validatedPayload,
+      },
     });
-
-    expect(mockedHandler).toHaveBeenCalledTimes(1);
   });
 });

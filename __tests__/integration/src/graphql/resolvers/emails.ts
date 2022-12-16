@@ -25,6 +25,7 @@ describe('CustomEmailResolver', () => {
     address: '0xyoyo',
     ensName: null,
     ensAvatarImageUrl: null,
+    memberships: [],
     githubId: null,
     githubHandle: null,
     discordId: null,

@@ -24,6 +24,8 @@ declare global {
       SENTRY_DSN: string;
       POSTMARK_SERVER_TOKEN: string;
       SLACK_TOKEN: string;
+
+      GRAPHIQL_PASSWORD: string;
     }
   }
 }

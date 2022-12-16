@@ -36,6 +36,7 @@ function mockJwtWithAddress() {
       ensName,
       ensAvatarImageUrl,
       email: null,
+      memberships: [],
     },
   } as any);
 }
@@ -56,6 +57,7 @@ function mockJwtWithOAuth() {
         discordHandle: 'tyler#2342',
         discordOAuthToken,
       },
+      memberships: [],
     },
   } as any);
 }

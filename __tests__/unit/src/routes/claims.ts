@@ -120,6 +120,7 @@ function mockJwtWithAddress() {
         id: emailId,
         isValidated: true,
       },
+      memberships: [],
     },
   } as any);
 }

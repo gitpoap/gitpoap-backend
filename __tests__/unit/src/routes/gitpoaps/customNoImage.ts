@@ -84,6 +84,7 @@ function mockJwtWithAddress() {
       email: {
         id: 23,
       },
+      memberships: [],
     },
   } as any);
 }
