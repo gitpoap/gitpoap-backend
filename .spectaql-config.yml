@@ -1,0 +1,17 @@
+introspection:
+  schemaFile: schema.gql
+
+servers:
+  - url: https://api.gitpoap.io/graphql
+    description: Production Server
+    production: true
+
+  - url: https://brisket-api.gitpoap.io/graphql
+    description: Staging Server
+
+  - url: https://localhost:3000/graphql
+    description: Local Server
+
+info:
+  description: GitPOAP GQL API
+  title: GitPOAP GQL API
