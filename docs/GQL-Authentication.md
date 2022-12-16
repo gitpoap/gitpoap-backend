@@ -23,7 +23,7 @@ A user-specific GQL route can be written like:
     // Note that this case should not be possible since the Address role is required
     if (userAccessTokenPayload === null) {
       logger.error('Route passed AuthRoles.Address authorization without user payload set');
-      return null;
+      throw new Error('Internal server error');
     }
 
     // The route can now use the payload as it sees fit
@@ -46,12 +46,10 @@ To check if a user is has a specific role on a team, one can use something like:
     // Note that this case should not be possible since the Address role is required
     if (userAccessTokenPayload === null) {
       logger.error('Route passed AuthRoles.Address authorization without user payload set');
-      return null;
+      throw new Error('Internal server error');
     }
 
-    if (!userAccessTokenPayload.memberships.some((membership) => (
-        membership.teamId === SOME_TEAM_ID && membership.role === MembershipRole.ADMIN
-    ))) {
+    if (!hasMembership(userAccessTokenPayload, SOME_TEAM_ID, MembershipRole.ADMIN)) {
       logger.warn(`User is not a member of ${SOME_TEAM_ID}`);
       return null;
     }

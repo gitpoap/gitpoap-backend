@@ -1,4 +1,4 @@
-import { createHandler } from 'graphql-http';
+import { createHandler } from 'graphql-http/lib/use/express';
 import { createAndEmitSchema } from './schema';
 import { context } from '../context';
 import { getGQLAccessToken } from './accessTokens';
@@ -21,7 +21,7 @@ export async function createGQLServer(): Promise<RequestHandler> {
     }),
   });
 
-  return async (req, res) => {
+  return async (req, res, next) => {
     const logger = createScopedLogger('gqlServerHandler');
 
     // Allow graphiql without auth
@@ -62,6 +62,6 @@ export async function createGQLServer(): Promise<RequestHandler> {
 
     set(req, 'user', userAccessTokenPayload);
 
-    gqlHandler(req, res);
+    gqlHandler(req, res, next);
   };
 }
