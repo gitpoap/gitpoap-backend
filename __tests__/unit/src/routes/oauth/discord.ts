@@ -59,6 +59,7 @@ function mockJwtWithAddress() {
       ensName,
       ensAvatarImageUrl,
       email: null,
+      memberships: [],
     },
   } as any);
 }
@@ -258,6 +259,7 @@ describe('DELETE /oauth/discord', () => {
         ensAvatarImageUrl,
         email: null,
         discordUser: null,
+        memberships: [],
       },
     } as any);
 
@@ -284,6 +286,7 @@ describe('DELETE /oauth/discord', () => {
           discordId,
           discordHandle,
         },
+        memberships: [],
       },
     } as any);
     const nextGeneration = authTokenGeneration + 1;

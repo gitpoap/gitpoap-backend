@@ -34,3 +34,5 @@ export const SLACK_TOKEN = env.get('SLACK_TOKEN').required().asString();
 export const DISCORD_CLIENT_ID = env.get('DISCORD_CLIENT_ID').required().asString();
 export const DISCORD_CLIENT_SECRET = env.get('DISCORD_CLIENT_SECRET').required().asString();
 export const DISCORD_REDIRECT_URL = env.get('DISCORD_REDIRECT_URL').required().asString();
+
+export const GRAPHIQL_PASSWORD = env.get('GRAPHIQL_PASSWORD').required().asString();

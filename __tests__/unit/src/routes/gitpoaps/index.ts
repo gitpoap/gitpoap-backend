@@ -42,6 +42,7 @@ function mockJwtWithAddress() {
       ensName,
       ensAvatarImageUrl,
       email: null,
+      memberships: [],
     },
   } as any);
 }
