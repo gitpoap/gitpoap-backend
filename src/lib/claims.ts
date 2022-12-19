@@ -195,7 +195,7 @@ export async function createNewClaimsForRepoContributionHelper(
   );
 }
 
-export async function retrieveClaimsCreatedByPR(pullRequestId: number) {
+export async function retrieveClaimsCreatedByPR(pullRequestId: number, createdAfter?: DateTime) {
   const logger = createScopedLogger('retrieveClaimsCreatedByPR');
 
   const pullRequestData = await context.prisma.githubPullRequest.findUnique({
@@ -222,6 +222,11 @@ export async function retrieveClaimsCreatedByPR(pullRequestId: number) {
     return [];
   }
 
+  let createdAt;
+  if (createdAfter !== undefined) {
+    createdAt = { gte: createdAfter.toJSDate() };
+  }
+
   // Retrieve any new claims created by this PR.
   // Also return any claims that are UNCLAIMED but are in the same Project
   // as this GithubPullRequest's Repo
@@ -231,9 +236,7 @@ export async function retrieveClaimsCreatedByPR(pullRequestId: number) {
   const claims = await context.prisma.claim.findMany({
     where: {
       OR: [
-        {
-          pullRequestEarnedId: pullRequestId,
-        },
+        { pullRequestEarnedId: pullRequestId },
         {
           gitPOAP: {
             projectId: pullRequestData.repo.projectId,
@@ -243,9 +246,8 @@ export async function retrieveClaimsCreatedByPR(pullRequestId: number) {
           status: ClaimStatus.UNCLAIMED,
         },
       ],
-      gitPOAP: {
-        isEnabled: true,
-      },
+      gitPOAP: { isEnabled: true },
+      createdAt,
     },
     select: {
       id: true,
