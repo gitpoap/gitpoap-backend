@@ -31,6 +31,7 @@ import {
   deleteRedeemCode,
   upsertRedeemCode,
 } from '../../../../src/lib/codes';
+import { DateTime } from 'luxon';
 
 jest.mock('../../../../src/logging');
 jest.mock('../../../../src/external/github');
@@ -39,6 +40,9 @@ jest.mock('../../../../src/lib/claims');
 jest.mock('../../../../src/external/slack');
 jest.mock('../../../../src/external/poap');
 jest.mock('../../../../src/lib/codes');
+jest.mock('luxon', () => ({
+  DateTime: { utc: jest.fn() },
+}));
 
 const mockedGetGithubAuthenticatedApp = jest.mocked(getGithubAuthenticatedApp, true);
 const mockedCreateClaimsForPR = jest.mocked(createClaimsForPR, true);
@@ -57,6 +61,7 @@ const mockedRunClaimsPostProcessing = jest.mocked(runClaimsPostProcessing, true)
 const mockedChooseUnusedRedeemCode = jest.mocked(chooseUnusedRedeemCode, true);
 const mockedDeleteRedeemCode = jest.mocked(deleteRedeemCode, true);
 const mockedUpsertRedeemCode = jest.mocked(upsertRedeemCode, true);
+const mockedDateTimeUTC = jest.mocked(DateTime.utc, true);
 
 const botJWTToken = 'foobar2';
 const contributorId = 2;
@@ -432,14 +437,13 @@ describe('POST /claims/gitpoap-bot/create', () => {
 
   it('Creates and returns new claims', async () => {
     mockedGetGithubAuthenticatedApp.mockResolvedValue({ id: GITPOAP_BOT_APP_ID } as any);
-
     const contributionId = 324;
-
     mockedCreateClaimsForPR.mockResolvedValue({ pullRequest: { id: contributionId } } as any);
     mockedCreateClaimsForIssue.mockResolvedValue({ mention: { id: contributionId } } as any);
-
     mockedRetrieveClaimsCreatedByPR.mockResolvedValue([claim]);
     mockedRetrieveClaimsCreatedByMention.mockResolvedValue([claim]);
+    const startTime = 'some-start-time';
+    mockedDateTimeUTC.mockReturnValue(startTime as any);
 
     {
       const result = await request(await setupApp())
@@ -478,7 +482,7 @@ describe('POST /claims/gitpoap-bot/create', () => {
     );
 
     expect(mockedRetrieveClaimsCreatedByPR).toHaveBeenCalledTimes(1);
-    expect(mockedRetrieveClaimsCreatedByPR).toHaveBeenCalledWith(contributionId);
+    expect(mockedRetrieveClaimsCreatedByPR).toHaveBeenCalledWith(contributionId, startTime);
 
     expect(mockedRetrieveClaimsCreatedByMention).toHaveBeenCalledTimes(1);
     expect(mockedRetrieveClaimsCreatedByMention).toHaveBeenCalledWith(contributionId);
