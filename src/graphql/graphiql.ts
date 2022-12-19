@@ -64,8 +64,6 @@ export function renderGraphiQL() {
           fetcher: GraphiQL.createFetcher(
             {
               url: 'https://api.gitpoap.io/graphql',
-            },
-            {
               headers: { Authorization: 'Bearer null' },
             },
           ),
