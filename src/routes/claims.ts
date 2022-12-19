@@ -29,6 +29,7 @@ import { ClaimData, FoundClaim } from '../types/claims';
 import { getRequestLogger } from '../middleware/loggingAndTiming';
 import { shortenAddress } from '../lib/addresses';
 import { chooseUnusedRedeemCode, deleteRedeemCode, upsertRedeemCode } from '../lib/codes';
+import { DateTime } from 'luxon';
 
 export const claimsRouter = Router();
 
@@ -355,6 +356,8 @@ claimsRouter.post(
         `Request to create claim for${mentionInfo} PR #${pullRequestNumber} on "${organization}/${repo}"`,
       );
 
+      const startTime = DateTime.utc();
+
       const contributions: RestrictedContribution[] = [];
       for (const githubId of contributorGithubIds) {
         const newContribution = await createClaimsForPR(
@@ -382,6 +385,9 @@ claimsRouter.post(
         } else if ('pullRequest' in contribution) {
           const newClaimsForContribution = await retrieveClaimsCreatedByPR(
             contribution.pullRequest.id,
+            // If the claims were not created by an explicit mention, don't renotify
+            // recipients of claims they have already earned (but not completed)
+            startTime,
           );
           newClaims = [...newClaims, ...newClaimsForContribution];
         } else {
