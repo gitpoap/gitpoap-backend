@@ -28,7 +28,7 @@ Data:
 
 ```json
 {
-  "claimIds": [4, 5],
+  "claimIds": [4, 5]
 }
 ```
 
@@ -60,7 +60,7 @@ for convenience):
 {
   "project": {
     "projectName": "some name",
-    "githubRepoIds": [ 9001 ]
+    "githubRepoIds": [9001]
   }, // This should be a JSON string
   "name": "GitPOAP Contributor 2022",
   "description": "You contributed to GitPOAP in 2022!\nCongrats, you are a super cool person!",
@@ -124,6 +124,7 @@ as defined by [`ADMIN_GITHUB_IDS` at `src/constants.ts`](https://github.com/gitp
 This endpoint allows the creator of a `CUSTOM` GitPOAP, or a site admin for some other `GitPOAPType` to create new Claims.
 
 Data:
+
 ```json
 {
   "contributors": {
@@ -402,15 +403,62 @@ GitPOAP must be an admin as defined by
 
 Note that the Claim can only be deleted if it is still `UNCLAIMED`.
 
+## Retrieve an Email Connected
+
+`GET /email`
+
+This endpoint allows a user to retrieve the email connection of the currently authenticated user.
+
+Note that this endpoint requires an address-based JWT.
+
+## Create an Email Connection
+
+`POST /email`
+
+This endpoint allows a user to connect an email address to their account. If the email is not already in use, we send an email with a verification token that expires in 24hrs.
+
+Note that this endpoint requires an address-based JWT.
+
+## Resend a Verification Email
+
+`POST /email/resend`
+
+This endpoint allows users to resend a verification email for current email connection attempt, generating a new verification token in the process.
+
+Note that this endpoint requires an address-based JWT.
+
+## Delete an Email
+
+`DELETE /email`
+
+This endpoint allows users to remove an email connection from their account.
+
+Note that this endpoint requires an address-based JWT.
+
+## Verify an Email Connection
+
+`POST /verify/:activeToken`
+
+This endpoint is used to verify an email connection attempt. If the correct active token is provided, the email connection is marked as valid. If an expired token is provided, the email connection attempt is removed.
+
+One of 4 messages are returned based on the success of the endpoint
+
+```typescript
+{
+  msg: "INVALID" | "USED" | "EXPIRED" | "VALID",
+}
+```
+
 ## Update a GitPOAPRequest
 
 `PATCH /gitpoaps/custom/:gitPOAPRequestId`
 
 This endpoint allows the creator of a GitPOAPRequest to update (non-contributor) fields while the
-GitPOAPRequest is *not yet* `APPROVED`. It should receive the data as `multipart/form-data` with fields like
+GitPOAPRequest is _not yet_ `APPROVED`. It should receive the data as `multipart/form-data` with fields like
 the following (shown in JSON for convenience):
 
 Data:
+
 ```json
 {
   "name": "Hi",
@@ -448,33 +496,35 @@ Note that this endpoint requires an address-based JWT to be provided.
 
 This endpoint allows the gitpoap-bot to create claims for either a PR or an issue.
 The request to this endpoint should contain bodies like the following:
-* For a Pull Request:
-    ```json
-    {
-      "pullRequest": {
-        "organization": "gitpoap",
-        "repo": "gitpoap-backend",
-        "pullRequestNumber": 34,
-        "contributorGithubIds": [1, 23, 44],
-        "wasEarnedByMention": false
-      }
+
+- For a Pull Request:
+  ```json
+  {
+    "pullRequest": {
+      "organization": "gitpoap",
+      "repo": "gitpoap-backend",
+      "pullRequestNumber": 34,
+      "contributorGithubIds": [1, 23, 44],
+      "wasEarnedByMention": false
     }
-    ```
-* For an Issue:
-    ```json
-    {
-      "issue": {
-        "organization": "gitpoap",
-        "repo": "gitpoap-backend",
-        "issueNumber": 324,
-        "contributorGithubIds": [4],
-        "wasEarnedByMention": true
-      }
+  }
+  ```
+- For an Issue:
+  ```json
+  {
+    "issue": {
+      "organization": "gitpoap",
+      "repo": "gitpoap-backend",
+      "issueNumber": 324,
+      "contributorGithubIds": [4],
+      "wasEarnedByMention": true
     }
-    ```
+  }
+  ```
 
 Note: The returned `ClaimData` of this will only include Claims that have
 `wasEarnedByMention` set to the same value as in the request. In this way we can make
 (presumably) two separate comments:
+
 1. For any users that were mentined as being contributors to the PR/Issue
 2. For the user that was the creator of the merged/closed PR/issue
