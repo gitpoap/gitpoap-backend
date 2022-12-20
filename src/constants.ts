@@ -62,7 +62,7 @@ export const GITPOAP_DEV_ROOT_URL = 'http://localhost:3000';
 
 export const GITPOAP_API_URL = 'https://api.gitpoap.io';
 export const GITPOAP_STAGING_API_URL = 'https://brisket-api.gitpoap.io';
-export const GITPOAP_DEV_API_URL = 'https://localhost:3001';
+export const GITPOAP_DEV_API_URL = 'http://localhost:3001';
 
 export const TEAM_EMAIL = 'team@gitpoap.io';
 
