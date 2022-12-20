@@ -10,16 +10,16 @@ import {
 export function renderGraphiQL() {
   // From https://github.com/graphql/graphiql/blob/main/examples/graphiql-cdn/index.html
 
-  let gqlEndpoint;
+  let apiEndpoint;
   switch (NODE_ENV) {
     case PROD_ENV:
-      gqlEndpoint = GITPOAP_API_URL;
+      apiEndpoint = GITPOAP_API_URL;
       break;
     case STAGING_ENV:
-      gqlEndpoint = GITPOAP_STAGING_API_URL;
+      apiEndpoint = GITPOAP_STAGING_API_URL;
       break;
     default:
-      gqlEndpoint = GITPOAP_DEV_API_URL;
+      apiEndpoint = GITPOAP_DEV_API_URL;
       break;
   }
 
@@ -86,7 +86,7 @@ export function renderGraphiQL() {
         React.createElement(GraphiQL, {
           fetcher: GraphiQL.createFetcher(
             {
-              url: '${gqlEndpoint}',
+              url: '${apiEndpoint}/graphql',
               headers: { Authorization: 'Bearer null' },
             },
           ),
