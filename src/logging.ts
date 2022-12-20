@@ -1,6 +1,7 @@
 import winston from 'winston';
 import { APP_NAME, NODE_ENV } from './environment';
 import { Logger } from './types/logger';
+import { PROD_ENV, STAGING_ENV } from './constants';
 
 const baseFormat = winston.format.combine(
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
@@ -16,8 +17,8 @@ const baseFormat = winston.format.combine(
 // be ingested by CloudWatch/etc
 let colorFormat;
 switch (NODE_ENV) {
-  case 'production':
-  case 'staging':
+  case PROD_ENV:
+  case STAGING_ENV:
     colorFormat = baseFormat;
     break;
   default:

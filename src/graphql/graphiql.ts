@@ -1,5 +1,28 @@
+import { NODE_ENV } from '../environment';
+import {
+  GITPOAP_API_URL,
+  GITPOAP_STAGING_API_URL,
+  GITPOAP_DEV_API_URL,
+  PROD_ENV,
+  STAGING_ENV,
+} from '../constants';
+
 export function renderGraphiQL() {
   // From https://github.com/graphql/graphiql/blob/main/examples/graphiql-cdn/index.html
+
+  let gqlEndpoint;
+  switch (NODE_ENV) {
+    case PROD_ENV:
+      gqlEndpoint = GITPOAP_API_URL;
+      break;
+    case STAGING_ENV:
+      gqlEndpoint = GITPOAP_STAGING_API_URL;
+      break;
+    default:
+      gqlEndpoint = GITPOAP_DEV_API_URL;
+      break;
+  }
+
   return `
 <!--
  *  Copyright (c) 2021 GraphQL Contributors
@@ -63,7 +86,7 @@ export function renderGraphiQL() {
         React.createElement(GraphiQL, {
           fetcher: GraphiQL.createFetcher(
             {
-              url: 'https://api.gitpoap.io/graphql',
+              url: '${gqlEndpoint}',
               headers: { Authorization: 'Bearer null' },
             },
           ),
