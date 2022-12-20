@@ -12,7 +12,7 @@ import { s3configProfile } from '../external/s3';
 import { createScopedLogger } from '../logging';
 import { DateTime } from 'luxon';
 import { parseJSON } from './json';
-import { safelyUploadMulterImage } from './images';
+import { safelyUploadImageBuffer } from './images';
 
 export async function deleteGitPOAPRequest(id: number) {
   await context.prisma.gitPOAPRequest.delete({
@@ -50,7 +50,12 @@ export function chooseNumberOfRequestedCodes(
 export async function uploadGitPOAPRequestImage(
   image: Express.Multer.File,
 ): Promise<string | null> {
-  return await safelyUploadMulterImage(s3configProfile.buckets.gitPOAPRequestImages, image);
+  return await safelyUploadImageBuffer(
+    s3configProfile.buckets.gitPOAPRequestImages,
+    image.originalname,
+    image.mimetype,
+    image.buffer,
+  );
 }
 
 export function validateContributorsString(contributorsString: string) {

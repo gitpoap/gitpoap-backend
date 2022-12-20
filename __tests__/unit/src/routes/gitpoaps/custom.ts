@@ -10,7 +10,7 @@ import {
   getImageBufferFromS3URL,
   getS3URL,
   S3ClientConfigProfile,
-  uploadMulterFile,
+  uploadFileBuffer,
 } from '../../../../../src/external/s3';
 import { DateTime } from 'luxon';
 import { STAFF_ADDRESSES, CUSTOM_GITPOAP_MINIMUM_CODES } from '../../../../../src/constants';
@@ -80,7 +80,7 @@ jest.mock('../../../../../src/external/s3', () => {
         gitPOAPRequestImages: 'gitpoap-request-images-test',
       },
     },
-    uploadMulterFile: jest.fn(),
+    uploadFileBuffer: jest.fn(),
     getImageBufferFromS3: jest.fn(),
     getImageBufferFromS3URL: jest.fn(),
   };
@@ -131,7 +131,7 @@ jest.mocked(sendGitPOAPRequestRejectionEmail, true);
 
 jest.spyOn(DateTime, 'now').mockReturnValue(DateTime.fromMillis(123456789));
 const mockedGetImageBufferFromS3URL = jest.mocked(getImageBufferFromS3URL, true);
-const mockedUploadMulterFile = jest.mocked(uploadMulterFile, true);
+const mockedUploadFileBuffer = jest.mocked(uploadFileBuffer, true);
 
 function genAuthTokens(someAddress?: string) {
   return generateAuthTokens(
@@ -599,15 +599,13 @@ describe('POST /gitpoaps/custom', () => {
     });
 
     /* Expect that the image was uploaded to S3 */
-    expect(mockedUploadMulterFile).toHaveBeenCalledTimes(1);
-    expect(mockedUploadMulterFile).toHaveBeenCalledWith(
-      {
-        buffer: Buffer.from('foobar'),
-        mimetype: 'image/png',
-        originalname: 'foobar.png',
-      },
+    expect(mockedUploadFileBuffer).toHaveBeenCalledTimes(1);
+    expect(mockedUploadFileBuffer).toHaveBeenCalledWith(
       'gitpoap-request-images-test',
       'foobar-123456789.png',
+      'image/png',
+      Buffer.from('foobar'),
+      undefined,
     );
   };
 
@@ -664,7 +662,7 @@ describe('POST /gitpoaps/custom', () => {
   it('Fails when the s3 image upload fails', async () => {
     mockJwtWithAddress();
     const authTokens = genAuthTokens();
-    mockedUploadMulterFile.mockRejectedValueOnce(new Error('Failed to upload image to S3'));
+    mockedUploadFileBuffer.mockRejectedValueOnce(new Error('Failed to upload image to S3'));
 
     const result = await request(await setupApp())
       .post('/gitpoaps/custom')
@@ -688,7 +686,7 @@ describe('POST /gitpoaps/custom', () => {
       staffApprovalStatus: StaffApprovalStatus.PENDING,
     } as any);
 
-    mockedUploadMulterFile.mockResolvedValue({
+    mockedUploadFileBuffer.mockResolvedValue({
       filename: 'foobar_imgKey',
     } as any);
 
@@ -714,7 +712,7 @@ describe('POST /gitpoaps/custom', () => {
       staffApprovalStatus: StaffApprovalStatus.PENDING,
     } as any);
 
-    mockedUploadMulterFile.mockResolvedValue({
+    mockedUploadFileBuffer.mockResolvedValue({
       filename: 'foobar_imgKey',
     } as any);
 
@@ -746,7 +744,7 @@ describe('POST /gitpoaps/custom', () => {
       imageUrl: getS3URL('gitpoap-request-images-test', 'foobar.png-123456789000'),
     } as any);
 
-    mockedUploadMulterFile.mockResolvedValue({
+    mockedUploadFileBuffer.mockResolvedValue({
       filename: 'foobar_imgKey',
     } as any);
 
@@ -800,7 +798,7 @@ describe('POST /gitpoaps/custom', () => {
       },
     } as any);
 
-    mockedUploadMulterFile.mockResolvedValue({
+    mockedUploadFileBuffer.mockResolvedValue({
       filename: 'foobar_imgKey',
     } as any);
 
@@ -964,15 +962,13 @@ describe('PATCH /gitpoaps/custom/:gitPOAPRequestId', () => {
     expectFindUniqueCalls(2);
 
     /* Expect that the image was uploaded to S3 */
-    expect(mockedUploadMulterFile).toHaveBeenCalledTimes(2);
-    expect(mockedUploadMulterFile).toHaveBeenCalledWith(
-      {
-        buffer: Buffer.from('foobar'),
-        mimetype: 'image/png',
-        originalname: 'foobar.png',
-      },
+    expect(mockedUploadFileBuffer).toHaveBeenCalledTimes(2);
+    expect(mockedUploadFileBuffer).toHaveBeenCalledWith(
       'gitpoap-request-images-test',
       'foobar-123456789.png',
+      'image/png',
+      Buffer.from('foobar'),
+      undefined,
     );
   });
 });
