@@ -2,6 +2,7 @@ import winston from 'winston';
 import { APP_NAME, NODE_ENV } from './environment';
 import { Logger } from './types/logger';
 import { PROD_ENV, STAGING_ENV } from './constants';
+import * as Sentry from '@sentry/node';
 
 const baseFormat = winston.format.combine(
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
@@ -52,7 +53,10 @@ export function createScopedLogger(scope: string): Logger {
     debug: (msg: string) => logger.debug(format(msg)),
     info: (msg: string) => logger.info(format(msg)),
     warn: (msg: string) => logger.warn(format(msg)),
-    error: (msg: string) => logger.error(format(msg)),
+    error: (msg: string) => {
+      Sentry.captureMessage(`${scope}: ${msg}`);
+      logger.error(format(msg));
+    },
   };
 }
 
