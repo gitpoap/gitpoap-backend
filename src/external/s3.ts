@@ -12,7 +12,7 @@ import fetch from 'cross-fetch';
 import { createScopedLogger } from '../logging';
 import { captureException } from '../lib/sentry';
 
-export type Buckets = 'intakeForm' | 'ensAvatarCache' | 'gitPOAPRequestImages';
+export type Buckets = 'intakeForm' | 'ensAvatarCache' | 'gitPOAPRequestImages' | 'teamLogoImages';
 
 export type S3ClientConfigProfile = S3ClientConfig & {
   buckets: Record<Buckets, string>;
@@ -26,6 +26,7 @@ const S3_CONFIG_PROFILES: Record<'local' | 'prod', S3ClientConfigProfile> = {
       intakeForm: 'intake-form-test',
       ensAvatarCache: 'ens-avatar-cache-test',
       gitPOAPRequestImages: 'gitpoap-request-images-test',
+      teamLogoImages: 'team-logo-images-test',
     },
   },
   prod: {
@@ -34,6 +35,7 @@ const S3_CONFIG_PROFILES: Record<'local' | 'prod', S3ClientConfigProfile> = {
       intakeForm: 'intake-form-prod',
       ensAvatarCache: 'ens-avatar-cache-prod',
       gitPOAPRequestImages: 'gitpoap-request-images-prod',
+      teamLogoImages: 'team-logo-images-prod',
     },
   },
 };
