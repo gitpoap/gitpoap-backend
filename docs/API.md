@@ -431,6 +431,17 @@ Note that all the fields above are optional.
 In addition, there can be part of the `multipart/form-data` named `"image"` that contains an uploaded
 image that the GitPOAPRequest should update to use.
 
+## Upload a new Team Logo
+
+`POST /teams/logo`
+
+This endpoint allows the admin of a Team to upload a new logo for their team. If the logo is greater than
+500px by 500px then it will be resized to fit within that square.
+
+The image is supplied via `multipart/form-data` as a field named `"image"`.
+
+Note that this endpoint requires an address-based JWT to be provided.
+
 ## [gitpoap-bot] Create a Claim
 
 `PUT /claims/gitpoap-bot/create`
