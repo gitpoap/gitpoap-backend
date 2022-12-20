@@ -49,14 +49,15 @@ function isAccessTokenPayloadBase(payload: any): boolean {
   ) {
     return false;
   }
-
   for (const membership of payload.memberships) {
     if (
       !(
+        membership &&
+        typeof membership === 'object' &&
         'teamId' in membership &&
-        typeof payload.teamId === 'number' &&
+        typeof membership.teamId === 'number' &&
         'role' in membership &&
-        membershipSet.has(payload.role)
+        membershipSet.has(membership.role)
       )
     ) {
       return false;
