@@ -44,21 +44,31 @@ export const s3configProfile = S3_CONFIG_PROFILES[NODE_ENV === 'local' ? 'local'
 
 export const s3 = new S3Client(s3configProfile);
 
+export async function uploadFileBuffer(
+  bucket: string,
+  key: string,
+  mimetype: string,
+  buffer: Buffer,
+  isPublic?: boolean,
+) {
+  const params: PutObjectCommandInput = {
+    Bucket: bucket,
+    Key: key,
+    Body: buffer,
+    ContentType: mimetype,
+    ACL: isPublic ? 'public-read' : undefined,
+  };
+
+  return await s3.send(new PutObjectCommand(params));
+}
+
 export const uploadMulterFile = async (
   file: Express.Multer.File,
   bucket: string,
   key: string,
   isPublic?: boolean,
 ): Promise<PutObjectCommandOutput> => {
-  const params: PutObjectCommandInput = {
-    Bucket: bucket,
-    Key: key,
-    Body: file.buffer,
-    ContentType: file.mimetype,
-    ACL: isPublic ? 'public-read' : undefined,
-  };
-
-  return await s3.send(new PutObjectCommand(params));
+  return await uploadFileBuffer(bucket, key, file.mimetype, file.buffer, isPublic);
 };
 
 export const uploadFileFromURL = async (

@@ -1,22 +1,25 @@
 import { createScopedLogger } from '../logging';
 import path from 'path';
-import { uploadMulterFile } from '../external/s3';
+import { uploadFileBuffer } from '../external/s3';
 import { DateTime } from 'luxon';
 
-export async function safelyUploadMulterImage(
+export async function safelyUploadImageBuffer(
   bucket: string,
-  image: Express.Multer.File,
+  originalName: string,
+  mimetype: string,
+  buffer: Buffer,
+  isPublic?: boolean,
 ): Promise<string | null> {
-  const logger = createScopedLogger('safelyUploadMulterImage');
+  const logger = createScopedLogger('safelyUploadImageBuffer');
 
-  logger.info(`Uploading image "${image.originalname}" to S3`);
+  logger.info(`Uploading image "${originalName}" to S3`);
 
   try {
-    const extension = path.extname(image.originalname);
-    const originalName = path.basename(image.originalname, extension);
-    const name = originalName.replace(/[^a-zA-Z0-9]/g, '');
+    const extension = path.extname(originalName);
+    const baseName = path.basename(originalName, extension);
+    const name = baseName.replace(/[^a-zA-Z0-9]/g, '');
     const imageKey = `${name}-${DateTime.now().toMillis()}${extension}`;
-    await uploadMulterFile(image, bucket, imageKey);
+    await uploadFileBuffer(bucket, imageKey, mimetype, buffer, isPublic);
     logger.info(`Uploaded image with imageKey: ${imageKey} to S3 bucket ${bucket}`);
     return imageKey;
   } catch (err) {

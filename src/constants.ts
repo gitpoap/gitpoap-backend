@@ -86,3 +86,6 @@ export const DISCORD_AUTH_SCOPE = 'identify';
 export const GNOSIS_RPC = 'https://rpc.gnosischain.com/';
 
 export const POAP_DATE_FORMAT = 'yyyy-MM-dd';
+
+// Maximum size of Team logos sides
+export const MAX_LOGO_IMAGE_SIZE = 500;
