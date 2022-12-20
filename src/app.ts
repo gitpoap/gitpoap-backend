@@ -23,6 +23,7 @@ import { authRouter } from './routes/auth';
 import { loggingAndTimingMiddleware } from './middleware/loggingAndTiming';
 import { routeNotFoundHandler } from './middleware/routeNotFound';
 import { createGQLRouter } from './graphql/server';
+import { teamsRouter } from './routes/teams';
 
 const initializeSentry = (app: Express) => {
   if (SENTRY_DSN) {
@@ -82,6 +83,7 @@ export async function setupAppWithMiddleware(middleware: RequestHandler[]) {
   app.use('/profiles', profilesRouter);
   app.use('/projects', projectsRouter);
   app.use('/triggers', triggersRouter);
+  app.use('/teams', teamsRouter);
   app.use('/vitals', vitalsRouter);
 
   app.use(routeNotFoundHandler);

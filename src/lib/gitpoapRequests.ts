@@ -8,11 +8,11 @@ import {
 } from '../constants';
 import { GitPOAPContributorsSchema } from '../schemas/gitpoaps';
 import { z } from 'zod';
-import { s3configProfile, uploadMulterFile } from '../external/s3';
-import path from 'path';
+import { s3configProfile } from '../external/s3';
 import { createScopedLogger } from '../logging';
 import { DateTime } from 'luxon';
 import { parseJSON } from './json';
+import { safelyUploadMulterImage } from './images';
 
 export async function deleteGitPOAPRequest(id: number) {
   await context.prisma.gitPOAPRequest.delete({
@@ -50,24 +50,7 @@ export function chooseNumberOfRequestedCodes(
 export async function uploadGitPOAPRequestImage(
   image: Express.Multer.File,
 ): Promise<string | null> {
-  const logger = createScopedLogger('uploadGitPOAPRequestImage');
-
-  logger.info(`Uploading image "${image.originalname}" to S3`);
-
-  try {
-    const extension = path.extname(image.originalname);
-    const originalName = path.basename(image.originalname, extension);
-    const name = originalName.replace(/[^a-zA-Z0-9]/g, '');
-    const imageKey = `${name}-${DateTime.now().toMillis()}${extension}`;
-    await uploadMulterFile(image, s3configProfile.buckets.gitPOAPRequestImages, imageKey);
-    logger.info(
-      `Uploaded image with imageKey: ${imageKey} to S3 bucket ${s3configProfile.buckets.gitPOAPRequestImages}`,
-    );
-    return imageKey;
-  } catch (err) {
-    logger.error(`Received error when uploading image to S3: ${err}`);
-    return null;
-  }
+  return await safelyUploadMulterImage(s3configProfile.buckets.gitPOAPRequestImages, image);
 }
 
 export function validateContributorsString(contributorsString: string) {
