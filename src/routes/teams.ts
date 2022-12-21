@@ -4,17 +4,78 @@ import { jwtWithAddress } from '../middleware/auth';
 import { getRequestLogger } from '../middleware/loggingAndTiming';
 import { getS3URL, s3configProfile } from '../external/s3';
 import { hasMembership } from '../lib/authTokens';
-import { MembershipRole } from '@prisma/client';
+import { MembershipAcceptanceStatus, MembershipRole } from '@prisma/client';
 import { getAccessTokenPayload } from '../types/authTokens';
 import { uploadTeamLogoImage } from '../lib/teams';
 import { context } from '../context';
+import { CreateTeamSchema } from '../schemas/teams';
+import { DateTime } from 'luxon';
 
 export const teamsRouter = Router();
+
+const upload = multer();
+
+teamsRouter.post('/', jwtWithAddress(), upload.single('image'), async function (req, res) {
+  const logger = getRequestLogger(req);
+
+  const schemaResult = CreateTeamSchema.safeParse(req.body);
+  if (!schemaResult.success) {
+    logger.warn(
+      `Missing/invalid body fields in request: ${JSON.stringify(schemaResult.error.issues)}`,
+    );
+    return res.status(400).send({ issues: schemaResult.error.issues });
+  }
+  if (!req.file) {
+    const msg = 'Missing/invalid "image" upload in request';
+    logger.warn(msg);
+    return res.status(400).send({ msg });
+  }
+
+  const { addressId } = getAccessTokenPayload(req.user);
+
+  logger.info(`Request to create Team "${schemaResult.data.name}" for Address ID ${addressId}`);
+
+  const imageKey = await uploadTeamLogoImage(req.file);
+  if (imageKey === null) {
+    logger.error('Failed to upload Team logo image to s3');
+    return res.status(500).send({ msg: 'Failed to upload image' });
+  }
+
+  const teamResult = await context.prisma.team.create({
+    data: {
+      name: schemaResult.data.name,
+      ownerAddress: {
+        connect: { id: addressId },
+      },
+      description: schemaResult.data.description ?? null,
+      logoImageUrl: getS3URL(s3configProfile.buckets.teamLogoImages, imageKey),
+    },
+    select: { id: true },
+  });
+
+  await context.prisma.membership.create({
+    data: {
+      team: {
+        connect: { id: teamResult.id },
+      },
+      address: {
+        connect: { id: addressId },
+      },
+      role: MembershipRole.ADMIN,
+      acceptanceStatus: MembershipAcceptanceStatus.ACCEPTED,
+      joinedOn: DateTime.utc().toJSDate(),
+    },
+  });
+
+  logger.info(
+    `Completed request to create Team "${schemaResult.data.name}" for Address ID ${addressId}`,
+  );
+});
 
 teamsRouter.patch(
   '/:teamId/logo',
   jwtWithAddress(),
-  multer().single('image'),
+  upload.single('image'),
   async function (req, res) {
     const logger = getRequestLogger(req);
 

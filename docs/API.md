@@ -476,8 +476,31 @@ Data:
 
 Note that all the fields above are optional.
 
-In addition, there can be part of the `multipart/form-data` named `"image"` that contains an uploaded
+In addition, there must be part of the `multipart/form-data` named `"image"` that contains an uploaded
 image that the GitPOAPRequest should update to use.
+
+## Create a new Team
+
+`POST /teams`
+
+This endpoint allows an arbitrary user to create a new Team. It should receive the data as
+`multipart/form-data` with fields like the following (shown in JSON for convenience):
+
+Data:
+
+```json
+{
+  "name": "Hi",
+  "description": "There"
+}
+```
+
+Note that `"description"` is optional.
+
+In addition, there must be part of the `multipart/form-data` named `"image"` that contains an uploaded
+image that the GitPOAPRequest should update to use.
+
+
 
 ## Upload a new Team Logo
 
