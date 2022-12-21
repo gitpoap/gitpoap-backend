@@ -49,7 +49,7 @@ To check if a user is has a specific role on a team, one can use something like:
       throw InternalError;
     }
 
-    if (!hasMembership(userAccessTokenPayload, SOME_TEAM_ID, MembershipRole.ADMIN)) {
+    if (!hasMembership(userAccessTokenPayload, SOME_TEAM_ID, [MembershipRole.ADMIN])) {
       logger.warn(`User is not a member of ${SOME_TEAM_ID}`);
       return null;
     }
