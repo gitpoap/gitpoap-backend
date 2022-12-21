@@ -121,11 +121,12 @@ import {
 import { CustomClaimResolver } from './resolvers/claims';
 import { CustomEmailResolver } from './resolvers/emails';
 import { CustomGitPOAPResolver } from './resolvers/gitpoaps';
+import { CustomMembershipResolver } from './resolvers/memberships';
 import { CustomOrganizationResolver } from './resolvers/githubOrganizations';
 import { CustomProfileResolver } from './resolvers/profiles';
 import { CustomRepoResolver } from './resolvers/repos';
 import { CustomSearchResolver } from './resolvers/search';
-import { MembershipResolver } from './resolvers/memberships';
+import { CustomTeamResolver } from './resolvers/teams';
 
 type ResolverClass = { new (...args: any[]): any };
 
@@ -245,11 +246,12 @@ const allResolvers: NonEmptyArray<ResolverClass> = [
   CustomClaimResolver,
   CustomEmailResolver,
   CustomGitPOAPResolver,
+  CustomMembershipResolver,
   CustomOrganizationResolver,
   CustomProfileResolver,
   CustomRepoResolver,
   CustomSearchResolver,
-  MembershipResolver,
+  CustomTeamResolver,
 ];
 
 export const createAndEmitSchema = async () => {

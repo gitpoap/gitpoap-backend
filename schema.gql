@@ -549,6 +549,13 @@ type Query {
     sort: String = "claim-date"
     gitPOAPId: Float!
   ): Holders
+  userMemberships: UserMemberships
+  teamMemberships(
+    page: Float = null
+    perPage: Float = null
+    sort: String = "date"
+    teamId: Float!
+  ): TeamMemberships
   repoData(
     repoName: String = null
     orgName: String = null
@@ -590,13 +597,6 @@ type Query {
     repoId: Float!
   ): [ProfileWithClaimsCount!]
   search(text: String!): SearchResults!
-  userMemberships: UserMemberships
-  teamMemberships(
-    page: Float = null
-    perPage: Float = null
-    sort: String = "date"
-    teamId: Float!
-  ): TeamMemberships
 }
 
 type AggregateAddress {
@@ -5754,6 +5754,15 @@ type Holder {
   gitPOAPCount: Float!
 }
 
+type UserMemberships {
+  memberships: [Membership!]!
+}
+
+type TeamMemberships {
+  total: Float!
+  memberships: [Membership!]!
+}
+
 type RepoReturnData {
   id: Int!
   name: String!
@@ -5844,21 +5853,22 @@ type SearchResults {
   profiles: [Profile!]!
 }
 
-type UserMemberships {
-  memberships: [Membership!]!
-}
-
-type TeamMemberships {
-  total: Float!
-  memberships: [Membership!]!
-}
-
 type Mutation {
   addNewMembership(address: String!, teamId: Float!): MembershipMutationPayload!
   removeMembership(address: String!, teamId: Float!): MembershipMutationPayload!
   acceptMembership(teamId: Float!): MembershipMutationPayload!
+  updateTeamName(name: String!, teamId: Float!): TeamMutationPayload!
+  updateDescriptionName(
+    description: String
+    teamId: Float!
+  ): TeamMutationPayload!
 }
 
 type MembershipMutationPayload {
-  membership: Membership!
+  membership: Membership
+}
+
+type TeamMutationPayload {
+  name: String!
+  description: String
 }
