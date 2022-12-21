@@ -4,6 +4,7 @@ import { MembershipAcceptanceStatus, MembershipRole } from '@prisma/client';
 import { DateTime } from 'luxon';
 import { AuthRoles } from '../auth';
 import { AuthLoggingContext } from '../middleware';
+import { InternalError } from '../errors';
 
 enum MembershipSort {
   DATE = 'date',
@@ -12,7 +13,6 @@ enum MembershipSort {
 }
 
 enum MembershipErrorMessage {
-  NOT_AUTHENTICATED = 'Not authenticated',
   NOT_AUTHORIZED = 'Not authorized',
   ADDRESS_NOT_FOUND = 'Address not found',
   TEAM_NOT_FOUND = 'Team not found',
@@ -39,23 +39,23 @@ class TeamMemberships {
 
 @ObjectType()
 class MembershipMutationPayload {
-  @Field(() => Membership)
+  @Field(() => Membership, { nullable: true })
   membership: Membership | null;
 }
 
 @Resolver(() => Membership)
-export class MembershipResolver {
+export class CustomMembershipResolver {
   @Authorized(AuthRoles.Address)
   @Query(() => UserMemberships, { nullable: true })
   async userMemberships(
     @Ctx() { prisma, userAccessTokenPayload, logger }: AuthLoggingContext,
   ): Promise<UserMemberships> {
-    logger.info(`Request for Memberships for address`);
-
     if (userAccessTokenPayload === null) {
       logger.error('Route passed AuthRoles.Address authorization without user payload set');
-      throw new Error(MembershipErrorMessage.NOT_AUTHENTICATED);
+      throw InternalError;
     }
+
+    logger.info(`Request for Memberships for address ${userAccessTokenPayload.address}`);
 
     const memberships = await prisma.membership.findMany({
       where: {
@@ -67,9 +67,7 @@ export class MembershipResolver {
 
     logger.debug(`Completed request for Memberships for address ${userAccessTokenPayload.address}`);
 
-    return {
-      memberships,
-    };
+    return { memberships };
   }
 
   @Authorized(AuthRoles.Address)
@@ -87,7 +85,7 @@ export class MembershipResolver {
 
     if (userAccessTokenPayload === null) {
       logger.error('Route passed AuthRoles.Address authorization without user payload set');
-      throw new Error(MembershipErrorMessage.NOT_AUTHENTICATED);
+      throw InternalError;
     }
 
     let orderBy: MembershipOrderByWithRelationInput | undefined = undefined;
@@ -170,12 +168,12 @@ export class MembershipResolver {
     @Arg('teamId') teamId: number,
     @Arg('address') address: string,
   ): Promise<MembershipMutationPayload> {
-    logger.info(`Request to add user with address: ${address} as a member to team ${teamId}`);
-
     if (userAccessTokenPayload === null) {
       logger.error('Route passed AuthRoles.Address authorization without user payload set');
-      throw new Error(MembershipErrorMessage.NOT_AUTHENTICATED);
+      throw InternalError;
     }
+
+    logger.info(`Request to add user with address: ${address} as a member to team ${teamId}`);
 
     const team = await prisma.team.findUnique({
       where: {
@@ -264,7 +262,7 @@ export class MembershipResolver {
 
     if (userAccessTokenPayload === null) {
       logger.error('Route passed AuthRoles.Address authorization without user payload set');
-      throw new Error(MembershipErrorMessage.NOT_AUTHENTICATED);
+      throw InternalError;
     }
 
     const team = await prisma.team.findUnique({
@@ -345,7 +343,7 @@ export class MembershipResolver {
 
     if (userAccessTokenPayload === null) {
       logger.error('Route passed AuthRoles.Address authorization without user payload set');
-      throw new Error(MembershipErrorMessage.NOT_AUTHENTICATED);
+      throw InternalError;
     }
 
     const team = await prisma.team.findUnique({
