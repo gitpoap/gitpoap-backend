@@ -398,9 +398,12 @@ export async function getValidatedAccessTokenPayload(
 export function hasMembership(
   accessTokenPayload: AccessTokenPayload,
   teamId: number,
-  role?: MembershipRole,
+  roles?: MembershipRole[],
 ) {
+  const acceptedRoles = new Set<MembershipRole>(roles ?? []);
+
   return accessTokenPayload.memberships.some(
-    membership => membership.teamId === teamId && (role === undefined || membership.role === role),
+    membership =>
+      membership.teamId === teamId && (roles === undefined || acceptedRoles.has(membership.role)),
   );
 }
