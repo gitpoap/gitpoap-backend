@@ -11,7 +11,7 @@ import { context } from '../context';
 
 export const teamsRouter = Router();
 
-teamsRouter.post(
+teamsRouter.patch(
   '/:teamId/logo',
   jwtWithAddress(),
   multer().single('image'),

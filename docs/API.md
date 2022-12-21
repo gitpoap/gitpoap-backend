@@ -481,7 +481,7 @@ image that the GitPOAPRequest should update to use.
 
 ## Upload a new Team Logo
 
-`POST /teams/logo`
+`PATCH /teams/:teamId/logo`
 
 This endpoint allows the admin of a Team to upload a new logo for their team. If the logo is greater than
 500px by 500px then it will be resized to fit within that square.
