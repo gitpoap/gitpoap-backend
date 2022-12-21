@@ -61,7 +61,7 @@ teamsRouter.post('/', jwtWithAddress(), upload.single('image'), async function (
       address: {
         connect: { id: addressId },
       },
-      role: MembershipRole.ADMIN,
+      role: MembershipRole.OWNER,
       acceptanceStatus: MembershipAcceptanceStatus.ACCEPTED,
       joinedOn: DateTime.utc().toJSDate(),
     },
@@ -100,7 +100,7 @@ teamsRouter.patch(
 
     const accessTokenPayload = getAccessTokenPayload(req.user);
 
-    if (!hasMembership(accessTokenPayload, teamId, MembershipRole.ADMIN)) {
+    if (!hasMembership(accessTokenPayload, teamId, [MembershipRole.OWNER, MembershipRole.ADMIN])) {
       logger.warn(
         `Non-admin ${accessTokenPayload.address} attempted to change the logo for Team ID ${teamId}`,
       );
