@@ -5853,9 +5853,37 @@ type SearchResults {
   profiles: [Profile!]!
 }
 
+type UserMemberships {
+  memberships: [MembershipWithTeam!]!
+}
+
+type MembershipWithTeam {
+  id: Int!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  teamId: Int!
+  addressId: Int!
+  role: MembershipRole!
+  acceptanceStatus: MembershipAcceptanceStatus!
+  joinedOn: DateTime
+  team: Team!
+  address: Address!
+}
+
+type TeamMemberships {
+  total: Float!
+  memberships: [MembershipWithTeam!]!
+}
+
 type Mutation {
-  addNewMembership(address: String!, teamId: Float!): MembershipMutationPayload!
-  removeMembership(address: String!, teamId: Float!): MembershipMutationPayload!
+  addNewMembership(
+    address: String!
+    teamId: Float!
+  ): MembershipMutationPayload!
+  removeMembership(
+    address: String!
+    teamId: Float!
+  ): MembershipMutationPayload!
   acceptMembership(teamId: Float!): MembershipMutationPayload!
   updateTeamName(name: String!, teamId: Float!): TeamMutationPayload!
   updateDescriptionName(
@@ -5871,4 +5899,5 @@ type MembershipMutationPayload {
 type TeamMutationPayload {
   name: String!
   description: String
+  membership: MembershipWithTeam!
 }
