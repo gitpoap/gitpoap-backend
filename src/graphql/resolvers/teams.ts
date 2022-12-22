@@ -1,10 +1,23 @@
-import { Authorized, Arg, Ctx, Field, ObjectType, Resolver, Mutation } from 'type-graphql';
+import {
+  Authorized,
+  Arg,
+  Ctx,
+  Field,
+  InputType,
+  ObjectType,
+  Resolver,
+  Mutation,
+} from 'type-graphql';
 import { AuthRoles } from '../auth';
 import { AuthLoggingContext } from '../middleware';
 import { InternalError } from '../errors';
 import { hasMembership } from '../../lib/authTokens';
 import { MembershipRole } from '@prisma/client';
-import { Team } from '@generated/type-graphql';
+import {
+  Team,
+  NullableStringFieldUpdateOperationsInput,
+  StringFieldUpdateOperationsInput,
+} from '@generated/type-graphql';
 
 const TeamErrorText = {
   NotAuthorized: 'Not authorized to update Team',
@@ -12,8 +25,17 @@ const TeamErrorText = {
 
 const NotAuthorizedError = new Error(TeamErrorText.NotAuthorized);
 
+@InputType()
+class TeamUpdateInput {
+  @Field({ nullable: true })
+  name?: StringFieldUpdateOperationsInput;
+
+  @Field({ nullable: true })
+  description?: NullableStringFieldUpdateOperationsInput;
+}
+
 @ObjectType()
-class TeamMutationPayload {
+class TeamUpdatePayload {
   @Field()
   name: string;
 
@@ -24,18 +46,18 @@ class TeamMutationPayload {
 @Resolver(() => Team)
 export class CustomTeamResolver {
   @Authorized(AuthRoles.Address)
-  @Mutation(() => TeamMutationPayload)
-  async updateTeamName(
+  @Mutation(() => TeamUpdatePayload)
+  async updateTeam(
     @Ctx() { prisma, userAccessTokenPayload, logger }: AuthLoggingContext,
     @Arg('teamId') teamId: number,
-    @Arg('name') name: string,
-  ): Promise<TeamMutationPayload> {
+    @Arg('input') input: TeamUpdateInput,
+  ): Promise<TeamUpdatePayload> {
     if (userAccessTokenPayload === null) {
       logger.error('Route passed AuthRoles.Address authorization without user payload set');
       throw InternalError;
     }
 
-    logger.info(`Request to update name for Team ID ${teamId}`);
+    logger.info(`Request to data for Team ID ${teamId}`);
 
     if (
       !hasMembership(userAccessTokenPayload, teamId, [MembershipRole.OWNER, MembershipRole.ADMIN])
@@ -46,53 +68,29 @@ export class CustomTeamResolver {
       throw NotAuthorizedError;
     }
 
+    let name;
+    if (input.name !== undefined) {
+      name = input.name.set;
+    }
+
+    let description;
+    if (input.description !== undefined) {
+      description = input.description.set;
+    }
+
     const result = await prisma.team.update({
       where: { id: teamId },
-      data: { name },
+      data: {
+        name,
+        description,
+      },
       select: {
         name: true,
         description: true,
       },
     });
 
-    logger.debug(`Completed request to update name for Team ID ${teamId}`);
-
-    return result;
-  }
-
-  @Authorized(AuthRoles.Address)
-  @Mutation(() => TeamMutationPayload)
-  async updateDescriptionName(
-    @Ctx() { prisma, userAccessTokenPayload, logger }: AuthLoggingContext,
-    @Arg('teamId') teamId: number,
-    @Arg('description', { nullable: true }) description: string,
-  ): Promise<TeamMutationPayload> {
-    if (userAccessTokenPayload === null) {
-      logger.error('Route passed AuthRoles.Address authorization without user payload set');
-      throw InternalError;
-    }
-
-    logger.info(`Request to update description for Team ID ${teamId}`);
-
-    if (
-      !hasMembership(userAccessTokenPayload, teamId, [MembershipRole.OWNER, MembershipRole.ADMIN])
-    ) {
-      logger.warn(
-        `Unauthorized Address ID ${userAccessTokenPayload.addressId} tried to update Team ID ${teamId}`,
-      );
-      throw NotAuthorizedError;
-    }
-
-    const result = await prisma.team.update({
-      where: { id: teamId },
-      data: { description },
-      select: {
-        name: true,
-        description: true,
-      },
-    });
-
-    logger.debug(`Completed request to update description for Team ID ${teamId}`);
+    logger.debug(`Completed request to update data for Team ID ${teamId}`);
 
     return result;
   }
