@@ -121,11 +121,6 @@ export class CustomTeamResolver {
       throw InternalError;
     }
 
-    if (!teamId) {
-      logger.warn('A "teamId" must be provided');
-      throw new Error('A "teamId" must be provided');
-    }
-
     let orderBy: TeamOrderByWithRelationInput;
     switch (sort) {
       case 'createdAt':
@@ -155,7 +150,7 @@ export class CustomTeamResolver {
       },
     });
     if (team === null) {
-      logger.warn(`Failed to look up team with ID: ${teamId}`);
+      logger.error(`Failed to look up team with ID: ${teamId}`);
       throw TeamNotFoundError;
     }
 
@@ -176,11 +171,6 @@ export class CustomTeamResolver {
     if (userAccessTokenPayload === null) {
       logger.error('Route passed AuthRoles.Address authorization without user payload set');
       throw InternalError;
-    }
-
-    if (!teamId) {
-      logger.warn('A "teamId" must be provided');
-      throw new Error('A "teamId" must be provided');
     }
 
     let orderBy: TeamOrderByWithRelationInput;
@@ -210,7 +200,7 @@ export class CustomTeamResolver {
       },
     });
     if (team === null) {
-      logger.warn(`Failed to look up team with ID: ${teamId}`);
+      logger.error(`Failed to look up team with ID: ${teamId}`);
       throw TeamNotFoundError;
     }
 
