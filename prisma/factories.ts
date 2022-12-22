@@ -659,6 +659,33 @@ export class TeamFactory {
 
     return team;
   };
+
+  static addGitPOAPs = async (teamId: number, gitPOAPIds: number[]): Promise<Team> => {
+    const data: Prisma.TeamUpdateInput = {
+      gitPOAPs: {
+        connect: gitPOAPIds.map(id => ({ id })),
+      },
+    };
+    const team = await prisma.team.update({ where: { id: teamId }, data });
+    logger.debug(`Adding GitPOAPs with IDs: ${gitPOAPIds} to Team with ID: ${teamId}`);
+
+    return team;
+  };
+
+  static addGitPOAPRequests = async (
+    teamId: number,
+    gitPOAPRequestIds: number[],
+  ): Promise<Team> => {
+    const data: Prisma.TeamUpdateInput = {
+      gitPOAPRequests: {
+        connect: gitPOAPRequestIds.map(id => ({ id })),
+      },
+    };
+    const team = await prisma.team.update({ where: { id: teamId }, data });
+    logger.debug(`Adding GitPOAPRequest with IDs: ${gitPOAPRequestIds} to Team with ID: ${teamId}`);
+
+    return team;
+  };
 }
 
 export class MembershipFactory {
