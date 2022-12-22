@@ -597,6 +597,16 @@ type Query {
     repoId: Float!
   ): [ProfileWithClaimsCount!]
   search(text: String!): SearchResults!
+  teamGitPOAPs(
+    sort: String = null
+    approvalStatus: String = null
+    teamId: Float!
+  ): [GitPOAP!]!
+  teamGitPOAPRequests(
+    sort: String = null
+    approvalStatus: String = null
+    teamId: Float!
+  ): [GitPOAPRequest!]!
 }
 
 type AggregateAddress {
