@@ -329,6 +329,23 @@ export const seed = async () => {
     },
   });
 
+  const request3 = await GitPOAPRequestFactory.create({
+    name: 'Rejected Submission',
+    description: 'A really poorly made GitPOAP request',
+    creatorEmailId: teamEmail.id,
+    addressId: addressAldo.id,
+    imageUrl: getS3URL('gitpoap-request-images-test', 'gitpoap-test-1.png-1666121850.987'),
+    startDate: DateTime.fromISO('2022-06-01').toJSDate(),
+    endDate: DateTime.fromISO('2022-06-30').toJSDate(),
+    staffApprovalStatus: StaffApprovalStatus.REJECTED,
+    contributors: {
+      ensNames: ['lamberti.eth'],
+      githubHandles: ['aldolamb'],
+      ethAddresses: ['0xpeebeejay'],
+      emails: ['aldo@gitpoap.io', 'burz@gitpoap.io', 'jay@gitpoap.io'],
+    },
+  });
+
   /* Create Teams */
   const gitpoapTeam = await TeamFactory.create(
     'GitPoap team',
@@ -353,6 +370,24 @@ export const seed = async () => {
   const team3 = await TeamFactory.create(faker.company.bs(), faker.lorem.sentence(), addressBurz.id, faker.image.dataUri());
   const team4 = await TeamFactory.create(faker.company.bs(), faker.lorem.sentence(), addressKayleen.id, faker.image.dataUri());
   const team5 = await TeamFactory.create(faker.company.bs(), faker.lorem.sentence(), addressAldo.id, faker.image.dataUri());
+
+  /* Add GitPOAPs to Team */
+  await TeamFactory.addGitPOAPs(gitpoapTeam.id, [
+    gitpoap1.id,
+    gitpoap2.id,
+    gitpoap3.id,
+    gitpoap4.id,
+    gitpoap5.id,
+    gitpoap6.id,
+    gitpoap7.id,
+    gitpoap8.id,
+    gitpoap9.id,
+    gitpoap12.id,
+    gitpoap18.id,
+  ]);
+
+  /* Add GitPOAPRequests to Team */
+  await TeamFactory.addGitPOAPRequests(gitpoapTeam.id, [request1.id, request2.id, request3.id]);
 
   /* Create Memberships */
   const membership1 = await MembershipFactory.create(
