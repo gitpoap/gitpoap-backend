@@ -1,5 +1,10 @@
 import { Authorized, Arg, Ctx, Field, ObjectType, Resolver, Query, Mutation } from 'type-graphql';
-import { Membership, MembershipOrderByWithRelationInput } from '@generated/type-graphql';
+import {
+  MembershipOrderByWithRelationInput,
+  Address,
+  Membership,
+  Team,
+} from '@generated/type-graphql';
 import { MembershipAcceptanceStatus, MembershipRole } from '@prisma/client';
 import { DateTime } from 'luxon';
 import { AuthRoles } from '../auth';
@@ -23,9 +28,18 @@ enum MembershipErrorMessage {
 }
 
 @ObjectType()
+class MembershipWithTeam extends Membership {
+  @Field(() => Team)
+  team?: Team;
+
+  @Field(() => Address)
+  address?: Address;
+}
+
+@ObjectType()
 class UserMemberships {
-  @Field(() => [Membership])
-  memberships: Membership[];
+  @Field(() => [MembershipWithTeam])
+  memberships: MembershipWithTeam[];
 }
 
 @ObjectType()
@@ -33,14 +47,14 @@ class TeamMemberships {
   @Field()
   total: number;
 
-  @Field(() => [Membership])
-  memberships: Membership[];
+  @Field(() => [MembershipWithTeam])
+  memberships: MembershipWithTeam[];
 }
 
 @ObjectType()
 class MembershipMutationPayload {
-  @Field(() => Membership, { nullable: true })
-  membership: Membership | null;
+  @Field(() => MembershipWithTeam, { nullable: true })
+  membership: MembershipWithTeam | null;
 }
 
 @Resolver(() => Membership)
@@ -62,6 +76,10 @@ export class CustomMembershipResolver {
         address: {
           ethAddress: userAccessTokenPayload.address.toLowerCase(),
         },
+      },
+      include: {
+        team: true,
+        address: true,
       },
     });
 
@@ -148,6 +166,10 @@ export class CustomMembershipResolver {
         team: {
           id: teamId,
         },
+      },
+      include: {
+        team: true,
+        address: true,
       },
     });
 
