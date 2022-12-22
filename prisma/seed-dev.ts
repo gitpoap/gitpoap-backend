@@ -397,5 +397,15 @@ export const seed = async () => {
   );
   const membership11 = await MembershipFactory.create(ethereumTeam.id, addressKayleen.id, MembershipRole.OWNER, MembershipAcceptanceStatus.PENDING);
 
+  const membership12 = await MembershipFactory.create(team2.id, addressBurz.id, MembershipRole.ADMIN, MembershipAcceptanceStatus.PENDING);
+  const membership13 = await MembershipFactory.create(
+    team2.id,
+    addressAldo.id,
+    MembershipRole.MEMBER,
+    MembershipAcceptanceStatus.ACCEPTED,
+    faker.date.between('2020-01-01T00:00:00.000Z', '2023-01-01T00:00:00.000Z'),
+  );
+  const membership14 = await MembershipFactory.create(team2.id, addressKayleen.id, MembershipRole.OWNER, MembershipAcceptanceStatus.PENDING);
+
   console.log('DB Seeding complete. ');
 };
