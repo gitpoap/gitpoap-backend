@@ -5755,12 +5755,25 @@ type Holder {
 }
 
 type UserMemberships {
-  memberships: [Membership!]!
+  memberships: [MembershipWithTeam!]!
+}
+
+type MembershipWithTeam {
+  id: Int!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  teamId: Int!
+  addressId: Int!
+  role: MembershipRole!
+  acceptanceStatus: MembershipAcceptanceStatus!
+  joinedOn: DateTime
+  team: Team!
+  address: Address!
 }
 
 type TeamMemberships {
   total: Float!
-  memberships: [Membership!]!
+  memberships: [MembershipWithTeam!]!
 }
 
 type RepoReturnData {
@@ -5853,51 +5866,31 @@ type SearchResults {
   profiles: [Profile!]!
 }
 
-type UserMemberships {
-  memberships: [MembershipWithTeam!]!
-}
-
-type MembershipWithTeam {
-  id: Int!
-  createdAt: DateTime!
-  updatedAt: DateTime!
-  teamId: Int!
-  addressId: Int!
-  role: MembershipRole!
-  acceptanceStatus: MembershipAcceptanceStatus!
-  joinedOn: DateTime
-  team: Team!
-  address: Address!
-}
-
-type TeamMemberships {
-  total: Float!
-  memberships: [MembershipWithTeam!]!
-}
-
 type Mutation {
-  addNewMembership(
-    address: String!
-    teamId: Float!
-  ): MembershipMutationPayload!
-  removeMembership(
-    address: String!
-    teamId: Float!
-  ): MembershipMutationPayload!
+  addNewMembership(address: String!, teamId: Float!): MembershipMutationPayload!
+  removeMembership(address: String!, teamId: Float!): MembershipMutationPayload!
   acceptMembership(teamId: Float!): MembershipMutationPayload!
-  updateTeamName(name: String!, teamId: Float!): TeamMutationPayload!
-  updateDescriptionName(
-    description: String
-    teamId: Float!
-  ): TeamMutationPayload!
+  updateTeam(input: TeamUpdateInput!, teamId: Float!): TeamUpdatePayload!
 }
 
 type MembershipMutationPayload {
-  membership: Membership
+  membership: MembershipWithTeam
 }
 
-type TeamMutationPayload {
+type TeamUpdatePayload {
   name: String!
   description: String
-  membership: MembershipWithTeam!
+}
+
+input TeamUpdateInput {
+  name: StringFieldUpdateOperationsInput
+  description: NullableStringFieldUpdateOperationsInput
+}
+
+input StringFieldUpdateOperationsInput {
+  set: String
+}
+
+input NullableStringFieldUpdateOperationsInput {
+  set: String
 }
