@@ -56,6 +56,32 @@ class TeamUpdatePayload {
 @Resolver(() => Team)
 export class CustomTeamResolver {
   @Authorized(AuthRoles.Address)
+  @Query(() => Team)
+  async teamData(
+    @Ctx() { prisma, userAccessTokenPayload, logger }: AuthLoggingContext,
+    @Arg('teamId') teamId: number,
+  ): Promise<Team> {
+    logger.info(`Request data for Team: ${teamId}`);
+
+    if (userAccessTokenPayload === null) {
+      logger.error('Route passed AuthRoles.Address authorization without user payload set');
+      throw InternalError;
+    }
+
+    const team = await prisma.team.findUnique({
+      where: {
+        id: teamId,
+      },
+    });
+    if (team === null) {
+      logger.error(`Failed to look up team with ID: ${teamId}`);
+      throw TeamNotFoundError;
+    }
+
+    return team;
+  }
+
+  @Authorized(AuthRoles.Address)
   @Mutation(() => TeamUpdatePayload)
   async updateTeam(
     @Ctx() { prisma, userAccessTokenPayload, logger }: AuthLoggingContext,
