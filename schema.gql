@@ -597,6 +597,7 @@ type Query {
     repoId: Float!
   ): [ProfileWithClaimsCount!]
   search(text: String!): SearchResults!
+  teamData(teamId: Float!): Team!
   teamGitPOAPs(
     sort: String = null
     approvalStatus: String = null
