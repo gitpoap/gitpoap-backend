@@ -33,9 +33,14 @@ export class CustomEmailResolver {
       },
     });
 
+    if (!emailData) {
+      logger.info('No email found for logged-in user');
+      return null;
+    }
+
     return {
-      emailAddress: emailData?.emailAddress ?? null,
-      isValidated: emailData?.isValidated ?? false,
+      emailAddress: emailData.emailAddress,
+      isValidated: emailData.isValidated,
     };
   }
 }
