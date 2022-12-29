@@ -123,10 +123,10 @@ export async function getRepoByName(
   });
 
   if (result.length === 0) {
-    logger.error(`Couldn't find any repos in the DB named "${owner}/${repo}"`);
+    logger.warn(`Couldn't find any repos in the DB named "${owner}/${repo}"`);
     return null;
   } else if (result.length > 1) {
-    logger.error(`Found multiple repos in DB named "${owner}/${repo}"`);
+    logger.warn(`Found multiple repos in DB named "${owner}/${repo}"`);
     return null;
   }
 
