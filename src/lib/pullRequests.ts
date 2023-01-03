@@ -234,12 +234,6 @@ export async function backloadGithubPullRequestData(repoId: number) {
       'asc',
     );
 
-    if (prData === null) {
-      logger.error(`Failed to request page ${page - 1} of the PR data from GitHub`);
-      endTimer();
-      return;
-    }
-
     // If we've reached the last of the PRs, end after this loop
     if (prData.length < BACKFILL_PRS_PER_REQUEST) {
       isProcessing = false;
@@ -311,4 +305,49 @@ export async function getGithubRepositoryPullsMergedAfter(
   }
 
   return reverseResults.reverse();
+}
+
+// We skip timing this since it is a special case
+export async function backloadGithubPullRequestDataForPRsMergedAfter(
+  repoId: number,
+  mergedAfter: DateTime,
+) {
+  const logger = createScopedLogger('backloadGithubPullRequestDataForPRsMergedAfter');
+
+  const repoInfo = await getRepoInfo(repoId);
+
+  if (repoInfo === null) {
+    logger.error(`Failed to look up repo with ID ${repoId}`);
+    return;
+  }
+
+  const fullRepoName = `${repoInfo.organization.name}/${repoInfo.name}`;
+
+  logger.info(
+    `Backloading the historical PR data merged after ${mergedAfter} for repo ID: ${repoId} (${fullRepoName})`,
+  );
+
+  if (repoInfo.project.gitPOAPs.length === 0) {
+    logger.warn(
+      `No GitPOAPs found for repo with ID ${repoId} (Possibly since they are not PR-based)`,
+    );
+    return;
+  }
+
+  const yearlyGitPOAPsMap = createYearlyGitPOAPsMap(repoInfo.project.gitPOAPs);
+
+  const prData = await getGithubRepositoryPullsMergedAfter(
+    repoInfo.organization.name,
+    repoInfo.name,
+    mergedAfter,
+  );
+
+  // Handle all the PRs individually (and sequentially)
+  for (const pr of prData) {
+    await backloadGithubPullRequest(repoInfo, yearlyGitPOAPsMap, pr);
+  }
+
+  logger.debug(
+    `Finished backloading the historical PR data merged after ${mergedAfter} for repo ID: ${repoId} (${fullRepoName})`,
+  );
 }
