@@ -253,7 +253,7 @@ export async function backloadGithubPullRequestData(repoId: number) {
 }
 
 // This should only be used by our background processes
-export async function getGithubRepositoryPullsMergedAfter(
+async function getGithubRepositoryPullsMergedAfter(
   org: string,
   repo: string,
   mergedAfter: DateTime,
@@ -341,6 +341,8 @@ export async function backloadGithubPullRequestDataForPRsMergedAfter(
     repoInfo.name,
     mergedAfter,
   );
+
+  logger.info(`Found ${prData.length} merged PRs after ${mergedAfter}`);
 
   // Handle all the PRs individually (and sequentially)
   for (const pr of prData) {
