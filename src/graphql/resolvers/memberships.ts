@@ -274,85 +274,62 @@ export class CustomMembershipResolver {
   }
 
   @Authorized(AuthRoles.Address)
-  @Mutation(() => MembershipMutationPayload)
+  @Mutation(() => Number)
   async removeMembership(
     @Ctx() { prisma, userAccessTokenPayload, logger }: AuthLoggingContext,
-    @Arg('teamId') teamId: number,
-    @Arg('address') address: string,
-  ): Promise<MembershipMutationPayload> {
-    logger.info(`Request to remove a membership from team ${teamId} for address ${address}`);
+    @Arg('membershipId') membershipId: number,
+  ): Promise<number> {
+    logger.info(`Request to remove a membership ${membershipId}`);
 
     if (userAccessTokenPayload === null) {
       logger.error('Route passed AuthRoles.Address authorization without user payload set');
       throw InternalError;
     }
 
-    const team = await prisma.team.findUnique({
-      where: {
-        id: teamId,
-      },
-      select: {
-        id: true,
-        ownerAddress: true,
-      },
-    });
-
-    if (team === null) {
-      logger.warn(`Team not found for teamId: ${teamId}`);
-      throw new Error(MembershipErrorMessage.TEAM_NOT_FOUND);
-    }
-
-    if (
-      team.ownerAddress.ethAddress.toLowerCase() !== userAccessTokenPayload.address.toLowerCase()
-    ) {
-      logger.warn('Not the team owner');
-      throw new Error(MembershipErrorMessage.NOT_AUTHORIZED);
-    }
-
-    const addressRecord = await prisma.address.findUnique({
-      where: {
-        ethAddress: address.toLowerCase(),
-      },
-      select: {
-        id: true,
-      },
-    });
-
-    if (addressRecord === null) {
-      logger.warn(`Address not found for address: ${address}`);
-      throw new Error(MembershipErrorMessage.ADDRESS_NOT_FOUND);
-    }
-
     const membership = await prisma.membership.findUnique({
       where: {
-        teamId_addressId: {
-          addressId: addressRecord.id,
-          teamId,
+        id: membershipId,
+      },
+      select: {
+        id: true,
+        team: {
+          select: {
+            ownerAddress: true,
+          },
         },
+        address: {
+          select: {
+            ethAddress: true,
+          },
+        },
+        acceptanceStatus: true,
       },
     });
 
     if (membership === null) {
-      logger.warn(`Membership not found for address: ${address} in team ${teamId}`);
+      logger.warn(`Membership not found for membershipId: ${membershipId}`);
       throw new Error(MembershipErrorMessage.MEMBERSHIP_NOT_FOUND);
+    }
+
+    if (
+      membership.team.ownerAddress.ethAddress.toLowerCase() !==
+        userAccessTokenPayload.address.toLowerCase() &&
+      membership.acceptanceStatus === MembershipAcceptanceStatus.PENDING &&
+      userAccessTokenPayload.address.toLowerCase() !== membership.address.ethAddress.toLowerCase()
+    ) {
+      logger.warn('Not the team owner nor invited member');
+      throw new Error(MembershipErrorMessage.NOT_AUTHORIZED);
     }
 
     await prisma.membership.delete({
       where: {
-        teamId_addressId: {
-          teamId,
-          addressId: addressRecord.id,
-        },
+        id: membershipId,
       },
     });
 
-    logger.debug(
-      `Completed request to remove a membership from team ${teamId} for address ${address}`,
-    );
+    logger.debug(`Completed request to Request to remove a membership ${membershipId}`);
 
-    return {
-      membership,
-    };
+    return membershipId;
   }
 
   @Authorized(AuthRoles.Address)
