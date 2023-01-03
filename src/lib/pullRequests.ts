@@ -13,6 +13,7 @@ import {
   createYearlyGitPOAPsMap,
 } from './claims';
 import { GitPOAPStatus } from '@prisma/client';
+import { DateTime } from 'luxon';
 
 async function getRepoInfo(repoId: number) {
   const logger = createScopedLogger('getRepoInfo');
@@ -255,4 +256,59 @@ export async function backloadGithubPullRequestData(repoId: number) {
   logger.debug(
     `Finished backloading the historical PR data for repo ID: ${repoId} (${repoInfo.organization.name}/${repoInfo.name})`,
   );
+}
+
+// This should only be used by our background processes
+export async function getGithubRepositoryPullsMergedAfter(
+  org: string,
+  repo: string,
+  mergedAfter: DateTime,
+) {
+  const logger = createScopedLogger('getGithubRepositoryPullsMergedAfter');
+
+  let page = 1;
+  let prsReceived = BACKFILL_PRS_PER_REQUEST;
+
+  const reverseResults: Awaited<ReturnType<typeof getGithubRepositoryPullsAsApp>> = [];
+
+  // We need to start from the most recent and construct the list
+  // of PRs in reverse
+  while (prsReceived === BACKFILL_PRS_PER_REQUEST) {
+    const prs = await getGithubRepositoryPullsAsApp(
+      org,
+      repo,
+      BACKFILL_PRS_PER_REQUEST,
+      page++,
+      'desc',
+    );
+
+    prsReceived = prs.length;
+
+    for (const pr of prs) {
+      // Skip non-merged PRs
+      if (pr.merged_at === null) {
+        continue;
+      }
+
+      // Stop early after we've reached the first irrelevant PR
+      if (DateTime.fromISO(pr.merged_at) < mergedAfter) {
+        const lastPRDesc = `#${pr.number} made on ${pr.merged_at}`;
+        if (reverseResults.length === 0) {
+          logger.debug(`Found no merged PRs to ${org}/${repo} after ${lastPRDesc}`);
+        } else {
+          const firstPR = reverseResults[reverseResults.length - 1];
+          const firstPRDesc = `#${firstPR.number} made on ${firstPR.merged_at}`;
+          logger.debug(
+            `Found ${reverseResults.length} merged PRs to ${org}/${repo} starting on ${firstPRDesc} after ${lastPRDesc}`,
+          );
+        }
+
+        return reverseResults.reverse();
+      }
+
+      reverseResults.push(pr);
+    }
+  }
+
+  return reverseResults.reverse();
 }
