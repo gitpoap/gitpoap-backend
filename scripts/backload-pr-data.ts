@@ -2,15 +2,19 @@ import { config } from 'dotenv';
 config();
 
 import 'reflect-metadata';
-import { backloadGithubPullRequestData } from '../src/lib/pullRequests';
+import {
+  backloadGithubPullRequestData,
+  backloadGithubPullRequestDataForPRsMergedAfter,
+} from '../src/lib/pullRequests';
 import { createScopedLogger, updateLogLevel } from '../src/logging';
 import minimist from 'minimist';
 import { context } from '../src/context';
 import { sleep } from '../src/lib/sleep';
+import { DateTime } from 'luxon';
 
 const BACKLOADER_DELAY_BETWEEN_PROJECTS_SECONDS = 2;
 
-async function backloadRepos(repos: { id: number }[]) {
+async function backloadRepos(repos: { id: number }[], mergedAfter?: DateTime) {
   const logger = createScopedLogger('backloadRepos');
 
   for (let i = 0; i < repos.length; ++i) {
@@ -22,11 +26,15 @@ async function backloadRepos(repos: { id: number }[]) {
       await sleep(BACKLOADER_DELAY_BETWEEN_PROJECTS_SECONDS);
     }
 
-    await backloadGithubPullRequestData(repos[i].id);
+    if (mergedAfter !== undefined) {
+      await backloadGithubPullRequestDataForPRsMergedAfter(repos[i].id, mergedAfter);
+    } else {
+      await backloadGithubPullRequestData(repos[i].id);
+    }
   }
 }
 
-async function backloadGitPOAPs(gitPOAPIds: number[]) {
+async function backloadGitPOAPs(gitPOAPIds: number[], mergedAfter?: DateTime) {
   const logger = createScopedLogger('backloadGitPOAPs');
 
   const repoIds = await context.prisma.repo.findMany({
@@ -43,7 +51,7 @@ async function backloadGitPOAPs(gitPOAPIds: number[]) {
 
   logger.info(`Running on Repo IDs ${repoIds.map(r => r.id)}`);
 
-  await backloadRepos(repoIds);
+  await backloadRepos(repoIds, mergedAfter);
 }
 
 const main = async () => {
@@ -55,12 +63,20 @@ const main = async () => {
 
   updateLogLevel(argv['level']);
 
+  let mergedAfter = undefined;
+  if ('merged-after' in argv) {
+    mergedAfter = DateTime.fromISO(argv['merged-after']);
+  }
+
   if ('only' in argv) {
     const repoIds = [argv['only']].concat(argv['_']).map((id: string) => parseInt(id, 10));
 
     logger.info(`Running only on Repo IDs ${repoIds}`);
 
-    await backloadRepos(repoIds.map(repoId => ({ id: repoId })));
+    await backloadRepos(
+      repoIds.map(repoId => ({ id: repoId })),
+      mergedAfter,
+    );
   } else if ('only-gitpoap-ids' in argv) {
     const gitPOAPIds = [argv['only-gitpoap-ids']]
       .concat(argv['_'])
@@ -68,7 +84,7 @@ const main = async () => {
 
     logger.info(`Running only on the Repos for GitPOAP IDs ${gitPOAPIds}`);
 
-    await backloadGitPOAPs(gitPOAPIds);
+    await backloadGitPOAPs(gitPOAPIds, mergedAfter);
   } else {
     let where;
     if ('from-repo-id' in argv) {
@@ -97,7 +113,7 @@ const main = async () => {
       orderBy: { id: 'desc' },
     });
 
-    await backloadRepos(repos);
+    await backloadRepos(repos, mergedAfter);
   }
 };
 
