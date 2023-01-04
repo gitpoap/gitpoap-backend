@@ -153,7 +153,7 @@ export class CustomMembershipResolver {
     });
 
     if (membership === null) {
-      logger.warn('Not the team member');
+      logger.warn('Not a team member');
       throw new Error(MembershipErrorMessage.NOT_AUTHORIZED);
     }
 
