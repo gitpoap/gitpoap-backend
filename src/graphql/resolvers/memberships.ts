@@ -274,11 +274,11 @@ export class CustomMembershipResolver {
   }
 
   @Authorized(AuthRoles.Address)
-  @Mutation(() => Number)
+  @Mutation(() => MembershipMutationPayload)
   async removeMembership(
     @Ctx() { prisma, userAccessTokenPayload, logger }: AuthLoggingContext,
     @Arg('membershipId') membershipId: number,
-  ): Promise<number> {
+  ): Promise<MembershipMutationPayload> {
     logger.info(`Request to remove a membership ${membershipId}`);
 
     if (userAccessTokenPayload === null) {
@@ -321,15 +321,21 @@ export class CustomMembershipResolver {
       throw new Error(MembershipErrorMessage.NOT_AUTHORIZED);
     }
 
-    await prisma.membership.delete({
+    const result = await prisma.membership.delete({
       where: {
         id: membershipId,
+      },
+      include: {
+        team: true,
+        address: true,
       },
     });
 
     logger.debug(`Completed request to Request to remove a membership ${membershipId}`);
 
-    return membershipId;
+    return {
+      membership: result,
+    };
   }
 
   @Authorized(AuthRoles.Address)

@@ -5879,7 +5879,7 @@ type SearchResults {
 
 type Mutation {
   addNewMembership(address: String!, teamId: Float!): MembershipMutationPayload!
-  removeMembership(membershipId: Float!): Float!
+  removeMembership(membershipId: Float!): MembershipMutationPayload!
   acceptMembership(teamId: Float!): MembershipMutationPayload!
   updateTeam(input: TeamUpdateInput!, teamId: Float!): TeamUpdatePayload!
 }
