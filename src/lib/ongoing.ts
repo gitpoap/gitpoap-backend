@@ -24,9 +24,9 @@ const PULL_STEP_SIZE = 100;
 const ONGOING_ISSUANCE_BATCH_TIMING_KEY = 'ongoing-issuance';
 
 // The amount of hours to wait before checking for new contributions
-const ONGOING_ISSUANCE_DELAY_HOURS = 6;
+const ONGOING_ISSUANCE_DELAY_HOURS = 24;
 
-// The amount of minutes to wait in between the checks for separate projects.
+// The amount of seconds to wait in between the checks for separate projects.
 // Currently we don't expect to be rate limited by GitHub for this background
 // process, but this is good to have in place as we add more projects that
 // require ongoing checks
@@ -248,6 +248,15 @@ export async function runOngoingIssuanceUpdater() {
   ).filter(r => r.project.gitPOAPs.length > 0);
 
   logger.info(`Found ${repos.length} repos with ongoing GitPOAPs that need to be checked`);
+
+  // Log an error we will see on Sentry if it the ongoing issuance process is expected to
+  // overlap with itself
+  const minExpectedTimeHours = DELAY_BETWEEN_ONGOING_ISSUANCE_CHECKS_SECONDS * repos.length;
+  if (minExpectedTimeHours > ONGOING_ISSUANCE_DELAY_HOURS) {
+    logger.error(
+      `The minimum expected time for ongoing issuance of ${minExpectedTimeHours} hours is greater than the delay between runs of ${ONGOING_ISSUANCE_DELAY_HOURS} the processes will likely overlap!`,
+    );
+  }
 
   for (let i = 0; i < repos.length; ++i) {
     if (i > 0) {
