@@ -5,7 +5,6 @@ import {
 } from './constants';
 import { tryToRunOngoingIssuanceUpdater } from './lib/ongoing';
 import { tryToCheckForNewPOAPCodes } from './lib/codes';
-import { yearEndCronJob } from './lib/yearEnd';
 
 async function startBatchProcess(processFunction: () => Promise<void>, frequencyInMinutes: number) {
   // Try to run immediately
@@ -18,6 +17,4 @@ export async function startBatchProcesses() {
   void startBatchProcess(tryToRunOngoingIssuanceUpdater, ONGOING_ISSUANCE_CHECK_FREQUENCY_MINUTES);
 
   void startBatchProcess(tryToCheckForNewPOAPCodes, CHECK_FOR_CODES_CHECK_FREQUENCY_MINUTES);
-
-  yearEndCronJob.start();
 }

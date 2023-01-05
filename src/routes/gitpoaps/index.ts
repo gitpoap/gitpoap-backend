@@ -64,13 +64,7 @@ gitPOAPsRouter.post(
 
     const { githubOAuthToken } = getAccessTokenPayloadWithGithubOAuth(req.user);
 
-    const isOngoing = schemaResult.data.isOngoing === 'true';
     const canRequestMoreCodes = schemaResult.data.isOngoing === 'true';
-    if (isOngoing && !canRequestMoreCodes) {
-      const msg = `GitPOAP requested to be ongoing but can't request additional codes`;
-      logger.warn(msg);
-      return res.status(400).send({ msg });
-    }
 
     const projectChoice: z.infer<typeof CreateGitPOAPProjectSchema> = JSON.parse(
       schemaResult.data.project,
@@ -178,7 +172,6 @@ gitPOAPsRouter.post(
           },
         },
         poapSecret: secretCode,
-        isOngoing,
         canRequestMoreCodes,
         isPRBased: schemaResult.data.isPRBased !== 'false',
         isEnabled: schemaResult.data.isEnabled !== 'false',
@@ -405,7 +398,6 @@ gitPOAPsRouter.put('/deprecate/:id', jwtWithStaffAddress(), async (req, res) => 
       id: gitPOAPId,
     },
     data: {
-      isOngoing: false,
       canRequestMoreCodes: false,
       poapApprovalStatus: GitPOAPStatus.DEPRECATED,
     },

@@ -124,20 +124,20 @@ export const seed = async () => {
 
   // For the gitpoaps created for the bug bash -~- March 2022
   const gitpoap7 = await GitPOAPFactory.createFromEvent(frontendProject.id, event36568, GitPOAPStatus.APPROVED);
-  const gitpoap8 = await GitPOAPFactory.createFromEvent(frontendProject.id, event36569, GitPOAPStatus.APPROVED, false, 2, 2);
+  const gitpoap8 = await GitPOAPFactory.createFromEvent(frontendProject.id, event36569, GitPOAPStatus.APPROVED, 2, 2);
   const gitpoap9 = await GitPOAPFactory.createFromEvent(backendProject.id, event36570, GitPOAPStatus.APPROVED);
-  const gitpoap10 = await GitPOAPFactory.createFromEvent(backendProject.id, event36571, GitPOAPStatus.APPROVED, false, 2, 2);
-  const gitpoap11 = await GitPOAPFactory.createFromEvent(backendProject.id, event36572, GitPOAPStatus.APPROVED, false, 3, 3);
+  const gitpoap10 = await GitPOAPFactory.createFromEvent(backendProject.id, event36571, GitPOAPStatus.APPROVED, 2, 2);
+  const gitpoap11 = await GitPOAPFactory.createFromEvent(backendProject.id, event36572, GitPOAPStatus.APPROVED, 3, 3);
   // Not the real POAP secret!
-  const gitpoap12 = await GitPOAPFactory.createFromEvent(wagyuInstallerProject.id, event37428, GitPOAPStatus.UNAPPROVED, true);
-  const gitpoap13 = await GitPOAPFactory.createFromEvent(wagyuInstallerProject.id, event37429, GitPOAPStatus.UNAPPROVED, true, 2, 2);
-  const gitpoap14 = await GitPOAPFactory.createFromEvent(wagyuInstallerProject.id, event37430, GitPOAPStatus.UNAPPROVED, true, 3, 3);
+  const gitpoap12 = await GitPOAPFactory.createFromEvent(wagyuInstallerProject.id, event37428, GitPOAPStatus.UNAPPROVED);
+  const gitpoap13 = await GitPOAPFactory.createFromEvent(wagyuInstallerProject.id, event37429, GitPOAPStatus.UNAPPROVED, 2, 2);
+  const gitpoap14 = await GitPOAPFactory.createFromEvent(wagyuInstallerProject.id, event37430, GitPOAPStatus.UNAPPROVED, 3, 3);
 
   // For gitpoap-bot-test-repo (uses random POAP IDs)
-  const gitpoap15 = await GitPOAPFactory.createFromEvent(botTestProject.id, event36573, GitPOAPStatus.APPROVED, true);
-  const gitpoap16 = await GitPOAPFactory.createFromEvent(botTestProject.id, event36574, GitPOAPStatus.APPROVED, true, 2, 2);
+  const gitpoap15 = await GitPOAPFactory.createFromEvent(botTestProject.id, event36573, GitPOAPStatus.APPROVED);
+  const gitpoap16 = await GitPOAPFactory.createFromEvent(botTestProject.id, event36574, GitPOAPStatus.APPROVED, 2, 2);
   // Add one that is NOT enabled
-  const gitpoap17 = await GitPOAPFactory.createFromEvent(botTestProject.id, event36575, GitPOAPStatus.APPROVED, true, 3, 3, false);
+  const gitpoap17 = await GitPOAPFactory.createFromEvent(botTestProject.id, event36575, GitPOAPStatus.APPROVED, 3, 3, false);
   // Add one that is deprecated
   const gitpoap18 = await GitPOAPFactory.createFromEvent(botTestProject.id, event36576, GitPOAPStatus.DEPRECATED);
 

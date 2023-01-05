@@ -18,7 +18,11 @@ jest.mock('../../../../src/lib/pullRequests', () => ({
   upsertGithubPullRequest: jest.fn(),
 }));
 
-jest.mock('../../../../src/lib/claims');
+jest.mock('../../../../src/lib/claims', () => ({
+  __esModule: true,
+  ...(<any>jest.requireActual('../../../../src/lib/claims')),
+  createNewClaimsForRepoContribution: jest.fn(),
+}));
 
 const mockedUpsertUser = jest.mocked(upsertGithubUser, true);
 const mockedUpsertGithubPullRequest = jest.mocked(upsertGithubPullRequest, true);
@@ -158,50 +162,6 @@ describe('handleNewPull', () => {
     );
 
     expect(mockedLogger.error).toHaveBeenCalledTimes(1);
-
-    expect(createNewClaimsForRepoContribution).toHaveBeenCalledTimes(0);
-  });
-
-  it("Doesn't try to create claims for older years", async () => {
-    mockedUpsertUser.mockResolvedValue(githubUser);
-
-    const pull: GithubPullRequestData = {
-      number: 204,
-      title: 'Some older merged PR',
-      user: {
-        id: githubUser.githubId,
-        login: githubUser.githubHandle,
-        type: 'User',
-      },
-      created_at: '2021-03-20',
-      merged_at: '2021-04-19',
-      updated_at: '2022-06-13',
-      merge_commit_sha: 'aaaa4fjalskjfdlkajs',
-      head: {
-        sha: 'kqqqqdfksssl333',
-      },
-    };
-
-    const result = await handleNewPullWrapper(repo, pull);
-
-    expect(result.finished).toEqual(false);
-    expect(result.updatedAt).toEqual(new Date(pull.updated_at));
-
-    expect(upsertGithubUser).toHaveBeenCalledTimes(1);
-    expect(upsertGithubUser).toHaveBeenCalledWith(pull.user.id, pull.user.login);
-
-    expect(upsertGithubPullRequest).toHaveBeenCalledTimes(1);
-    expect(upsertGithubPullRequest).toHaveBeenCalledWith(
-      repo.id,
-      pull.number,
-      pull.title,
-      new Date(pull.created_at),
-      new Date(<string>pull.merged_at),
-      pull.merge_commit_sha,
-      githubUser.id,
-    );
-
-    expect(mockedLogger.error).toHaveBeenCalledTimes(0);
 
     expect(createNewClaimsForRepoContribution).toHaveBeenCalledTimes(0);
   });

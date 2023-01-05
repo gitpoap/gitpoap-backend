@@ -108,15 +108,13 @@ export async function handleNewPull(
   if (repo.project.gitPOAPs.length === 0) {
     logger.warn(`Repo ID ${repo.id} has no GitPOAPs (Possibly because none are PR-based)`);
   } else {
-    // We assume here that all the ongoing GitPOAPs have the same year
-    const year = repo.project.gitPOAPs[0].year;
+    // Note here that previous years may still be ongoing immediately after new years
+    if (!(mergedAt.year.toString() in yearlyGitPOAPsMap)) {
+      const availableYears = Object.keys(yearlyGitPOAPsMap);
+      logger.error(
+        `Found a merged PR for repo ID ${repo.id} for year ${mergedAt.year} with no corresponding GitPOAP year. Found only ${availableYears}`,
+      );
 
-    // Log an error if we haven't figured out what to do in the new years
-    if (mergedAt.year > year) {
-      logger.error(`Found a merged PR for repo ID ${repo.id} for a new year`);
-      return { finished: false, updatedAt };
-      // Don't handle previous years (note we still handle an updated title)
-    } else if (mergedAt.year < year) {
       return { finished: false, updatedAt };
     }
 
@@ -218,7 +216,6 @@ export async function runOngoingIssuanceUpdater() {
           select: {
             gitPOAPs: {
               where: {
-                isOngoing: true,
                 isPRBased: true,
                 NOT: {
                   poapApprovalStatus: GitPOAPStatus.DEPRECATED,
