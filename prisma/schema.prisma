@@ -237,9 +237,6 @@ model GitPOAP {
   poapSecret          String          @db.VarChar(6)
   // External POAP approval status ~ related to the POAP Curation Team
   poapApprovalStatus  GitPOAPStatus   @default(UNAPPROVED)
-  // If a GitPOAP is marked as isOngoing then the backend will automatically
-  // check if new claims can be created for new PRs (if isPRBased)
-  isOngoing           Boolean         @default(false)
   canRequestMoreCodes Boolean         @default(false)
   redeemCodes         RedeemCode[]
   eventId             Int?
