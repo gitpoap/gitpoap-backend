@@ -788,7 +788,6 @@ describe('POST /gitpoaps/custom', () => {
       staffApprovalStatus: StaffApprovalStatus.PENDING,
       isEnabled: true,
       isPRBased: false,
-      isOngoing: false,
       canRequestMoreCodes: true,
       year: 2021,
       imageUrl: getS3URL('gitpoap-request-images-test', 'foobar.png-123456789000'),

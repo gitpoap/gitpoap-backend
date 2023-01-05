@@ -212,7 +212,6 @@ describe('PUT /gitpoaps/deprecate/:id', () => {
     expect(contextMock.prisma.gitPOAP.update).toHaveBeenCalledWith({
       where: { id: gitPOAPId },
       data: {
-        isOngoing: false,
         canRequestMoreCodes: false,
         poapApprovalStatus: GitPOAPStatus.DEPRECATED,
       },
