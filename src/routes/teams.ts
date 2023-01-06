@@ -83,6 +83,8 @@ teamsRouter.post('/', jwtWithAddress(), upload.single('image'), async function (
   logger.info(
     `Completed request to create Team "${schemaResult.data.name}" for Address ID ${addressId}`,
   );
+
+  return res.status(200).json(teamResult);
 });
 
 teamsRouter.patch(
