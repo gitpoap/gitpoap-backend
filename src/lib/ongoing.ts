@@ -16,6 +16,7 @@ import {
 } from './claims';
 import { lookupLastRun, updateLastRun } from './batchProcessing';
 import { GitPOAPStatus } from '@prisma/client';
+import { SECONDS_PER_HOUR } from '../constants';
 
 // The number of pull requests to request in a single page (currently the maximum number)
 const PULL_STEP_SIZE = 100;
@@ -248,7 +249,8 @@ export async function runOngoingIssuanceUpdater() {
 
   // Log an error we will see on Sentry if it the ongoing issuance process is expected to
   // overlap with itself
-  const minExpectedTimeHours = DELAY_BETWEEN_ONGOING_ISSUANCE_CHECKS_SECONDS * repos.length;
+  const minExpectedTimeHours =
+    (DELAY_BETWEEN_ONGOING_ISSUANCE_CHECKS_SECONDS * repos.length) / SECONDS_PER_HOUR;
   if (minExpectedTimeHours > ONGOING_ISSUANCE_DELAY_HOURS) {
     logger.error(
       `The minimum expected time for ongoing issuance of ${minExpectedTimeHours} hours is greater than the delay between runs of ${ONGOING_ISSUANCE_DELAY_HOURS} the processes will likely overlap!`,
