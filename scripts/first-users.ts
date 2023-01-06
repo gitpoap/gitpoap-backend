@@ -49,7 +49,7 @@ async function findFirstUsers(requestedCount: number) {
   const foundMintedAddressIds = new Set<number>();
   const foundGithubIds = new Set<number>();
   const foundEmailIds = new Set<number>();
-  const foundIssuedAddressIds = new Set<number>();
+  let issuedAddressCount = 0;
   let rowCount = 0;
 
   for (const claim of claims) {
@@ -66,7 +66,6 @@ async function findFirstUsers(requestedCount: number) {
     if (foundMintedAddressIds.has(claim.mintedAddressId)) {
       continue;
     }
-    foundMintedAddressIds.add(claim.mintedAddressId);
     if (claim.githubUser !== null) {
       if (foundGithubIds.has(claim.githubUser.id)) {
         continue;
@@ -78,10 +77,12 @@ async function findFirstUsers(requestedCount: number) {
       }
       foundEmailIds.add(claim.email.id);
     } else if (claim.issuedAddress !== null) {
-      if (foundIssuedAddressIds.has(claim.issuedAddress.id)) {
+      // Here we include the mintedAddressIds to ensure maximum deduplication
+      if (foundMintedAddressIds.has(claim.issuedAddress.id)) {
         continue;
       }
-      foundIssuedAddressIds.add(claim.issuedAddress.id);
+      foundMintedAddressIds.add(claim.issuedAddress.id);
+      ++issuedAddressCount;
     } else {
       logger.error(
         `Claim ID ${claim.id} has status CLAIMED but none of githubUser, email, or issuedAddress is non-null`,
@@ -89,6 +90,8 @@ async function findFirstUsers(requestedCount: number) {
       process.exit(1);
       return;
     }
+    // Ensure this is here even if issuedAddres.id === mintedAddressId
+    foundMintedAddressIds.add(claim.mintedAddressId);
 
     resultContent += `${claim.githubUser?.githubHandle ?? ''},`;
     resultContent += `${claim.email?.emailAddress ?? ''},`;
@@ -105,6 +108,9 @@ async function findFirstUsers(requestedCount: number) {
   } else {
     logger.info(`Found the first ${requestedCount} unique users`);
   }
+  logger.info(`This includes ${foundGithubIds.size} GitHub handles`);
+  logger.info(`This includes ${foundEmailIds.size} email addresses`);
+  logger.info(`This includes ${issuedAddressCount} ETH addresses`);
 
   await writeFile(`first-${requestedCount}-users.csv`, resultContent);
 }
