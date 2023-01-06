@@ -637,7 +637,7 @@ export class TeamFactory {
     name: string,
     description: string,
     ownerAddressId: number,
-    logoImageUrl: string,
+    logoImageUrl?: string,
   ): Promise<Team> => {
     const data: Prisma.TeamCreateInput = {
       name,
