@@ -21,9 +21,19 @@ async function findFirstUsers(requestedCount: number) {
       githubUser: {
         select: {
           githubHandle: true,
-          githubId: true,
         },
       },
+      email: {
+        select: {
+          emailAddress: true,
+        },
+      },
+      issuedAddress: {
+        select: {
+          ethAddress: true,
+        },
+      },
+      mintedAddressId: true,
     },
     orderBy: {
       mintedAt: 'asc',
@@ -32,30 +42,45 @@ async function findFirstUsers(requestedCount: number) {
 
   logger.info(`Found ${claims.length} Claims`);
 
-  let resultContent = 'githubHandle,githubId,mintedAt\n';
-  const foundGithubIds = new Set<number>();
+  let resultContent = 'githubHandle,emailAddress,ethAddress,mintedAt\n';
+  const foundMintedAddressIds = new Set<number>();
 
   for (const claim of claims) {
-    if (claim.githubUser && !foundGithubIds.has(claim.githubUser.githubId)) {
-      if (claim.mintedAt === null) {
-        logger.error(`Claim ID ${claim.id} has status CLAIMED but mintedAt is null`);
-        continue;
-      }
+    if (claim.mintedAddressId === null) {
+      logger.error(`Claim ID ${claim.id} has status CLAIMED but mintedAddress is null`);
+      process.exit(1);
+      return;
+    }
+    if (claim.mintedAt === null) {
+      logger.error(`Claim ID ${claim.id} has status CLAIMED but mintedAt is null`);
+      process.exit(1);
+      return;
+    }
+    if (claim.githubUser === null && claim.email === null && claim.issuedAddress === null) {
+      logger.error(
+        `Claim ID ${claim.id} has status CLAIMED but none of githubUser, email, or issuedAddress is non-null`,
+      );
+      process.exit(1);
+      return;
+    }
+    if (foundMintedAddressIds.has(claim.mintedAddressId)) {
+      continue;
+    }
 
-      const mintedAt = claim.mintedAt.toISOString();
+    resultContent += `${claim.githubUser?.githubHandle ?? ''},`;
+    resultContent += `${claim.email?.emailAddress ?? ''},`;
+    resultContent += `${claim.issuedAddress?.ethAddress ?? ''},`;
+    resultContent += `${claim.mintedAt.toISOString()}\n`;
 
-      resultContent += `${claim.githubUser.githubHandle},${claim.githubUser.githubId},${mintedAt}\n`;
+    foundMintedAddressIds.add(claim.mintedAddressId);
 
-      foundGithubIds.add(claim.githubUser.githubId);
-
-      if (foundGithubIds.size === requestedCount) {
-        break;
-      }
+    if (foundMintedAddressIds.size === requestedCount) {
+      break;
     }
   }
 
-  if (foundGithubIds.size !== requestedCount) {
-    logger.warn(`There are only ${foundGithubIds.size} unique users!`);
+  if (foundMintedAddressIds.size !== requestedCount) {
+    logger.warn(`There are only ${foundMintedAddressIds.size} unique users!`);
   } else {
     logger.info(`Found the first ${requestedCount} unique users`);
   }
