@@ -348,19 +348,12 @@ export const seed = async () => {
     'GitPoap team',
     'A POAP is a digital collectible created as an NFT that represents an action taken by the owner.',
     addressColfax.id,
-    getS3URL('gitpoap-team-logo-test', 'gitpoap-team-logo-test.png-1634321850.778'),
   );
-  const gitpoapDevTeam = await TeamFactory.create(
-    'GitPoap dev team',
-    'The dev team at GitPoap',
-    addressJay.id,
-    getS3URL('gitpoap-dev-team-logo-test', 'gitpoap-dev-team-logo.png-16661532343.423'),
-  );
+  const gitpoapDevTeam = await TeamFactory.create('GitPoap dev team', 'The dev team at GitPoap', addressJay.id);
   const ethereumTeam = await TeamFactory.create(
     'Ethereum team',
     'Ethereum is a decentralized, open-source blockchain with smart contract functionality. Ether is the native cryptocurrency of the platform.',
     addressVitalik.id,
-    getS3URL('ethereum-team-logo-test', 'ethereum-team-logo.png-166635645643.437'),
   );
   const team1 = await TeamFactory.create(faker.company.bs(), faker.lorem.sentence(), addressBurz.id, faker.image.dataUri());
   const team2 = await TeamFactory.create(faker.company.bs(), faker.lorem.sentence(), addressTyler.id, faker.image.dataUri());
@@ -411,7 +404,7 @@ export const seed = async () => {
     faker.date.between('2020-01-01T00:00:00.000Z', '2023-01-01T00:00:00.000Z'),
   );
   const membership6 = await MembershipFactory.create(gitpoapDevTeam.id, addressAldo.id, MembershipRole.ADMIN, MembershipAcceptanceStatus.PENDING);
-  const membership7 = await MembershipFactory.create(gitpoapTeam.id, addressAldo.id, MembershipRole.OWNER, MembershipAcceptanceStatus.PENDING);
+  const membership7 = await MembershipFactory.create(gitpoapTeam.id, addressAldo.id, MembershipRole.OWNER, MembershipAcceptanceStatus.ACCEPTED);
   const membership8 = await MembershipFactory.create(
     ethereumTeam.id,
     addressAldo.id,
