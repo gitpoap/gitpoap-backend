@@ -1215,7 +1215,7 @@ input TeamWhereInput {
   createdAt: DateTimeFilter
   updatedAt: DateTimeFilter
   description: StringNullableFilter
-  logoImageUrl: StringNullableFilter
+  logoImageUrl: StringFilter
   memberships: MembershipListRelationFilter
   gitPOAPs: GitPOAPListRelationFilter
   gitPOAPRequests: GitPOAPRequestListRelationFilter
@@ -2403,7 +2403,7 @@ type Team {
   createdAt: DateTime!
   updatedAt: DateTime!
   description: String
-  logoImageUrl: String
+  logoImageUrl: String!
   approvalStatus: StaffApprovalStatus!
   _count: TeamCount
 }
@@ -5579,7 +5579,7 @@ type TeamGroupBy {
   createdAt: DateTime!
   updatedAt: DateTime!
   description: String
-  logoImageUrl: String
+  logoImageUrl: String!
   approvalStatus: StaffApprovalStatus!
   _count: TeamCountAggregate
   _avg: TeamAvgAggregate
@@ -5657,7 +5657,7 @@ input TeamScalarWhereWithAggregatesInput {
   createdAt: DateTimeWithAggregatesFilter
   updatedAt: DateTimeWithAggregatesFilter
   description: StringNullableWithAggregatesFilter
-  logoImageUrl: StringNullableWithAggregatesFilter
+  logoImageUrl: StringWithAggregatesFilter
   approvalStatus: EnumStaffApprovalStatusWithAggregatesFilter
 }
 
