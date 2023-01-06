@@ -345,11 +345,11 @@ export const seed = async () => {
 
   /* Create Teams */
   const gitpoapTeam = await TeamFactory.create(
-    'GitPoap team',
+    'GitPOAP team',
     'A POAP is a digital collectible created as an NFT that represents an action taken by the owner.',
     addressColfax.id,
   );
-  const gitpoapDevTeam = await TeamFactory.create('GitPoap dev team', 'The dev team at GitPoap', addressJay.id);
+  const gitpoapDevTeam = await TeamFactory.create('GitPOAP dev team', 'The dev team at GitPOAP', addressJay.id);
   const ethereumTeam = await TeamFactory.create(
     'Ethereum team',
     'Ethereum is a decentralized, open-source blockchain with smart contract functionality. Ether is the native cryptocurrency of the platform.',
