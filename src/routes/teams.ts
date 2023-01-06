@@ -10,6 +10,7 @@ import { uploadTeamLogoImage } from '../lib/teams';
 import { context } from '../context';
 import { CreateTeamSchema } from '../schemas/teams';
 import { DateTime } from 'luxon';
+import { validateAddressesString } from '../lib/teams';
 
 export const teamsRouter = Router();
 
@@ -67,43 +68,53 @@ teamsRouter.post('/', jwtWithAddress(), upload.single('image'), async function (
     },
   });
 
-  const addresses = schemaResult.data.addresses ?? [];
-  for (const address of addresses) {
-    let addressRecord = await context.prisma.address.findUnique({
-      where: {
-        ethAddress: address.toLowerCase(),
-      },
-    });
+  if (schemaResult.data.addresses) {
+    const addresses = validateAddressesString(schemaResult.data.addresses);
+    if (addresses === null) {
+      const msg = `Invalid addresses`;
+      logger.warn(msg);
+      return res.status(400).send({ msg });
+    }
 
-    if (addressRecord === null) {
-      addressRecord = await context.prisma.address.create({
-        data: {
+    for (const address of addresses) {
+      let addressRecord = await context.prisma.address.findUnique({
+        where: {
           ethAddress: address.toLowerCase(),
         },
       });
-    }
 
-    await context.prisma.membership.create({
-      data: {
-        team: {
-          connect: {
-            id: teamResult.id,
+      if (addressRecord === null) {
+        addressRecord = await context.prisma.address.create({
+          data: {
+            ethAddress: address.toLowerCase(),
           },
-        },
-        address: {
-          connect: {
-            id: addressRecord.id,
+        });
+      }
+
+      await context.prisma.membership.create({
+        data: {
+          team: {
+            connect: {
+              id: teamResult.id,
+            },
           },
+          address: {
+            connect: {
+              id: addressRecord.id,
+            },
+          },
+          role: MembershipRole.ADMIN,
+          acceptanceStatus: MembershipAcceptanceStatus.PENDING,
         },
-        role: MembershipRole.ADMIN,
-        acceptanceStatus: MembershipAcceptanceStatus.PENDING,
-      },
-    });
+      });
+    }
   }
 
   logger.info(
     `Completed request to create Team "${schemaResult.data.name}" for Address ID ${addressId}`,
   );
+
+  return res.status(200).json(teamResult);
 });
 
 teamsRouter.patch(
