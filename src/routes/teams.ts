@@ -25,20 +25,19 @@ teamsRouter.post('/', jwtWithAddress(), upload.single('image'), async function (
     );
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
-  if (!req.file) {
-    const msg = 'Missing/invalid "image" upload in request';
-    logger.warn(msg);
-    return res.status(400).send({ msg });
-  }
 
   const { addressId } = getAccessTokenPayload(req.user);
 
   logger.info(`Request to create Team "${schemaResult.data.name}" for Address ID ${addressId}`);
 
-  const imageKey = await uploadTeamLogoImage(req.file);
-  if (imageKey === null) {
-    logger.error('Failed to upload Team logo image to s3');
-    return res.status(500).send({ msg: 'Failed to upload image' });
+  let logoImageUrl: string | null = null;
+  if (req.file) {
+    const imageKey = await uploadTeamLogoImage(req.file);
+    if (imageKey === null) {
+      logger.error('Failed to upload Team logo image to s3');
+      return res.status(500).send({ msg: 'Failed to upload image' });
+    }
+    logoImageUrl = getS3URL(s3configProfile.buckets.teamLogoImages, imageKey);
   }
 
   const teamResult = await context.prisma.team.create({
@@ -48,7 +47,7 @@ teamsRouter.post('/', jwtWithAddress(), upload.single('image'), async function (
         connect: { id: addressId },
       },
       description: schemaResult.data.description ?? null,
-      logoImageUrl: getS3URL(s3configProfile.buckets.teamLogoImages, imageKey),
+      logoImageUrl,
     },
     select: { id: true },
   });
