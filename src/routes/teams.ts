@@ -10,6 +10,7 @@ import { uploadTeamLogoImage } from '../lib/teams';
 import { context } from '../context';
 import { CreateTeamSchema } from '../schemas/teams';
 import { DateTime } from 'luxon';
+import { isAddressAStaffMember } from '../lib/staff';
 
 export const teamsRouter = Router();
 
@@ -26,7 +27,20 @@ teamsRouter.post('/', jwtWithAddress(), upload.single('image'), async function (
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
-  const { addressId } = getAccessTokenPayload(req.user);
+  let { address, addressId } = getAccessTokenPayload(req.user);
+  if (isAddressAStaffMember(address) && schemaResult.data.adminAddressId !== undefined) {
+    addressId = schemaResult.data.adminAddressId;
+
+    const addressResult = await context.prisma.address.findUnique({
+      where: { id: addressId },
+      select: { id: true },
+    });
+    if (addressResult === null) {
+      const msg = `Admin Address ID ${addressId} requested doesn't exist`;
+      logger.warn(msg);
+      return res.status(400).send({ msg });
+    }
+  }
 
   logger.info(`Request to create Team "${schemaResult.data.name}" for Address ID ${addressId}`);
 
