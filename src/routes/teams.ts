@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import multer from 'multer';
-import { jwtWithAddress } from '../middleware/auth';
+import { jwtWithAddress, jwtWithStaffAddress } from '../middleware/auth';
 import { getRequestLogger } from '../middleware/loggingAndTiming';
 import { getS3URL, s3configProfile } from '../external/s3';
 import { hasMembership } from '../lib/authTokens';
@@ -138,3 +138,44 @@ teamsRouter.patch(
     return res.status(200).send('UPDATED');
   },
 );
+
+teamsRouter.put('/:teamId/gitpoaps/:gitPOAPId', jwtWithStaffAddress(), async function (req, res) {
+  const logger = getRequestLogger(req);
+
+  const teamId = parseInt(req.params.teamId, 10);
+  const gitPOAPId = parseInt(req.params.gitPOAPId, 10);
+
+  logger.info(`Request to add GitPOAP ID ${gitPOAPId} to Team ID ${teamId}`);
+
+  const gitPOAP = await context.prisma.gitPOAP.findUnique({
+    where: { id: gitPOAPId },
+    select: { teamId: true },
+  });
+  if (gitPOAP === null) {
+    const msg = `GitPOAP ID ${gitPOAPId} doesn't exist`;
+    logger.warn(msg);
+    return res.status(404).send({ msg });
+  }
+  if (gitPOAP.teamId === teamId) {
+    logger.debug(`Completed request to add GitPOAP ID ${gitPOAPId} to Team ID ${teamId}`);
+    return res.status(200).send({ msg: 'ASSOCIATED' });
+  }
+  if (gitPOAP.teamId !== null) {
+    const msg = `GitPOAP ID ${gitPOAPId} is already associated with Team ID ${gitPOAP.teamId}`;
+    logger.warn(msg);
+    return res.status(400).send({ msg });
+  }
+
+  await context.prisma.gitPOAP.update({
+    where: { id: gitPOAPId },
+    data: {
+      team: {
+        connect: { id: teamId },
+      },
+    },
+  });
+
+  logger.debug(`Completed request to add GitPOAP ID ${gitPOAPId} to Team ID ${teamId}`);
+
+  return res.status(200).send({ msg: 'ASSOCIATED' });
+});
