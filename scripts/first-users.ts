@@ -8,7 +8,7 @@ import { context } from '../src/context';
 import { ClaimStatus } from '@prisma/client';
 import { writeFile } from 'fs/promises';
 
-async function findFirstUsers(requestedCount: number) {
+async function findFirstUsers(requestedCount: number, oneLine: boolean) {
   const logger = createScopedLogger('findFirstUsers');
 
   const claims = await context.prisma.claim.findMany({
@@ -45,7 +45,10 @@ async function findFirstUsers(requestedCount: number) {
 
   logger.info(`Found ${claims.length} Claims`);
 
-  let resultContent = 'githubHandle,emailAddress,ethAddress,mintedAt\n';
+  let resultContent = '';
+  if (!oneLine) {
+    resultContent += 'githubHandle,emailAddress,ethAddress,mintedAt\n';
+  }
   const foundMintedAddressIds = new Set<number>();
   const foundGithubIds = new Set<number>();
   const foundEmailIds = new Set<number>();
@@ -71,11 +74,17 @@ async function findFirstUsers(requestedCount: number) {
         continue;
       }
       foundGithubIds.add(claim.githubUser.id);
+      if (oneLine) {
+        resultContent += claim.githubUser.githubHandle + '\n';
+      }
     } else if (claim.email !== null) {
       if (foundEmailIds.has(claim.email.id)) {
         continue;
       }
       foundEmailIds.add(claim.email.id);
+      if (oneLine) {
+        resultContent += claim.email.emailAddress + '\n';
+      }
     } else if (claim.issuedAddress !== null) {
       // Here we include the mintedAddressIds to ensure maximum deduplication
       if (foundMintedAddressIds.has(claim.issuedAddress.id)) {
@@ -83,6 +92,9 @@ async function findFirstUsers(requestedCount: number) {
       }
       foundMintedAddressIds.add(claim.issuedAddress.id);
       ++issuedAddressCount;
+      if (oneLine) {
+        resultContent += claim.issuedAddress.ethAddress + '\n';
+      }
     } else {
       logger.error(
         `Claim ID ${claim.id} has status CLAIMED but none of githubUser, email, or issuedAddress is non-null`,
@@ -93,10 +105,12 @@ async function findFirstUsers(requestedCount: number) {
     // Ensure this is here even if issuedAddres.id === mintedAddressId
     foundMintedAddressIds.add(claim.mintedAddressId);
 
-    resultContent += `${claim.githubUser?.githubHandle ?? ''},`;
-    resultContent += `${claim.email?.emailAddress ?? ''},`;
-    resultContent += `${claim.issuedAddress?.ethAddress ?? ''},`;
-    resultContent += `${claim.mintedAt.toISOString()}\n`;
+    if (!oneLine) {
+      resultContent += `${claim.githubUser?.githubHandle ?? ''},`;
+      resultContent += `${claim.email?.emailAddress ?? ''},`;
+      resultContent += `${claim.issuedAddress?.ethAddress ?? ''},`;
+      resultContent += `${claim.mintedAt.toISOString()}\n`;
+    }
 
     if (++rowCount === requestedCount) {
       break;
@@ -118,7 +132,7 @@ async function findFirstUsers(requestedCount: number) {
 const main = async () => {
   const logger = createScopedLogger('main');
 
-  const argv = minimist(process.argv.slice(2));
+  const argv = minimist(process.argv.slice(2), { boolean: 'one-line' });
 
   logger.info(`Command line args: ${JSON.stringify(argv)}`);
 
@@ -131,7 +145,7 @@ const main = async () => {
 
   const count = parseInt(argv['_'][0], 10);
 
-  await findFirstUsers(count);
+  await findFirstUsers(count, argv['one-line'] ?? false);
 };
 
 void main();
