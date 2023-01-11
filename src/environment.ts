@@ -36,3 +36,6 @@ export const DISCORD_CLIENT_SECRET = env.get('DISCORD_CLIENT_SECRET').required()
 export const DISCORD_REDIRECT_URL = env.get('DISCORD_REDIRECT_URL').required().asString();
 
 export const GRAPHIQL_PASSWORD = env.get('GRAPHIQL_PASSWORD').required().asString();
+
+export const PRIVY_APP_ID = env.get('PRIVY_APP_ID').required().asString();
+export const PRIVY_APP_SECRET = env.get('PRIVY_APP_SECRET').required().asString();
