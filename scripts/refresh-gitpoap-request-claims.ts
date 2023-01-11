@@ -35,12 +35,12 @@ async function refreshGitPOAPRequestContributors(gitPOAPRequestId: number) {
 
   logger.info(`GitPOAP Request ID ${gitPOAPRequestId} corresponds with GitPOAP ID ${gitPOAP.id}`);
 
-  const contributorCount = createClaimsForContributors(
+  const contributorCount = await createClaimsForContributors(
     gitPOAP.id,
     convertContributorsFromSchema(gitPOAPRequest.contributors as Prisma.JsonObject),
   );
 
-  logger.info(`Refreshing Claims for ${contributorCount} contributors...`);
+  logger.info(`Refreshed ${contributorCount} Claims for GitPOAP Request ID ${gitPOAPRequestId}`);
 }
 
 const main = async () => {
@@ -59,7 +59,12 @@ const main = async () => {
 
   const gitPOAPRequestId = parseInt(argv['_'][0], 10);
 
+  await context.redis.connect();
+  logger.info('Connected to redis');
+
   await refreshGitPOAPRequestContributors(gitPOAPRequestId);
+
+  await context.redis.disconnect();
 };
 
 void main();
