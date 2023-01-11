@@ -26,6 +26,9 @@ declare global {
       SLACK_TOKEN: string;
 
       GRAPHIQL_PASSWORD: string;
+
+      PRIVY_APP_ID: string;
+      PRIVY_APP_SECRET: string;
     }
   }
 }
