@@ -76,24 +76,24 @@ export function countContributors(contributors: GitPOAPContributors): number {
   );
 }
 
-export function createClaimsForContributors(
+export async function createClaimsForContributors(
   gitPOAPId: number,
   contributors: GitPOAPContributors,
-): number {
+): Promise<number> {
   for (const githubHandle of contributors.githubHandles) {
-    void createClaimForGithubHandle(githubHandle, gitPOAPId);
+    await createClaimForGithubHandle(githubHandle, gitPOAPId);
   }
 
   for (const email of contributors.emails) {
-    void createClaimForEmail(email, gitPOAPId);
+    await createClaimForEmail(email, gitPOAPId);
   }
 
   for (const ethAddress of contributors.ethAddresses) {
-    void createClaimForEthAddress(ethAddress, gitPOAPId);
+    await createClaimForEthAddress(ethAddress, gitPOAPId);
   }
 
   for (const ensName of contributors.ensNames) {
-    void createClaimForEnsName(ensName, gitPOAPId);
+    await createClaimForEnsName(ensName, gitPOAPId);
   }
 
   return countContributors(contributors);
