@@ -41,7 +41,8 @@
     "poap-to-gitpoap": "APP_NAME=poap-to-gitpoap ts-node-dev ./scripts/poap-to-gitpoap.ts",
     "validate-codes": "APP_NAME=validate-codes ts-node-dev ./scripts/validate-codes.ts",
     "force-check-for-new-codes": "APP_NAME=force-check-for-new-codes ts-node-dev ./scripts/force-check-for-new-codes.ts",
-    "get-mint-status": "APP_NAME=get-mint-status ts-node-dev ./scripts/get-mint-status.ts"
+    "get-mint-status": "APP_NAME=get-mint-status ts-node-dev ./scripts/get-mint-status.ts",
+    "refresh-gitpoap-request-claims": "APP_NAME=refresh-gitpoap-request-claims ts-node-dev ./scripts/refresh-gitpoap-request-claims.ts"
   },
   "devDependencies": {
     "@faker-js/faker": "^7.6.0",
