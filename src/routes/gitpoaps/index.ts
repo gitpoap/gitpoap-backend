@@ -468,7 +468,7 @@ gitPOAPsRouter.put('/:gitPOAPId/claims', jwtWithAddress(), async (req, res) => {
     }
   }
 
-  const claimsCount = createClaimsForContributors(
+  const claimsCount = await createClaimsForContributors(
     gitPOAPId,
     convertContributorsFromSchema(contributors),
   );

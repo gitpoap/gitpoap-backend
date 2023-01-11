@@ -259,7 +259,7 @@ customGitPOAPsRouter.put('/approve/:id', jwtWithStaffAddress(), async (req, res)
     const contributors = convertContributorsFromSchema(
       updatedGitPOAPRequest.contributors as Prisma.JsonObject,
     );
-    claimsCount = createClaimsForContributors(gitPOAP.id, contributors);
+    claimsCount = await createClaimsForContributors(gitPOAP.id, contributors);
   }
   logger.info(`Created ${claimsCount} Claims for GitPOAP Request with ID: ${gitPOAPRequestId}`);
 
