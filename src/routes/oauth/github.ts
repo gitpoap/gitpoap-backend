@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { RequestAccessTokenSchema } from '../../schemas/github';
 import { requestGithubOAuthToken, getGithubCurrentUserInfo } from '../../external/github';
-import { generateAuthTokensWithChecks, updateAuthTokenGeneration } from '../../lib/authTokens';
+import { generateNewAuthTokens } from '../../lib/authTokens';
 import { jwtWithAddress } from '../../middleware/auth';
 import { getAccessTokenPayload } from '../../types/authTokens';
 import { upsertGithubUser } from '../../lib/githubUsers';
@@ -21,7 +21,7 @@ githubRouter.post('/', jwtWithAddress(), async function (req, res) {
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
-  const { authTokenId, addressId, address: ethAddress } = getAccessTokenPayload(req.user);
+  const { addressId, address: ethAddress } = getAccessTokenPayload(req.user);
   let { code } = req.body;
 
   logger.info(`Received a GitHub login request from address ${ethAddress}`);
@@ -56,24 +56,7 @@ githubRouter.post('/', jwtWithAddress(), async function (req, res) {
   /* Add the GitHub login to the address record */
   await addGithubLoginForAddress(addressId, githubUser.id);
 
-  // Update the generation of the AuthToken (this should exist
-  // since it was looked up within the middleware)
-  let dbAuthToken;
-  try {
-    dbAuthToken = await updateAuthTokenGeneration(authTokenId);
-  } catch (err) {
-    logger.warn(
-      `GithubUser ID ${githubUser.id}'s AuthToken was invalidated during GitHub login process`,
-    );
-    return res.status(401).send({ msg: 'Not logged in with address' });
-  }
-
-  const userAuthTokens = await generateAuthTokensWithChecks(authTokenId, dbAuthToken.generation, {
-    ...dbAuthToken.address,
-    id: addressId,
-    ethAddress,
-    githubUser,
-  });
+  const userAuthTokens = await generateNewAuthTokens(addressId);
 
   logger.debug(`Completed a GitHub login request for address ${ethAddress}`);
 
@@ -85,7 +68,6 @@ githubRouter.delete('/', jwtWithAddress(), async function (req, res) {
   const logger = getRequestLogger(req);
 
   const {
-    authTokenId,
     addressId,
     address: ethAddress,
     githubHandle,
@@ -104,16 +86,7 @@ githubRouter.delete('/', jwtWithAddress(), async function (req, res) {
   /* Remove the GitHub login from the address record */
   await removeGithubLoginForAddress(addressId);
 
-  // Update the generation of the AuthToken (this must exist
-  // since it was looked up within the middleware)
-  const dbAuthToken = await updateAuthTokenGeneration(authTokenId);
-
-  const userAuthTokens = await generateAuthTokensWithChecks(authTokenId, dbAuthToken.generation, {
-    ...dbAuthToken.address,
-    id: addressId,
-    ethAddress,
-    githubUser: null,
-  });
+  const userAuthTokens = await generateNewAuthTokens(addressId);
 
   logger.debug(`Completed Github disconnect request for address ${ethAddress}`);
 

@@ -7,7 +7,7 @@ import { AddEmailSchema } from '../schemas/email';
 import { getAccessTokenPayload } from '../types/authTokens';
 import { getRequestLogger } from '../middleware/loggingAndTiming';
 import { generateUniqueEmailToken, upsertUnverifiedEmail } from '../lib/emails';
-import { generateAuthTokensWithChecks, updateAuthTokenGeneration } from '../lib/authTokens';
+import { generateNewAuthTokens } from '../lib/authTokens';
 
 export const emailRouter = Router();
 
@@ -161,7 +161,7 @@ emailRouter.post('/resend', jwtWithAddress(), async function (req, res) {
 emailRouter.delete('/', jwtWithAddress(), async function (req, res) {
   const logger = getRequestLogger(req);
 
-  const { address: ethAddress, addressId, authTokenId } = getAccessTokenPayload(req.user);
+  const { address: ethAddress, addressId } = getAccessTokenPayload(req.user);
 
   logger.info(`Received request from ${ethAddress} to remove email connection`);
 
@@ -182,13 +182,7 @@ emailRouter.delete('/', jwtWithAddress(), async function (req, res) {
     return res.status(404).send({ msg: `No email connection present` });
   }
 
-  const dbAuthToken = await updateAuthTokenGeneration(authTokenId);
-
-  const tokens = await generateAuthTokensWithChecks(
-    authTokenId,
-    dbAuthToken.generation,
-    dbAuthToken.address,
-  );
+  const tokens = await generateNewAuthTokens(addressId);
 
   logger.debug(`Completed request from ${ethAddress} to remove email connection`);
 

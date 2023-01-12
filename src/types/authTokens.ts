@@ -14,7 +14,6 @@ export type Memberships = {
 }[];
 
 type AccessTokenPayloadBase = {
-  authTokenId: number;
   addressId: number;
   address: string;
   ensName: string | null;
@@ -170,33 +169,6 @@ export function getAccessTokenPayloadWithEmail(payload: any): AccessTokenPayload
   throw Error('Tried to convert payload to AccessTokenPayload but it is not!');
 }
 
-export type RefreshTokenPayload = {
-  authTokenId: number;
-  addressId: number;
-  generation: number;
-};
-
-function isRefreshTokenPayload(payload: any): payload is RefreshTokenPayload {
-  return (
-    payload &&
-    'authTokenId' in payload &&
-    typeof payload.authTokenId === 'number' &&
-    'addressId' in payload &&
-    typeof payload.addressId === 'number' &&
-    'generation' in payload &&
-    typeof payload.generation === 'number'
-  );
-}
-
-export function getRefreshTokenPayload(payload: any): RefreshTokenPayload {
-  if (isRefreshTokenPayload(payload)) {
-    return payload;
-  }
-
-  throw Error('Tried to convert payload to RefreshTokenPayload but it is not!');
-}
-
 export type UserAuthTokens = {
   accessToken: string;
-  refreshToken: string;
 };
