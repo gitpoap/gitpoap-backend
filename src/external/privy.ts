@@ -6,15 +6,17 @@ export function createPrivyClient() {
   return new PrivyClient(PRIVY_APP_ID, PRIVY_APP_SECRET);
 }
 
-export type PrivyUserData = {
+export type VerifyPrivyUserForDataResult = {
   privyUserId: string;
   ethAddress: string | null;
+  emailAddress: string | null;
+  discordHandle: string | null;
 };
 
 export async function verifyPrivyTokenForData(
   privyClient: PrivyClient,
   privyAuthToken: string,
-): Promise<PrivyUserData | null> {
+): Promise<VerifyPrivyUserForDataResult | null> {
   const logger = createScopedLogger('verifyPrivyToken');
 
   try {
@@ -24,7 +26,7 @@ export async function verifyPrivyTokenForData(
     let ethAddress: string | null = null;
     if (userData.wallet !== undefined) {
       if (userData.wallet.chainType === 'ethereum') {
-        ethAddress = userData.wallet.address;
+        ethAddress = userData.wallet.address.toLowerCase();
       } else {
         logger.warn("User's wallet is not an ETH wallet");
       }
@@ -33,6 +35,8 @@ export async function verifyPrivyTokenForData(
     return {
       privyUserId: verifiedClaims.userId,
       ethAddress,
+      emailAddress: userData.email?.address.toLowerCase() ?? null,
+      discordHandle: userData.discord?.username ?? null,
     };
   } catch (err) {
     logger.warn('Privy failed to verify token');

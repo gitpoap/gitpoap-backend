@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { RequestAccessTokenSchema } from '../../schemas/github';
+import { RequestAccessTokenSchema } from '../../schemas/oauth/github';
 import { requestGithubOAuthToken, getGithubCurrentUserInfo } from '../../external/github';
 import { generateNewAuthTokens } from '../../lib/authTokens';
 import { jwtWithAddress } from '../../middleware/auth';
@@ -21,7 +21,7 @@ githubRouter.post('/', jwtWithAddress(), async function (req, res) {
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
-  const { addressId, address: ethAddress } = getAccessTokenPayload(req.user);
+  const { addressId, ethAddress, discordHandle, emailAddress } = getAccessTokenPayload(req.user);
   let { code } = req.body;
 
   logger.info(`Received a GitHub login request from address ${ethAddress}`);
@@ -56,7 +56,12 @@ githubRouter.post('/', jwtWithAddress(), async function (req, res) {
   /* Add the GitHub login to the address record */
   await addGithubLoginForAddress(addressId, githubUser.id);
 
-  const userAuthTokens = await generateNewAuthTokens(addressId);
+  const userAuthTokens = await generateNewAuthTokens({
+    addressId,
+    ethAddress,
+    discordHandle,
+    emailAddress,
+  });
 
   logger.debug(`Completed a GitHub login request for address ${ethAddress}`);
 
@@ -67,12 +72,8 @@ githubRouter.post('/', jwtWithAddress(), async function (req, res) {
 githubRouter.delete('/', jwtWithAddress(), async function (req, res) {
   const logger = getRequestLogger(req);
 
-  const {
-    addressId,
-    address: ethAddress,
-    githubHandle,
-    githubId,
-  } = getAccessTokenPayload(req.user);
+  const { addressId, ethAddress, githubId, githubHandle, discordHandle, emailAddress } =
+    getAccessTokenPayload(req.user);
 
   logger.info(`Received a GitHub disconnect request from address ${ethAddress}`);
 
@@ -86,7 +87,12 @@ githubRouter.delete('/', jwtWithAddress(), async function (req, res) {
   /* Remove the GitHub login from the address record */
   await removeGithubLoginForAddress(addressId);
 
-  const userAuthTokens = await generateNewAuthTokens(addressId);
+  const userAuthTokens = await generateNewAuthTokens({
+    addressId,
+    ethAddress,
+    discordHandle,
+    emailAddress,
+  });
 
   logger.debug(`Completed Github disconnect request for address ${ethAddress}`);
 
