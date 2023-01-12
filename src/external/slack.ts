@@ -191,5 +191,5 @@ export async function sendInternalClaimByMentionMessage(
     msg += `\n* GitHub User: ${earnerLink} earned ${gitPOAPLink}`;
   }
 
-  await sendSlackMessage(msg, CHANNELS.gitpoap.claimByMentionsAlerts);
+  await sendSlackMessage(msg, CHANNELS.gitpoap.claimByMentionAlerts);
 }
