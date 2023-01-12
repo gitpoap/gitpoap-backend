@@ -12,13 +12,13 @@ import { getValidatedAccessTokenPayload } from '../lib/authTokens';
 
 export const jwtMiddleware = jwt({ secret: JWT_SECRET as string, algorithms: ['HS256'] });
 
-function safelyGetAuthTokenId(payload: any): number | null {
-  const logger = createScopedLogger('safelyGetAuthTokenId');
+function safelyGetAddressId(payload: any): number | null {
+  const logger = createScopedLogger('safelyGetAddressId');
 
   try {
-    const { authTokenId } = getAccessTokenPayload(payload);
+    const { addressId } = getAccessTokenPayload(payload);
 
-    return authTokenId;
+    return addressId;
   } catch (err) {
     logger.warn(`Got a malformed AuthToken in middleware: ${err}`);
 
@@ -34,13 +34,13 @@ export function jwtWithAddress() {
         return;
       }
 
-      const authTokenId = safelyGetAuthTokenId(req.user);
-      if (authTokenId === null) {
+      const addressId = safelyGetAddressId(req.user);
+      if (addressId === null) {
         next({ status: 400, msg: 'Malformed Access Token' });
         return;
       }
 
-      const validatedAccessTokenPayload = await getValidatedAccessTokenPayload(authTokenId);
+      const validatedAccessTokenPayload = await getValidatedAccessTokenPayload(addressId);
       if (validatedAccessTokenPayload === null) {
         next({ status: 401, msg: 'Not logged in with address' });
         return;
@@ -103,13 +103,13 @@ export function jwtWithGitHubOAuth() {
         return;
       }
 
-      const authTokenId = safelyGetAuthTokenId(req.user);
-      if (authTokenId === null) {
+      const addressId = safelyGetAddressId(req.user);
+      if (addressId === null) {
         next({ status: 400, msg: 'Malformed Access Token' });
         return;
       }
 
-      const validatedAccessTokenPayload = await getValidatedAccessTokenPayload(authTokenId);
+      const validatedAccessTokenPayload = await getValidatedAccessTokenPayload(addressId);
       if (validatedAccessTokenPayload === null) {
         next({ status: 401, msg: 'Not logged in with address' });
         return;
