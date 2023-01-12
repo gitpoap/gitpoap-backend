@@ -1,10 +1,12 @@
-import { Arg, Ctx, Field, ObjectType, Resolver, Query } from 'type-graphql';
+import { Authorized, Ctx, Field, ObjectType, Resolver, Query } from 'type-graphql';
 import { Claim } from '@generated/type-graphql';
 import { AuthLoggingContext } from '../middleware';
 import { POAPEvent } from '../../types/poap';
 import { retrievePOAPEventInfo } from '../../external/poap';
 import { getLastMonthStartDatetime } from './util';
 import { ClaimStatus, GitPOAPStatus, Prisma } from '@prisma/client';
+import { AuthRoles } from '../auth';
+import { InternalError } from '../errors';
 
 @ObjectType()
 class FullClaimData {
@@ -43,43 +45,35 @@ export class CustomClaimResolver {
     return result._count.id;
   }
 
+  @Authorized(AuthRoles.Address)
   @Query(() => [FullClaimData], { nullable: true })
   async userClaims(
-    @Ctx() { prisma, logger }: AuthLoggingContext,
-    @Arg('address') address: string,
+    @Ctx() { prisma, userAccessTokenPayload, logger }: AuthLoggingContext,
   ): Promise<FullClaimData[] | null> {
-    logger.info(`Request for the claims for address: ${address}`);
+    if (userAccessTokenPayload === null) {
+      logger.error('Route passed AuthRoles.Address authorization without user payload set');
+      throw InternalError;
+    }
+
+    logger.info(`Request for the claims for address: ${userAccessTokenPayload.ethAddress}`);
 
     const addressRecord = await prisma.address.findUnique({
-      where: {
-        ethAddress: address.toLowerCase(),
-      },
-      select: {
-        id: true,
-        ethAddress: true,
-        githubUser: true,
-        email: true,
-      },
+      where: { ethAddress: userAccessTokenPayload.ethAddress },
+      select: { githubUser: true },
     });
-
-    if (addressRecord === null) {
-      return [];
-    }
 
     const possibleMatches: Prisma.Enumerable<Prisma.ClaimWhereInput[]> = [
       // Note that this covers both the ethAddress and the ensName
-      { issuedAddressId: addressRecord.id },
+      { issuedAddressId: userAccessTokenPayload.addressId },
     ];
 
-    const githubId = addressRecord.githubUser?.githubId ?? null;
+    const githubId = addressRecord?.githubUser?.githubId ?? null;
     if (githubId !== null) {
       possibleMatches.push({ githubUser: { githubId } });
     }
-    const emailAddress = addressRecord.email?.emailAddress ?? null;
+    const emailAddress = userAccessTokenPayload.emailAddress ?? null;
     if (emailAddress !== null) {
-      possibleMatches.push({
-        email: { emailAddress: emailAddress.toLowerCase() },
-      });
+      possibleMatches.push({ email: { emailAddress } });
     }
 
     const claims = await prisma.claim.findMany({

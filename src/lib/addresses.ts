@@ -44,17 +44,6 @@ export async function removeGithubLoginForAddress(addressId: number) {
   });
 }
 
-export async function removeDiscordLoginForAddress(addressId: number) {
-  await context.prisma.address.update({
-    where: {
-      id: addressId,
-    },
-    data: {
-      discordUserId: null,
-    },
-  });
-}
-
 export const addGithubLoginForAddress = async (addressId: number, githubUserId: number) => {
   await context.prisma.address.update({
     where: {
@@ -64,21 +53,6 @@ export const addGithubLoginForAddress = async (addressId: number, githubUserId: 
       githubUser: {
         connect: {
           id: githubUserId,
-        },
-      },
-    },
-  });
-};
-
-export const addDiscordLoginForAddress = async (addressId: number, discordUserId: number) => {
-  await context.prisma.address.update({
-    where: {
-      id: addressId,
-    },
-    data: {
-      discordUser: {
-        connect: {
-          id: discordUserId,
         },
       },
     },
