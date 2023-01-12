@@ -11,15 +11,15 @@ export const featuredRouter = Router();
 featuredRouter.put('/:poapTokenId', jwtWithAddress(), async function (req, res) {
   const logger = getRequestLogger(req);
 
-  const { address, addressId } = getAccessTokenPayload(req.user);
+  const { addressId, ethAddress } = getAccessTokenPayload(req.user);
   const poapTokenId = req.params.poapTokenId;
 
-  logger.info(`Request from ${address} for POAP ID: ${poapTokenId}`);
+  logger.info(`Request from ${ethAddress} for POAP ID: ${poapTokenId}`);
 
   const profile = await upsertProfileForAddressId(addressId);
 
   if (profile === null) {
-    logger.error(`Failed to upsert profile for address: ${address}`);
+    logger.error(`Failed to upsert profile for address: ${ethAddress}`);
     return res.status(500).send({ msg: 'Failed to create profile for address' });
   }
 
@@ -30,8 +30,8 @@ featuredRouter.put('/:poapTokenId', jwtWithAddress(), async function (req, res) 
     return res.status(400).send({ msg });
   }
 
-  if (poapData.owner.toLowerCase() !== address) {
-    logger.warn(`Address ${address} attempted to feature unowned POAP`);
+  if (poapData.owner.toLowerCase() !== ethAddress) {
+    logger.warn(`Address ${ethAddress} attempted to feature unowned POAP`);
     return res.status(401).send({ msg: 'Users cannot feature POAPs they do not own' });
   }
 
@@ -45,7 +45,7 @@ featuredRouter.put('/:poapTokenId', jwtWithAddress(), async function (req, res) 
     },
   });
   if (claimData?.needsRevalidation) {
-    logger.warn(`Address ${address} attempted to feature a GitPOAP that needs revalidation`);
+    logger.warn(`Address ${ethAddress} attempted to feature a GitPOAP that needs revalidation`);
     return res.status(400).send({
       msg: 'You must revalidate yourself as owner of this GitPOAP before you can feature it',
     });
@@ -65,7 +65,7 @@ featuredRouter.put('/:poapTokenId', jwtWithAddress(), async function (req, res) 
     },
   });
 
-  logger.debug(`Completed request from ${address} for POAP ID: ${poapTokenId}`);
+  logger.debug(`Completed request from ${ethAddress} for POAP ID: ${poapTokenId}`);
 
   return res.status(200).send('ADDED');
 });
@@ -73,14 +73,14 @@ featuredRouter.put('/:poapTokenId', jwtWithAddress(), async function (req, res) 
 featuredRouter.delete('/:poapTokenId', jwtWithAddress(), async function (req, res) {
   const logger = getRequestLogger(req);
 
-  const { address } = getAccessTokenPayload(req.user);
+  const { ethAddress } = getAccessTokenPayload(req.user);
   const poapTokenId = req.params.poapTokenId;
 
-  logger.info(`Received request from ${address} for POAP ID: ${poapTokenId}`);
+  logger.info(`Received request from ${ethAddress} for POAP ID: ${poapTokenId}`);
 
-  const profile = await getProfileByAddress(address);
+  const profile = await getProfileByAddress(ethAddress);
   if (profile === null) {
-    const msg = `There is no profile for the address ${address}`;
+    const msg = `There is no profile for the address ${ethAddress}`;
     logger.warn(msg);
     return res.status(404).send({ msg });
   }
@@ -98,7 +98,7 @@ featuredRouter.delete('/:poapTokenId', jwtWithAddress(), async function (req, re
     logger.warn(`Tried to delete a FeaturedPOAP that was already deleted: ${err}`);
   }
 
-  logger.debug(`Completed request from ${address} for POAP ID: ${poapTokenId}`);
+  logger.debug(`Completed request from ${ethAddress} for POAP ID: ${poapTokenId}`);
 
   return res.status(200).send('DELETED');
 });

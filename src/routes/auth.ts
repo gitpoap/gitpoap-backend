@@ -21,13 +21,13 @@ authRouter.post('/', async function (req, res) {
 
   logger.info(`Request to create AuthToken`);
 
-  const addressId = await verifyPrivyToken(privyToken);
-  if (addressId === null) {
+  const privyUserData = await verifyPrivyToken(privyToken);
+  if (privyUserData === null) {
     logger.error('Failed verify Privy token');
     return res.status(500).send({ msg: 'Login failed, please retry' });
   }
 
-  const userAuthTokens = await generateNewAuthTokens(addressId);
+  const userAuthTokens = await generateNewAuthTokens(privyUserData);
 
   logger.debug('Completed request to create AuthToken');
 

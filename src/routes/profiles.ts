@@ -10,7 +10,7 @@ export const profilesRouter = Router();
 profilesRouter.post('/', jwtWithAddress(), async function (req, res) {
   const logger = getRequestLogger(req);
 
-  const { addressId, address } = getAccessTokenPayload(req.user);
+  const { addressId, ethAddress } = getAccessTokenPayload(req.user);
 
   const schemaResult = UpdateProfileSchema.safeParse(req.body);
   if (!schemaResult.success) {
@@ -20,7 +20,7 @@ profilesRouter.post('/', jwtWithAddress(), async function (req, res) {
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
-  logger.info(`Request to update profile for address: ${address}`);
+  logger.info(`Request to update profile for address: ${ethAddress}`);
 
   await context.prisma.profile.upsert({
     where: {
@@ -35,7 +35,7 @@ profilesRouter.post('/', jwtWithAddress(), async function (req, res) {
     },
   });
 
-  logger.debug(`Completed request to update profile for address: ${req.body.address}`);
+  logger.debug(`Completed request to update profile for address: ${ethAddress}`);
 
   return res.status(200).send('UPDATED');
 });
