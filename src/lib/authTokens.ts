@@ -2,12 +2,7 @@ import { context } from '../context';
 import { JWT_EXP_TIME_SECONDS } from '../constants';
 import { sign } from 'jsonwebtoken';
 import { JWT_SECRET } from '../environment';
-import {
-  AccessTokenPayload,
-  RefreshTokenPayload,
-  Memberships,
-  UserAuthTokens,
-} from '../types/authTokens';
+import { AccessTokenPayload, Memberships, UserAuthTokens } from '../types/authTokens';
 import { createScopedLogger } from '../logging';
 import { isGithubTokenValidForUser } from '../external/github';
 import { isDiscordTokenValidForUser } from '../external/discord';
@@ -16,55 +11,43 @@ import { removeDiscordUsersDiscordOAuthToken } from '../lib/discordUsers';
 import { removeGithubLoginForAddress, removeDiscordLoginForAddress } from '../lib/addresses';
 import { MembershipAcceptanceStatus, MembershipRole } from '@prisma/client';
 
-async function createAuthToken(addressId: number) {
-  return await context.prisma.authToken.create({
-    data: {
-      address: {
-        connect: {
-          id: addressId,
-        },
-      },
-    },
+async function retrieveAddressData(addressId: number) {
+  return await context.prisma.address.findUnique({
+    where: { id: addressId },
     select: {
       id: true,
-      generation: true,
-      address: {
+      ethAddress: true,
+      ensName: true,
+      ensAvatarImageUrl: true,
+      githubUser: {
         select: {
           id: true,
-          ethAddress: true,
-          ensName: true,
-          ensAvatarImageUrl: true,
-          githubUser: {
-            select: {
-              id: true,
-              githubId: true,
-              githubHandle: true,
-              githubOAuthToken: true,
-            },
-          },
-          discordUser: {
-            select: {
-              id: true,
-              discordId: true,
-              discordHandle: true,
-              discordOAuthToken: true,
-            },
-          },
-          email: {
-            select: {
-              id: true,
-              isValidated: true,
-            },
-          },
-          memberships: {
-            where: {
-              acceptanceStatus: MembershipAcceptanceStatus.ACCEPTED,
-            },
-            select: {
-              teamId: true,
-              role: true,
-            },
-          },
+          githubId: true,
+          githubHandle: true,
+          githubOAuthToken: true,
+        },
+      },
+      discordUser: {
+        select: {
+          id: true,
+          discordId: true,
+          discordHandle: true,
+          discordOAuthToken: true,
+        },
+      },
+      email: {
+        select: {
+          id: true,
+          isValidated: true,
+        },
+      },
+      memberships: {
+        where: {
+          acceptanceStatus: MembershipAcceptanceStatus.ACCEPTED,
+        },
+        select: {
+          teamId: true,
+          role: true,
         },
       },
     },
@@ -165,13 +148,7 @@ function generateAccessToken(payload: AccessTokenPayload): string {
   });
 }
 
-function generateRefreshToken(payload: RefreshTokenPayload) {
-  return sign(payload, JWT_SECRET);
-}
-
 export function generateAuthTokens(
-  authTokenId: number,
-  authTokenGeneration: number,
   addressId: number,
   address: string,
   ensName: string | null,
@@ -184,7 +161,6 @@ export function generateAuthTokens(
   emailId: number | null,
 ): UserAuthTokens {
   const accessTokenPayload: AccessTokenPayload = {
-    authTokenId,
     addressId,
     address,
     ensName,
@@ -196,15 +172,9 @@ export function generateAuthTokens(
     discordHandle,
     emailId,
   };
-  const refreshTokenPayload: RefreshTokenPayload = {
-    authTokenId,
-    addressId,
-    generation: authTokenGeneration,
-  };
 
   return {
     accessToken: generateAccessToken(accessTokenPayload),
-    refreshToken: generateRefreshToken(refreshTokenPayload),
   };
 }
 
@@ -224,11 +194,7 @@ type CheckAddressType = {
   email: CheckEmailType | null;
 };
 
-export async function generateAuthTokensWithChecks(
-  authTokenId: number,
-  generation: number,
-  address: CheckAddressType,
-): Promise<UserAuthTokens> {
+async function generateAuthTokensWithChecks(address: CheckAddressType): Promise<UserAuthTokens> {
   const { githubId, githubHandle } = await checkGithubTokenData(address.id, address.githubUser);
   const { discordId, discordHandle } = await checkDiscordTokenData(address.id, address.discordUser);
 
@@ -238,8 +204,6 @@ export async function generateAuthTokensWithChecks(
   }
 
   return generateAuthTokens(
-    authTokenId,
-    generation,
     address.id,
     address.ethAddress,
     address.ensName,
@@ -253,73 +217,16 @@ export async function generateAuthTokensWithChecks(
   );
 }
 
-export async function generateNewAuthTokens(addressId: number): Promise<UserAuthTokens> {
-  const dbAuthToken = await createAuthToken(addressId);
+export async function generateNewAuthTokens(addressId: number): Promise<UserAuthTokens | null> {
+  const logger = createScopedLogger('generateNewAuthTokens');
 
-  return generateAuthTokensWithChecks(dbAuthToken.id, dbAuthToken.generation, dbAuthToken.address);
-}
-
-export async function deleteAuthToken(authTokenId: number) {
-  const logger = createScopedLogger('deleteAuthToken');
-
-  try {
-    await context.prisma.authToken.delete({
-      where: { id: authTokenId },
-    });
-  } catch (err) {
-    logger.warn(`AuthToken ID ${authTokenId} is already deleted: ${err}`);
+  const address = await retrieveAddressData(addressId);
+  if (address === null) {
+    logger.error(`Failed to lookup known Address ID ${addressId}`);
+    return null;
   }
-}
 
-export async function updateAuthTokenGeneration(authTokenId: number) {
-  return await context.prisma.authToken.update({
-    where: { id: authTokenId },
-    data: {
-      generation: { increment: 1 },
-    },
-    select: {
-      generation: true,
-      address: {
-        select: {
-          id: true,
-          ethAddress: true,
-          ensName: true,
-          ensAvatarImageUrl: true,
-          githubUser: {
-            select: {
-              id: true,
-              githubId: true,
-              githubHandle: true,
-              githubOAuthToken: true,
-            },
-          },
-          discordUser: {
-            select: {
-              id: true,
-              discordId: true,
-              discordHandle: true,
-              discordOAuthToken: true,
-            },
-          },
-          email: {
-            select: {
-              id: true,
-              isValidated: true,
-            },
-          },
-          memberships: {
-            where: {
-              acceptanceStatus: MembershipAcceptanceStatus.ACCEPTED,
-            },
-            select: {
-              teamId: true,
-              role: true,
-            },
-          },
-        },
-      },
-    },
-  });
+  return generateAuthTokensWithChecks(address);
 }
 
 type ValidatedAccessTokenPayload = {
@@ -335,66 +242,30 @@ type ValidatedAccessTokenPayload = {
 };
 
 export async function getValidatedAccessTokenPayload(
-  authTokenId: number,
+  addressId: number,
 ): Promise<ValidatedAccessTokenPayload | null> {
-  const tokenInfo = await context.prisma.authToken.findUnique({
-    where: { id: authTokenId },
-    select: {
-      id: true,
-      address: {
-        select: {
-          ensName: true,
-          ensAvatarImageUrl: true,
-          githubUser: {
-            select: {
-              githubId: true,
-              githubHandle: true,
-              githubOAuthToken: true,
-            },
-          },
-          discordUser: {
-            select: {
-              discordId: true,
-              discordHandle: true,
-            },
-          },
-          email: {
-            select: {
-              id: true,
-              isValidated: true,
-            },
-          },
-          memberships: {
-            where: {
-              acceptanceStatus: MembershipAcceptanceStatus.ACCEPTED,
-            },
-            select: {
-              teamId: true,
-              role: true,
-            },
-          },
-        },
-      },
-    },
-  });
-  if (tokenInfo === null) {
+  const logger = createScopedLogger('getValidatedAccessTokenPayload');
+
+  const addressData = await retrieveAddressData(addressId);
+  if (addressData === null) {
+    logger.error(`Failed to lookup known Address ID ${addressId}`);
     return null;
   }
 
   let emailId: number | null = null;
-  if (tokenInfo.address.email !== null) {
-    emailId = tokenInfo.address.email.isValidated ? tokenInfo.address.email.id : null;
+  if (addressData.email !== null) {
+    emailId = addressData.email.isValidated ? addressData.email.id : null;
   }
 
   return {
-    ensName: tokenInfo.address.ensName,
-    ensAvatarImageUrl: tokenInfo.address.ensAvatarImageUrl,
-    memberships: tokenInfo.address.memberships,
-    githubId: tokenInfo.address.githubUser?.githubId ?? null,
-    githubHandle: tokenInfo.address.githubUser?.githubHandle ?? null,
-    githubOAuthToken: tokenInfo.address.githubUser?.githubOAuthToken ?? null,
-    discordId: tokenInfo.address.discordUser?.discordId ?? null,
-    discordHandle: tokenInfo.address.discordUser?.discordHandle ?? null,
+    ensName: addressData.ensName,
+    ensAvatarImageUrl: addressData.ensAvatarImageUrl,
+    memberships: addressData.memberships,
+    githubId: addressData.githubUser?.githubId ?? null,
+    githubHandle: addressData.githubUser?.githubHandle ?? null,
+    githubOAuthToken: addressData.githubUser?.githubOAuthToken ?? null,
+    discordId: addressData.discordUser?.discordId ?? null,
+    discordHandle: addressData.discordUser?.discordHandle ?? null,
     emailId,
   };
 }
