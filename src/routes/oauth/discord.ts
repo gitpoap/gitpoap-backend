@@ -8,7 +8,7 @@ import { jwtWithAddress } from '../../middleware/auth';
 import { RequestAccessTokenSchema } from '../../schemas/discord';
 import { getAccessTokenPayload } from '../../types/authTokens';
 import { upsertDiscordUser } from '../../lib/discordUsers';
-import { generateAuthTokensWithChecks, updateAuthTokenGeneration } from '../../lib/authTokens';
+import { generateNewAuthTokens } from '../../lib/authTokens';
 import { addDiscordLoginForAddress, removeDiscordLoginForAddress } from '../../lib/addresses';
 import { getRequestLogger } from '../../middleware/loggingAndTiming';
 
@@ -25,7 +25,7 @@ discordRouter.post('/', jwtWithAddress(), async function (req, res) {
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
-  const { authTokenId, addressId, address: ethAddress } = getAccessTokenPayload(req.user);
+  const { addressId, address: ethAddress } = getAccessTokenPayload(req.user);
   const { code } = schemaResult.data;
 
   logger.info(`Received a Discord login request from address ${ethAddress}`);
@@ -55,24 +55,7 @@ discordRouter.post('/', jwtWithAddress(), async function (req, res) {
   /* Add the discord login to the address record */
   await addDiscordLoginForAddress(addressId, discordUser.id);
 
-  // Update the generation of the AuthToken (this should exist
-  // since it was looked up within the middleware)
-  let dbAuthToken;
-  try {
-    dbAuthToken = await updateAuthTokenGeneration(authTokenId);
-  } catch (err) {
-    logger.warn(
-      `DiscordUser ID ${discordUser.id}'s AuthToken was invalidated during Discord login process`,
-    );
-    return res.status(401).send({ msg: 'Not logged in with address' });
-  }
-
-  const userAuthTokens = await generateAuthTokensWithChecks(authTokenId, dbAuthToken.generation, {
-    ...dbAuthToken.address,
-    id: addressId,
-    ethAddress,
-    discordUser,
-  });
+  const userAuthTokens = await generateNewAuthTokens(addressId);
 
   logger.debug(`Completed a Discord login request for address ${ethAddress}`);
 
@@ -84,7 +67,6 @@ discordRouter.delete('/', jwtWithAddress(), async function (req, res) {
   const logger = getRequestLogger(req);
 
   const {
-    authTokenId,
     addressId,
     address: ethAddress,
     discordId,
@@ -103,16 +85,7 @@ discordRouter.delete('/', jwtWithAddress(), async function (req, res) {
   /* Remove the Discord login from the address record */
   await removeDiscordLoginForAddress(addressId);
 
-  // Update the generation of the AuthToken (this must exist
-  // since it was looked up within the middleware)
-  const dbAuthToken = await updateAuthTokenGeneration(authTokenId);
-
-  const userAuthTokens = await generateAuthTokensWithChecks(authTokenId, dbAuthToken.generation, {
-    ...dbAuthToken.address,
-    id: addressId,
-    ethAddress,
-    discordUser: null,
-  });
+  const userAuthTokens = await generateNewAuthTokens(addressId);
 
   logger.debug(`Completed Discord disconnect request for address ${ethAddress}`);
 
