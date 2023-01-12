@@ -8,10 +8,8 @@ import { subscribeRouter } from './routes/subscribe';
 import { suggestRouter } from './routes/suggest';
 import jwtRouter from './routes/jwt';
 import { claimsRouter } from './routes/claims';
-import { emailRouter } from './routes/email';
 import { featuredRouter } from './routes/featured';
 import { githubRouter } from './routes/oauth/github';
-import { discordRouter } from './routes/oauth/discord';
 import { gitPOAPsRouter } from './routes/gitpoaps';
 import { profilesRouter } from './routes/profiles';
 import { projectsRouter } from './routes/projects';
@@ -69,14 +67,12 @@ export async function setupAppWithMiddleware(middleware: RequestHandler[]) {
   /* Endpoints */
   app.use('/auth', authRouter);
   app.use('/oauth/github', githubRouter);
-  app.use('/oauth/discord', discordRouter);
   app.use('/jwt', jwtRouter);
   app.use('/subscribe', subscribeRouter);
   app.use('/suggest', suggestRouter);
 
   /* API endpoints for the frontend */
   app.use('/claims', claimsRouter);
-  app.use('/email', emailRouter);
   app.use('/featured', featuredRouter);
   app.use('/gitpoaps', gitPOAPsRouter);
   app.use('/onboarding', onboardingRouter);

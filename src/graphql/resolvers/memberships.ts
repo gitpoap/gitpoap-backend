@@ -70,12 +70,12 @@ export class CustomMembershipResolver {
       throw InternalError;
     }
 
-    logger.info(`Request for Memberships for address ${userAccessTokenPayload.address}`);
+    logger.info(`Request for Memberships for address ${userAccessTokenPayload.ethAddress}`);
 
     const memberships = await prisma.membership.findMany({
       where: {
         address: {
-          ethAddress: userAccessTokenPayload.address.toLowerCase(),
+          ethAddress: userAccessTokenPayload.ethAddress,
         },
       },
       include: {
@@ -91,7 +91,9 @@ export class CustomMembershipResolver {
         compareDates(a.joinedOn, b.joinedOn),
     );
 
-    logger.debug(`Completed request for Memberships for address ${userAccessTokenPayload.address}`);
+    logger.debug(
+      `Completed request for Memberships for address ${userAccessTokenPayload.ethAddress}`,
+    );
 
     return { memberships };
   }
@@ -236,6 +238,11 @@ export class CustomMembershipResolver {
       throw new Error(MembershipErrorMessage.TEAM_NOT_FOUND);
     }
 
+    if (team.ownerAddress.ethAddress !== userAccessTokenPayload.ethAddress) {
+      logger.warn('Not the team owner');
+      throw new Error(MembershipErrorMessage.NOT_AUTHORIZED);
+    }
+
     const addressRecord = await prisma.address.findUnique({
       where: {
         ethAddress: address.toLowerCase(),
@@ -286,9 +293,7 @@ export class CustomMembershipResolver {
           },
         },
         address: {
-          connect: {
-            ethAddress: address.toLowerCase(),
-          },
+          connect: { ethAddress: address.toLowerCase() },
         },
         role: MembershipRole.ADMIN,
         acceptanceStatus: MembershipAcceptanceStatus.PENDING,
@@ -330,9 +335,7 @@ export class CustomMembershipResolver {
           },
         },
         address: {
-          select: {
-            ethAddress: true,
-          },
+          select: { ethAddress: true },
         },
         acceptanceStatus: true,
       },
@@ -354,7 +357,7 @@ export class CustomMembershipResolver {
 
     const isAdmin = userMembership?.role === MembershipRole.MEMBER;
     const isMembershipOwner =
-      userAccessTokenPayload.address.toLowerCase() !== membership.address.ethAddress.toLowerCase();
+      userAccessTokenPayload.ethAddress.toLowerCase() !== membership.address.ethAddress.toLowerCase();
     const isPending = membership.acceptanceStatus === MembershipAcceptanceStatus.PENDING;
 
     if ((userMembership === null || isAdmin) && isPending && isMembershipOwner) {
@@ -408,7 +411,7 @@ export class CustomMembershipResolver {
 
     const addressRecord = await prisma.address.findUnique({
       where: {
-        ethAddress: userAccessTokenPayload.address.toLowerCase(),
+        ethAddress: userAccessTokenPayload.ethAddress,
       },
       select: {
         id: true,
@@ -416,7 +419,7 @@ export class CustomMembershipResolver {
     });
 
     if (addressRecord === null) {
-      logger.warn(`Address not found for address: ${userAccessTokenPayload.address}`);
+      logger.warn(`Address not found for address: ${userAccessTokenPayload.ethAddress}`);
       throw new Error(MembershipErrorMessage.ADDRESS_NOT_FOUND);
     }
 
@@ -431,13 +434,13 @@ export class CustomMembershipResolver {
 
     if (membership === null) {
       logger.warn(
-        `Membership not found for team ${teamId} address: ${userAccessTokenPayload.address}`,
+        `Membership not found for team ${teamId} address: ${userAccessTokenPayload.ethAddress}`,
       );
       throw new Error(MembershipErrorMessage.MEMBERSHIP_NOT_FOUND);
     }
 
     if (membership.acceptanceStatus !== MembershipAcceptanceStatus.PENDING) {
-      logger.warn(`Membership is already accepted: ${userAccessTokenPayload.address}`);
+      logger.warn(`Membership is already accepted: ${userAccessTokenPayload.ethAddress}`);
       throw new Error(MembershipErrorMessage.ALREADY_ACCEPTED);
     }
 
@@ -455,7 +458,7 @@ export class CustomMembershipResolver {
     });
 
     logger.debug(
-      `Completed request to accept a membership to team ${teamId} for address ${userAccessTokenPayload.address}`,
+      `Completed request to accept a membership to team ${teamId} for address ${userAccessTokenPayload.ethAddress}`,
     );
 
     return {

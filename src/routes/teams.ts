@@ -27,8 +27,8 @@ teamsRouter.post('/', jwtWithAddress(), upload.single('image'), async function (
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
-  let { address, addressId } = getAccessTokenPayload(req.user);
-  if (isAddressAStaffMember(address) && schemaResult.data.adminAddressId !== undefined) {
+  let { addressId, ethAddress } = getAccessTokenPayload(req.user);
+  if (isAddressAStaffMember(ethAddress) && schemaResult.data.adminAddressId !== undefined) {
     addressId = schemaResult.data.adminAddressId;
 
     const addressResult = await context.prisma.address.findUnique({
@@ -117,7 +117,7 @@ teamsRouter.patch(
 
     if (!hasMembership(accessTokenPayload, teamId, [MembershipRole.OWNER, MembershipRole.ADMIN])) {
       logger.warn(
-        `Non-admin ${accessTokenPayload.address} attempted to change the logo for Team ID ${teamId}`,
+        `Non-admin ${accessTokenPayload.ethAddress} attempted to change the logo for Team ID ${teamId}`,
       );
       return res.status(401).send({ msg: 'Must be an admin of the team' });
     }

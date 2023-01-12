@@ -35,16 +35,15 @@ model GithubUser {
 }
 
 model DiscordUser {
-  id                Int       @id @default(autoincrement())
-  discordId         String    @unique
-  discordHandle     String    @db.VarChar(255)
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  id                Int      @id @default(autoincrement())
+  discordId         String   @unique
+  discordHandle     String   @db.VarChar(255)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
   claims            Claim[]
   // Hide discordUser.discordOAuthToken from generated resolvers
   /// @TypeGraphQL.omit(output: true, input: true)
   discordOAuthToken String?
-  addresses         Address[]
 }
 
 model Profile {
@@ -68,21 +67,16 @@ model Profile {
 model Address {
   id                Int              @id @default(autoincrement())
   ethAddress        String           @unique @db.VarChar(255)
-  email             Email?
   createdAt         DateTime         @default(now())
   updatedAt         DateTime         @updatedAt
   githubUserId      Int?
   githubUser        GithubUser?      @relation(fields: [githubUserId], references: [id])
-  discordUserId     Int?
-  discordUser       DiscordUser?     @relation(fields: [discordUserId], references: [id])
   ensAvatarImageUrl String?
   ensName           String?          @db.VarChar(255)
   memberships       Membership[]
   profile           Profile?
   issuedClaims      Claim[]          @relation("issuedClaims")
   mintedClaims      Claim[]          @relation("mintedClaims")
-  // Hide Address.authTokens from generated resolvers
-  /// @TypeGraphQL.omit(output: true, input: true)
   gitPOAPRequests   GitPOAPRequest[]
   createdGitPOAPs   GitPOAP[]
   teams             Team[]
@@ -95,18 +89,9 @@ model Email {
   // Hide email.emailAddress from generated resolvers
   /// @TypeGraphQL.omit(output: false, input: false)
   emailAddress           String           @unique @db.VarChar(255)
-  addressId              Int?             @unique
-  address                Address?         @relation(fields: [addressId], references: [id])
   createdAt              DateTime         @default(now())
   updatedAt              DateTime         @updatedAt
   claims                 Claim[]
-  isValidated            Boolean          @default(false)
-  // Hide email.activeToken from generated resolvers
-  /// @TypeGraphQL.omit(output: true, input: true)
-  activeToken            String?          @unique
-  // Hide email.activeToken from generated resolvers
-  /// @TypeGraphQL.omit(output: true, input: true)
-  tokenExpiresAt         DateTime?
   createdGitPOAPs        GitPOAP[]
   createdGitPOAPRequests GitPOAPRequest[]
 }

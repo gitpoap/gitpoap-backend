@@ -451,25 +451,25 @@ gitPOAPsRouter.put('/:gitPOAPId/claims', jwtWithAddress(), async (req, res) => {
     },
   });
 
-  const { addressId, address } = getAccessTokenPayload(req.user);
+  const { addressId, ethAddress } = getAccessTokenPayload(req.user);
 
   if (gitPOAP === null) {
     logger.warn(
-      `Address ${address} tried to create claims for nonexistant GitPOAP ID ${gitPOAPId}`,
+      `Address ${ethAddress} tried to create claims for nonexistant GitPOAP ID ${gitPOAPId}`,
     );
     return res.status(404).send({ msg: "Request doesn't exist" });
   }
 
-  if (!isAddressAStaffMember(address)) {
+  if (!isAddressAStaffMember(ethAddress)) {
     if (gitPOAP.type === GitPOAPType.CUSTOM) {
       if (gitPOAP.creatorAddressId !== addressId) {
         logger.warn(
-          `Non-creator and non-staff ${address} tried to add claims to Custom GitPOAP ID ${gitPOAPId}`,
+          `Non-creator and non-staff ${ethAddress} tried to add claims to Custom GitPOAP ID ${gitPOAPId}`,
         );
         return res.status(401).send({ msg: 'Not GitPOAP owner' });
       }
     } else {
-      logger.warn(`Non-staff ${address} tried to add claims to non-Custom GitPOAP ID ${gitPOAPId}`);
+      logger.warn(`Non-staff ${ethAddress} tried to add claims to non-Custom GitPOAP ID ${gitPOAPId}`);
       return res.status(401).send({ msg: 'Not authorized to create Claims' });
     }
   }
