@@ -8,12 +8,11 @@ export function createPrivyClient() {
 
 export type PrivyUserData = {
   privyUserId: string;
-  address: string | null;
+  ethAddress: string | null;
 };
 
 export async function verifyPrivyTokenForData(
   privyClient: PrivyClient,
-  userId: number,
   privyAuthToken: string,
 ): Promise<PrivyUserData | null> {
   const logger = createScopedLogger('verifyPrivyToken');
@@ -22,12 +21,21 @@ export async function verifyPrivyTokenForData(
     const verifiedClaims = await privyClient.verifyAuthToken(privyAuthToken);
     const userData = await privyClient.getUser(verifiedClaims.userId);
 
+    let ethAddress: string | null = null;
+    if (userData.wallet !== undefined) {
+      if (userData.wallet.chainType === 'ethereum') {
+        ethAddress = userData.wallet.address;
+      } else {
+        logger.warn("User's wallet is not an ETH wallet");
+      }
+    }
+
     return {
       privyUserId: verifiedClaims.userId,
-      address: userData.wallet?.address ?? null,
+      ethAddress,
     };
   } catch (err) {
-    logger.warn(`Privy failed to verify token for User ID ${userId}`);
+    logger.warn('Privy failed to verify token');
     return null;
   }
 }
