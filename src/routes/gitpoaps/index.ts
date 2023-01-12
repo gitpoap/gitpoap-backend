@@ -456,13 +456,15 @@ gitPOAPsRouter.put('/:gitPOAPId/claims', jwtWithAddress(), async (req, res) => {
     return res.status(404).send({ msg: "Request doesn't exist" });
   }
 
-  if (gitPOAP.type === GitPOAPType.CUSTOM) {
-    if (gitPOAP.creatorAddressId !== addressId) {
-      logger.warn(`Non-creator ${address} tried to add claims to Custom GitPOAP ID ${gitPOAPId}`);
-      return res.status(401).send({ msg: 'Not GitPOAP owner' });
-    }
-  } else {
-    if (!isAddressAStaffMember(address)) {
+  if (!isAddressAStaffMember(address)) {
+    if (gitPOAP.type === GitPOAPType.CUSTOM) {
+      if (gitPOAP.creatorAddressId !== addressId) {
+        logger.warn(
+          `Non-creator and non-staff ${address} tried to add claims to Custom GitPOAP ID ${gitPOAPId}`,
+        );
+        return res.status(401).send({ msg: 'Not GitPOAP owner' });
+      }
+    } else {
       logger.warn(`Non-staff ${address} tried to add claims to non-Custom GitPOAP ID ${gitPOAPId}`);
       return res.status(401).send({ msg: 'Not authorized to create Claims' });
     }
