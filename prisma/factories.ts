@@ -420,16 +420,13 @@ export class AddressFactory {
   static create = async (
     ethAddress: string,
     githubUserId?: number,
-    emailId?: number,
     ensName?: string,
   ): Promise<Address> => {
     const githubUser = githubUserId ? { connect: { id: githubUserId } } : undefined;
-    const email = emailId ? { connect: { id: emailId } } : undefined;
 
     const data: Prisma.AddressCreateInput = {
       ethAddress,
       githubUser,
-      email,
       ensName,
     };
     const addressResult = await prisma.address.create({ data });
@@ -440,20 +437,8 @@ export class AddressFactory {
 }
 
 export class EmailFactory {
-  static create = async (
-    emailAddress: string,
-    address?: Prisma.EmailCreateInput['address'],
-    activeToken?: string,
-    isValidated?: boolean,
-    tokenExpiresAt?: Date,
-  ): Promise<Email> => {
-    const data: Prisma.EmailCreateInput = {
-      emailAddress: emailAddress.toLowerCase(),
-      activeToken,
-      address,
-      isValidated,
-      tokenExpiresAt,
-    };
+  static create = async (emailAddress: string): Promise<Email> => {
+    const data: Prisma.EmailCreateInput = { emailAddress: emailAddress.toLowerCase() };
     const emailObj = await prisma.email.create({ data });
     logger.debug(`Creating email with id: ${emailObj.id}`);
 

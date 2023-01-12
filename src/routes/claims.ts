@@ -44,14 +44,19 @@ claimsRouter.post('/', jwtWithAddress(), async function (req, res) {
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
-  const {
-    addressId,
-    address: ethAddress,
-    ensName,
-    emailId,
-    githubId,
-  } = getAccessTokenPayload(req.user);
+  const { addressId, ethAddress, ensName, emailAddress, githubId } = getAccessTokenPayload(
+    req.user,
+  );
   const { claimIds } = schemaResult.data;
+
+  let emailId;
+  if (emailAddress !== null) {
+    const emailData = await context.prisma.email.findUnique({
+      where: { emailAddress },
+      select: { id: true },
+    });
+    emailId = emailData === null ? undefined : emailData.id;
+  }
 
   logger.info(`Request claiming IDs ${claimIds} for address ${ethAddress}`);
 
@@ -502,7 +507,7 @@ claimsRouter.post('/revalidate', jwtWithAddress(), async (req, res) => {
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
-  const { address, githubId, githubHandle } = getAccessTokenPayload(req.user);
+  const { ethAddress, githubId, githubHandle } = getAccessTokenPayload(req.user);
 
   logger.info(
     `Request to revalidate GitPOAP IDs ${req.body.claimIds} by GitHub user ${githubHandle}`,
@@ -538,10 +543,10 @@ claimsRouter.post('/revalidate', jwtWithAddress(), async (req, res) => {
     // If the claim address is not set to the user sending the request,
     // assume the user is correct and that perhaps we haven't seen the
     // transfer yet in our backend
-    if (claim.mintedAddress?.ethAddress !== address) {
+    if (claim.mintedAddress?.ethAddress !== ethAddress) {
       const newAddress = await checkIfClaimTransferred(claimId);
 
-      if (newAddress?.toLowerCase() !== address) {
+      if (newAddress?.toLowerCase() !== ethAddress) {
         invalidClaims.push({
           claimId,
           reason: 'Logged-in Address is not the current owner',
@@ -616,7 +621,7 @@ claimsRouter.delete('/:id', jwtWithAddress(), async (req, res) => {
     return res.status(200).send('DELETED');
   }
 
-  const { addressId, address } = getAccessTokenPayload(req.user);
+  const { addressId, ethAddress } = getAccessTokenPayload(req.user);
 
   if (claim.gitPOAP.type === GitPOAPType.CUSTOM) {
     // If the GitPOAP is CUSTOM ensure that requestor is it's creator
@@ -635,8 +640,8 @@ claimsRouter.delete('/:id', jwtWithAddress(), async (req, res) => {
     }
   } else {
     // Otherwise ensure that the requestor is a staff member
-    if (!isAddressAStaffMember(address)) {
-      logger.warn(`Non-staff address ${address} attempted to delete a Claim for a GitPOAP`);
+    if (!isAddressAStaffMember(ethAddress)) {
+      logger.warn(`Non-staff address ${ethAddress} attempted to delete a Claim for a GitPOAP`);
       return res.status(401).send({ msg: 'Not authorized to delete claims' });
     }
   }

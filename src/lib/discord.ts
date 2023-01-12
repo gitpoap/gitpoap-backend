@@ -25,14 +25,3 @@ export async function upsertDiscordUser(
     },
   });
 }
-
-export async function removeDiscordUsersDiscordOAuthToken(discordUserId: number) {
-  await context.prisma.discordUser.update({
-    where: {
-      id: discordUserId,
-    },
-    data: {
-      discordOAuthToken: null,
-    },
-  });
-}

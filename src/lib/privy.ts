@@ -4,7 +4,14 @@ import { createScopedLogger } from '../logging';
 import { upsertAddress } from './addresses';
 import { resolveAddress } from './ens';
 
-export async function verifyPrivyToken(privyAuthToken: string): Promise<number | null> {
+export type PrivyUserData = {
+  addressId: number;
+  ethAddress: string;
+  emailAddress: string | null;
+  discordHandle: string | null;
+};
+
+export async function verifyPrivyToken(privyAuthToken: string): Promise<PrivyUserData | null> {
   const logger = createScopedLogger('verifyPrivyToken');
 
   const privyUserData = await verifyPrivyTokenForData(context.privy, privyAuthToken);
@@ -26,5 +33,9 @@ export async function verifyPrivyToken(privyAuthToken: string): Promise<number |
   // Resolve the ENS name in the background
   void resolveAddress(privyUserData.ethAddress);
 
-  return address.id;
+  return {
+    ...privyUserData,
+    ethAddress: privyUserData.ethAddress, // TS is stupid here....
+    addressId: address.id,
+  };
 }

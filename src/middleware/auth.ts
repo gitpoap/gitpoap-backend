@@ -52,9 +52,6 @@ export function jwtWithAddress() {
       set(req, 'user.memberships', validatedAccessTokenPayload.memberships);
       set(req, 'user.githubId', validatedAccessTokenPayload.githubId);
       set(req, 'user.githubHandle', validatedAccessTokenPayload.githubHandle);
-      set(req, 'user.discordId', validatedAccessTokenPayload.discordId);
-      set(req, 'user.discordHandle', validatedAccessTokenPayload.discordHandle);
-      set(req, 'user.emailId', validatedAccessTokenPayload.emailId);
 
       next();
     };
@@ -78,10 +75,10 @@ export function jwtWithStaffAddress() {
         return;
       }
 
-      const { address } = getAccessTokenPayload(req.user);
+      const { ethAddress } = getAccessTokenPayload(req.user);
 
-      if (!isAddressAStaffMember(address)) {
-        logger.warn(`Non-staff user (Address: ${address}) attempted to use staff-only routes`);
+      if (!isAddressAStaffMember(ethAddress)) {
+        logger.warn(`Non-staff user (Address: ${ethAddress}) attempted to use staff-only routes`);
         next({ status: 401, msg: 'You are not privileged for this endpoint' });
         return;
       }
@@ -127,9 +124,6 @@ export function jwtWithGitHubOAuth() {
       set(req, 'user.ensName', validatedAccessTokenPayload.ensName);
       set(req, 'user.ensAvatarImageUrl', validatedAccessTokenPayload.ensAvatarImageUrl);
       set(req, 'user.memberships', validatedAccessTokenPayload.memberships);
-      set(req, 'user.discordId', validatedAccessTokenPayload.discordId);
-      set(req, 'user.discordHandle', validatedAccessTokenPayload.discordHandle);
-      set(req, 'user.emailId', validatedAccessTokenPayload.emailId);
 
       next();
     };
@@ -153,12 +147,10 @@ export function jwtWithStaffOAuth() {
         return;
       }
 
-      const { address, githubHandle } = getAccessTokenPayloadWithGithubOAuth(req.user);
+      const { ethAddress } = getAccessTokenPayloadWithGithubOAuth(req.user);
 
-      if (!isAddressAStaffMember(address)) {
-        logger.warn(
-          `Non-staff user (GitHub handle: ${githubHandle}) attempted to use staff-only routes`,
-        );
+      if (!isAddressAStaffMember(ethAddress)) {
+        logger.warn(`Non-staff user (Address: ${ethAddress}) attempted to use staff-only routes`);
         next({ status: 401, msg: 'You are not privileged for this endpoint' });
         return;
       }

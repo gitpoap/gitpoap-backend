@@ -33,7 +33,7 @@ export const authChecker: AuthChecker<AuthContext, AuthRoles> = (
   if (
     roles.some(v => v === AuthRoles.Staff) &&
     context.userAccessTokenPayload !== null &&
-    isAddressAStaffMember(context.userAccessTokenPayload.address)
+    isAddressAStaffMember(context.userAccessTokenPayload.ethAddress)
   ) {
     return true;
   }

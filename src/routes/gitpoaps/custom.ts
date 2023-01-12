@@ -389,11 +389,11 @@ customGitPOAPsRouter.patch(
       return res.status(404).send({ msg });
     }
 
-    const { address, addressId } = getAccessTokenPayload(req.user);
+    const { ethAddress, addressId } = getAccessTokenPayload(req.user);
 
-    if (gitPOAPRequest.addressId !== addressId && !isAddressAStaffMember(address)) {
+    if (gitPOAPRequest.addressId !== addressId && !isAddressAStaffMember(ethAddress)) {
       logger.warn(
-        `Non-staff address ${address} attempted to update a GitPOAPRequest (ID: ${gitPOAPRequestId}) that they do not own`,
+        `Non-staff address ${ethAddress} attempted to update a GitPOAPRequest (ID: ${gitPOAPRequestId}) that they do not own`,
       );
       return res.status(401).send({ msg: 'Not GitPOAPRequest creator' });
     }
