@@ -6,7 +6,7 @@ import {
   resolveENSAvatarInternal,
   resolveENSInternal,
 } from '../external/ens';
-import { getS3URL, s3configProfile, uploadFileFromURL } from '../external/s3';
+import { UploadFailureStatus, getS3URL, s3configProfile, uploadFileFromURL } from '../external/s3';
 import { SECONDS_PER_HOUR } from '../constants';
 import { upsertProfileForAddressId } from './profiles';
 import { captureException } from './sentry';
@@ -177,9 +177,16 @@ export async function resolveENSAvatar(
         true, // Make the image publicly accessible
       );
 
-      if (response === null) {
-        logger.error(`Failed to upload ENS Avatar for ${ensName} at "${avatarURL}" to s3 cache`);
-        return;
+      if ('error' in response) {
+        if (response.error === UploadFailureStatus.URLNotFound) {
+          logger.warn(`ENS Avatar image at ${avatarURL} for ${ensName} returned HTTP status 404`);
+          return;
+        } else {
+          logger.error(
+            `Failed to upload ENS Avatar for ${ensName} at "${avatarURL}" to s3 cache for reason ${response.error}`,
+          );
+          return;
+        }
       }
 
       avatarURL = getS3URL(s3configProfile.buckets.ensAvatarCache, addressLower);
