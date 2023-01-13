@@ -49,7 +49,7 @@ function mockJwtWithOAuth() {
       email: null,
       githubUser: {
         githubId: 23,
-        githubHandle: 'yo',
+        githubHandle,
         githubOAuthToken,
       },
       discordUser: {
@@ -163,11 +163,10 @@ describe('POST /projects/add-repos', () => {
       select: { id: true },
     });
     expect(mockedCreateRepoByGithubId).toHaveBeenCalledTimes(1);
-    expect(mockedCreateRepoByGithubId).toHaveBeenCalledWith(
-      githubRepoIds[0],
-      projectId,
-      githubOAuthToken,
-    );
+    expect(mockedCreateRepoByGithubId).toHaveBeenCalledWith(githubRepoIds[0], projectId, {
+      requestorGithubHandle: githubHandle,
+      githubToken: githubOAuthToken,
+    });
   });
 
   it('Adds valid repos to valid project with staff JWT', async () => {
@@ -198,11 +197,10 @@ describe('POST /projects/add-repos', () => {
       select: { id: true },
     });
     expect(mockedCreateRepoByGithubId).toHaveBeenCalledTimes(1);
-    expect(mockedCreateRepoByGithubId).toHaveBeenCalledWith(
-      githubRepoIds[0],
-      projectId,
-      githubOAuthToken,
-    );
+    expect(mockedCreateRepoByGithubId).toHaveBeenCalledWith(githubRepoIds[0], projectId, {
+      requestorGithubHandle: githubHandle,
+      githubToken: githubOAuthToken,
+    });
     expect(mockedBackloadGithubPullRequestData).toHaveBeenCalledTimes(1);
     expect(mockedBackloadGithubPullRequestData).toHaveBeenCalledWith(repoId);
   });
