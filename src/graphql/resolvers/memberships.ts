@@ -335,11 +335,12 @@ export class CustomMembershipResolver {
       },
     });
 
-    if (
-      (userMembership === null || userMembership.role === MembershipRole.MEMBER) &&
-      membership.acceptanceStatus === MembershipAcceptanceStatus.PENDING &&
-      userAccessTokenPayload.address.toLowerCase() !== membership.address.ethAddress.toLowerCase()
-    ) {
+    const isAdmin = userMembership?.role === MembershipRole.MEMBER;
+    const isMembershipOwner =
+      userAccessTokenPayload.address.toLowerCase() !== membership.address.ethAddress.toLowerCase();
+    const isPending = membership.acceptanceStatus === MembershipAcceptanceStatus.PENDING;
+
+    if ((userMembership === null || isAdmin) && isPending && isMembershipOwner) {
       logger.warn('Not the team owner nor invited member');
       throw new Error(MembershipErrorMessage.NOT_AUTHORIZED);
     }
