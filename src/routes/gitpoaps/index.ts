@@ -62,7 +62,7 @@ gitPOAPsRouter.post(
       return res.status(400).send({ msg });
     }
 
-    const { githubOAuthToken } = getAccessTokenPayloadWithGithubOAuth(req.user);
+    const { githubHandle, githubOAuthToken } = getAccessTokenPayloadWithGithubOAuth(req.user);
 
     const canRequestMoreCodes = schemaResult.data.isOngoing === 'true';
 
@@ -105,15 +105,19 @@ gitPOAPsRouter.post(
       logger.info(
         `Request to create a new GitPOAP "${name}" for year ${year} in Project with Github Repo IDs: ${projectChoice.githubRepoIds}`,
       );
+      const githubCredentials = {
+        requestorGithubHandle: githubHandle,
+        githubToken: githubOAuthToken,
+      };
       if (projectChoice.githubRepoIds.length === 1) {
         project = await getOrCreateProjectWithGithubRepoId(
           projectChoice.githubRepoIds[0],
-          githubOAuthToken,
+          githubCredentials,
         );
       } else {
         project = await createProjectWithGithubRepoIds(
           projectChoice.githubRepoIds,
-          githubOAuthToken,
+          githubCredentials,
         );
       }
     }
