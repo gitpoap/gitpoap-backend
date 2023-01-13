@@ -20,7 +20,7 @@ projectsRouter.post('/add-repos', jwtWithStaffOAuth(), async (req, res) => {
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
-  const { githubOAuthToken } = getAccessTokenPayloadWithGithubOAuth(req.user);
+  const { githubHandle, githubOAuthToken } = getAccessTokenPayloadWithGithubOAuth(req.user);
 
   logger.info(
     `Request to add GitHub Repo IDs ${req.body.githubRepoIds} to Project ID ${req.body.projectId}`,
@@ -43,7 +43,10 @@ projectsRouter.post('/add-repos', jwtWithStaffOAuth(), async (req, res) => {
   const addedIds: number[] = [];
   const failures: number[] = [];
   for (const githubRepoId of req.body.githubRepoIds) {
-    const repo = await createRepoByGithubId(githubRepoId, project.id, githubOAuthToken);
+    const repo = await createRepoByGithubId(githubRepoId, project.id, {
+      requestorGithubHandle: githubHandle,
+      githubToken: githubOAuthToken,
+    });
     if (repo === null) {
       failures.push(githubRepoId);
     } else {
