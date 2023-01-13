@@ -219,13 +219,6 @@ export class CustomMembershipResolver {
       throw new Error(MembershipErrorMessage.TEAM_NOT_FOUND);
     }
 
-    if (
-      team.ownerAddress.ethAddress.toLowerCase() !== userAccessTokenPayload.address.toLowerCase()
-    ) {
-      logger.warn('Not the team owner');
-      throw new Error(MembershipErrorMessage.NOT_AUTHORIZED);
-    }
-
     const addressRecord = await prisma.address.findUnique({
       where: {
         ethAddress: address.toLowerCase(),
@@ -238,6 +231,20 @@ export class CustomMembershipResolver {
     if (addressRecord === null) {
       logger.warn(`Address not found for address: ${address}`);
       throw new Error(MembershipErrorMessage.ADDRESS_NOT_FOUND);
+    }
+
+    const userMembership = await prisma.membership.findUnique({
+      where: {
+        teamId_addressId: {
+          addressId: userAccessTokenPayload.addressId,
+          teamId,
+        },
+      },
+    });
+
+    if (userMembership === null || userMembership.role === MembershipRole.MEMBER) {
+      logger.warn('Not the team admin');
+      throw new Error(MembershipErrorMessage.NOT_AUTHORIZED);
     }
 
     const membershipRecord = await prisma.membership.findUnique({
@@ -302,6 +309,7 @@ export class CustomMembershipResolver {
         team: {
           select: {
             ownerAddress: true,
+            id: true,
           },
         },
         address: {
@@ -317,10 +325,17 @@ export class CustomMembershipResolver {
       logger.warn(`Membership not found for membershipId: ${membershipId}`);
       throw new Error(MembershipErrorMessage.MEMBERSHIP_NOT_FOUND);
     }
+    const userMembership = await prisma.membership.findUnique({
+      where: {
+        teamId_addressId: {
+          addressId: userAccessTokenPayload.addressId,
+          teamId: membership.team.id,
+        },
+      },
+    });
 
     if (
-      membership.team.ownerAddress.ethAddress.toLowerCase() !==
-        userAccessTokenPayload.address.toLowerCase() &&
+      (userMembership === null || userMembership.role === MembershipRole.MEMBER) &&
       membership.acceptanceStatus === MembershipAcceptanceStatus.PENDING &&
       userAccessTokenPayload.address.toLowerCase() !== membership.address.ethAddress.toLowerCase()
     ) {
