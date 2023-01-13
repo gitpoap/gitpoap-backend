@@ -2,17 +2,18 @@ import { Project } from '@generated/type-graphql';
 import { context } from '../context';
 import { createScopedLogger } from '../logging';
 import { createRepoByGithubId } from './repos';
+import { GithubCredentials } from '../external/github';
 
 export async function createProjectWithGithubRepoIds(
   githubRepoIds: number[],
-  githubOAuthToken: string,
+  githubCredentials: GithubCredentials,
 ): Promise<Project | null> {
   const logger = createScopedLogger('createProjectWithGithubRepoIds');
 
   const project = await context.prisma.project.create({ data: {} });
 
   for (const id of githubRepoIds) {
-    const repo = await createRepoByGithubId(id, project.id, githubOAuthToken);
+    const repo = await createRepoByGithubId(id, project.id, githubCredentials);
     if (repo === null) {
       // Rollback the project
       logger.warn(
@@ -40,7 +41,7 @@ export async function createProjectWithGithubRepoIds(
 
 export async function getOrCreateProjectWithGithubRepoId(
   githubRepoId: number,
-  githubOAuthToken: string,
+  githubCredentials: GithubCredentials,
 ): Promise<Project | null> {
   const logger = createScopedLogger('getOrCreateProjectWithGithubRepoId');
 
@@ -61,5 +62,5 @@ export async function getOrCreateProjectWithGithubRepoId(
   }
   logger.debug(`No repo found for GitHub repository ID ${githubRepoId}. Attempting to create.`);
 
-  return await createProjectWithGithubRepoIds([githubRepoId], githubOAuthToken);
+  return await createProjectWithGithubRepoIds([githubRepoId], githubCredentials);
 }
