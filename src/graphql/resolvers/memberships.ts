@@ -325,6 +325,7 @@ export class CustomMembershipResolver {
       logger.warn(`Membership not found for membershipId: ${membershipId}`);
       throw new Error(MembershipErrorMessage.MEMBERSHIP_NOT_FOUND);
     }
+
     const userMembership = await prisma.membership.findUnique({
       where: {
         teamId_addressId: {
