@@ -220,7 +220,7 @@ claimsRouter.post('/create', jwtWithStaffOAuth(), async function (req, res) {
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
-  const { githubOAuthToken } = getAccessTokenPayloadWithGithubOAuth(req.user);
+  const { githubHandle, githubOAuthToken } = getAccessTokenPayloadWithGithubOAuth(req.user);
 
   logger.info(
     `Request to create ${req.body.recipientGithubIds.length} claims for GitPOAP Id: ${req.body.gitPOAPId}`,
@@ -259,7 +259,10 @@ claimsRouter.post('/create', jwtWithStaffOAuth(), async function (req, res) {
 
   const notFound = [];
   for (const githubId of req.body.recipientGithubIds) {
-    const githubUserInfo = await getGithubUserById(githubId, githubOAuthToken);
+    const githubUserInfo = await getGithubUserById(githubId, {
+      requestorGithubHandle: githubHandle,
+      githubToken: githubOAuthToken,
+    });
     if (githubUserInfo === null) {
       logger.warn(`GitHub ID ${githubId} not found!`);
       notFound.push(githubId);
