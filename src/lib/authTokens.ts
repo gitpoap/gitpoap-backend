@@ -260,11 +260,15 @@ export async function generateNewAuthTokens(addressId: number): Promise<UserAuth
 }
 
 export async function deleteAuthToken(authTokenId: number) {
-  await context.prisma.authToken.delete({
-    where: {
-      id: authTokenId,
-    },
-  });
+  const logger = createScopedLogger('deleteAuthToken');
+
+  try {
+    await context.prisma.authToken.delete({
+      where: { id: authTokenId },
+    });
+  } catch (err) {
+    logger.warn(`AuthToken ID ${authTokenId} is already deleted: ${err}`);
+  }
 }
 
 export async function updateAuthTokenGeneration(authTokenId: number) {
