@@ -71,44 +71,56 @@ export const uploadMulterFile = async (
   return await uploadFileBuffer(bucket, key, file.mimetype, file.buffer, isPublic);
 };
 
+export enum UploadFailureStatus {
+  DataURL,
+  URLNotFound,
+  BadServerResponse,
+  FetchThrows,
+  EmptyResponseBody,
+  NoContentType,
+}
+
 export const uploadFileFromURL = async (
   url: string,
   bucket: string,
   key: string,
   isPublic?: boolean,
-): Promise<PutObjectCommandOutput | null> => {
+): Promise<{ result: PutObjectCommandOutput } | { error: UploadFailureStatus }> => {
   const logger = createScopedLogger('uploadFileFromURL');
 
   // Skip data URLs
   if (url.startsWith('data:')) {
     logger.warn('Attempted to upload file with "data:*" URL');
-    return null;
+    return { error: UploadFailureStatus.DataURL };
   } else {
     let response;
     try {
       response = await fetch(url);
 
-      if (response.status >= 400) {
+      if (response.status === 404) {
+        logger.warn(`File URL ${url} not found on external server`);
+        return { error: UploadFailureStatus.URLNotFound };
+      } else if (response.status >= 400) {
         logger.error(
           `Failed to fetch file "${url}" [status: ${response.status}]: ${await response.text()}`,
         );
-        return null;
+        return { error: UploadFailureStatus.BadServerResponse };
       }
     } catch (err) {
       logger.error(`Error while fetching file "${url}": ${err}`);
-      return null;
+      return { error: UploadFailureStatus.FetchThrows };
     }
 
     if (response.body === null) {
       logger.warn(`The file at "${url}" has no body`);
-      return null;
+      return { error: UploadFailureStatus.EmptyResponseBody };
     }
 
     const headerContentType = response.headers.get('content-type');
 
     if (headerContentType === null) {
       logger.warn(`The file at "${url}" has no Content-Type set`);
-      return null;
+      return { error: UploadFailureStatus.NoContentType };
     }
 
     const params: PutObjectCommandInput = {
@@ -119,7 +131,7 @@ export const uploadFileFromURL = async (
       ACL: isPublic ? 'public-read' : undefined,
     };
 
-    return await s3.send(new PutObjectCommand(params));
+    return { result: await s3.send(new PutObjectCommand(params)) };
   }
 };
 
