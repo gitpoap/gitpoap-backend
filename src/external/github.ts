@@ -117,7 +117,7 @@ export async function getGithubCurrentUserInfo(githubToken: string) {
 
 export async function getGithubUser(githubHandle: string, githubCredentials: GithubCredentials) {
   return await responseHandler<OctokitResponseData<UsersAPI['getByUsername']>>(
-    'getGithubUser',
+    `getGithubUser(${githubHandle})`,
     githubCredentials.requestorGithubHandle,
     getOAuthUserOctokit(githubCredentials.githubToken).rest.users.getByUsername({
       username: githubHandle,
@@ -127,7 +127,7 @@ export async function getGithubUser(githubHandle: string, githubCredentials: Git
 
 export async function getGithubUserAsApp(githubHandle: string) {
   return await responseHandler<OctokitResponseData<UsersAPI['getByUsername']>>(
-    'getGithubUserAsApp',
+    `getGithubUserAsApp(${githubHandle})`,
     '[APP]',
     getOAuthAppOctokit().rest.users.getByUsername({
       username: githubHandle,
@@ -137,7 +137,7 @@ export async function getGithubUserAsApp(githubHandle: string) {
 
 export async function getGithubUserById(githubId: number, githubCredentials: GithubCredentials) {
   return await responseHandler<OctokitResponseData<UsersAPI['getByUsername']>>(
-    'getGithubUserById',
+    `getGithubUserById(${githubId})`,
     githubCredentials.requestorGithubHandle,
     getOAuthUserOctokit(githubCredentials.githubToken).request('GET /user/{githubId}', {
       githubId,
@@ -147,7 +147,7 @@ export async function getGithubUserById(githubId: number, githubCredentials: Git
 
 export async function getGithubUserByIdAsApp(githubId: number) {
   return await responseHandler<OctokitResponseData<UsersAPI['getByUsername']>>(
-    'getGithubUserByIdAsApp',
+    `getGithubUserByIdAsApp${githubId})`,
     '[APP]',
     getOAuthAppOctokit().request('GET /user/{githubId}', {
       githubId,
@@ -161,7 +161,7 @@ export async function getGithubRepository(
   githubCredentials: GithubCredentials,
 ) {
   return await responseHandler<OctokitRepoItem>(
-    'getGithubRepository',
+    `getGithubRepository(${organization}/${name})`,
     githubCredentials.requestorGithubHandle,
     getOAuthUserOctokit(githubCredentials.githubToken).rest.repos.get({
       owner: organization,
@@ -175,7 +175,7 @@ export async function getGithubRepositoryById(
   githubCredentials: GithubCredentials,
 ) {
   return await responseHandler<OctokitRepoItem>(
-    'getGithubRepositoryById',
+    `getGithubRepositoryById(${repoId})`,
     githubCredentials.requestorGithubHandle,
     getOAuthUserOctokit(githubCredentials.githubToken).request('GET /repositories/{repoId}', {
       repoId,
@@ -185,7 +185,7 @@ export async function getGithubRepositoryById(
 
 async function getGithubRepositoryByIdAsApp(repoId: number) {
   return await responseHandler<OctokitRepoItem>(
-    'getGithubRepositoryByIdAsApp',
+    `getGithubRepositoryByIdAsApp(${repoId})`,
     '[APP]',
     getOAuthAppOctokit().request('GET /repositories/{repoId}', {
       repoId,
@@ -260,7 +260,7 @@ export async function getGithubOrganizationAdmins(
     return [{ login: organization }];
   } else {
     return await responseHandler<OctokitResponseData<OrgsAPI['listMembers']>>(
-      'getGithubOrganizationAdmins',
+      `getGithubOrganizationAdmins(${organization})`,
       githubCredentials.requestorGithubHandle,
       getOAuthUserOctokit(githubCredentials.githubToken).rest.orgs.listMembers({
         org: organization,
@@ -280,7 +280,7 @@ export async function getGithubRepositoryPullsAsApp(
 ) {
   return (
     (await responseHandler<OctokitPullList>(
-      'getGithubRepositoryPullsAsApp',
+      `getGithubRepositoryPullsAsApp(${org}/${repo}, page: ${page}, perPage: ${perPage}, direction: ${direction})`,
       '[APP]',
       getOAuthAppOctokit().rest.pulls.list({
         owner: org,
@@ -302,7 +302,7 @@ export async function getSingleGithubRepositoryPullAsApp(
   pullRequestNumber: number,
 ) {
   return await responseHandler<OctokitPullItem>(
-    'getSingleGithubRepositoryPullAsApp',
+    `getSingleGithubRepositoryPullAsApp(${org}/${repo}, number: ${pullRequestNumber})`,
     '[APP]',
     getOAuthAppOctokit().rest.pulls.get({
       owner: org,
@@ -318,7 +318,7 @@ export async function getSingleGithubRepositoryIssueAsApp(
   issueNumber: number,
 ) {
   return await responseHandler<OctokitResponseData<IssuesAPI['get']>>(
-    'getSingleGithubRepositoryIssueAsApp',
+    `getSingleGithubRepositoryIssueAsApp(${org}/${repo}, number: ${issueNumber})`,
     '[APP]',
     getOAuthAppOctokit().rest.issues.get({
       owner: org,
