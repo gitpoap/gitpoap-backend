@@ -214,7 +214,7 @@ emailRouter.post('/verify/:activeToken', async function (req, res) {
     },
   });
   if (email === null) {
-    logger.error(`Invalid email validation token provided: ${activeToken}`);
+    logger.warn(`Invalid email validation token provided: ${activeToken}`);
     return res.status(404).send({ msg: 'INVALID' });
   }
 
