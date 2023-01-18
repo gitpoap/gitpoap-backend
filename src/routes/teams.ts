@@ -137,7 +137,7 @@ teamsRouter.patch(
 
     logger.debug(`Completed request to change the logo for Team ID ${teamId}`);
 
-    return res.status(200).send('UPDATED');
+    return res.status(200).send({ msg: 'UPDATED' });
   },
 );
 
