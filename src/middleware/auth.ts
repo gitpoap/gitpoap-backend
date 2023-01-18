@@ -1,6 +1,10 @@
 import jwt from 'express-jwt';
 import set from 'lodash/set';
-import { getAccessTokenPayload, getAccessTokenPayloadWithGithubOAuth } from '../types/authTokens';
+import {
+  AccessTokenPayload,
+  getAccessTokenPayload,
+  getAccessTokenPayloadWithGithubOAuth,
+} from '../types/authTokens';
 import { RequestHandler } from 'express';
 import { JWT_SECRET } from '../environment';
 import { createScopedLogger } from '../logging';
@@ -9,16 +13,16 @@ import { getGithubAuthenticatedApp } from '../external/github';
 import { captureException } from '../lib/sentry';
 import { isAddressAStaffMember } from '../lib/staff';
 import { getValidatedAccessTokenPayload } from '../lib/authTokens';
+import { removeGithubUsersLogin } from '../lib/githubUsers';
+import { context } from '../context';
 
 export const jwtMiddleware = jwt({ secret: JWT_SECRET as string, algorithms: ['HS256'] });
 
-function safelyGetAddressId(payload: any): number | null {
-  const logger = createScopedLogger('safelyGetAddressId');
+function safelyGetAccessTokenPayload(payload: any): AccessTokenPayload | null {
+  const logger = createScopedLogger('safelyGetAccessTokenPayload');
 
   try {
-    const { addressId } = getAccessTokenPayload(payload);
-
-    return addressId;
+    return getAccessTokenPayload(payload);
   } catch (err) {
     logger.warn(`Got a malformed AuthToken in middleware: ${err}`);
 
@@ -34,13 +38,16 @@ export function jwtWithAddress() {
         return;
       }
 
-      const addressId = safelyGetAddressId(req.user);
-      if (addressId === null) {
+      const accessTokenPayload = safelyGetAccessTokenPayload(req.user);
+      if (accessTokenPayload === null) {
         next({ status: 400, msg: 'Malformed Access Token' });
         return;
       }
 
-      const validatedAccessTokenPayload = await getValidatedAccessTokenPayload(addressId);
+      const validatedAccessTokenPayload = await getValidatedAccessTokenPayload(
+        accessTokenPayload.privyUserId,
+        accessTokenPayload.addressId,
+      );
       if (validatedAccessTokenPayload === null) {
         next({ status: 401, msg: 'Not logged in with address' });
         return;
@@ -50,8 +57,6 @@ export function jwtWithAddress() {
       set(req, 'user.ensName', validatedAccessTokenPayload.ensName);
       set(req, 'user.ensAvatarImageUrl', validatedAccessTokenPayload.ensAvatarImageUrl);
       set(req, 'user.memberships', validatedAccessTokenPayload.memberships);
-      set(req, 'user.githubId', validatedAccessTokenPayload.githubId);
-      set(req, 'user.githubHandle', validatedAccessTokenPayload.githubHandle);
 
       next();
     };
@@ -93,6 +98,8 @@ export function jwtWithStaffAddress() {
 }
 
 export function jwtWithGitHubOAuth() {
+  const logger = createScopedLogger('jwtWithGithubOAuth');
+
   const middleware: RequestHandler = async (req, res, next) => {
     const callback = async () => {
       if (!req.user) {
@@ -100,25 +107,39 @@ export function jwtWithGitHubOAuth() {
         return;
       }
 
-      const addressId = safelyGetAddressId(req.user);
-      if (addressId === null) {
+      const accessTokenPayload = safelyGetAccessTokenPayload(req.user);
+      if (accessTokenPayload === null) {
         next({ status: 400, msg: 'Malformed Access Token' });
         return;
       }
 
-      const validatedAccessTokenPayload = await getValidatedAccessTokenPayload(addressId);
+      const validatedAccessTokenPayload = await getValidatedAccessTokenPayload(
+        accessTokenPayload.privyUserId,
+        accessTokenPayload.addressId,
+      );
       if (validatedAccessTokenPayload === null) {
         next({ status: 401, msg: 'Not logged in with address' });
         return;
       }
-      if (validatedAccessTokenPayload.githubOAuthToken === null) {
+
+      const githubUser = await context.prisma.githubUser.findUnique({
+        where: { privyUserId: accessTokenPayload.privyUserId },
+        select: { githubOAuthToken: true },
+      });
+      if (githubUser === null) {
+        next({ status: 401, msg: 'Not logged into GitHub' });
+        return;
+      }
+      if (githubUser.githubOAuthToken === null) {
+        logger.error(
+          `GithubUser githubId ${accessTokenPayload.githubId} has privyUserId set but not githubOAuthToken`,
+        );
+        await removeGithubUsersLogin(accessTokenPayload.privyUserId);
         next({ status: 401, msg: 'Not logged into GitHub' });
         return;
       }
 
-      set(req, 'user.githubId', validatedAccessTokenPayload.githubId);
-      set(req, 'user.githubHandle', validatedAccessTokenPayload.githubHandle);
-      set(req, 'user.githubOAuthToken', validatedAccessTokenPayload.githubOAuthToken);
+      set(req, 'user.githubOAuthToken', githubUser.githubOAuthToken);
 
       // Update the nullable values in case they've updated in the DB
       set(req, 'user.ensName', validatedAccessTokenPayload.ensName);

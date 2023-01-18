@@ -337,11 +337,7 @@ export async function getGithubAuthenticatedApp(jwtToken: string) {
 }
 
 /* -- Token Utils -- */
-export async function isGithubTokenValidForUser(githubToken: string | null, githubId: number) {
-  if (githubToken === null) {
-    return false;
-  }
-
+export async function isGithubTokenValidForUser(githubToken: string, githubId: number) {
   const githubUser = await getGithubCurrentUserInfo(githubToken);
 
   return githubUser !== null && githubUser.id === githubId;

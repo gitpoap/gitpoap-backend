@@ -14,6 +14,7 @@ export type Memberships = {
 }[];
 
 type AccessTokenPayloadBase = {
+  privyUserId: string;
   addressId: number;
   ethAddress: string;
   ensName: string | null;
@@ -32,6 +33,8 @@ function isAccessTokenPayloadBase(payload: any): boolean {
     !(
       payload &&
       typeof payload === 'object' &&
+      'privyUserId' in payload &&
+      typeof payload.privyUserId === 'string' &&
       'addressId' in payload &&
       typeof payload.addressId === 'number' &&
       'ethAddress' in payload &&

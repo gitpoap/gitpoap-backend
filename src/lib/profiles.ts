@@ -24,13 +24,7 @@ export async function upsertProfile(address: string, ensName?: string | null) {
           connect: { id: addressResult.id },
         },
       },
-      include: {
-        address: {
-          include: {
-            githubUser: true,
-          },
-        },
-      },
+      include: { address: true },
     });
   } catch (err) {
     logger.warn(`Failed to upsert profile for Address ID ${addressResult.id}: ${err}`);
@@ -38,13 +32,7 @@ export async function upsertProfile(address: string, ensName?: string | null) {
     // Return the record (which we assume to exist) if the upsert fails
     return await context.prisma.profile.findUnique({
       where: { addressId: addressResult.id },
-      include: {
-        address: {
-          include: {
-            githubUser: true,
-          },
-        },
-      },
+      include: { address: true },
     });
   }
 }

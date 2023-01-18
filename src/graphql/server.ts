@@ -41,7 +41,10 @@ export async function setupGQLContext(req: any) {
   if (userAccessToken !== null) {
     try {
       const basePayload = getAccessTokenPayload(verify(userAccessToken, JWT_SECRET));
-      const validatedPayload = await getValidatedAccessTokenPayload(basePayload.addressId);
+      const validatedPayload = await getValidatedAccessTokenPayload(
+        basePayload.privyUserId,
+        basePayload.addressId,
+      );
       if (validatedPayload !== null) {
         userAccessTokenPayload = { ...basePayload, ...validatedPayload };
       } else {

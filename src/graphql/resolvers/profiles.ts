@@ -117,9 +117,6 @@ export class CustomProfileResolver {
           select: {
             ensName: true,
             ensAvatarImageUrl: true,
-            githubUser: {
-              select: { githubHandle: true },
-            },
           },
         },
       },
@@ -174,7 +171,6 @@ export class CustomProfileResolver {
       address: resolvedAddress,
       ensName: result.address.ensName,
       ensAvatarImageUrl: result.address.ensAvatarImageUrl,
-      githubHandle: result.address.githubUser?.githubHandle ?? result.githubHandle,
     };
   }
 

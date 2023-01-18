@@ -24,6 +24,9 @@ model GithubUser {
   githubHandle       String              @db.VarChar(255)
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
+  // Hide githubUser.privyUserId from generated resolvers
+  /// @TypeGraphQL.omit(output: true, input: true)
+  privyUserId        String?             @unique
   claims             Claim[]
   // Hide githubUser.githubOAuthToken from generated resolvers
   /// @TypeGraphQL.omit(output: true, input: true)
@@ -69,8 +72,6 @@ model Address {
   ethAddress        String           @unique @db.VarChar(255)
   createdAt         DateTime         @default(now())
   updatedAt         DateTime         @updatedAt
-  githubUserId      Int?
-  githubUser        GithubUser?      @relation(fields: [githubUserId], references: [id])
   ensAvatarImageUrl String?
   ensName           String?          @db.VarChar(255)
   memberships       Membership[]
@@ -80,6 +81,8 @@ model Address {
   gitPOAPRequests   GitPOAPRequest[]
   createdGitPOAPs   GitPOAP[]
   teams             Team[]
+  GithubUser        GithubUser?      @relation(fields: [githubUserId], references: [id])
+  githubUserId      Int?
 
   @@index([ethAddress])
 }
