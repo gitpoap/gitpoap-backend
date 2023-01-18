@@ -97,43 +97,29 @@ const claim: ClaimData = {
     threshold: 1,
   },
 };
+const privyUserId = 'come and claim it';
 const addressId = 2342222;
 const address = ADDRESSES.vitalik;
-const authTokenId = 2;
-const authTokenGeneration = 32;
 const ensName = null;
 const ensAvatarImageUrl = null;
 const githubId = 3333;
 const githubHandle = 'burzadillo';
-const discordId = '7777';
 const discordHandle = 'test#2324';
-const emailId = 2342;
+const emailAddress = 'hi-there@gmail.com';
 const redeemCodeId = 942;
 const redeemCode = '4433';
 
 function mockJwtWithAddress() {
-  contextMock.prisma.authToken.findUnique.mockResolvedValue({
-    id: authTokenId,
-    address: {
-      ensName,
-      ensAvatarImageUrl,
-      githubUser: {
-        githubId,
-        githubHandle,
-      },
-      email: {
-        id: emailId,
-        isValidated: true,
-      },
-      memberships: [],
-    },
+  contextMock.prisma.address.findUnique.mockResolvedValue({
+    ensName,
+    ensAvatarImageUrl,
+    memberships: [],
   } as any);
 }
 
 function genAuthTokens(someAddress?: string) {
   return generateAuthTokens(
-    authTokenId,
-    authTokenGeneration,
+    privyUserId,
     addressId,
     someAddress ?? address,
     ensName,
@@ -141,9 +127,8 @@ function genAuthTokens(someAddress?: string) {
     [],
     githubId,
     githubHandle,
-    discordId,
     discordHandle,
-    emailId,
+    emailAddress,
   );
 }
 
@@ -897,7 +882,7 @@ describe('POST /claims', () => {
 
     contextMock.prisma.claim.findUnique.mockResolvedValueOnce({
       ...claimBase,
-      emailId: emailId + 1,
+      emailAddress: emailAddress + '1',
     } as any);
     await runTest();
 
@@ -913,7 +898,7 @@ describe('POST /claims', () => {
     contextMock.prisma.claim.findUnique.mockResolvedValue({
       status: ClaimStatus.UNCLAIMED,
       gitPOAP,
-      emailId,
+      emailAddress: emailAddress + '1',
     } as any);
     mockedChooseUnusedRedeemCode.mockResolvedValue(null);
 
@@ -950,7 +935,7 @@ describe('POST /claims', () => {
     contextMock.prisma.claim.findUnique.mockResolvedValue({
       status: ClaimStatus.UNCLAIMED,
       gitPOAP,
-      emailId,
+      emailAddress: emailAddress + '1',
     } as any);
     mockedChooseUnusedRedeemCode.mockResolvedValue({
       id: redeemCodeId,
@@ -1015,7 +1000,7 @@ describe('POST /claims', () => {
           gitPOAPId,
           gitPOAPName,
           githubHandle: null,
-          emailId,
+          emailAddress,
           mintedAddress: address,
           poapEventId,
         },
@@ -1051,7 +1036,7 @@ describe('POST /claims', () => {
     contextMock.prisma.claim.findUnique.mockResolvedValue({
       status: ClaimStatus.UNCLAIMED,
       gitPOAP,
-      emailId,
+      emailAddress,
     } as any);
     mockedChooseUnusedRedeemCode.mockResolvedValue({
       id: redeemCodeId,
@@ -1118,7 +1103,7 @@ describe('POST /claims', () => {
     contextMock.prisma.claim.findUnique.mockResolvedValueOnce({
       status: ClaimStatus.UNCLAIMED,
       gitPOAP,
-      emailId,
+      emailAddress,
     } as any);
     mockedChooseUnusedRedeemCode.mockResolvedValue({
       id: redeemCodeId,
