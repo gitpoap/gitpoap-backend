@@ -4,6 +4,7 @@ import { createScopedLogger } from '../logging';
 export async function upsertGithubUser(
   githubId: number,
   githubHandle: string,
+  privyUserId?: string,
   githubOAuthToken?: string,
 ) {
   const logger = createScopedLogger('upsertGithubUser');
@@ -11,27 +12,26 @@ export async function upsertGithubUser(
   logger.info(`Attempting to upsert GitHub user ${githubHandle}`);
 
   return await context.prisma.githubUser.upsert({
-    where: {
-      githubId,
-    },
+    where: { githubId },
     update: {
       githubHandle,
+      privyUserId,
       githubOAuthToken,
     },
     create: {
       githubId,
       githubHandle,
+      privyUserId,
       githubOAuthToken,
     },
   });
 }
 
-export async function removeGithubUsersGithubOAuthToken(githubUserId: number) {
+export async function removeGithubUsersLogin(privyUserId: string) {
   await context.prisma.githubUser.update({
-    where: {
-      id: githubUserId,
-    },
+    where: { privyUserId },
     data: {
+      privyUserId: null,
       githubOAuthToken: null,
     },
   });

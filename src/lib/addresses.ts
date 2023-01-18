@@ -33,32 +33,6 @@ export async function upsertAddress(
   }
 }
 
-export async function removeGithubLoginForAddress(addressId: number) {
-  await context.prisma.address.update({
-    where: {
-      id: addressId,
-    },
-    data: {
-      githubUserId: null,
-    },
-  });
-}
-
-export const addGithubLoginForAddress = async (addressId: number, githubUserId: number) => {
-  await context.prisma.address.update({
-    where: {
-      id: addressId,
-    },
-    data: {
-      githubUser: {
-        connect: {
-          id: githubUserId,
-        },
-      },
-    },
-  });
-};
-
 /* Shorten version of the input address ~ 0x + 4 chars @ start + end */
 export function shortenAddress(address: string, chars = 4): string {
   return `${address.substring(0, chars + 2)}...${address.substring(42 - chars)}`;

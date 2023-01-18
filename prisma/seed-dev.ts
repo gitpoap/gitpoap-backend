@@ -54,14 +54,14 @@ export const seed = async () => {
   const validatedEmail = await EmailFactory.create('validated@gitpoap.io');
 
   /* Create Address */
-  const addressJay = await AddressFactory.create(ADDRESSES.jay, jay.id);
-  const addressBurz = await AddressFactory.create(ADDRESSES.burz, burz.id);
-  const addressBurz2 = await AddressFactory.create(ADDRESSES.burz2, burz2.id);
-  const addressColfax = await AddressFactory.create(ADDRESSES.colfax, colfax.id);
-  const addressVitalik = await AddressFactory.create(ADDRESSES.vitalik, vitalik.id);
-  const addressAldo = await AddressFactory.create(ADDRESSES.aldo, aldo.id);
-  const addressTyler = await AddressFactory.create(ADDRESSES.tyler, tyler.id);
-  const addressKayleen = await AddressFactory.create(ADDRESSES.kayleen, kayleen.id);
+  const addressJay = await AddressFactory.create(ADDRESSES.jay);
+  const addressBurz = await AddressFactory.create(ADDRESSES.burz);
+  const addressBurz2 = await AddressFactory.create(ADDRESSES.burz2);
+  const addressColfax = await AddressFactory.create(ADDRESSES.colfax);
+  const addressVitalik = await AddressFactory.create(ADDRESSES.vitalik);
+  const addressAldo = await AddressFactory.create(ADDRESSES.aldo);
+  const addressTyler = await AddressFactory.create(ADDRESSES.tyler);
+  const addressKayleen = await AddressFactory.create(ADDRESSES.kayleen);
   const addressRandom1 = await AddressFactory.create(ADDRESSES.random);
   const addressRandom2 = await AddressFactory.create(ADDRESSES.random2);
 

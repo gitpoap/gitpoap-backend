@@ -57,19 +57,15 @@ export class CustomClaimResolver {
 
     logger.info(`Request for the claims for address: ${userAccessTokenPayload.ethAddress}`);
 
-    const addressRecord = await prisma.address.findUnique({
-      where: { ethAddress: userAccessTokenPayload.ethAddress },
-      select: { githubUser: true },
-    });
-
     const possibleMatches: Prisma.Enumerable<Prisma.ClaimWhereInput[]> = [
       // Note that this covers both the ethAddress and the ensName
       { issuedAddressId: userAccessTokenPayload.addressId },
     ];
 
-    const githubId = addressRecord?.githubUser?.githubId ?? null;
-    if (githubId !== null) {
-      possibleMatches.push({ githubUser: { githubId } });
+    if (userAccessTokenPayload.githubId !== null) {
+      possibleMatches.push({
+        githubUser: { githubId: userAccessTokenPayload.githubId },
+      });
     }
     const emailAddress = userAccessTokenPayload.emailAddress ?? null;
     if (emailAddress !== null) {
