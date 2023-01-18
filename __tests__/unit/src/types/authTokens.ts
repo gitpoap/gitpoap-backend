@@ -7,22 +7,21 @@ describe('getAccessTokenPayload', () => {
   });
 
   const validPayload1: AccessTokenPayload = {
-    authTokenId: 343,
+    privyUserId: 'hello-there',
     addressId: 784,
-    address: '0x00001',
+    ethAddress: '0x00001',
     ensName: null,
     ensAvatarImageUrl: null,
     memberships: [],
     githubId: null,
     githubHandle: null,
-    discordId: null,
     discordHandle: null,
-    emailId: null,
+    emailAddress: null,
   };
   const validPayload2: AccessTokenPayload = {
-    authTokenId: 743,
+    privyUserId: 'bye for now!',
     addressId: 84,
-    address: '0x44001',
+    ethAddress: '0x44001',
     ensName: 'burz.eth',
     ensAvatarImageUrl: 'https://example.com/example.jpg',
     memberships: [
@@ -33,9 +32,8 @@ describe('getAccessTokenPayload', () => {
     ],
     githubId: 32455,
     githubHandle: 'burz',
-    discordId: '44423423',
     discordHandle: 'yoyo#45',
-    emailId: 92555,
+    emailAddress: 'foobar@yoyo.com',
   };
 
   it('Succeeds with valid payload', () => {

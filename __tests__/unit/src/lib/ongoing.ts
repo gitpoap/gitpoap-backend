@@ -38,6 +38,7 @@ type GithubPullRequestData = DeepPartial<OctokitResponseData<PullsAPI['get']>> &
 
 const githubUser: GithubUser = {
   id: 32423,
+  privyUserId: null,
   githubId: 43532,
   githubHandle: 'some-user',
   githubOAuthToken: null,
