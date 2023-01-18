@@ -9,8 +9,7 @@ import { uploadMulterFile } from '../../../../../src/external/s3';
 import { StaffApprovalStatus } from '@prisma/client';
 import { STAFF_ADDRESSES } from '../../../../../src/constants';
 
-const authTokenId = 4;
-const authTokenGeneration = 1;
+const privyUserId = 'privy:3242343';
 const addressId = 342;
 const address = '0xburzistheword';
 const ensName = 'furby.eth';
@@ -60,8 +59,7 @@ function genAuthTokens(
   someAddress?: string,
 ) {
   return generateAuthTokens(
-    authTokenId,
-    authTokenGeneration,
+    privyUserId,
     someAddressId ?? addressId,
     someAddress ?? address,
     ensName,
@@ -69,23 +67,16 @@ function genAuthTokens(
     [],
     someGithubId ?? null,
     githubHandle ?? null,
-    someDiscordId ?? null,
     discordHandle ?? null,
     null,
   );
 }
 
 function mockJwtWithAddress() {
-  contextMock.prisma.authToken.findUnique.mockResolvedValue({
-    id: authTokenId,
-    address: {
-      ensName,
-      ensAvatarImageUrl,
-      email: {
-        id: 23,
-      },
-      memberships: [],
-    },
+  contextMock.prisma.address.findUnique.mockResolvedValue({
+    ensName,
+    ensAvatarImageUrl,
+    memberships: [],
   } as any);
 }
 

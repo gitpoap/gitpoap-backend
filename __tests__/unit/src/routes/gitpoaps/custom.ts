@@ -22,8 +22,7 @@ import {
 } from '../../../../../src/external/postmark';
 import { createPOAPEvent } from '../../../../../src/external/poap';
 
-const authTokenId = 4;
-const authTokenGeneration = 1;
+const privyUserId = 'nope';
 const addressId = 342;
 const address = ADDRESSES.vitalik;
 const gitPOAPRequestId = 2;
@@ -135,8 +134,7 @@ const mockedUploadFileBuffer = jest.mocked(uploadFileBuffer, true);
 
 function genAuthTokens(someAddress?: string) {
   return generateAuthTokens(
-    authTokenId,
-    authTokenGeneration,
+    privyUserId,
     addressId,
     someAddress ?? address,
     ensName,
@@ -146,18 +144,14 @@ function genAuthTokens(someAddress?: string) {
     null,
     null,
     null,
-    null,
   );
 }
 
 function mockJwtWithAddress() {
-  contextMock.prisma.authToken.findUnique.mockResolvedValue({
-    address: {
-      ensName,
-      ensAvatarImageUrl,
-      email: null,
-      memberships: [],
-    },
+  contextMock.prisma.address.findUnique.mockResolvedValue({
+    ensName,
+    ensAvatarImageUrl,
+    memberships: [],
   } as any);
 }
 
@@ -179,7 +173,7 @@ describe('PUT /gitpoaps/custom/approve/:id', () => {
       .send();
 
     expect(result.statusCode).toEqual(401);
-    expect(contextMock.prisma.authToken.findUnique).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.address.findUnique).toHaveBeenCalledTimes(1);
   });
 
   it('Returns a 404 when the GitPOAP Request is not found', async () => {
@@ -193,7 +187,7 @@ describe('PUT /gitpoaps/custom/approve/:id', () => {
       .send();
 
     expect(result.statusCode).toEqual(404);
-    expect(contextMock.prisma.authToken.findUnique).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.address.findUnique).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.gitPOAPRequest.findUnique).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.gitPOAPRequest.findUnique).toHaveBeenCalledWith({
       where: { id: gitPOAPRequestId },
@@ -214,7 +208,7 @@ describe('PUT /gitpoaps/custom/approve/:id', () => {
       .send();
 
     expect(result.statusCode).toEqual(200);
-    expect(contextMock.prisma.authToken.findUnique).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.address.findUnique).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.gitPOAPRequest.findUnique).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.gitPOAPRequest.findUnique).toHaveBeenCalledWith({
       where: { id: gitPOAPRequestId },
@@ -250,7 +244,7 @@ describe('PUT /gitpoaps/custom/approve/:id', () => {
       .send();
 
     expect(result.statusCode).toEqual(500);
-    expect(contextMock.prisma.authToken.findUnique).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.address.findUnique).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.gitPOAPRequest.findUnique).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.gitPOAPRequest.findUnique).toHaveBeenCalledWith({
       where: { id: gitPOAPRequestId },
@@ -312,7 +306,7 @@ describe('PUT /gitpoaps/custom/approve/:id', () => {
       .send();
 
     expect(result.statusCode).toEqual(200);
-    expect(contextMock.prisma.authToken.findUnique).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.address.findUnique).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.gitPOAPRequest.findUnique).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.gitPOAPRequest.findUnique).toHaveBeenCalledWith({
       where: { id: gitPOAPRequestId },
@@ -383,7 +377,7 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
       .send({ rejectionReason: null });
 
     expect(result.statusCode).toEqual(401);
-    expect(contextMock.prisma.authToken.findUnique).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.address.findUnique).toHaveBeenCalledTimes(1);
   });
 
   it('Fails with invalid request body', async () => {
@@ -396,7 +390,7 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
       .send({ foo: 'bar' });
 
     expect(result.statusCode).toEqual(400);
-    expect(contextMock.prisma.authToken.findUnique).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.address.findUnique).toHaveBeenCalledTimes(1);
   });
 
   it('Fails and returns a 404 when the GitPOAP Request is not found', async () => {
@@ -410,7 +404,7 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
       .send({ rejectionReason: null });
 
     expect(result.statusCode).toEqual(404);
-    expect(contextMock.prisma.authToken.findUnique).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.address.findUnique).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.gitPOAPRequest.findUnique).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.gitPOAPRequest.findUnique).toHaveBeenCalledWith({
       where: { id: gitPOAPRequestId },
@@ -435,7 +429,7 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
       .send({ rejectionReason: null });
 
     expect(result.statusCode).toEqual(400);
-    expect(contextMock.prisma.authToken.findUnique).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.address.findUnique).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.gitPOAPRequest.findUnique).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.gitPOAPRequest.findUnique).toHaveBeenCalledWith({
       where: { id: gitPOAPRequestId },
@@ -460,7 +454,7 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
       .send({ rejectionReason: null });
 
     expect(result.statusCode).toEqual(200);
-    expect(contextMock.prisma.authToken.findUnique).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.address.findUnique).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.gitPOAPRequest.findUnique).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.gitPOAPRequest.findUnique).toHaveBeenCalledWith({
       where: { id: gitPOAPRequestId },
@@ -499,7 +493,7 @@ describe('PUT /gitpoaps/custom/reject/:id', () => {
       .send({ rejectionReason });
 
     expect(result.statusCode).toEqual(200);
-    expect(contextMock.prisma.authToken.findUnique).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.address.findUnique).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.gitPOAPRequest.findUnique).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.gitPOAPRequest.findUnique).toHaveBeenCalledWith({
       where: { id: gitPOAPRequestId },
@@ -726,7 +720,7 @@ describe('POST /gitpoaps/custom', () => {
 
     expect(result.statusCode).toEqual(201);
 
-    expect(contextMock.prisma.authToken.findUnique).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.address.findUnique).toHaveBeenCalledTimes(1);
 
     expect(mockedUpsertEmail).toHaveBeenCalledTimes(1);
     expect(mockedUpsertEmail).toHaveBeenCalledWith(burzEmail);
@@ -765,7 +759,7 @@ describe('POST /gitpoaps/custom', () => {
 
     expect(result.statusCode).toEqual(201);
 
-    expect(contextMock.prisma.authToken.findUnique).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.address.findUnique).toHaveBeenCalledTimes(1);
 
     expect(mockedUpsertEmail).toHaveBeenCalledTimes(1);
     expect(mockedUpsertEmail).toHaveBeenCalledWith(burzEmail);

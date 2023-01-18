@@ -10,8 +10,7 @@ jest.mock('../../../../src/lib/ens');
 
 const mockedResolveENS = jest.mocked(resolveENS, true);
 
-const authTokenId = 9095;
-const authTokenGeneration = 2342;
+const privyUserId = 'I am I';
 const addressId = 3242;
 const address = '0x206e554084BEeC98e08043397be63C5132Cc01A1';
 const ensName = 'annab.eth';
@@ -30,26 +29,21 @@ const addressRecord = {
 };
 
 function mockJwtWithAddress() {
-  contextMock.prisma.authToken.findUnique.mockResolvedValue({
-    address: {
-      ensName,
-      ensAvatarImageUrl,
-      email: null,
-      memberships: [],
-    },
+  contextMock.prisma.address.findUnique.mockResolvedValue({
+    ensName,
+    ensAvatarImageUrl,
+    memberships: [],
   } as any);
 }
 
 function genAuthTokens() {
   return generateAuthTokens(
-    authTokenId,
-    authTokenGeneration,
+    privyUserId,
     addressId,
     address,
     ensName,
     ensAvatarImageUrl,
     [],
-    null,
     null,
     null,
     null,
