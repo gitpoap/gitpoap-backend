@@ -37,8 +37,7 @@ const mockedRemoveGithubLoginForAddress = jest.mocked(removeGithubLoginForAddres
 const mockedGenerateAuthTokensWithChecks = jest.mocked(generateAuthTokensWithChecks, true);
 const mockedUpdateAuthTokenGeneration = jest.mocked(updateAuthTokenGeneration, true);
 
-const authTokenId = 995;
-const authTokenGeneration = 42;
+const privyUserId = 'imma user';
 const addressId = 322;
 const address = '0xbArF00';
 const ensName = null;
@@ -50,29 +49,24 @@ const githubHandle = 'snoop-doggy-dog';
 const githubUserId = 342444;
 
 function mockJwtWithAddress() {
-  contextMock.prisma.authToken.findUnique.mockResolvedValue({
-    address: {
-      ensName,
-      ensAvatarImageUrl,
-      email: null,
-      memberships: [],
-    },
+  contextMock.prisma.address.findUnique.mockResolvedValue({
+    ensName,
+    ensAvatarImageUrl,
+    memberships: [],
   } as any);
 }
 
 const genAuthTokens = setupGenAuthTokens({
-  authTokenId,
-  generation: authTokenGeneration,
+  privyUserId,
   addressId,
-  address,
+  ethAddress: address,
   ensName,
   ensAvatarImageUrl,
   memberships: [],
   githubId,
   githubHandle,
   discordHandle: null,
-  discordId: null,
-  emailId: null,
+  emailAddress: null,
 });
 
 describe('POST /oauth/github', () => {
@@ -205,42 +199,20 @@ describe('DELETE /oauth/github', () => {
   });
 
   const expectAuthTokenFindUnique = () => {
-    expect(contextMock.prisma.authToken.findUnique).toHaveBeenCalledTimes(1);
-    expect(contextMock.prisma.authToken.findUnique).toHaveBeenCalledWith({
-      where: { id: authTokenId },
+    expect(contextMock.prisma.address.findUnique).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.address.findUnique).toHaveBeenCalledWith({
+      where: { id: addressId },
       select: {
-        id: true,
-        address: {
-          select: {
-            ensName: true,
-            ensAvatarImageUrl: true,
-            githubUser: {
-              select: {
-                githubId: true,
-                githubHandle: true,
-                githubOAuthToken: true,
-              },
+        select: {
+          ensName: true,
+          ensAvatarImageUrl: true,
+          memberships: {
+            where: {
+              acceptanceStatus: MembershipAcceptanceStatus.ACCEPTED,
             },
-            discordUser: {
-              select: {
-                discordId: true,
-                discordHandle: true,
-              },
-            },
-            email: {
-              select: {
-                id: true,
-                isValidated: true,
-              },
-            },
-            memberships: {
-              where: {
-                acceptanceStatus: MembershipAcceptanceStatus.ACCEPTED,
-              },
-              select: {
-                teamId: true,
-                role: true,
-              },
+            select: {
+              teamId: true,
+              role: true,
             },
           },
         },
