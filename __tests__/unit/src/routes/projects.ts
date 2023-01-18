@@ -15,15 +15,12 @@ jest.mock('../../../../src/lib/pullRequests');
 const mockedCreateRepoByGithubId = jest.mocked(createRepoByGithubId, true);
 const mockedBackloadGithubPullRequestData = jest.mocked(backloadGithubPullRequestData, true);
 
-const authTokenId = 4;
-const authTokenGeneration = 0;
+const privyUserId = 'hi hi';
 const addressId = 45;
 const address = ADDRESSES.vitalik;
 const githubId = 232444;
 const githubOAuthToken = 'foobar34543';
 const githubHandle = 'b-burz';
-const discordId = '123144123';
-const discordOAuthToken = 'foobar34543';
 const discordHandle = 'tyler#2342';
 const projectId = 234;
 const githubRepoIds = [2];
@@ -31,34 +28,21 @@ const ensName = 'wowza.eth';
 const ensAvatarImageUrl = 'https://foobar.com/a.jpg';
 
 function mockJwtWithAddress() {
-  contextMock.prisma.authToken.findUnique.mockResolvedValue({
-    address: {
-      ensName,
-      ensAvatarImageUrl,
-      email: null,
-      memberships: [],
-    },
+  contextMock.prisma.address.findUnique.mockResolvedValue({
+    ensName,
+    ensAvatarImageUrl,
+    memberships: [],
   } as any);
 }
 
 function mockJwtWithOAuth() {
-  contextMock.prisma.authToken.findUnique.mockResolvedValue({
-    address: {
-      ensName,
-      ensAvatarImageUrl,
-      email: null,
-      githubUser: {
-        githubId: 23,
-        githubHandle,
-        githubOAuthToken,
-      },
-      discordUser: {
-        discordId: '123144123',
-        discordHandle: 'tyler#2342',
-        discordOAuthToken,
-      },
-      memberships: [],
-    },
+  contextMock.prisma.address.findUnique.mockResolvedValue({
+    ensName,
+    ensAvatarImageUrl,
+    memberships: [],
+  } as any);
+  contextMock.prisma.githubUser.findUnique.mockResolvedValue({
+    githubOAuthToken,
   } as any);
 }
 
@@ -70,8 +54,7 @@ function genAuthTokens(
   someDiscordHandle?: string,
 ) {
   return generateAuthTokens(
-    authTokenId,
-    authTokenGeneration,
+    privyUserId,
     addressId,
     someAddress ?? address,
     ensName,
@@ -79,7 +62,6 @@ function genAuthTokens(
     [],
     someGithubId ?? null,
     someGithubHandle ?? null,
-    someDiscordId ?? null,
     someDiscordHandle ?? null,
     null,
   );
@@ -97,7 +79,7 @@ describe('POST /projects/add-repos', () => {
   it('Fails with non-staff OAuth Access Token provided', async () => {
     mockJwtWithOAuth();
 
-    const authTokens = genAuthTokens(address, githubId, githubHandle, discordId, discordHandle);
+    const authTokens = genAuthTokens(address, githubId, githubHandle, discordHandle);
 
     const result = await request(await setupApp())
       .post('/projects/add-repos')
@@ -106,7 +88,7 @@ describe('POST /projects/add-repos', () => {
 
     expect(result.statusCode).toEqual(401);
 
-    expect(contextMock.prisma.authToken.findUnique).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.address.findUnique).toHaveBeenCalledTimes(1);
   });
 
   it('Returns error when invalid project provided', async () => {
@@ -117,7 +99,6 @@ describe('POST /projects/add-repos', () => {
       STAFF_ADDRESSES[0],
       STAFF_GITHUB_IDS[0],
       githubHandle,
-      discordId,
       discordHandle,
     );
 
@@ -128,7 +109,7 @@ describe('POST /projects/add-repos', () => {
 
     expect(result.statusCode).toEqual(404);
 
-    expect(contextMock.prisma.authToken.findUnique).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.address.findUnique).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.project.findUnique).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.project.findUnique).toHaveBeenCalledWith({
       where: { id: projectId },
@@ -145,7 +126,6 @@ describe('POST /projects/add-repos', () => {
       STAFF_ADDRESSES[0],
       STAFF_GITHUB_IDS[0],
       githubHandle,
-      discordId,
       discordHandle,
     );
 
@@ -156,7 +136,7 @@ describe('POST /projects/add-repos', () => {
 
     expect(result.statusCode).toEqual(500);
 
-    expect(contextMock.prisma.authToken.findUnique).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.address.findUnique).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.project.findUnique).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.project.findUnique).toHaveBeenCalledWith({
       where: { id: projectId },
@@ -179,7 +159,6 @@ describe('POST /projects/add-repos', () => {
       STAFF_ADDRESSES[0],
       STAFF_GITHUB_IDS[0],
       githubHandle,
-      discordId,
       discordHandle,
     );
 
@@ -190,7 +169,7 @@ describe('POST /projects/add-repos', () => {
 
     expect(result.statusCode).toEqual(200);
 
-    expect(contextMock.prisma.authToken.findUnique).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.address.findUnique).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.project.findUnique).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.project.findUnique).toHaveBeenCalledWith({
       where: { id: projectId },
@@ -227,7 +206,7 @@ describe('PUT /projects/enable/:id', () => {
 
     expect(result.statusCode).toEqual(401);
 
-    expect(contextMock.prisma.authToken.findUnique).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.address.findUnique).toHaveBeenCalledTimes(1);
   });
 
   it('Returns a 404 when the Project is not found', async () => {
@@ -243,7 +222,7 @@ describe('PUT /projects/enable/:id', () => {
 
     expect(result.statusCode).toEqual(404);
 
-    expect(contextMock.prisma.authToken.findUnique).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.address.findUnique).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.project.findUnique).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.project.findUnique).toHaveBeenCalledWith({
       where: { id: projectId },
@@ -264,7 +243,7 @@ describe('PUT /projects/enable/:id', () => {
 
     expect(result.statusCode).toEqual(200);
 
-    expect(contextMock.prisma.authToken.findUnique).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.address.findUnique).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.project.findUnique).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.project.findUnique).toHaveBeenCalledWith({
       where: { id: projectId },

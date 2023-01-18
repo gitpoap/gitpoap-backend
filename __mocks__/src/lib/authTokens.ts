@@ -1,8 +1,4 @@
-import {
-  AccessTokenPayload,
-  Memberships,
-  RefreshTokenPayload,
-} from '../../../src/types/authTokens';
+import { AccessTokenPayload, Memberships } from '../../../src/types/authTokens';
 import { sign } from 'jsonwebtoken';
 import { JWT_SECRET } from '../../../src/environment';
 import { JWT_EXP_TIME_SECONDS } from '../../../src/constants';
@@ -14,58 +10,46 @@ type GenAuthTokensExtras = {
 };
 
 type SetupGenAuthTokensArgs = {
-  authTokenId: number;
-  generation: number;
+  privyUserId: string;
   addressId: number;
-  address: string;
+  ethAddress: string;
   ensName: string | null;
   ensAvatarImageUrl: string | null;
   memberships: Memberships;
   githubId: number | null;
   githubHandle: string | null;
-  discordId: string | null;
   discordHandle: string | null;
-  emailId: number | null;
+  emailAddress: string | null;
 };
 
 export function setupGenAuthTokens({
-  authTokenId,
-  generation,
+  privyUserId,
   addressId,
-  address,
+  ethAddress,
   ensName,
   ensAvatarImageUrl,
   memberships,
   githubId,
   githubHandle,
-  discordId,
   discordHandle,
-  emailId,
+  emailAddress,
 }: SetupGenAuthTokensArgs) {
-  const refreshTokenPayload: RefreshTokenPayload = {
-    authTokenId,
-    addressId,
-    generation,
-  };
-
   return (extras?: GenAuthTokensExtras) => {
     const accessTokenPayload: AccessTokenPayload = {
-      authTokenId,
+      privyUserId,
       addressId,
-      address,
+      ethAddress,
       ensName,
       ensAvatarImageUrl,
       memberships,
       githubId: extras?.hasGithub ? githubId : null,
       githubHandle: extras?.hasGithub ? githubHandle : null,
-      discordId: extras?.hasDiscord ? discordId : null,
       discordHandle: extras?.hasDiscord ? discordHandle : null,
-      emailId: extras?.hasEmail ? emailId : null,
+      emailAddress: extras?.hasEmail ? emailAddress : null,
     };
 
     return {
       accessToken: sign(accessTokenPayload, JWT_SECRET, { expiresIn: JWT_EXP_TIME_SECONDS }),
-      refreshToken: sign(refreshTokenPayload, JWT_SECRET),
     };
   };
 }
