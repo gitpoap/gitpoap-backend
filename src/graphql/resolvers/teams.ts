@@ -63,15 +63,13 @@ export class CustomTeamResolver {
   ): Promise<Team> {
     logger.info(`Request data for Team: ${teamId}`);
 
-    if (userAccessTokenPayload === null) {
+    if (userAccessTokenPayload === null || userAccessTokenPayload.address === null) {
       logger.error('Route passed AuthRoles.Address authorization without user payload set');
       throw InternalError;
     }
 
     const team = await prisma.team.findUnique({
-      where: {
-        id: teamId,
-      },
+      where: { id: teamId },
     });
     if (team === null) {
       logger.error(`Failed to look up team with ID: ${teamId}`);
@@ -88,7 +86,7 @@ export class CustomTeamResolver {
     @Arg('teamId') teamId: number,
     @Arg('input') input: TeamUpdateInput,
   ): Promise<TeamUpdatePayload> {
-    if (userAccessTokenPayload === null) {
+    if (userAccessTokenPayload === null || userAccessTokenPayload.address === null) {
       logger.error('Route passed AuthRoles.Address authorization without user payload set');
       throw InternalError;
     }
@@ -99,7 +97,7 @@ export class CustomTeamResolver {
       !hasMembership(userAccessTokenPayload, teamId, [MembershipRole.OWNER, MembershipRole.ADMIN])
     ) {
       logger.warn(
-        `Unauthorized Address ID ${userAccessTokenPayload.addressId} tried to update Team ID ${teamId}`,
+        `Unauthorized Address ID ${userAccessTokenPayload.address.id} tried to update Team ID ${teamId}`,
       );
       throw NotAuthorizedError;
     }
@@ -142,7 +140,7 @@ export class CustomTeamResolver {
   ): Promise<GitPOAP[]> {
     logger.info(`Request data for Team: ${teamId}`);
 
-    if (userAccessTokenPayload === null) {
+    if (userAccessTokenPayload === null || userAccessTokenPayload.address === null) {
       logger.error('Route passed AuthRoles.Address authorization without user payload set');
       throw InternalError;
     }
@@ -194,7 +192,7 @@ export class CustomTeamResolver {
   ): Promise<GitPOAPRequest[]> {
     logger.info(`Request data for Team: ${teamId}`);
 
-    if (userAccessTokenPayload === null) {
+    if (userAccessTokenPayload === null || userAccessTokenPayload.address === null) {
       logger.error('Route passed AuthRoles.Address authorization without user payload set');
       throw InternalError;
     }

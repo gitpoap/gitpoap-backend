@@ -2,14 +2,17 @@ import { Router } from 'express';
 import { RequestAccessTokenSchema } from '../../schemas/oauth/github';
 import { requestGithubOAuthToken, getGithubCurrentUserInfo } from '../../external/github';
 import { generateNewAuthTokens } from '../../lib/authTokens';
-import { jwtWithAddress } from '../../middleware/auth';
-import { getAccessTokenPayload } from '../../types/authTokens';
+import { jwtAccessToken, jwtWithGithubOAuth } from '../../middleware/auth';
+import {
+  getAccessTokenPayload,
+  getAccessTokenPayloadWithGithubOAuth,
+} from '../../types/authTokens';
 import { upsertGithubUser, removeGithubUsersLogin } from '../../lib/githubUsers';
 import { getRequestLogger } from '../../middleware/loggingAndTiming';
 
 export const githubRouter = Router();
 
-githubRouter.post('/', jwtWithAddress(), async function (req, res) {
+githubRouter.post('/', jwtAccessToken(), async function (req, res) {
   const logger = getRequestLogger(req);
 
   const schemaResult = RequestAccessTokenSchema.safeParse(req.body);
@@ -20,13 +23,11 @@ githubRouter.post('/', jwtWithAddress(), async function (req, res) {
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
-  const { privyUserId, addressId, ethAddress, discordHandle, emailAddress } = getAccessTokenPayload(
-    req.user,
-  );
+  const accessTokenPayload = getAccessTokenPayload(req.user);
 
   let { code } = req.body;
 
-  logger.info(`Received a GitHub login request from address ${ethAddress}`);
+  logger.info(`Received a GitHub login request from Privy ID ${accessTokenPayload.privyUserId}`);
 
   // Remove state string if it exists
   const andIndex = code.indexOf('&');
@@ -56,62 +57,43 @@ githubRouter.post('/', jwtWithAddress(), async function (req, res) {
   const githubUser = await upsertGithubUser(
     githubInfo.id,
     githubInfo.login,
-    privyUserId,
+    accessTokenPayload.privyUserId,
     githubToken,
   );
 
   const userAuthTokens = await generateNewAuthTokens({
-    privyUserId,
-    addressId,
-    ethAddress,
-    discordHandle,
-    emailAddress,
-    githubUser: {
+    ...accessTokenPayload,
+    github: {
       ...githubUser,
       githubOAuthToken: githubToken,
     },
   });
 
-  logger.debug(`Completed a GitHub login request for address ${ethAddress}`);
+  logger.debug(`Completed a GitHub login request from Privy ID ${accessTokenPayload.privyUserId}`);
 
   return res.status(200).send(userAuthTokens);
 });
 
 /* Route to remove a github connection from an address */
-githubRouter.delete('/', jwtWithAddress(), async function (req, res) {
+githubRouter.delete('/', jwtWithGithubOAuth(), async function (req, res) {
   const logger = getRequestLogger(req);
 
-  const {
-    privyUserId,
-    addressId,
-    ethAddress,
-    githubId,
-    githubHandle,
-    discordHandle,
-    emailAddress,
-  } = getAccessTokenPayload(req.user);
+  const accessTokenPayload = getAccessTokenPayloadWithGithubOAuth(req.user);
 
-  logger.info(`Received a GitHub disconnect request from address ${ethAddress}`);
+  logger.info(
+    `Received a GitHub disconnect request from GitHub handle ${accessTokenPayload.github.githubHandle}`,
+  );
 
-  if (githubHandle === null || githubId === null) {
-    logger.warn('No GitHub login found for address');
-    return res.status(400).send({
-      msg: 'No GitHub login found for address',
-    });
-  }
-
-  await removeGithubUsersLogin(privyUserId);
+  await removeGithubUsersLogin(accessTokenPayload.github.id);
 
   const userAuthTokens = await generateNewAuthTokens({
-    privyUserId,
-    addressId,
-    ethAddress,
-    discordHandle,
-    emailAddress,
-    githubUser: null,
+    ...accessTokenPayload,
+    github: null,
   });
 
-  logger.debug(`Completed Github disconnect request for address ${ethAddress}`);
+  logger.debug(
+    `Received a GitHub disconnect request from GitHub handle ${accessTokenPayload.github.githubHandle}`,
+  );
 
   return res.status(200).send(userAuthTokens);
 });

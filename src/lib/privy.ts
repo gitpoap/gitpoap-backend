@@ -6,8 +6,11 @@ import { resolveAddress } from './ens';
 import { isGithubTokenValidForUser } from '../external/github';
 import { removeGithubUsersLogin } from './githubUsers';
 import { getDiscordCurrentUserInfo } from '../external/discord';
+import { AddressPayload, GithubPayload, EmailPayload, DiscordPayload } from '../types/authTokens';
+import { upsertEmail } from './emails';
+import { upsertDiscordUser } from './discord';
 
-type GithubTokenData = {
+type GithubTokenData = GithubPayload & {
   githubOAuthToken: string;
 };
 
@@ -30,7 +33,7 @@ async function checkGithubTokenData(privyUserId: string): Promise<GithubTokenDat
     logger.error(
       `Found a GithubUser ID ${githubUser.id} where privyUserId is set but not githubOAuthToken`,
     );
-    await removeGithubUsersLogin(privyUserId);
+    await removeGithubUsersLogin(githubUser.id);
     return null;
   }
 
@@ -43,17 +46,17 @@ async function checkGithubTokenData(privyUserId: string): Promise<GithubTokenDat
 
   logger.info(`Removing invalid GitHub OAuth token for GithubUser githubId ${githubUser.githubId}`);
 
-  await removeGithubUsersLogin(privyUserId);
+  await removeGithubUsersLogin(githubUser.id);
 
   return null;
 }
 
 export type PrivyUserData = {
   privyUserId: string;
-  address: AddressData | null;
-  githubUser: GithubTokenData | null;
-  email: EmailData | null;
-  discord: DiscordData | null;
+  address: AddressPayload | null;
+  github: GithubTokenData | null;
+  email: EmailPayload | null;
+  discord: DiscordPayload | null;
 };
 
 export async function verifyPrivyToken(privyAuthToken: string): Promise<PrivyUserData | null> {
@@ -68,48 +71,40 @@ export async function verifyPrivyToken(privyAuthToken: string): Promise<PrivyUse
   // Used only in the case of errors
   const errorTail = `for Privy User ID ${privyUserData.privyUserId}`;
 
-  let address: AddressData | null = null;
+  let address: AddressPayload | null = null;
   if (privyUserData.ethAddress) {
     address = await upsertAddress(privyUserData.ethAddress);
-    if (address === null) {
-      logger.error(`Failed to upsert ETH address ${privyUserData.ethAddress} ${errorTail}`);
-      return null;
-    }
 
     // Resolve the ENS name in the background
     void resolveAddress(privyUserData.ethAddress);
   }
 
-  const githubUser = await checkGithubTokenData(privyUserData.privyUserId);
+  const github = await checkGithubTokenData(privyUserData.privyUserId);
 
-  let email: EmailData | null = null;
+  let email: EmailPayload | null = null;
   if (privyUserData.emailAddress) {
-    email = upsertEmail(privyUserData.emailAddress);
+    email = await upsertEmail(privyUserData.emailAddress);
     if (email === null) {
       logger.error(`Failed to upsert email address ${privyUserData.emailAddress} ${errorTail}`);
       return null;
     }
   }
 
-  let discord: DiscordData | null = null;
-  if (privyUserData.discordHandle) {
+  let discord: DiscordPayload | null = null;
+  if (privyUserData.discordToken) {
     const discordInfo = await getDiscordCurrentUserInfo(privyUserData.discordToken);
     if (discordInfo === null) {
       logger.error(`Failed to lookup discord info ${errorTail}`);
       return null;
     }
 
-    discord = upsertDiscordUser(discordInfo.id, discordInfo.username);
-    if (discord === null) {
-      logger.error(`Failed to upsert discord handle ${discordInfo.username} ${errorTail}`);
-      return null;
-    }
+    discord = await upsertDiscordUser(discordInfo.id, discordInfo.username);
   }
 
   return {
     ...privyUserData,
     address,
-    githubUser,
+    github,
     email,
     discord,
   };

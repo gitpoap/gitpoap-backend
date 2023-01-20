@@ -3,6 +3,7 @@ import set from 'lodash/set';
 import {
   AccessTokenPayload,
   getAccessTokenPayload,
+  getAccessTokenPayloadWithAddress,
   getAccessTokenPayloadWithGithubOAuth,
 } from '../types/authTokens';
 import { RequestHandler } from 'express';
@@ -11,12 +12,11 @@ import { createScopedLogger } from '../logging';
 import { GITPOAP_BOT_APP_ID } from '../constants';
 import { getGithubAuthenticatedApp } from '../external/github';
 import { captureException } from '../lib/sentry';
-import { isAddressAStaffMember } from '../lib/staff';
-import { getValidatedAccessTokenPayload } from '../lib/authTokens';
+import { isAddressAStaffMember, isGithubIdAStaffMember } from '../lib/staff';
 import { removeGithubUsersLogin } from '../lib/githubUsers';
 import { context } from '../context';
 
-export const jwtMiddleware = jwt({ secret: JWT_SECRET as string, algorithms: ['HS256'] });
+export const jwtBasic = jwt({ secret: JWT_SECRET as string, algorithms: ['HS256'] });
 
 function safelyGetAccessTokenPayload(payload: any): AccessTokenPayload | null {
   const logger = createScopedLogger('safelyGetAccessTokenPayload');
@@ -30,9 +30,17 @@ function safelyGetAccessTokenPayload(payload: any): AccessTokenPayload | null {
   }
 }
 
-export function jwtWithAddress() {
+export function jwtAccessToken() {
+  const jwtMiddleware = jwtBasic;
+
   const middleware: RequestHandler = async (req, res, next) => {
-    const callback = async () => {
+    const callback = async (err?: any) => {
+      // If the previous middleware failed, pass on the error
+      if (err) {
+        next(err);
+        return;
+      }
+
       if (!req.user) {
         next({ status: 400, msg: 'Invalid or missing Access Token' });
         return;
@@ -44,19 +52,31 @@ export function jwtWithAddress() {
         return;
       }
 
-      const validatedAccessTokenPayload = await getValidatedAccessTokenPayload(
-        accessTokenPayload.privyUserId,
-        accessTokenPayload.addressId,
-      );
-      if (validatedAccessTokenPayload === null) {
-        next({ status: 401, msg: 'Not logged in with address' });
+      next();
+    };
+
+    jwtMiddleware(req, res, callback);
+  };
+
+  return middleware;
+}
+
+export function jwtWithAddress() {
+  const jwtMiddleware = jwtAccessToken();
+
+  const middleware: RequestHandler = async (req, res, next) => {
+    const callback = async (err?: any) => {
+      // If the previous middleware failed, pass on the error
+      if (err) {
+        next(err);
         return;
       }
 
-      // Update the nullable fields in case they've updated in the DB
-      set(req, 'user.ensName', validatedAccessTokenPayload.ensName);
-      set(req, 'user.ensAvatarImageUrl', validatedAccessTokenPayload.ensAvatarImageUrl);
-      set(req, 'user.memberships', validatedAccessTokenPayload.memberships);
+      const accessTokenPayload = getAccessTokenPayload(req.user);
+      if (accessTokenPayload.address === null) {
+        next({ status: 401, msg: 'Not logged in with address' });
+        return;
+      }
 
       next();
     };
@@ -80,10 +100,12 @@ export function jwtWithStaffAddress() {
         return;
       }
 
-      const { ethAddress } = getAccessTokenPayload(req.user);
+      const { address } = getAccessTokenPayloadWithAddress(req.user);
 
-      if (!isAddressAStaffMember(ethAddress)) {
-        logger.warn(`Non-staff user (Address: ${ethAddress}) attempted to use staff-only routes`);
+      if (!isAddressAStaffMember(address.ethAddress)) {
+        logger.warn(
+          `Non-staff user (Address: ${address.ethAddress}) attempted to use staff-only routes`,
+        );
         next({ status: 401, msg: 'You are not privileged for this endpoint' });
         return;
       }
@@ -97,33 +119,27 @@ export function jwtWithStaffAddress() {
   return middleware;
 }
 
-export function jwtWithGitHubOAuth() {
+export function jwtWithGithubOAuth() {
   const logger = createScopedLogger('jwtWithGithubOAuth');
 
+  const jwtMiddleware = jwtAccessToken();
+
   const middleware: RequestHandler = async (req, res, next) => {
-    const callback = async () => {
-      if (!req.user) {
-        next({ status: 400, msg: 'Invalid or missing Access Token' });
+    const callback = async (err?: any) => {
+      // If the previous middleware failed, pass on the error
+      if (err) {
+        next(err);
         return;
       }
 
-      const accessTokenPayload = safelyGetAccessTokenPayload(req.user);
-      if (accessTokenPayload === null) {
-        next({ status: 400, msg: 'Malformed Access Token' });
-        return;
-      }
-
-      const validatedAccessTokenPayload = await getValidatedAccessTokenPayload(
-        accessTokenPayload.privyUserId,
-        accessTokenPayload.addressId,
-      );
-      if (validatedAccessTokenPayload === null) {
-        next({ status: 401, msg: 'Not logged in with address' });
+      const accessTokenPayload = getAccessTokenPayload(req.user);
+      if (accessTokenPayload.github === null) {
+        next({ status: 401, msg: 'Not logged in with github' });
         return;
       }
 
       const githubUser = await context.prisma.githubUser.findUnique({
-        where: { privyUserId: accessTokenPayload.privyUserId },
+        where: { id: accessTokenPayload.github.id },
         select: { githubOAuthToken: true },
       });
       if (githubUser === null) {
@@ -132,19 +148,14 @@ export function jwtWithGitHubOAuth() {
       }
       if (githubUser.githubOAuthToken === null) {
         logger.error(
-          `GithubUser githubId ${accessTokenPayload.githubId} has privyUserId set but not githubOAuthToken`,
+          `GithubUser ID ${accessTokenPayload.github.id} has privyUserId set but not githubOAuthToken`,
         );
-        await removeGithubUsersLogin(accessTokenPayload.privyUserId);
+        await removeGithubUsersLogin(accessTokenPayload.github.id);
         next({ status: 401, msg: 'Not logged into GitHub' });
         return;
       }
 
-      set(req, 'user.githubOAuthToken', githubUser.githubOAuthToken);
-
-      // Update the nullable values in case they've updated in the DB
-      set(req, 'user.ensName', validatedAccessTokenPayload.ensName);
-      set(req, 'user.ensAvatarImageUrl', validatedAccessTokenPayload.ensAvatarImageUrl);
-      set(req, 'user.memberships', validatedAccessTokenPayload.memberships);
+      set(req, 'user.github.githubOAuthToken', githubUser.githubOAuthToken);
 
       next();
     };
@@ -158,7 +169,7 @@ export function jwtWithGitHubOAuth() {
 export function jwtWithStaffOAuth() {
   const logger = createScopedLogger('jwtWithStaffOAuth');
 
-  const jwtMiddleware = jwtWithGitHubOAuth();
+  const jwtMiddleware = jwtWithGithubOAuth();
 
   const middleware: RequestHandler = (req, res, next) => {
     const callback = (err?: any) => {
@@ -168,10 +179,12 @@ export function jwtWithStaffOAuth() {
         return;
       }
 
-      const { ethAddress } = getAccessTokenPayloadWithGithubOAuth(req.user);
+      const { github } = getAccessTokenPayloadWithGithubOAuth(req.user);
 
-      if (!isAddressAStaffMember(ethAddress)) {
-        logger.warn(`Non-staff user (Address: ${ethAddress}) attempted to use staff-only routes`);
+      if (!isGithubIdAStaffMember(github.githubId)) {
+        logger.warn(
+          `Non-staff user (GitHub handle: ${github.githubHandle}) attempted to use staff-only routes`,
+        );
         next({ status: 401, msg: 'You are not privileged for this endpoint' });
         return;
       }

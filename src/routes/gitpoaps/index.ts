@@ -12,7 +12,7 @@ import { jwtWithAddress, jwtWithStaffAddress, jwtWithStaffOAuth } from '../../mi
 import multer from 'multer';
 import { ClaimStatus, GitPOAPStatus, GitPOAPType } from '@prisma/client';
 import {
-  getAccessTokenPayload,
+  getAccessTokenPayloadWithAddress,
   getAccessTokenPayloadWithGithubOAuth,
 } from '../../types/authTokens';
 import { backloadGithubPullRequestData } from '../../lib/pullRequests';
@@ -62,7 +62,9 @@ gitPOAPsRouter.post(
       return res.status(400).send({ msg });
     }
 
-    const { githubHandle, githubOAuthToken } = getAccessTokenPayloadWithGithubOAuth(req.user);
+    const {
+      github: { githubHandle, githubOAuthToken },
+    } = getAccessTokenPayloadWithGithubOAuth(req.user);
 
     const canRequestMoreCodes = schemaResult.data.isOngoing === 'true';
 
@@ -451,25 +453,27 @@ gitPOAPsRouter.put('/:gitPOAPId/claims', jwtWithAddress(), async (req, res) => {
     },
   });
 
-  const { addressId, ethAddress } = getAccessTokenPayload(req.user);
+  const { address } = getAccessTokenPayloadWithAddress(req.user);
 
   if (gitPOAP === null) {
     logger.warn(
-      `Address ${ethAddress} tried to create claims for nonexistant GitPOAP ID ${gitPOAPId}`,
+      `Address ${address.ethAddress} tried to create claims for nonexistant GitPOAP ID ${gitPOAPId}`,
     );
     return res.status(404).send({ msg: "Request doesn't exist" });
   }
 
-  if (!isAddressAStaffMember(ethAddress)) {
+  if (!isAddressAStaffMember(address.ethAddress)) {
     if (gitPOAP.type === GitPOAPType.CUSTOM) {
-      if (gitPOAP.creatorAddressId !== addressId) {
+      if (gitPOAP.creatorAddressId !== address.id) {
         logger.warn(
-          `Non-creator and non-staff ${ethAddress} tried to add claims to Custom GitPOAP ID ${gitPOAPId}`,
+          `Non-creator and non-staff ${address.ethAddress} tried to add claims to Custom GitPOAP ID ${gitPOAPId}`,
         );
         return res.status(401).send({ msg: 'Not GitPOAP owner' });
       }
     } else {
-      logger.warn(`Non-staff ${ethAddress} tried to add claims to non-Custom GitPOAP ID ${gitPOAPId}`);
+      logger.warn(
+        `Non-staff ${address.ethAddress} tried to add claims to non-Custom GitPOAP ID ${gitPOAPId}`,
+      );
       return res.status(401).send({ msg: 'Not authorized to create Claims' });
     }
   }

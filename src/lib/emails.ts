@@ -4,6 +4,7 @@ import { createScopedLogger } from '../logging';
 
 export async function upsertEmail(emailAddress: string): Promise<Email | null> {
   const logger = createScopedLogger('upsertEmail');
+
   const emailAddressLower = emailAddress.toLowerCase();
 
   try {

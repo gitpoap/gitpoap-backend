@@ -6,7 +6,6 @@ import { verify } from 'jsonwebtoken';
 import { GRAPHIQL_PASSWORD, JWT_SECRET } from '../environment';
 import { AccessTokenPayload, getAccessTokenPayload } from '../types/authTokens';
 import { RequestHandler, Router } from 'express';
-import { getValidatedAccessTokenPayload } from '../lib/authTokens';
 import { renderGraphiQL } from './graphiql';
 import basicAuth from 'express-basic-auth';
 import { InvalidAuthError, MissingAuthError } from './errors';
@@ -40,16 +39,7 @@ export async function setupGQLContext(req: any) {
   let userAccessTokenPayload: AccessTokenPayload | null = null;
   if (userAccessToken !== null) {
     try {
-      const basePayload = getAccessTokenPayload(verify(userAccessToken, JWT_SECRET));
-      const validatedPayload = await getValidatedAccessTokenPayload(
-        basePayload.privyUserId,
-        basePayload.addressId,
-      );
-      if (validatedPayload !== null) {
-        userAccessTokenPayload = { ...basePayload, ...validatedPayload };
-      } else {
-        logger.debug('User access token is no longer valid');
-      }
+      userAccessTokenPayload = getAccessTokenPayload(verify(userAccessToken, JWT_SECRET));
     } catch (err) {
       logger.debug(`User access token is malformed: ${err}`);
     }

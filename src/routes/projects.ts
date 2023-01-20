@@ -20,7 +20,9 @@ projectsRouter.post('/add-repos', jwtWithStaffOAuth(), async (req, res) => {
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
-  const { githubHandle, githubOAuthToken } = getAccessTokenPayloadWithGithubOAuth(req.user);
+  const {
+    github: { githubHandle, githubOAuthToken },
+  } = getAccessTokenPayloadWithGithubOAuth(req.user);
 
   logger.info(
     `Request to add GitHub Repo IDs ${req.body.githubRepoIds} to Project ID ${req.body.projectId}`,

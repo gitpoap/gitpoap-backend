@@ -21,7 +21,7 @@ A user-specific GQL route can be written like:
   @Query(() => String)
   async someRoute(@Ctx() { prisma, userAccessTokenPayload }: AuthContext) {
     // Note that this case should not be possible since the Address role is required
-    if (userAccessTokenPayload === null) {
+    if (userAccessTokenPayload === null || userAccessTokenPayload.address === null) {
       logger.error('Route passed AuthRoles.Address authorization without user payload set');
       throw InternalError;
     }
@@ -44,7 +44,7 @@ To check if a user is has a specific role on a team, one can use something like:
   @Query(() => String, { nullable: true })
   async someRoute(@Ctx() { prisma, userAccessTokenPayload }: AuthContext) {
     // Note that this case should not be possible since the Address role is required
-    if (userAccessTokenPayload === null) {
+    if (userAccessTokenPayload === null || userAccessTokenPayload.address === null) {
       logger.error('Route passed AuthRoles.Address authorization without user payload set');
       throw InternalError;
     }

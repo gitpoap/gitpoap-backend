@@ -19,7 +19,7 @@ import {
   s3configProfile,
 } from '../../external/s3';
 import { convertGitPOAPRequestToGitPOAP } from '../../lib/gitpoaps';
-import { getAccessTokenPayload } from '../../types/authTokens';
+import { getAccessTokenPayloadWithAddress } from '../../types/authTokens';
 import { sendInternalGitPOAPRequestMessage } from '../../external/slack';
 import { convertContributorsFromSchema, createClaimsForContributors } from '../../lib/gitpoaps';
 import {
@@ -136,7 +136,7 @@ customGitPOAPsRouter.post(
       return res.status(500).send({ msg: 'Failed to setup email address' });
     }
 
-    const { addressId } = getAccessTokenPayload(req.user);
+    const { address } = getAccessTokenPayloadWithAddress(req.user);
 
     const gitPOAPRequest = await context.prisma.gitPOAPRequest.create({
       data: {
@@ -154,7 +154,7 @@ customGitPOAPsRouter.post(
         staffApprovalStatus: StaffApprovalStatus.PENDING,
         contributors: contributors as Prisma.JsonObject,
         address: {
-          connect: { id: addressId },
+          connect: { id: address.id },
         },
       },
     });
@@ -389,11 +389,11 @@ customGitPOAPsRouter.patch(
       return res.status(404).send({ msg });
     }
 
-    const { ethAddress, addressId } = getAccessTokenPayload(req.user);
+    const { address } = getAccessTokenPayloadWithAddress(req.user);
 
-    if (gitPOAPRequest.addressId !== addressId && !isAddressAStaffMember(ethAddress)) {
+    if (gitPOAPRequest.addressId !== address.id && !isAddressAStaffMember(address.ethAddress)) {
       logger.warn(
-        `Non-staff address ${ethAddress} attempted to update a GitPOAPRequest (ID: ${gitPOAPRequestId}) that they do not own`,
+        `Non-staff address ${address.ethAddress} attempted to update a GitPOAPRequest (ID: ${gitPOAPRequestId}) that they do not own`,
       );
       return res.status(401).send({ msg: 'Not GitPOAPRequest creator' });
     }

@@ -50,26 +50,25 @@ export class CustomClaimResolver {
   async userClaims(
     @Ctx() { prisma, userAccessTokenPayload, logger }: AuthLoggingContext,
   ): Promise<FullClaimData[] | null> {
-    if (userAccessTokenPayload === null) {
+    if (userAccessTokenPayload === null || userAccessTokenPayload.address === null) {
       logger.error('Route passed AuthRoles.Address authorization without user payload set');
       throw InternalError;
     }
 
-    logger.info(`Request for the claims for address: ${userAccessTokenPayload.ethAddress}`);
+    logger.info(`Request for the claims for address: ${userAccessTokenPayload.address.ethAddress}`);
 
     const possibleMatches: Prisma.Enumerable<Prisma.ClaimWhereInput[]> = [
       // Note that this covers both the ethAddress and the ensName
-      { issuedAddressId: userAccessTokenPayload.addressId },
+      { issuedAddressId: userAccessTokenPayload.address.id },
     ];
 
-    if (userAccessTokenPayload.githubId !== null) {
+    if (userAccessTokenPayload.github !== null) {
       possibleMatches.push({
-        githubUser: { githubId: userAccessTokenPayload.githubId },
+        githubUser: { githubId: userAccessTokenPayload.github.githubId },
       });
     }
-    const emailAddress = userAccessTokenPayload.emailAddress ?? null;
-    if (emailAddress !== null) {
-      possibleMatches.push({ email: { emailAddress } });
+    if (userAccessTokenPayload.email !== null) {
+      possibleMatches.push({ email: { id: userAccessTokenPayload.email.id } });
     }
 
     const claims = await prisma.claim.findMany({

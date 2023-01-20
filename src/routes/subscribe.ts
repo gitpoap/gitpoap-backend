@@ -1,11 +1,11 @@
 import { Router } from 'express';
 import { addListMember } from '../external/mailchimp';
-import { jwtMiddleware } from '../middleware/auth';
+import { jwtBasic } from '../middleware/auth';
 import { getRequestLogger } from '../middleware/loggingAndTiming';
 
 export const subscribeRouter = Router();
 
-subscribeRouter.post('/', jwtMiddleware, async function (req, res) {
+subscribeRouter.post('/', jwtBasic, async function (req, res) {
   const logger = getRequestLogger(req);
 
   if (!req.user) {

@@ -65,18 +65,16 @@ export class CustomMembershipResolver {
   async userMemberships(
     @Ctx() { prisma, userAccessTokenPayload, logger }: AuthLoggingContext,
   ): Promise<UserMemberships> {
-    if (userAccessTokenPayload === null) {
+    if (userAccessTokenPayload === null || userAccessTokenPayload.address === null) {
       logger.error('Route passed AuthRoles.Address authorization without user payload set');
       throw InternalError;
     }
 
-    logger.info(`Request for Memberships for address ${userAccessTokenPayload.ethAddress}`);
+    logger.info(`Request for Memberships for address ${userAccessTokenPayload.address.ethAddress}`);
 
     const memberships = await prisma.membership.findMany({
       where: {
-        address: {
-          ethAddress: userAccessTokenPayload.ethAddress,
-        },
+        address: { ethAddress: userAccessTokenPayload.address.ethAddress },
       },
       include: {
         team: true,
@@ -92,7 +90,7 @@ export class CustomMembershipResolver {
     );
 
     logger.debug(
-      `Completed request for Memberships for address ${userAccessTokenPayload.ethAddress}`,
+      `Completed request for Memberships for address ${userAccessTokenPayload.address.ethAddress}`,
     );
 
     return { memberships };
@@ -107,26 +105,22 @@ export class CustomMembershipResolver {
     @Arg('perPage', { defaultValue: null }) perPage?: number,
     @Arg('page', { defaultValue: null }) page?: number,
   ): Promise<TeamMemberships> {
-    logger.info(
-      `Request for Memberships for team ${teamId} using sort ${sort}, with ${perPage} results per page and page ${page}`,
-    );
-
-    if (userAccessTokenPayload === null) {
+    if (userAccessTokenPayload === null || userAccessTokenPayload.address === null) {
       logger.error('Route passed AuthRoles.Address authorization without user payload set');
       throw InternalError;
     }
+
+    logger.info(
+      `Request for Memberships for team ${teamId} using sort ${sort}, with ${perPage} results per page and page ${page}`,
+    );
 
     if ((page === null || perPage === null) && page !== perPage) {
       logger.warn('"page" and "perPage" must be specified together');
       throw new Error(MembershipErrorMessage.PAGE_NOT_SPECIFIED);
     }
     const team = await prisma.team.findUnique({
-      where: {
-        id: teamId,
-      },
-      select: {
-        ownerAddress: true,
-      },
+      where: { id: teamId },
+      select: { ownerAddress: true },
     });
 
     if (team === null) {
@@ -138,7 +132,7 @@ export class CustomMembershipResolver {
       where: {
         teamId_addressId: {
           teamId,
-          addressId: userAccessTokenPayload.addressId,
+          addressId: userAccessTokenPayload.address.id,
         },
       },
     });
@@ -150,9 +144,7 @@ export class CustomMembershipResolver {
 
     const total = await prisma.membership.count({
       where: {
-        team: {
-          id: teamId,
-        },
+        team: { id: teamId },
       },
     });
 
@@ -160,9 +152,7 @@ export class CustomMembershipResolver {
       skip: page ? (page - 1) * <number>perPage : undefined,
       take: perPage ?? undefined,
       where: {
-        team: {
-          id: teamId,
-        },
+        team: { id: teamId },
       },
       include: {
         team: true,
@@ -216,7 +206,7 @@ export class CustomMembershipResolver {
     @Arg('teamId') teamId: number,
     @Arg('address') address: string,
   ): Promise<MembershipMutationPayload> {
-    if (userAccessTokenPayload === null) {
+    if (userAccessTokenPayload === null || userAccessTokenPayload.address === null) {
       logger.error('Route passed AuthRoles.Address authorization without user payload set');
       throw InternalError;
     }
@@ -224,9 +214,7 @@ export class CustomMembershipResolver {
     logger.info(`Request to add user with address: ${address} as a member to team ${teamId}`);
 
     const team = await prisma.team.findUnique({
-      where: {
-        id: teamId,
-      },
+      where: { id: teamId },
       select: {
         id: true,
         ownerAddress: true,
@@ -238,37 +226,19 @@ export class CustomMembershipResolver {
       throw new Error(MembershipErrorMessage.TEAM_NOT_FOUND);
     }
 
-    if (team.ownerAddress.ethAddress !== userAccessTokenPayload.ethAddress) {
+    if (team.ownerAddress.id !== userAccessTokenPayload.address.id) {
       logger.warn('Not the team owner');
       throw new Error(MembershipErrorMessage.NOT_AUTHORIZED);
     }
 
     const addressRecord = await prisma.address.findUnique({
-      where: {
-        ethAddress: address.toLowerCase(),
-      },
-      select: {
-        id: true,
-      },
+      where: { ethAddress: address.toLowerCase() },
+      select: { id: true },
     });
 
     if (addressRecord === null) {
       logger.warn(`Address not found for address: ${address}`);
       throw new Error(MembershipErrorMessage.ADDRESS_NOT_FOUND);
-    }
-
-    const userMembership = await prisma.membership.findUnique({
-      where: {
-        teamId_addressId: {
-          addressId: userAccessTokenPayload.addressId,
-          teamId,
-        },
-      },
-    });
-
-    if (userMembership === null || userMembership.role === MembershipRole.MEMBER) {
-      logger.warn('Not the team admin');
-      throw new Error(MembershipErrorMessage.NOT_AUTHORIZED);
     }
 
     const membershipRecord = await prisma.membership.findUnique({
@@ -288,9 +258,7 @@ export class CustomMembershipResolver {
     const membership = await prisma.membership.create({
       data: {
         team: {
-          connect: {
-            id: teamId,
-          },
+          connect: { id: teamId },
         },
         address: {
           connect: { ethAddress: address.toLowerCase() },
@@ -304,9 +272,7 @@ export class CustomMembershipResolver {
       `Completed request to add user with address: ${address} as a member to team ${teamId}`,
     );
 
-    return {
-      membership,
-    };
+    return { membership };
   }
 
   @Authorized(AuthRoles.Address)
@@ -315,12 +281,12 @@ export class CustomMembershipResolver {
     @Ctx() { prisma, userAccessTokenPayload, logger }: AuthLoggingContext,
     @Arg('membershipId') membershipId: number,
   ): Promise<MembershipMutationPayload> {
-    logger.info(`Request to remove a membership ${membershipId}`);
-
-    if (userAccessTokenPayload === null) {
+    if (userAccessTokenPayload === null || userAccessTokenPayload.address === null) {
       logger.error('Route passed AuthRoles.Address authorization without user payload set');
       throw InternalError;
     }
+
+    logger.info(`Request to remove a membership ${membershipId}`);
 
     const membership = await prisma.membership.findUnique({
       where: {
@@ -349,7 +315,7 @@ export class CustomMembershipResolver {
     const userMembership = await prisma.membership.findUnique({
       where: {
         teamId_addressId: {
-          addressId: userAccessTokenPayload.addressId,
+          addressId: userAccessTokenPayload.address.id,
           teamId: membership.team.id,
         },
       },
@@ -357,7 +323,7 @@ export class CustomMembershipResolver {
 
     const isAdmin = userMembership?.role === MembershipRole.MEMBER;
     const isMembershipOwner =
-      userAccessTokenPayload.ethAddress.toLowerCase() !== membership.address.ethAddress.toLowerCase();
+      userAccessTokenPayload.address.ethAddress !== membership.address.ethAddress;
     const isPending = membership.acceptanceStatus === MembershipAcceptanceStatus.PENDING;
 
     if ((userMembership === null || isAdmin) && isPending && isMembershipOwner) {
@@ -366,9 +332,7 @@ export class CustomMembershipResolver {
     }
 
     const result = await prisma.membership.delete({
-      where: {
-        id: membershipId,
-      },
+      where: { id: membershipId },
       include: {
         team: true,
         address: true,
@@ -377,9 +341,7 @@ export class CustomMembershipResolver {
 
     logger.debug(`Completed request to Request to remove a membership ${membershipId}`);
 
-    return {
-      membership: result,
-    };
+    return { membership: result };
   }
 
   @Authorized(AuthRoles.Address)
@@ -388,59 +350,39 @@ export class CustomMembershipResolver {
     @Ctx() { prisma, userAccessTokenPayload, logger }: AuthLoggingContext,
     @Arg('teamId') teamId: number,
   ): Promise<MembershipMutationPayload> {
-    logger.info(`Request to accept a membership to team ${teamId}`);
-
-    if (userAccessTokenPayload === null) {
+    if (userAccessTokenPayload === null || userAccessTokenPayload.address === null) {
       logger.error('Route passed AuthRoles.Address authorization without user payload set');
       throw InternalError;
     }
 
-    const team = await prisma.team.findUnique({
-      where: {
-        id: teamId,
-      },
-      select: {
-        id: true,
-      },
-    });
+    logger.info(`Request to accept a membership to team ${teamId}`);
 
+    const team = await prisma.team.findUnique({
+      where: { id: teamId },
+      select: { id: true },
+    });
     if (team === null) {
       logger.warn(`Team not found for teamId: ${teamId}`);
       throw new Error(MembershipErrorMessage.TEAM_NOT_FOUND);
-    }
-
-    const addressRecord = await prisma.address.findUnique({
-      where: {
-        ethAddress: userAccessTokenPayload.ethAddress,
-      },
-      select: {
-        id: true,
-      },
-    });
-
-    if (addressRecord === null) {
-      logger.warn(`Address not found for address: ${userAccessTokenPayload.ethAddress}`);
-      throw new Error(MembershipErrorMessage.ADDRESS_NOT_FOUND);
     }
 
     const membership = await prisma.membership.findUnique({
       where: {
         teamId_addressId: {
           teamId,
-          addressId: addressRecord.id,
+          addressId: userAccessTokenPayload.address.id,
         },
       },
     });
-
     if (membership === null) {
       logger.warn(
-        `Membership not found for team ${teamId} address: ${userAccessTokenPayload.ethAddress}`,
+        `Membership not found for team ${teamId} address: ${userAccessTokenPayload.address.ethAddress}`,
       );
       throw new Error(MembershipErrorMessage.MEMBERSHIP_NOT_FOUND);
     }
 
     if (membership.acceptanceStatus !== MembershipAcceptanceStatus.PENDING) {
-      logger.warn(`Membership is already accepted: ${userAccessTokenPayload.ethAddress}`);
+      logger.warn(`Membership is already accepted: ${userAccessTokenPayload.address.ethAddress}`);
       throw new Error(MembershipErrorMessage.ALREADY_ACCEPTED);
     }
 
@@ -448,7 +390,7 @@ export class CustomMembershipResolver {
       where: {
         teamId_addressId: {
           teamId,
-          addressId: addressRecord.id,
+          addressId: userAccessTokenPayload.address.id,
         },
       },
       data: {
@@ -458,11 +400,9 @@ export class CustomMembershipResolver {
     });
 
     logger.debug(
-      `Completed request to accept a membership to team ${teamId} for address ${userAccessTokenPayload.ethAddress}`,
+      `Completed request to accept a membership to team ${teamId} for address ${userAccessTokenPayload.address.ethAddress}`,
     );
 
-    return {
-      membership: result,
-    };
+    return { membership: result };
   }
 }

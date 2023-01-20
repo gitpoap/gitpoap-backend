@@ -2,7 +2,7 @@ import { PutItemCommand } from '@aws-sdk/client-dynamodb';
 import { Router } from 'express';
 import { dynamoDBClient, SUGGESTIONS_TABLE_NAME } from '../external/dynamo';
 import { getRequestLogger } from '../middleware/loggingAndTiming';
-import { jwtMiddleware } from '../middleware/auth';
+import { jwtBasic } from '../middleware/auth';
 
 type SuggestionFormData = {
   email: string;
@@ -17,7 +17,7 @@ enum UserType {
 
 export const suggestRouter = Router();
 
-suggestRouter.post('/', jwtMiddleware, async function (req, res) {
+suggestRouter.post('/', jwtBasic, async function (req, res) {
   const logger = getRequestLogger(req);
 
   if (!req.user) {

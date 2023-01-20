@@ -5,7 +5,7 @@ import { getRequestLogger } from '../middleware/loggingAndTiming';
 import { getS3URL, s3configProfile } from '../external/s3';
 import { hasMembership } from '../lib/authTokens';
 import { MembershipAcceptanceStatus, MembershipRole } from '@prisma/client';
-import { getAccessTokenPayload } from '../types/authTokens';
+import { getAccessTokenPayloadWithAddress } from '../types/authTokens';
 import { uploadTeamLogoImage } from '../lib/teams';
 import { context } from '../context';
 import { CreateTeamSchema } from '../schemas/teams';
@@ -27,8 +27,10 @@ teamsRouter.post('/', jwtWithAddress(), upload.single('image'), async function (
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
-  let { addressId, ethAddress } = getAccessTokenPayload(req.user);
-  if (isAddressAStaffMember(ethAddress) && schemaResult.data.adminAddressId !== undefined) {
+  const { address } = getAccessTokenPayloadWithAddress(req.user);
+
+  let addressId = address.id;
+  if (isAddressAStaffMember(address.ethAddress) && schemaResult.data.adminAddressId !== undefined) {
     addressId = schemaResult.data.adminAddressId;
 
     const addressResult = await context.prisma.address.findUnique({
@@ -113,11 +115,11 @@ teamsRouter.patch(
       return res.status(404).send({ msg });
     }
 
-    const accessTokenPayload = getAccessTokenPayload(req.user);
+    const accessTokenPayload = getAccessTokenPayloadWithAddress(req.user);
 
     if (!hasMembership(accessTokenPayload, teamId, [MembershipRole.OWNER, MembershipRole.ADMIN])) {
       logger.warn(
-        `Non-admin ${accessTokenPayload.ethAddress} attempted to change the logo for Team ID ${teamId}`,
+        `Non-admin ${accessTokenPayload.address.ethAddress} attempted to change the logo for Team ID ${teamId}`,
       );
       return res.status(401).send({ msg: 'Must be an admin of the team' });
     }
