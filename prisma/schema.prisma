@@ -44,9 +44,6 @@ model DiscordUser {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
   claims            Claim[]
-  // Hide discordUser.discordOAuthToken from generated resolvers
-  /// @TypeGraphQL.omit(output: true, input: true)
-  discordOAuthToken String?
 }
 
 model Profile {
