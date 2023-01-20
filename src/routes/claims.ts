@@ -23,7 +23,7 @@ import { BotCreateClaimsErrorType, createClaimsForPR, createClaimsForIssue } fro
 import { RestrictedContribution } from '../lib/contributions';
 import { sendInternalClaimMessage, sendInternalClaimByMentionMessage } from '../external/slack';
 import { isAddressAStaffMember } from '../lib/staff';
-import { getAccessTokenPayload } from '../types/authTokens';
+import { getAccessTokenPayloadWithAddress } from '../types/authTokens';
 import { ensureRedeemCodeThreshold, runClaimsPostProcessing } from '../lib/claims';
 import { ClaimData, FoundClaim } from '../types/claims';
 import { getRequestLogger } from '../middleware/loggingAndTiming';
@@ -44,21 +44,10 @@ claimsRouter.post('/', jwtWithAddress(), async function (req, res) {
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
-  const { addressId, ethAddress, ensName, emailAddress, githubId } = getAccessTokenPayload(
-    req.user,
-  );
+  const { address, email, github } = getAccessTokenPayloadWithAddress(req.user);
   const { claimIds } = schemaResult.data;
 
-  let emailId;
-  if (emailAddress !== null) {
-    const emailData = await context.prisma.email.findUnique({
-      where: { emailAddress },
-      select: { id: true },
-    });
-    emailId = emailData === null ? undefined : emailData.id;
-  }
-
-  logger.info(`Request claiming IDs ${claimIds} for address ${ethAddress}`);
+  logger.info(`Request claiming IDs ${claimIds} for address ${address.ethAddress}`);
 
   const foundClaims: FoundClaim[] = [];
   const qrHashes: string[] = [];
@@ -88,9 +77,9 @@ claimsRouter.post('/', jwtWithAddress(), async function (req, res) {
 
     if (!claim.gitPOAP.isEnabled) {
       logger.warn(
-        `User with address: ${shortenAddress(
-          ethAddress,
-        )} (ID: ${addressId}) attempted to claim a non-enabled GitPOAP`,
+        `User with address: ${shortenAddress(address.ethAddress)} (ID: ${
+          address.id
+        }) attempted to claim a non-enabled GitPOAP`,
       );
       invalidClaims.push({
         claimId,
@@ -110,9 +99,11 @@ claimsRouter.post('/', jwtWithAddress(), async function (req, res) {
 
     // Check that the user owns the claim
     if (
-      claim.githubUser?.githubId !== githubId &&
-      claim.issuedAddressId !== addressId &&
-      claim.emailId !== emailId
+      github &&
+      claim.githubUser?.githubId !== github.githubId &&
+      claim.issuedAddressId !== address.id &&
+      email &&
+      claim.emailId !== email.id
     ) {
       invalidClaims.push({
         claimId,
@@ -130,9 +121,9 @@ claimsRouter.post('/', jwtWithAddress(), async function (req, res) {
     }
 
     await deleteRedeemCode(redeemCode.id);
-    await updateClaimStatusById(claimId, ClaimStatus.PENDING, addressId);
+    await updateClaimStatusById(claimId, ClaimStatus.PENDING, address.id);
 
-    const poapData = await redeemPOAP(ethAddress, redeemCode.code);
+    const poapData = await redeemPOAP(address.ethAddress, redeemCode.code);
     // If minting the POAP failed we need to revert
     if (poapData === null) {
       logger.error(`Failed to mint claim ${claimId} via the POAP API`);
@@ -154,15 +145,13 @@ claimsRouter.post('/', jwtWithAddress(), async function (req, res) {
       githubHandle: claim.githubUser?.githubHandle ?? null,
       emailId: claim.emailId,
       poapEventId: claim.gitPOAP.poapEventId,
-      mintedAddress: ethAddress,
+      mintedAddress: address.ethAddress,
     });
     qrHashes.push(poapData.qr_hash);
 
     // Mark that the POAP has been claimed
     await context.prisma.claim.update({
-      where: {
-        id: claimId,
-      },
+      where: { id: claimId },
       data: {
         status: ClaimStatus.MINTING,
         qrHash: poapData.qr_hash,
@@ -189,9 +178,9 @@ claimsRouter.post('/', jwtWithAddress(), async function (req, res) {
     }
   }
 
-  void sendInternalClaimMessage(foundClaims, ethAddress, ensName);
+  void sendInternalClaimMessage(foundClaims, address.ethAddress, address.ensName);
 
-  logger.debug(`Completed request claiming IDs ${claimIds} for address ${ethAddress}`);
+  logger.debug(`Completed request claiming IDs ${claimIds} for address ${address.ethAddress}`);
 
   res.status(200).send({
     claimed: claimedIds,
@@ -225,7 +214,9 @@ claimsRouter.post('/create', jwtWithStaffOAuth(), async function (req, res) {
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
-  const { githubHandle, githubOAuthToken } = getAccessTokenPayloadWithGithubOAuth(req.user);
+  const {
+    github: { githubHandle, githubOAuthToken },
+  } = getAccessTokenPayloadWithGithubOAuth(req.user);
 
   logger.info(
     `Request to create ${req.body.recipientGithubIds.length} claims for GitPOAP Id: ${req.body.gitPOAPId}`,
@@ -239,9 +230,7 @@ claimsRouter.post('/create', jwtWithStaffOAuth(), async function (req, res) {
       project: {
         select: {
           repos: {
-            select: {
-              id: true,
-            },
+            select: { id: true },
           },
         },
       },
@@ -294,14 +283,10 @@ claimsRouter.post('/create', jwtWithStaffOAuth(), async function (req, res) {
       update: {},
       create: {
         gitPOAP: {
-          connect: {
-            id: gitPOAPData.id,
-          },
+          connect: { id: gitPOAPData.id },
         },
         githubUser: {
-          connect: {
-            id: githubUser.id,
-          },
+          connect: { id: githubUser.id },
         },
       },
     });
@@ -507,10 +492,17 @@ claimsRouter.post('/revalidate', jwtWithAddress(), async (req, res) => {
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
-  const { ethAddress, githubId, githubHandle } = getAccessTokenPayload(req.user);
+  const { address, github } = getAccessTokenPayloadWithAddress(req.user);
+
+  if (github === null) {
+    logger.warn(
+      `Address ${address.ethAddress} attempted to revalidate while not logged into GitHub`,
+    );
+    return res.status(400).send({ msg: 'Not logged into GitHub' });
+  }
 
   logger.info(
-    `Request to revalidate GitPOAP IDs ${req.body.claimIds} by GitHub user ${githubHandle}`,
+    `Request to revalidate GitPOAP IDs ${req.body.claimIds} by GitHub user ${github.githubHandle}`,
   );
 
   const foundClaims: number[] = [];
@@ -518,16 +510,12 @@ claimsRouter.post('/revalidate', jwtWithAddress(), async (req, res) => {
 
   for (const claimId of req.body.claimIds) {
     const claim = await context.prisma.claim.findUnique({
-      where: {
-        id: claimId,
-      },
+      where: { id: claimId },
       select: {
         status: true,
         mintedAddress: true,
         githubUser: {
-          select: {
-            githubId: true,
-          },
+          select: { githubId: true },
         },
       },
     });
@@ -543,10 +531,10 @@ claimsRouter.post('/revalidate', jwtWithAddress(), async (req, res) => {
     // If the claim address is not set to the user sending the request,
     // assume the user is correct and that perhaps we haven't seen the
     // transfer yet in our backend
-    if (claim.mintedAddress?.ethAddress !== ethAddress) {
+    if (claim.mintedAddress?.ethAddress !== address.ethAddress) {
       const newAddress = await checkIfClaimTransferred(claimId);
 
-      if (newAddress?.toLowerCase() !== ethAddress) {
+      if (newAddress?.toLowerCase() !== address.ethAddress) {
         invalidClaims.push({
           claimId,
           reason: 'Logged-in Address is not the current owner',
@@ -555,7 +543,7 @@ claimsRouter.post('/revalidate', jwtWithAddress(), async (req, res) => {
       }
     }
 
-    if (claim.githubUser?.githubId !== githubId) {
+    if (claim.githubUser?.githubId !== github.githubId) {
       invalidClaims.push({
         claimId,
         reason: 'User does not own claim',
@@ -563,12 +551,8 @@ claimsRouter.post('/revalidate', jwtWithAddress(), async (req, res) => {
     }
 
     await context.prisma.claim.update({
-      where: {
-        id: claimId,
-      },
-      data: {
-        needsRevalidation: false,
-      },
+      where: { id: claimId },
+      data: { needsRevalidation: false },
     });
   }
 
@@ -585,7 +569,7 @@ claimsRouter.post('/revalidate', jwtWithAddress(), async (req, res) => {
   }
 
   logger.debug(
-    `Completed request to revalidate GitPOAP IDs ${req.body.claimIds} by GitHub user ${githubHandle}`,
+    `Completed request to revalidate GitPOAP IDs ${req.body.claimIds} by GitHub user ${github.githubHandle}`,
   );
 
   res.status(200).send({
@@ -621,7 +605,7 @@ claimsRouter.delete('/:id', jwtWithAddress(), async (req, res) => {
     return res.status(200).send('DELETED');
   }
 
-  const { addressId, ethAddress } = getAccessTokenPayload(req.user);
+  const { address } = getAccessTokenPayloadWithAddress(req.user);
 
   if (claim.gitPOAP.type === GitPOAPType.CUSTOM) {
     // If the GitPOAP is CUSTOM ensure that requestor is it's creator
@@ -632,16 +616,18 @@ claimsRouter.delete('/:id', jwtWithAddress(), async (req, res) => {
       return res.status(500).send({ msg: "Can't authenticate GitPOAP ownership" });
     }
 
-    if (claim.gitPOAP.creatorAddressId !== addressId) {
+    if (claim.gitPOAP.creatorAddressId !== address.id) {
       logger.warn(
-        `User attempted to delete a Claim for a custom GitPOAP (ID: ${claim.gitPOAP.id} that they do not own`,
+        `User ${address.ethAddress} attempted to delete a Claim for a custom GitPOAP (ID: ${claim.gitPOAP.id}) that they do not own`,
       );
       return res.status(401).send({ msg: 'Not Custom GitPOAP creator' });
     }
   } else {
     // Otherwise ensure that the requestor is a staff member
-    if (!isAddressAStaffMember(ethAddress)) {
-      logger.warn(`Non-staff address ${ethAddress} attempted to delete a Claim for a GitPOAP`);
+    if (!isAddressAStaffMember(address.ethAddress)) {
+      logger.warn(
+        `Non-staff address ${address.ethAddress} attempted to delete a Claim for a GitPOAP`,
+      );
       return res.status(401).send({ msg: 'Not authorized to delete claims' });
     }
   }
