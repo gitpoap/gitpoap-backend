@@ -27,9 +27,9 @@ export async function upsertGithubUser(
   });
 }
 
-export async function removeGithubUsersLogin(privyUserId: string) {
+export async function removeGithubUsersLogin(id: number) {
   await context.prisma.githubUser.update({
-    where: { privyUserId },
+    where: { id },
     data: {
       privyUserId: null,
       githubOAuthToken: null,

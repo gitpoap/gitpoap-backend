@@ -10,7 +10,7 @@ import {
   UpdateItemCommand,
 } from '@aws-sdk/client-dynamodb';
 import { configProfile, dynamoDBClient } from '../../external/dynamo';
-import { jwtWithGitHubOAuth } from '../../middleware/auth';
+import { jwtWithGithubOAuth } from '../../middleware/auth';
 import { getAccessTokenPayloadWithGithubOAuth } from '../../types/authTokens';
 import { sendConfirmationEmail, sendInternalConfirmationEmail } from '../../external/postmark';
 import {
@@ -31,12 +31,14 @@ const upload = multer();
 
 onboardingRouter.post<'/intake-form', any, any, IntakeForm>(
   '/intake-form',
-  jwtWithGitHubOAuth(),
+  jwtWithGithubOAuth(),
   upload.array('images', 5),
   async (req, res) => {
     const logger = getRequestLogger(req);
 
-    const { githubHandle } = getAccessTokenPayloadWithGithubOAuth(req.user);
+    const {
+      github: { githubHandle },
+    } = getAccessTokenPayloadWithGithubOAuth(req.user);
     const unixTime = DateTime.local().toUnixInteger();
     const intakeFormTable = configProfile.tables.intakeForm;
 
@@ -174,11 +176,13 @@ onboardingRouter.post<'/intake-form', any, any, IntakeForm>(
 
 onboardingRouter.get<'/github/repos', any, APIResponseData<Repo[]>>(
   '/github/repos',
-  jwtWithGitHubOAuth(),
+  jwtWithGithubOAuth(),
   async function (req, res) {
     const logger = getRequestLogger(req);
 
-    const { githubOAuthToken } = getAccessTokenPayloadWithGithubOAuth(req.user);
+    const {
+      github: { githubOAuthToken },
+    } = getAccessTokenPayloadWithGithubOAuth(req.user);
     const octokit = new Octokit({ auth: githubOAuthToken });
     const user = await octokit.rest.users.getAuthenticated();
 
