@@ -45,9 +45,6 @@ export const PUBLIC_API_RATE_LIMIT_MAX_REQUESTS = 1000;
 export const MEGABYTES_TO_BYTES = 1000000;
 
 export const JWT_EXP_TIME_SECONDS = 10 * SECONDS_PER_MINUTE;
-export const SIGNATURE_TTL_DAYS = 30;
-
-export const LOGIN_EXP_TIME_MONTHS = 1;
 
 export const GITPOAP_ISSUER_EMAIL = 'issuer@gitpoap.io';
 
@@ -81,8 +78,6 @@ export const CUSTOM_GITPOAP_CODE_BUFFER = 5;
 export const CUSTOM_GITPOAP_MAX_STARTING_CODES = 100;
 
 export const DISCORD_URL = 'https://discord.com';
-export const DISCORD_AUTH_GRANT_TYPE = 'authorization_code';
-export const DISCORD_AUTH_SCOPE = 'identify';
 
 export const GNOSIS_RPC = 'https://rpc.gnosischain.com/';
 

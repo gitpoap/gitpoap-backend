@@ -1,25 +1,80 @@
 import { MembershipRole } from '@prisma/client';
 
-function isNumberOrNull(field: any): boolean {
-  return typeof field === 'number' || field === null;
-}
-
 function isStringOrNull(field: any): boolean {
   return typeof field === 'string' || field === null;
 }
 
-export type Memberships = {
-  teamId: number;
-  role: MembershipRole;
-}[];
+function isObjectWithId(payload: any): boolean {
+  return (
+    payload && typeof payload === 'object' && 'id' in payload && typeof payload.id === 'number'
+  );
+}
 
-type AccessTokenPayloadBase = {
-  privyUserId: string;
-  addressId: number;
+export type AddressPayload = {
+  id: number;
   ethAddress: string;
   ensName: string | null;
   ensAvatarImageUrl: string | null;
-  memberships: Memberships;
+};
+
+function isAddressPayload(payload: any): payload is AddressPayload {
+  return (
+    isObjectWithId(payload) &&
+    'ethAddress' in payload &&
+    typeof payload.ethAddress === 'string' &&
+    'ensName' in payload &&
+    isStringOrNull(payload.ensName) &&
+    'ensAvatarImageUrl' in payload &&
+    isStringOrNull(payload.ensAvatarImageUrl)
+  );
+}
+
+export type GithubPayload = {
+  id: number;
+  githubId: number;
+  githubHandle: string;
+};
+
+function isGithubPayload(payload: any): payload is GithubPayload {
+  return (
+    isObjectWithId(payload) &&
+    'githubId' in payload &&
+    typeof payload.githubId === 'number' &&
+    'githubHandle' in payload &&
+    typeof payload.githubHandle === 'string'
+  );
+}
+
+export type EmailPayload = {
+  id: number;
+  emailAddress: string;
+};
+
+function isEmailPayload(payload: any): payload is EmailPayload {
+  return (
+    isObjectWithId(payload) && 'emailAddress' in payload && typeof payload.emailAddress === 'string'
+  );
+}
+
+export type DiscordPayload = {
+  id: number;
+  discordId: string;
+  discordHandle: string;
+};
+
+function isDiscordPayload(payload: any): payload is DiscordPayload {
+  return (
+    isObjectWithId(payload) &&
+    'discordId' in payload &&
+    typeof payload.discordId === 'string' &&
+    'discordHandle' in payload &&
+    typeof payload.discordHandle === 'string'
+  );
+}
+
+export type MembershipPayload = {
+  teamId: number;
+  role: MembershipRole;
 };
 
 const membershipSet = new Set<MembershipRole>([
@@ -28,38 +83,26 @@ const membershipSet = new Set<MembershipRole>([
   MembershipRole.MEMBER,
 ]);
 
-function isAccessTokenPayloadBase(payload: any): boolean {
-  if (
-    !(
-      payload &&
-      typeof payload === 'object' &&
-      'privyUserId' in payload &&
-      typeof payload.privyUserId === 'string' &&
-      'addressId' in payload &&
-      typeof payload.addressId === 'number' &&
-      'ethAddress' in payload &&
-      typeof payload.ethAddress === 'string' &&
-      'ensName' in payload &&
-      isStringOrNull(payload.ensName) &&
-      'ensAvatarImageUrl' in payload &&
-      isStringOrNull(payload.ensAvatarImageUrl) &&
-      'memberships' in payload &&
-      Array.isArray(payload.memberships)
-    )
-  ) {
+function isMembershipPayload(payload: any): payload is MembershipPayload {
+  return (
+    payload &&
+    typeof payload === 'object' &&
+    'teamId' in payload &&
+    typeof payload.teamId === 'number' &&
+    'role' in payload &&
+    membershipSet.has(payload.role)
+  );
+}
+
+export type MembershipsPayload = MembershipPayload[];
+
+function isMembershipsPayload(payload: any): payload is MembershipsPayload {
+  if (!(payload && Array.isArray(payload))) {
     return false;
   }
-  for (const membership of payload.memberships) {
-    if (
-      !(
-        membership &&
-        typeof membership === 'object' &&
-        'teamId' in membership &&
-        typeof membership.teamId === 'number' &&
-        'role' in membership &&
-        membershipSet.has(membership.role)
-      )
-    ) {
+
+  for (const membership of payload) {
+    if (!isMembershipPayload(membership)) {
       return false;
     }
   }
@@ -67,24 +110,31 @@ function isAccessTokenPayloadBase(payload: any): boolean {
   return true;
 }
 
-export type AccessTokenPayload = AccessTokenPayloadBase & {
-  githubId: number | null;
-  githubHandle: string | null;
-  discordHandle: string | null;
-  emailAddress: string | null;
+export type AccessTokenPayload = {
+  privyUserId: string;
+  address: AddressPayload | null;
+  github: GithubPayload | null;
+  email: EmailPayload | null;
+  discord: DiscordPayload | null;
+  memberships: MembershipsPayload;
 };
 
 function isAccessTokenPayload(payload: any): payload is AccessTokenPayload {
   return (
-    isAccessTokenPayloadBase(payload) &&
-    'githubId' in payload &&
-    isNumberOrNull(payload.githubId) &&
-    'githubHandle' in payload &&
-    isStringOrNull(payload.githubHandle) &&
-    'discordHandle' in payload &&
-    isStringOrNull(payload.discordHandle) &&
-    'emailAddress' in payload &&
-    isStringOrNull(payload.emailAddress)
+    payload &&
+    typeof payload === 'object' &&
+    'privyUserId' in payload &&
+    typeof payload.privyUserId === 'string' &&
+    'address' in payload &&
+    (payload.address === null || isAddressPayload(payload.address)) &&
+    'github' in payload &&
+    (payload.github === null || isGithubPayload(payload.github)) &&
+    'email' in payload &&
+    (payload.email === null || isEmailPayload(payload.email)) &&
+    'discord' in payload &&
+    (payload.discord === null || isDiscordPayload(payload.discord)) &&
+    'memberships' in payload &&
+    isMembershipsPayload(payload.memberships)
   );
 }
 
@@ -96,29 +146,36 @@ export function getAccessTokenPayload(payload: any): AccessTokenPayload {
   throw Error('Tried to convert payload to AccessTokenPayload but it is not!');
 }
 
-export type AccessTokenPayloadWithGithubOAuth = AccessTokenPayloadBase & {
-  githubId: number;
-  githubHandle: string;
-  githubOAuthToken: string;
-  discordHandle: string | null;
-  emailAddress: string | null;
+export type AccessTokenPayloadWithAddress = AccessTokenPayload & {
+  address: AddressPayload;
+};
+
+function isAccessTokenPayloadWithAddress(payload: any): payload is AccessTokenPayloadWithAddress {
+  return isAccessTokenPayload(payload) && payload.github !== null;
+}
+
+export function getAccessTokenPayloadWithAddress(payload: any): AccessTokenPayloadWithAddress {
+  if (isAccessTokenPayloadWithAddress(payload)) {
+    return payload;
+  }
+
+  throw Error('Tried to convert payload to AccessTokenPayloadWithAddress but it is not!');
+}
+
+export type AccessTokenPayloadWithGithubOAuth = AccessTokenPayload & {
+  github: GithubPayload & {
+    githubOAuthToken: string;
+  };
 };
 
 function isAccessTokenPayloadWithGithubOAuth(
   payload: any,
 ): payload is AccessTokenPayloadWithGithubOAuth {
   return (
-    isAccessTokenPayloadBase(payload) &&
-    'githubId' in payload &&
-    typeof payload.githubId === 'number' &&
-    'githubHandle' in payload &&
-    typeof payload.githubHandle === 'string' &&
-    'githubOAuthToken' in payload &&
-    typeof payload.githubOAuthToken === 'string' &&
-    'discordHandle' in payload &&
-    isStringOrNull(payload.discordHandle) &&
-    'emailAddress' in payload &&
-    isStringOrNull(payload.emailAddress)
+    isAccessTokenPayload(payload) &&
+    payload.github !== null &&
+    'githubOAuthToken' in payload.github &&
+    typeof payload.github.githubOAuthToken === 'string'
   );
 }
 
@@ -130,35 +187,6 @@ export function getAccessTokenPayloadWithGithubOAuth(
   }
 
   throw Error('Tried to convert payload to AccessTokenPayloadWithGithubOAuth but it is not!');
-}
-
-export type AccessTokenPayloadWithEmail = AccessTokenPayloadBase & {
-  githubId: number | null;
-  githubHandle: string | null;
-  discordHandle: string | null;
-  emailAddress: string;
-};
-
-function isAccessTokenPayloadWithEmail(payload: any): payload is AccessTokenPayloadWithEmail {
-  return (
-    isAccessTokenPayloadBase(payload) &&
-    'githubId' in payload &&
-    isNumberOrNull(payload.githubId) &&
-    'githubHandle' in payload &&
-    isStringOrNull(payload.githubHandle) &&
-    'discordHandle' in payload &&
-    isStringOrNull(payload.discordHandle) &&
-    'emailAddress' in payload &&
-    typeof payload.emailAddress === 'string'
-  );
-}
-
-export function getAccessTokenPayloadWithEmail(payload: any): AccessTokenPayloadWithEmail {
-  if (isAccessTokenPayloadWithEmail(payload)) {
-    return payload;
-  }
-
-  throw Error('Tried to convert payload to AccessTokenPayload but it is not!');
 }
 
 export type UserAuthTokens = {

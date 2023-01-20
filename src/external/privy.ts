@@ -10,7 +10,7 @@ export type VerifyPrivyUserForDataResult = {
   privyUserId: string;
   ethAddress: string | null;
   emailAddress: string | null;
-  discordHandle: string | null;
+  discordToken: string | null;
 };
 
 export async function verifyPrivyTokenForData(
@@ -36,7 +36,7 @@ export async function verifyPrivyTokenForData(
       privyUserId: verifiedClaims.userId,
       ethAddress,
       emailAddress: userData.email?.address.toLowerCase() ?? null,
-      discordHandle: userData.discord?.username ?? null,
+      discordToken: userData.discord?.subject ?? null,
     };
   } catch (err) {
     logger.warn('Privy failed to verify token');
