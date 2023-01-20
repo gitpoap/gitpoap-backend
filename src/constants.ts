@@ -77,8 +77,6 @@ export const CUSTOM_GITPOAP_CODE_BUFFER = 5;
 // out with from POAP for a Custom GitPOAP
 export const CUSTOM_GITPOAP_MAX_STARTING_CODES = 100;
 
-export const DISCORD_URL = 'https://discord.com';
-
 export const GNOSIS_RPC = 'https://rpc.gnosischain.com/';
 
 export const POAP_DATE_FORMAT = 'yyyy-MM-dd';
