@@ -5,7 +5,6 @@ import { upsertAddress } from './addresses';
 import { resolveAddress } from './ens';
 import { isGithubTokenValidForUser } from '../external/github';
 import { removeGithubUsersLogin } from './githubUsers';
-import { getDiscordCurrentUserInfo } from '../external/discord';
 import { AddressPayload, GithubPayload, EmailPayload, DiscordPayload } from '../types/authTokens';
 import { upsertEmail } from './emails';
 import { upsertDiscordUser } from './discord';
@@ -91,14 +90,11 @@ export async function verifyPrivyToken(privyAuthToken: string): Promise<PrivyUse
   }
 
   let discord: DiscordPayload | null = null;
-  if (privyUserData.discordToken) {
-    const discordInfo = await getDiscordCurrentUserInfo(privyUserData.discordToken);
-    if (discordInfo === null) {
-      logger.error(`Failed to lookup discord info ${errorTail}`);
-      return null;
-    }
-
-    discord = await upsertDiscordUser(discordInfo.id, discordInfo.username);
+  if (privyUserData.discord) {
+    discord = await upsertDiscordUser(
+      privyUserData.discord.discordId,
+      privyUserData.discord.discordHandle,
+    );
   }
 
   return {
