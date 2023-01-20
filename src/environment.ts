@@ -20,20 +20,18 @@ export const INFURA_API_KEY = env.get('INFURA_API_KEY').asString();
 
 export const GITHUB_URL = env.get('GITHUB_URL').required().asString();
 export const GITHUB_API_URL = env.get('GITHUB_API_URL').required().asString();
-
 export const GITHUB_APP_CLIENT_ID = env.get('GITHUB_APP_CLIENT_ID').required().asString();
 export const GITHUB_APP_CLIENT_SECRET = env.get('GITHUB_APP_CLIENT_SECRET').required().asString();
 export const GITHUB_APP_REDIRECT_URL = env.get('GITHUB_APP_REDIRECT_URL').required().asString();
 
 export const REDIS_URL = env.get('REDIS_URL').required().asString();
+
 export const MAILCHIMP_API_KEY = env.get('MAILCHIMP_API_KEY').required().asString();
+
 export const SENTRY_DSN = env.get('SENTRY_DSN').asString();
+
 export const POSTMARK_SERVER_TOKEN = env.get('POSTMARK_SERVER_TOKEN').required().asString();
 export const SLACK_TOKEN = env.get('SLACK_TOKEN').required().asString();
-
-export const DISCORD_CLIENT_ID = env.get('DISCORD_CLIENT_ID').required().asString();
-export const DISCORD_CLIENT_SECRET = env.get('DISCORD_CLIENT_SECRET').required().asString();
-export const DISCORD_REDIRECT_URL = env.get('DISCORD_REDIRECT_URL').required().asString();
 
 export const GRAPHIQL_PASSWORD = env.get('GRAPHIQL_PASSWORD').required().asString();
 
