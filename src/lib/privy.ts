@@ -5,10 +5,9 @@ import { upsertAddress } from './addresses';
 import { resolveAddress } from './ens';
 import { isGithubTokenValidForUser } from '../external/github';
 import { removeGithubUsersLogin } from './githubUsers';
+import { getDiscordCurrentUserInfo } from '../external/discord';
 
 type GithubTokenData = {
-  githubId: number;
-  githubHandle: string;
   githubOAuthToken: string;
 };
 
@@ -51,11 +50,10 @@ async function checkGithubTokenData(privyUserId: string): Promise<GithubTokenDat
 
 export type PrivyUserData = {
   privyUserId: string;
-  addressId: number;
-  ethAddress: string;
+  address: AddressData | null;
   githubUser: GithubTokenData | null;
-  emailAddress: string | null;
-  discordHandle: string | null;
+  email: EmailData | null;
+  discord: DiscordData | null;
 };
 
 export async function verifyPrivyToken(privyAuthToken: string): Promise<PrivyUserData | null> {
@@ -66,26 +64,53 @@ export async function verifyPrivyToken(privyAuthToken: string): Promise<PrivyUse
     logger.warn('Failed to verify token via Privy');
     return null;
   }
-  if (privyUserData.ethAddress === null) {
-    logger.warn(`Privy User ID ${privyUserData.privyUserId} doesn't have an associated address`);
-    return null;
-  }
 
-  const address = await upsertAddress(privyUserData.ethAddress);
-  if (address === null) {
-    logger.error(`Failed to upsert address for Privy User ID ${privyUserData.privyUserId}`);
-    return null;
+  // Used only in the case of errors
+  const errorTail = `for Privy User ID ${privyUserData.privyUserId}`;
+
+  let address: AddressData | null = null;
+  if (privyUserData.ethAddress) {
+    address = await upsertAddress(privyUserData.ethAddress);
+    if (address === null) {
+      logger.error(`Failed to upsert ETH address ${privyUserData.ethAddress} ${errorTail}`);
+      return null;
+    }
+
+    // Resolve the ENS name in the background
+    void resolveAddress(privyUserData.ethAddress);
   }
 
   const githubUser = await checkGithubTokenData(privyUserData.privyUserId);
 
-  // Resolve the ENS name in the background
-  void resolveAddress(privyUserData.ethAddress);
+  let email: EmailData | null = null;
+  if (privyUserData.emailAddress) {
+    email = upsertEmail(privyUserData.emailAddress);
+    if (email === null) {
+      logger.error(`Failed to upsert email address ${privyUserData.emailAddress} ${errorTail}`);
+      return null;
+    }
+  }
+
+  let discord: DiscordData | null = null;
+  if (privyUserData.discordHandle) {
+    const discordInfo = await getDiscordCurrentUserInfo(privyUserData.discordToken);
+    if (discordInfo === null) {
+      logger.error(`Failed to lookup discord info ${errorTail}`);
+      return null;
+    }
+
+    discord = upsertDiscordUser(discordInfo.id, discordInfo.username);
+    if (discord === null) {
+      logger.error(`Failed to upsert discord handle ${discordInfo.username} ${errorTail}`);
+      return null;
+    }
+  }
 
   return {
     ...privyUserData,
-    ethAddress: privyUserData.ethAddress, // TS is stupid here....
-    addressId: address.id,
+    address,
     githubUser,
+    email,
+    discord,
   };
 }
