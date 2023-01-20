@@ -6,11 +6,16 @@ export function createPrivyClient() {
   return new PrivyClient(PRIVY_APP_ID, PRIVY_APP_SECRET);
 }
 
+type PrivyDiscordDataResult = {
+  discordId: string;
+  discordHandle: string;
+};
+
 export type VerifyPrivyUserForDataResult = {
   privyUserId: string;
   ethAddress: string | null;
   emailAddress: string | null;
-  discordToken: string | null;
+  discord: PrivyDiscordDataResult | null;
 };
 
 export async function verifyPrivyTokenForData(
@@ -32,11 +37,19 @@ export async function verifyPrivyTokenForData(
       }
     }
 
+    let discord: PrivyDiscordDataResult | null = null;
+    if (userData.discord?.username) {
+      discord = {
+        discordId: userData.discord.subject,
+        discordHandle: userData.discord.username,
+      };
+    }
+
     return {
       privyUserId: verifiedClaims.userId,
       ethAddress,
       emailAddress: userData.email?.address.toLowerCase() ?? null,
-      discordToken: userData.discord?.subject ?? null,
+      discord,
     };
   } catch (err) {
     logger.warn('Privy failed to verify token');
