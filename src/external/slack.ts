@@ -106,7 +106,7 @@ export const sendInternalClaimMessage = async (
     if (claim.githubHandle !== null) {
       msg += ` issued to GitHub User ${createGithubUserLink(claim.githubHandle)}`;
     } else if (claim.emailId !== null) {
-      const emailAddress = lookupEmailAddress(emailAddressCache, claim.emailId);
+      const emailAddress = await lookupEmailAddress(emailAddressCache, claim.emailId);
       if (emailAddress === null) {
         logger.error(`Failed to look up Email ID ${claim.emailId} on Claim ID ${claim.claimId}`);
       } else {
