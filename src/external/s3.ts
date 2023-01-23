@@ -72,12 +72,12 @@ export const uploadMulterFile = async (
 };
 
 export enum UploadFailureStatus {
-  DataURL,
-  URLNotFound,
-  BadServerResponse,
-  FetchThrows,
-  EmptyResponseBody,
-  NoContentType,
+  DataURL = 'DataURL',
+  URLNotFound = 'URLNotFound',
+  BadServerResponse = 'BadServerResponse',
+  FetchThrows = 'FetchThrows',
+  EmptyResponseBody = 'EmptyResponseBody',
+  NoContentType = 'NoContentType',
 }
 
 export const uploadFileFromURL = async (
