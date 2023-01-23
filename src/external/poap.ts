@@ -12,7 +12,6 @@ import { createScopedLogger } from '../logging';
 import FormData from 'form-data';
 import { poapRequestDurationSeconds } from '../metrics';
 import { URL } from 'url';
-import { captureException } from '../lib/sentry';
 
 // DB keys
 const POAP_DB_KEY_NAME = 'poap';
@@ -133,7 +132,6 @@ async function makeGenericPOAPRequest(
         poapResponse.status
       }) for ${method} ${path} from POAP API: ${await poapResponse.text()}`;
       logger.error(msg);
-      captureException(new Error(msg), { service: 'poap-api', method, path }, { body });
       endTimer({ success: 0 });
       return null;
     }
@@ -143,7 +141,6 @@ async function makeGenericPOAPRequest(
     return await poapResponse.json();
   } catch (err) {
     logger.error(`Error while calling POAP API: ${err}`);
-    captureException(err, { service: 'poap-api', method, path }, { body });
     endTimer({ success: 0 });
     return null;
   }
