@@ -747,41 +747,46 @@ export async function runClaimsPostProcessing(claims: PostProcessingClaimType[])
         continue;
       }
 
-      // This can happen if the server accidentally restarts RIGHT before we call the POAP
-      // API to mint the token (This is VERY unlikely to happen, but we've seen it once.
       if (poapData.tx_status === '') {
-        logger.warn(
-          `Found a Claim (ID: ${claims[i].id} in MINTING that was not submitted to POAP API`,
-        );
+        if (poapData.claimed) {
+          logger.warn(`MINTING Claim (ID: ${claims[i].id})'s tx hasn't been submitted yet`);
+        } else {
+          // This can happen if the server accidentally restarts RIGHT before we call the POAP
+          // API to mint the token (This is VERY unlikely to happen, but we've seen it once).
 
-        await context.prisma.claim.update({
-          where: { id: claims[i].id },
-          data: {
-            status: ClaimStatus.UNCLAIMED,
-            qrHash: null,
-            mintedAddress: { disconnect: true },
-          },
-        });
-        // We should save the RedeemCode we didn't use
-        try {
-          await context.prisma.redeemCode.create({
+          logger.warn(
+            `Found a Claim (ID: ${
+              claims[i].id
+            }) in MINTING that was not submitted to POAP API: ${JSON.stringify(poapData)}`,
+          );
+
+          await context.prisma.claim.update({
+            where: { id: claims[i].id },
             data: {
-              gitPOAPId: claims[i].gitPOAP.id,
-              code: qrHash,
+              status: ClaimStatus.UNCLAIMED,
+              qrHash: null,
+              mintedAddress: { disconnect: true },
             },
           });
-        } catch (err) {
-          // This might happen if both servers try to create at the same time (not an issue)
-          logger.warn(`Couldn't recreate RedeemCode '${qrHash}' from Claim ID ${claims[i].id}`);
+          // We should save the RedeemCode we didn't use
+          try {
+            await context.prisma.redeemCode.create({
+              data: {
+                gitPOAPId: claims[i].gitPOAP.id,
+                code: qrHash,
+              },
+            });
+          } catch (err) {
+            // This might happen if both servers try to create at the same time (not an issue)
+            logger.warn(`Couldn't recreate RedeemCode '${qrHash}' from Claim ID ${claims[i].id}`);
+          }
+
+          removeAtIndex(i);
+          // Move to the next claim by not incrementing i since
+          // we've just removed the claim at the current index
+          continue;
         }
-
-        removeAtIndex(i);
-        // Move to the next claim by not incrementing i since
-        // we've just removed the claim at the current index
-        continue;
-      }
-
-      if (poapData.tx_status === 'passed' || poapData.tx_status === 'bumped') {
+      } else if (poapData.tx_status === 'passed' || poapData.tx_status === 'bumped') {
         const mintData = await getClaimMintData(
           claims[i].id,
           poapData.tx_hash,
