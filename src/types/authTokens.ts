@@ -151,7 +151,7 @@ export type AccessTokenPayloadWithAddress = AccessTokenPayload & {
 };
 
 function isAccessTokenPayloadWithAddress(payload: any): payload is AccessTokenPayloadWithAddress {
-  return isAccessTokenPayload(payload) && payload.github !== null;
+  return isAccessTokenPayload(payload) && payload.address !== null;
 }
 
 export function getAccessTokenPayloadWithAddress(payload: any): AccessTokenPayloadWithAddress {

@@ -3198,7 +3198,6 @@ type DiscordUserCountAggregate {
   discordHandle: Int!
   createdAt: Int!
   updatedAt: Int!
-  discordOAuthToken: Int!
   _all: Int!
 }
 
@@ -3216,7 +3215,6 @@ type DiscordUserMinAggregate {
   discordHandle: String
   createdAt: DateTime
   updatedAt: DateTime
-  discordOAuthToken: String
 }
 
 type DiscordUserMaxAggregate {
@@ -3225,7 +3223,6 @@ type DiscordUserMaxAggregate {
   discordHandle: String
   createdAt: DateTime
   updatedAt: DateTime
-  discordOAuthToken: String
 }
 
 input DiscordUserWhereUniqueInput {
@@ -3239,7 +3236,6 @@ enum DiscordUserScalarFieldEnum {
   discordHandle
   createdAt
   updatedAt
-  discordOAuthToken
 }
 
 type DiscordUserGroupBy {
@@ -3248,7 +3244,6 @@ type DiscordUserGroupBy {
   discordHandle: String!
   createdAt: DateTime!
   updatedAt: DateTime!
-  discordOAuthToken: String
   _count: DiscordUserCountAggregate
   _avg: DiscordUserAvgAggregate
   _sum: DiscordUserSumAggregate
