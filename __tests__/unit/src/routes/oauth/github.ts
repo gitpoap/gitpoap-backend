@@ -6,17 +6,9 @@ import {
   requestGithubOAuthToken,
   getGithubCurrentUserInfo,
 } from '../../../../../src/external/github';
-import {
-  addGithubLoginForAddress,
-  removeGithubLoginForAddress,
-} from '../../../../../src/lib/addresses';
-import { upsertGithubUser } from '../../../../../src/lib/githubUsers';
-import {
-  generateAuthTokensWithChecks,
-  updateAuthTokenGeneration,
-} from '../../../../../src/lib/authTokens';
+import { upsertGithubUser, removeGithubUsersLogin } from '../../../../../src/lib/githubUsers';
+import { generateNewAuthTokens } from '../../../../../src/lib/authTokens';
 import { setupGenAuthTokens } from '../../../../../__mocks__/src/lib/authTokens';
-import { MembershipAcceptanceStatus } from '@prisma/client';
 
 jest.mock('../../../../../src/logging');
 jest.mock('../../../../../src/external/github');
@@ -25,28 +17,25 @@ jest.mock('../../../../../src/lib/addresses');
 jest.mock('../../../../../src/lib/authTokens', () => ({
   __esModule: true,
   ...(<any>jest.requireActual('../../../../../src/lib/authTokens')),
-  generateAuthTokensWithChecks: jest.fn(),
-  updateAuthTokenGeneration: jest.fn(),
+  generateNewAuthTokens: jest.fn(),
 }));
 
 const mockedRequestGithubOAuthToken = jest.mocked(requestGithubOAuthToken, true);
 const mockedGetGithubCurrentUserInfo = jest.mocked(getGithubCurrentUserInfo, true);
 const mockedUpsertGithubUser = jest.mocked(upsertGithubUser, true);
-const mockedAddGithubLoginForAddress = jest.mocked(addGithubLoginForAddress, true);
-const mockedRemoveGithubLoginForAddress = jest.mocked(removeGithubLoginForAddress, true);
-const mockedGenerateAuthTokensWithChecks = jest.mocked(generateAuthTokensWithChecks, true);
-const mockedUpdateAuthTokenGeneration = jest.mocked(updateAuthTokenGeneration, true);
+const mockedRemoveGithubUsersLogin = jest.mocked(removeGithubUsersLogin, true);
+const mockedGenerateNewAuthTokens = jest.mocked(generateNewAuthTokens, true);
 
 const privyUserId = 'imma user';
 const addressId = 322;
-const address = '0xbArF00';
+const ethAddress = '0xbArF00';
 const ensName = null;
 const ensAvatarImageUrl = null;
 const code = '243lkjlkjdfs';
 const githubToken = 'fooajldkfjlskj32f';
+const githubUserId = 342444;
 const githubId = 2342;
 const githubHandle = 'snoop-doggy-dog';
-const githubUserId = 342444;
 
 function mockJwtWithAddress() {
   contextMock.prisma.address.findUnique.mockResolvedValue({
@@ -59,14 +48,11 @@ function mockJwtWithAddress() {
 const genAuthTokens = setupGenAuthTokens({
   privyUserId,
   addressId,
-  ethAddress: address,
+  ethAddress,
   ensName,
   ensAvatarImageUrl,
-  memberships: [],
   githubId,
   githubHandle,
-  discordHandle: null,
-  emailAddress: null,
 });
 
 describe('POST /oauth/github', () => {
@@ -138,15 +124,8 @@ describe('POST /oauth/github', () => {
     } as any);
     const fakeGithubUser = { id: githubUserId };
     mockedUpsertGithubUser.mockResolvedValue(fakeGithubUser as any);
-    const nextGeneration = authTokenGeneration + 1;
-    const fakeAddress = { is: 'fake' };
-    mockedUpdateAuthTokenGeneration.mockResolvedValue({
-      generation: nextGeneration,
-      address: fakeAddress,
-    } as any);
-    mockedAddGithubLoginForAddress.mockResolvedValue(undefined);
-    const fakeAuthTokens = { accessToken: 'foo', refreshToken: 'bar' };
-    mockedGenerateAuthTokensWithChecks.mockResolvedValue(fakeAuthTokens);
+    const fakeAuthTokens = { accessToken: 'foo' };
+    mockedGenerateNewAuthTokens.mockResolvedValue(fakeAuthTokens);
 
     const authTokens = genAuthTokens();
 
@@ -167,18 +146,15 @@ describe('POST /oauth/github', () => {
     expect(mockedUpsertGithubUser).toHaveBeenCalledTimes(1);
     expect(mockedUpsertGithubUser).toHaveBeenCalledWith(githubId, githubHandle, githubToken);
 
-    expect(mockedAddGithubLoginForAddress).toHaveBeenCalledTimes(1);
-    expect(mockedAddGithubLoginForAddress).toHaveBeenCalledWith(addressId, githubUserId);
-
-    expect(mockedUpdateAuthTokenGeneration).toHaveBeenCalledTimes(1);
-    expect(mockedUpdateAuthTokenGeneration).toHaveBeenCalledWith(authTokenId);
-
-    expect(generateAuthTokensWithChecks).toHaveBeenCalledTimes(1);
-    expect(generateAuthTokensWithChecks).toHaveBeenCalledWith(authTokenId, nextGeneration, {
-      ...fakeAddress,
-      id: addressId,
-      ethAddress: address,
-      githubUser: fakeGithubUser,
+    expect(generateNewAuthTokens).toHaveBeenCalledTimes(1);
+    expect(generateNewAuthTokens).toHaveBeenCalledWith({
+      ...authTokens.accessTokenPayload,
+      github: {
+        id: githubUserId,
+        githubId,
+        githubHandle,
+        githubOAuthToken: githubToken,
+      },
     });
   });
 });
@@ -198,74 +174,21 @@ describe('DELETE /oauth/github', () => {
     expect(result.statusCode).toEqual(400);
   });
 
-  const expectAuthTokenFindUnique = () => {
-    expect(contextMock.prisma.address.findUnique).toHaveBeenCalledTimes(1);
-    expect(contextMock.prisma.address.findUnique).toHaveBeenCalledWith({
-      where: { id: addressId },
-      select: {
-        select: {
-          ensName: true,
-          ensAvatarImageUrl: true,
-          memberships: {
-            where: {
-              acceptanceStatus: MembershipAcceptanceStatus.ACCEPTED,
-            },
-            select: {
-              teamId: true,
-              role: true,
-            },
-          },
-        },
-      },
-    });
-  };
-
   it('Fails if no GitHub user is connected to the address', async () => {
-    contextMock.prisma.authToken.findUnique.mockResolvedValue({
-      id: authTokenId,
-      address: {
-        ensName,
-        ensAvatarImageUrl,
-        email: null,
-        githubUser: null,
-        memberships: [],
-      },
-    } as any);
-
     const authTokens = genAuthTokens({ hasGithub: false });
 
     const result = await request(await setupApp())
       .delete('/oauth/github')
       .set('Authorization', `Bearer ${authTokens.accessToken}`);
 
-    expect(result.statusCode).toEqual(400);
+    expect(result.statusCode).toEqual(401);
 
-    expectAuthTokenFindUnique();
+    expect(mockedRemoveGithubUsersLogin).toHaveBeenCalledTimes(0);
   });
 
   it('Succeeds if GitHub user is connected to the address', async () => {
-    contextMock.prisma.authToken.findUnique.mockResolvedValue({
-      id: authTokenId,
-      address: {
-        ensName,
-        ensAvatarImageUrl,
-        email: null,
-        githubUser: {
-          id: githubUserId,
-          githubId,
-          githubHandle,
-        },
-        memberships: [],
-      },
-    } as any);
-    const nextGeneration = authTokenGeneration + 1;
-    const fakeAddress = { wow: 'so fake' };
-    mockedUpdateAuthTokenGeneration.mockResolvedValue({
-      generation: nextGeneration,
-      address: fakeAddress,
-    } as any);
     const fakeAuthTokens = { accessToken: 'yeet', refreshToken: 'yolo' };
-    mockedGenerateAuthTokensWithChecks.mockResolvedValue(fakeAuthTokens);
+    mockedGenerateNewAuthTokens.mockResolvedValue(fakeAuthTokens);
 
     const authTokens = genAuthTokens({ hasGithub: true });
 
@@ -276,21 +199,13 @@ describe('DELETE /oauth/github', () => {
     expect(result.statusCode).toEqual(200);
     expect(result.body).toEqual(fakeAuthTokens);
 
-    expectAuthTokenFindUnique();
+    expect(mockedRemoveGithubUsersLogin).toHaveBeenCalledTimes(0);
+    expect(mockedRemoveGithubUsersLogin).toHaveBeenCalledWith(githubUserId);
 
-    /* Expect that the token is updated to remove the user */
-    expect(mockedUpdateAuthTokenGeneration).toHaveBeenCalledTimes(1);
-    expect(mockedUpdateAuthTokenGeneration).toHaveBeenCalledWith(authTokenId);
-
-    expect(mockedRemoveGithubLoginForAddress).toHaveBeenCalledTimes(1);
-    expect(mockedRemoveGithubLoginForAddress).toHaveBeenCalledWith(addressId);
-
-    expect(mockedGenerateAuthTokensWithChecks).toHaveBeenCalledTimes(1);
-    expect(mockedGenerateAuthTokensWithChecks).toHaveBeenCalledWith(authTokenId, nextGeneration, {
-      ...fakeAddress,
-      id: addressId,
-      ethAddress: address,
-      githubUser: null,
+    expect(mockedGenerateNewAuthTokens).toHaveBeenCalledTimes(1);
+    expect(mockedGenerateNewAuthTokens).toHaveBeenCalledWith({
+      ...authTokens.accessTokenPayload,
+      github: null,
     });
   });
 });

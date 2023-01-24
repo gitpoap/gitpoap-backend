@@ -19,12 +19,12 @@ authRouter.post('/', async function (req, res) {
 
   const { privyToken } = schemaResult.data;
 
-  logger.info(`Request to create AuthToken`);
+  logger.info('Request to create AuthToken');
 
   const privyUserData = await verifyPrivyToken(privyToken);
   if (privyUserData === null) {
-    logger.error('Failed verify Privy token');
-    return res.status(500).send({ msg: 'Login failed, please retry' });
+    logger.warn('Failed to verify Privy token');
+    return res.status(401).send({ msg: 'Login failed, please retry' });
   }
 
   const userAuthTokens = await generateNewAuthTokens(privyUserData);

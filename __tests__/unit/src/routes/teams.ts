@@ -64,7 +64,6 @@ const genAuthTokens = setupGenAuthTokens({
   ethAddress,
   ensName,
   ensAvatarImageUrl,
-  memberships: [],
 });
 
 describe('POST /teams', () => {
