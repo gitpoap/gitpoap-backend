@@ -28,7 +28,7 @@ const mockedEnsureRedeemCodeThreshold = jest.mocked(ensureRedeemCodeThreshold, t
 
 const privyUserId = 'mambo # 5';
 const addressId = 342;
-const address = ADDRESSES.vitalik;
+const ethAddress = ADDRESSES.vitalik;
 const gitPOAPId = 24;
 const ensName = 'furby.eth';
 const ensAvatarImageUrl = null;
@@ -46,15 +46,16 @@ function mockJwtWithAddress() {
 function genAuthTokens(someAddress?: string) {
   return generateAuthTokens(
     privyUserId,
-    addressId,
-    someAddress ?? address,
-    ensName,
-    ensAvatarImageUrl,
+    {
+      id: addressId,
+      ethAddress: someAddress ?? ethAddress,
+      ensName,
+      ensAvatarImageUrl,
+    },
+    null,
+    null,
+    null,
     [],
-    null,
-    null,
-    null,
-    null,
   );
 }
 
