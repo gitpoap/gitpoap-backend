@@ -105,17 +105,10 @@ const ensAvatarImageUrl = null;
 const githubId = 3333;
 const githubHandle = 'burzadillo';
 const discordHandle = 'test#2324';
+const emailId = 34909;
 const emailAddress = 'hi-there@gmail.com';
 const redeemCodeId = 942;
 const redeemCode = '4433';
-
-function mockJwtWithAddress() {
-  contextMock.prisma.address.findUnique.mockResolvedValue({
-    ensName,
-    ensAvatarImageUrl,
-    memberships: [],
-  } as any);
-}
 
 function genAuthTokens(someAddress?: string) {
   return generateAuthTokens(
@@ -132,7 +125,7 @@ function genAuthTokens(someAddress?: string) {
       githubHandle,
     },
     {
-      id: 1,
+      id: emailId,
       emailAddress,
     },
     {
@@ -562,7 +555,6 @@ describe('DELETE /claims/:id', () => {
   };
 
   it('Succeeds if the claim is already deleted', async () => {
-    mockJwtWithAddress();
     contextMock.prisma.claim.findUnique.mockResolvedValue(null);
     const authTokens = genAuthTokens();
     const result = await request(await setupApp())
@@ -576,7 +568,6 @@ describe('DELETE /claims/:id', () => {
   });
 
   it('Fails if the claim is not CUSTOM and user is not a staff member', async () => {
-    mockJwtWithAddress();
     contextMock.prisma.claim.findUnique.mockResolvedValue({
       gitPOAP: { type: GitPOAPType.ANNUAL },
     } as any);
@@ -592,7 +583,6 @@ describe('DELETE /claims/:id', () => {
   });
 
   it('Fails if claim is CUSTOM and creatorAddress does not exist', async () => {
-    mockJwtWithAddress();
     contextMock.prisma.claim.findUnique.mockResolvedValue({
       gitPOAP: {
         type: GitPOAPType.CUSTOM,
@@ -611,7 +601,6 @@ describe('DELETE /claims/:id', () => {
   });
 
   it('Fails if claim is CUSTOM the caller is not the creator', async () => {
-    mockJwtWithAddress();
     contextMock.prisma.claim.findUnique.mockResolvedValue({
       gitPOAP: {
         type: GitPOAPType.CUSTOM,
@@ -630,7 +619,6 @@ describe('DELETE /claims/:id', () => {
   });
 
   it('Fails if the Claim is not UNCLAIMED', async () => {
-    mockJwtWithAddress();
     const testClaimStatusValue = async (
       type: GitPOAPType,
       status: ClaimStatus,
@@ -663,7 +651,6 @@ describe('DELETE /claims/:id', () => {
   });
 
   it('Succeeds if Claim is UNCLAIMED', async () => {
-    mockJwtWithAddress();
     // ANNUAL
     {
       contextMock.prisma.claim.findUnique.mockResolvedValueOnce({
@@ -725,8 +712,6 @@ describe('POST /claims', () => {
   });
 
   it('Fails with invalid request body', async () => {
-    mockJwtWithAddress();
-
     const authTokens = genAuthTokens();
     const result = await request(await setupApp())
       .post(`/claims`)
@@ -759,7 +744,6 @@ describe('POST /claims', () => {
   };
 
   it('Fails when Claim not found', async () => {
-    mockJwtWithAddress();
     contextMock.prisma.claim.findUnique.mockResolvedValue(null);
 
     const authTokens = genAuthTokens();
@@ -784,7 +768,6 @@ describe('POST /claims', () => {
   });
 
   it('Fails when GitPOAP is not enabled', async () => {
-    mockJwtWithAddress();
     contextMock.prisma.claim.findUnique.mockResolvedValue({
       gitPOAP: {
         id: gitPOAPId,
@@ -814,7 +797,6 @@ describe('POST /claims', () => {
   });
 
   it('Fails when GitPOAP is not UNCLAIMED', async () => {
-    mockJwtWithAddress();
     const authTokens = genAuthTokens();
 
     const runTestOnStatus = async (status: ClaimStatus) => {
@@ -851,7 +833,6 @@ describe('POST /claims', () => {
   });
 
   it("Fails when user doesn't own claim", async () => {
-    mockJwtWithAddress();
     const authTokens = genAuthTokens();
 
     const runTest = async () => {
@@ -902,7 +883,6 @@ describe('POST /claims', () => {
   });
 
   it('Fails when there are no more RedeemCodes', async () => {
-    mockJwtWithAddress();
     const gitPOAP = {
       id: gitPOAPId,
       isEnabled: true,
@@ -910,7 +890,7 @@ describe('POST /claims', () => {
     contextMock.prisma.claim.findUnique.mockResolvedValue({
       status: ClaimStatus.UNCLAIMED,
       gitPOAP,
-      emailAddress: emailAddress + '1',
+      emailId,
     } as any);
     mockedChooseUnusedRedeemCode.mockResolvedValue(null);
 
@@ -939,7 +919,6 @@ describe('POST /claims', () => {
   });
 
   it('Fails when POAP API redeem call fails', async () => {
-    mockJwtWithAddress();
     const gitPOAP = {
       id: gitPOAPId,
       isEnabled: true,
@@ -947,7 +926,7 @@ describe('POST /claims', () => {
     contextMock.prisma.claim.findUnique.mockResolvedValue({
       status: ClaimStatus.UNCLAIMED,
       gitPOAP,
-      emailAddress: emailAddress + '1',
+      emailId,
     } as any);
     mockedChooseUnusedRedeemCode.mockResolvedValue({
       id: redeemCodeId,
@@ -1012,7 +991,7 @@ describe('POST /claims', () => {
           gitPOAPId,
           gitPOAPName,
           githubHandle: null,
-          emailAddress,
+          emailId,
           mintedAddress: address,
           poapEventId,
         },
@@ -1038,7 +1017,6 @@ describe('POST /claims', () => {
   };
 
   it('Succeeds when POAP API redeem call completes', async () => {
-    mockJwtWithAddress();
     const gitPOAP = {
       id: gitPOAPId,
       name: gitPOAPName,
@@ -1048,7 +1026,7 @@ describe('POST /claims', () => {
     contextMock.prisma.claim.findUnique.mockResolvedValue({
       status: ClaimStatus.UNCLAIMED,
       gitPOAP,
-      emailAddress,
+      emailId,
     } as any);
     mockedChooseUnusedRedeemCode.mockResolvedValue({
       id: redeemCodeId,
@@ -1104,7 +1082,6 @@ describe('POST /claims', () => {
   });
 
   it('Succeeds on multiple claims when one fails', async () => {
-    mockJwtWithAddress();
     const gitPOAP = {
       id: gitPOAPId,
       name: gitPOAPName,
@@ -1115,7 +1092,7 @@ describe('POST /claims', () => {
     contextMock.prisma.claim.findUnique.mockResolvedValueOnce({
       status: ClaimStatus.UNCLAIMED,
       gitPOAP,
-      emailAddress,
+      emailId,
     } as any);
     mockedChooseUnusedRedeemCode.mockResolvedValue({
       id: redeemCodeId,
