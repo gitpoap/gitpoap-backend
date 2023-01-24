@@ -37,20 +37,13 @@ const githubUserId = 342444;
 const githubId = 2342;
 const githubHandle = 'snoop-doggy-dog';
 
-function mockJwtWithAddress() {
-  contextMock.prisma.address.findUnique.mockResolvedValue({
-    ensName,
-    ensAvatarImageUrl,
-    memberships: [],
-  } as any);
-}
-
 const genAuthTokens = setupGenAuthTokens({
   privyUserId,
   addressId,
   ethAddress,
   ensName,
   ensAvatarImageUrl,
+  githubUserId,
   githubId,
   githubHandle,
 });
@@ -65,8 +58,6 @@ describe('POST /oauth/github', () => {
   });
 
   it('Fails with bad fields in request', async () => {
-    mockJwtWithAddress();
-
     const authTokens = genAuthTokens();
 
     const result = await request(await setupApp())
@@ -78,7 +69,6 @@ describe('POST /oauth/github', () => {
   });
 
   it('Fails with invalid code', async () => {
-    mockJwtWithAddress();
     mockedRequestGithubOAuthToken.mockRejectedValue(new Error('error'));
 
     const authTokens = genAuthTokens();
@@ -95,7 +85,6 @@ describe('POST /oauth/github', () => {
   });
 
   it('Fails if current GitHub user lookup fails', async () => {
-    mockJwtWithAddress();
     mockedRequestGithubOAuthToken.mockResolvedValue(githubToken);
     mockedGetGithubCurrentUserInfo.mockResolvedValue(null);
 
@@ -116,13 +105,16 @@ describe('POST /oauth/github', () => {
   });
 
   it('Returns UserAuthTokens on success', async () => {
-    mockJwtWithAddress();
     mockedRequestGithubOAuthToken.mockResolvedValue(githubToken);
     mockedGetGithubCurrentUserInfo.mockResolvedValue({
       id: githubId,
       login: githubHandle,
     } as any);
-    const fakeGithubUser = { id: githubUserId };
+    const fakeGithubUser = {
+      id: githubUserId,
+      githubId,
+      githubHandle,
+    };
     mockedUpsertGithubUser.mockResolvedValue(fakeGithubUser as any);
     const fakeAuthTokens = { accessToken: 'foo' };
     mockedGenerateNewAuthTokens.mockResolvedValue(fakeAuthTokens);
@@ -144,18 +136,25 @@ describe('POST /oauth/github', () => {
     expect(mockedGetGithubCurrentUserInfo).toHaveBeenCalledWith(githubToken);
 
     expect(mockedUpsertGithubUser).toHaveBeenCalledTimes(1);
-    expect(mockedUpsertGithubUser).toHaveBeenCalledWith(githubId, githubHandle, githubToken);
+    expect(mockedUpsertGithubUser).toHaveBeenCalledWith(
+      githubId,
+      githubHandle,
+      privyUserId,
+      githubToken,
+    );
 
     expect(generateNewAuthTokens).toHaveBeenCalledTimes(1);
-    expect(generateNewAuthTokens).toHaveBeenCalledWith({
-      ...authTokens.accessTokenPayload,
-      github: {
-        id: githubUserId,
-        githubId,
-        githubHandle,
-        githubOAuthToken: githubToken,
-      },
-    });
+    expect(generateNewAuthTokens).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ...authTokens.accessTokenPayload,
+        github: {
+          id: githubUserId,
+          githubId,
+          githubHandle,
+          githubOAuthToken: githubToken,
+        },
+      }),
+    );
   });
 });
 
@@ -187,7 +186,10 @@ describe('DELETE /oauth/github', () => {
   });
 
   it('Succeeds if GitHub user is connected to the address', async () => {
-    const fakeAuthTokens = { accessToken: 'yeet', refreshToken: 'yolo' };
+    contextMock.prisma.githubUser.findUnique.mockResolvedValue({
+      githubOAuthToken: githubToken,
+    } as any);
+    const fakeAuthTokens = { accessToken: 'yeet' };
     mockedGenerateNewAuthTokens.mockResolvedValue(fakeAuthTokens);
 
     const authTokens = genAuthTokens({ hasGithub: true });
@@ -199,13 +201,21 @@ describe('DELETE /oauth/github', () => {
     expect(result.statusCode).toEqual(200);
     expect(result.body).toEqual(fakeAuthTokens);
 
-    expect(mockedRemoveGithubUsersLogin).toHaveBeenCalledTimes(0);
+    expect(contextMock.prisma.githubUser.findUnique).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.githubUser.findUnique).toHaveBeenCalledWith({
+      where: { id: githubUserId },
+      select: { githubOAuthToken: true },
+    });
+
+    expect(mockedRemoveGithubUsersLogin).toHaveBeenCalledTimes(1);
     expect(mockedRemoveGithubUsersLogin).toHaveBeenCalledWith(githubUserId);
 
     expect(mockedGenerateNewAuthTokens).toHaveBeenCalledTimes(1);
-    expect(mockedGenerateNewAuthTokens).toHaveBeenCalledWith({
-      ...authTokens.accessTokenPayload,
-      github: null,
-    });
+    expect(mockedGenerateNewAuthTokens).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ...authTokens.accessTokenPayload,
+        github: null,
+      }),
+    );
   });
 });

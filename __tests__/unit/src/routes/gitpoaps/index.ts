@@ -35,14 +35,6 @@ const ensAvatarImageUrl = null;
 const colfaxEmail = 'colfax@gitpoap.io';
 const colfaxENS = 'colfax.eth';
 
-function mockJwtWithAddress() {
-  contextMock.prisma.address.findUnique.mockResolvedValue({
-    ensName,
-    ensAvatarImageUrl,
-    memberships: [],
-  } as any);
-}
-
 function genAuthTokens(someAddress?: string) {
   return generateAuthTokens(
     privyUserId,
@@ -69,8 +61,6 @@ describe('PUT /gitpoaps/enable/:id', () => {
   });
 
   it('Fails with non-staff Access Token provided', async () => {
-    mockJwtWithAddress();
-
     const authTokens = genAuthTokens();
 
     const result = await request(await setupApp())
@@ -79,12 +69,9 @@ describe('PUT /gitpoaps/enable/:id', () => {
       .send();
 
     expect(result.statusCode).toEqual(401);
-
-    expect(contextMock.prisma.address.findUnique).toHaveBeenCalledTimes(1);
   });
 
   it('Returns a 404 when the GitPOAP is not found', async () => {
-    mockJwtWithAddress();
     contextMock.prisma.gitPOAP.findUnique.mockResolvedValue(null);
 
     const authTokens = genAuthTokens(STAFF_ADDRESSES[0]);
@@ -96,7 +83,6 @@ describe('PUT /gitpoaps/enable/:id', () => {
 
     expect(result.statusCode).toEqual(404);
 
-    expect(contextMock.prisma.address.findUnique).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.gitPOAP.findUnique).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.gitPOAP.findUnique).toHaveBeenCalledWith({
       where: { id: gitPOAPId },
@@ -108,7 +94,6 @@ describe('PUT /gitpoaps/enable/:id', () => {
   });
 
   it('Enables valid GitPOAPs', async () => {
-    mockJwtWithAddress();
     contextMock.prisma.gitPOAP.findUnique.mockResolvedValue({ id: gitPOAPId } as any);
 
     const authTokens = genAuthTokens(STAFF_ADDRESSES[0]);
@@ -120,7 +105,6 @@ describe('PUT /gitpoaps/enable/:id', () => {
 
     expect(result.statusCode).toEqual(200);
 
-    expect(contextMock.prisma.address.findUnique).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.gitPOAP.findUnique).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.gitPOAP.findUnique).toHaveBeenCalledWith({
       where: { id: gitPOAPId },
@@ -148,8 +132,6 @@ describe('PUT /gitpoaps/deprecate/:id', () => {
   });
 
   it('Fails with non-staff Access Token provided', async () => {
-    mockJwtWithAddress();
-
     const authTokens = genAuthTokens();
 
     const result = await request(await setupApp())
@@ -158,12 +140,9 @@ describe('PUT /gitpoaps/deprecate/:id', () => {
       .send();
 
     expect(result.statusCode).toEqual(401);
-
-    expect(contextMock.prisma.address.findUnique).toHaveBeenCalledTimes(1);
   });
 
   it('Returns a 404 when the GitPOAP is not found', async () => {
-    mockJwtWithAddress();
     contextMock.prisma.gitPOAP.findUnique.mockResolvedValue(null);
 
     const authTokens = genAuthTokens(STAFF_ADDRESSES[0]);
@@ -175,7 +154,6 @@ describe('PUT /gitpoaps/deprecate/:id', () => {
 
     expect(result.statusCode).toEqual(404);
 
-    expect(contextMock.prisma.address.findUnique).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.gitPOAP.findUnique).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.gitPOAP.findUnique).toHaveBeenCalledWith({
       where: { id: gitPOAPId },
@@ -184,7 +162,6 @@ describe('PUT /gitpoaps/deprecate/:id', () => {
   });
 
   it('DEPRECATES valid GitPOAPs and deletes unclaimed claims', async () => {
-    mockJwtWithAddress();
     contextMock.prisma.gitPOAP.findUnique.mockResolvedValue({ id: gitPOAPId } as any);
 
     const authTokens = genAuthTokens(STAFF_ADDRESSES[0]);
@@ -196,7 +173,6 @@ describe('PUT /gitpoaps/deprecate/:id', () => {
 
     expect(result.statusCode).toEqual(200);
 
-    expect(contextMock.prisma.address.findUnique).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.gitPOAP.findUnique).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.gitPOAP.findUnique).toHaveBeenCalledWith({
       where: { id: gitPOAPId },
@@ -235,7 +211,6 @@ describe('PUT /gitpoaps/:gitPOAPId/claims', () => {
   });
 
   it('Fails with invalid body', async () => {
-    mockJwtWithAddress();
     contextMock.prisma.gitPOAP.findUnique.mockResolvedValue(null);
     const authTokens = genAuthTokens();
     const result = await request(await setupApp())
@@ -265,7 +240,6 @@ describe('PUT /gitpoaps/:gitPOAPId/claims', () => {
   };
 
   it('Fails when GitPOAP is not found', async () => {
-    mockJwtWithAddress();
     contextMock.prisma.gitPOAP.findUnique.mockResolvedValue(null);
     const authTokens = genAuthTokens();
     const result = await request(await setupApp())
@@ -279,7 +253,6 @@ describe('PUT /gitpoaps/:gitPOAPId/claims', () => {
   });
 
   it('Fails when user is not the owner of CUSTOM GitPOAP', async () => {
-    mockJwtWithAddress();
     contextMock.prisma.gitPOAP.findUnique.mockResolvedValue({
       type: GitPOAPType.CUSTOM,
       creatorAddressId: addressId + 2,
@@ -296,7 +269,6 @@ describe('PUT /gitpoaps/:gitPOAPId/claims', () => {
   });
 
   it('Fails when user is not a staff member for non-CUSTOM GitPOAPs', async () => {
-    mockJwtWithAddress();
     contextMock.prisma.gitPOAP.findUnique.mockResolvedValue({
       type: GitPOAPType.ANNUAL,
       creatorAddressId: null,
@@ -374,7 +346,6 @@ describe('PUT /gitpoaps/:gitPOAPId/claims', () => {
   };
 
   it('Succeeds for owner of Custom GitPOAP', async () => {
-    mockJwtWithAddress();
     contextMock.prisma.gitPOAP.findUnique.mockResolvedValue({
       type: GitPOAPType.CUSTOM,
       creatorAddressId: addressId,
@@ -385,7 +356,6 @@ describe('PUT /gitpoaps/:gitPOAPId/claims', () => {
   });
 
   it('Succeeds for staff with non-Custom GitPOAP', async () => {
-    mockJwtWithAddress();
     contextMock.prisma.gitPOAP.findUnique.mockResolvedValue({
       type: GitPOAPType.ANNUAL,
       creatorAddressId: null,
