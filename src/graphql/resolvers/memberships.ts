@@ -54,7 +54,7 @@ class MembershipMutationPayload {
 
 const RoleSortOrder = ['OWNER', 'ADMIN', 'MEMBER'];
 const compareAcceptanceStatus = (a: string, b: string) => a.localeCompare(b);
-const compareRole = (a: string, b: string) => RoleSortOrder.indexOf(a) - RoleSortOrder.indexOf(b);
+const compareRoles = (a: string, b: string) => RoleSortOrder.indexOf(a) - RoleSortOrder.indexOf(b);
 const compareDates = (a: Date | null, b: Date | null) =>
   a && b ? a.getTime() - b.getTime() : b ? 1 : -1;
 
@@ -87,7 +87,7 @@ export class CustomMembershipResolver {
     await memberships.sort(
       (a, b) =>
         compareAcceptanceStatus(a.acceptanceStatus, b.acceptanceStatus) ||
-        compareRole(a.role, b.role) ||
+        compareRoles(a.role, b.role) ||
         compareDates(a.joinedOn, b.joinedOn),
     );
 
@@ -174,13 +174,13 @@ export class CustomMembershipResolver {
           (a, b) =>
             compareDates(a.joinedOn, b.joinedOn) ||
             compareAcceptanceStatus(a.acceptanceStatus, b.acceptanceStatus) ||
-            compareRole(a.role, b.role),
+            compareRoles(a.role, b.role),
         );
         break;
       case MembershipSort.ROLE:
         await memberships.sort(
           (a, b) =>
-            compareRole(a.role, b.role) ||
+            compareRoles(a.role, b.role) ||
             compareAcceptanceStatus(a.acceptanceStatus, b.acceptanceStatus) ||
             compareDates(a.joinedOn, b.joinedOn),
         );
@@ -191,7 +191,7 @@ export class CustomMembershipResolver {
         await memberships.sort(
           (a, b) =>
             compareAcceptanceStatus(a.acceptanceStatus, b.acceptanceStatus) ||
-            compareRole(a.role, b.role) ||
+            compareRoles(a.role, b.role) ||
             compareDates(a.joinedOn, b.joinedOn),
         );
         break;
