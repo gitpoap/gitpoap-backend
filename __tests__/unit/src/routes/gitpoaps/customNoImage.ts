@@ -8,6 +8,7 @@ import request from 'supertest';
 import { uploadMulterFile } from '../../../../../src/external/s3';
 import { StaffApprovalStatus } from '@prisma/client';
 import { STAFF_ADDRESSES } from '../../../../../src/constants';
+import { DiscordPayload, GithubPayload } from '../../../../../src/types/authTokens';
 
 const privyUserId = 'privy:3242343';
 const addressId = 342;
@@ -58,17 +59,36 @@ function genAuthTokens(
   someAddressId?: number,
   someAddress?: string,
 ) {
+  let github: GithubPayload | null = null;
+  if (someGithubId && githubHandle) {
+    github = {
+      id: 1,
+      githubId: someGithubId,
+      githubHandle,
+    };
+  }
+
+  let discord: DiscordPayload | null = null;
+  if (discordHandle) {
+    discord = {
+      id: 234,
+      discordId: '234',
+      discordHandle,
+    };
+  }
+
   return generateAuthTokens(
     privyUserId,
-    someAddressId ?? addressId,
-    someAddress ?? address,
-    ensName,
-    ensAvatarImageUrl,
-    [],
-    someGithubId ?? null,
-    githubHandle ?? null,
-    discordHandle ?? null,
+    {
+      id: someAddressId ?? addressId,
+      ethAddress: someAddress ?? address,
+      ensName,
+      ensAvatarImageUrl,
+    },
+    github,
     null,
+    discord,
+    [],
   );
 }
 

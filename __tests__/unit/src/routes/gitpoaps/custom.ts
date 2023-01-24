@@ -24,7 +24,7 @@ import { createPOAPEvent } from '../../../../../src/external/poap';
 
 const privyUserId = 'nope';
 const addressId = 342;
-const address = ADDRESSES.vitalik;
+const ethAddress = ADDRESSES.vitalik;
 const gitPOAPRequestId = 2;
 const gitPOAPId = 24;
 const ensName = 'furby.eth';
@@ -135,15 +135,16 @@ const mockedUploadFileBuffer = jest.mocked(uploadFileBuffer, true);
 function genAuthTokens(someAddress?: string) {
   return generateAuthTokens(
     privyUserId,
-    addressId,
-    someAddress ?? address,
-    ensName,
-    ensAvatarImageUrl,
+    {
+      id: addressId,
+      ethAddress: someAddress ?? ethAddress,
+      ensName,
+      ensAvatarImageUrl,
+    },
+    null,
+    null,
+    null,
     [],
-    null,
-    null,
-    null,
-    null,
   );
 }
 
