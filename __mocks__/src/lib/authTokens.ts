@@ -21,7 +21,7 @@ type SetupGenAuthTokensArgs = {
   ethAddress: string;
   ensName: string | null;
   ensAvatarImageUrl: string | null;
-  memberships: MembershipsPayload;
+  memberships?: MembershipsPayload;
   githubId?: number;
   githubHandle?: string;
   emailAddress?: string;
@@ -78,10 +78,11 @@ export function setupGenAuthTokens({
       github,
       email,
       discord,
-      memberships,
+      memberships: memberships ?? [],
     };
 
     return {
+      accessTokenPayload,
       accessToken: sign(accessTokenPayload, JWT_SECRET, { expiresIn: JWT_EXP_TIME_SECONDS }),
     };
   };
