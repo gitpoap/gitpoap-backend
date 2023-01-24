@@ -2,7 +2,6 @@ import '../../../../__mocks__/src/logging';
 import { setupGQLContext } from '../../../../src/graphql/server';
 import { verify } from 'jsonwebtoken';
 import { JWT_SECRET } from '../../../../src/environment';
-import { getValidatedAccessTokenPayload } from '../../../../src/lib/authTokens';
 import { MembershipRole } from '@prisma/client';
 import { context } from '../../../../src/context';
 import { ErrorText } from '../../../../src/graphql/errors';
@@ -12,7 +11,6 @@ jest.mock('jsonwebtoken');
 jest.mock('../../../../src/lib/authTokens');
 
 const mockedVerify = jest.mocked(verify, true);
-const mockedGetValidatedAccessTokenPayload = jest.mocked(getValidatedAccessTokenPayload, true);
 
 describe('setupGQLContext', () => {
   it('Fails when no auth header is provided', async () => {
@@ -80,7 +78,6 @@ describe('setupGQLContext', () => {
       headers: { authorization: `Bearer ${user}` },
     };
     mockedVerify.mockImplementationOnce(() => ({ foo: 'bar' }));
-    mockedGetValidatedAccessTokenPayload.mockResolvedValue(null);
 
     expect(await setupGQLContext(mockedReq)).toEqual({
       ...context,
@@ -115,7 +112,6 @@ describe('setupGQLContext', () => {
       emailId: null,
     };
     mockedVerify.mockImplementationOnce(() => userPayload);
-    mockedGetValidatedAccessTokenPayload.mockResolvedValue(validatedPayload as any);
 
     expect(await setupGQLContext(mockedReq)).toEqual({
       ...context,

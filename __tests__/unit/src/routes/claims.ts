@@ -120,15 +120,27 @@ function mockJwtWithAddress() {
 function genAuthTokens(someAddress?: string) {
   return generateAuthTokens(
     privyUserId,
-    addressId,
-    someAddress ?? address,
-    ensName,
-    ensAvatarImageUrl,
+    {
+      id: addressId,
+      ethAddress: someAddress ?? address,
+      ensName,
+      ensAvatarImageUrl,
+    },
+    {
+      id: 1,
+      githubId,
+      githubHandle,
+    },
+    {
+      id: 1,
+      emailAddress,
+    },
+    {
+      id: 1,
+      discordId: '1',
+      discordHandle,
+    },
     [],
-    githubId,
-    githubHandle,
-    discordHandle,
-    emailAddress,
   );
 }
 

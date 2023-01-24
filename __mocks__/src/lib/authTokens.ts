@@ -1,4 +1,10 @@
-import { AccessTokenPayload, Memberships } from '../../../src/types/authTokens';
+import {
+  AccessTokenPayload,
+  DiscordPayload,
+  EmailPayload,
+  GithubPayload,
+  MembershipsPayload,
+} from '../../../src/types/authTokens';
 import { sign } from 'jsonwebtoken';
 import { JWT_SECRET } from '../../../src/environment';
 import { JWT_EXP_TIME_SECONDS } from '../../../src/constants';
@@ -15,11 +21,11 @@ type SetupGenAuthTokensArgs = {
   ethAddress: string;
   ensName: string | null;
   ensAvatarImageUrl: string | null;
-  memberships: Memberships;
-  githubId: number | null;
-  githubHandle: string | null;
-  discordHandle: string | null;
-  emailAddress: string | null;
+  memberships: MembershipsPayload;
+  githubId?: number;
+  githubHandle?: string;
+  emailAddress?: string;
+  discordHandle?: string;
 };
 
 export function setupGenAuthTokens({
@@ -31,21 +37,48 @@ export function setupGenAuthTokens({
   memberships,
   githubId,
   githubHandle,
-  discordHandle,
   emailAddress,
+  discordHandle,
 }: SetupGenAuthTokensArgs) {
   return (extras?: GenAuthTokensExtras) => {
+    let github: GithubPayload | null = null;
+    if (extras?.hasGithub && githubId !== undefined && githubHandle !== undefined) {
+      github = {
+        id: 1, // Dummy since it's not used in tests yet
+        githubId,
+        githubHandle,
+      };
+    }
+
+    let email: EmailPayload | null = null;
+    if (extras?.hasEmail && emailAddress !== undefined) {
+      email = {
+        id: 1, // Dummy since it's not used in tests yet
+        emailAddress,
+      };
+    }
+
+    let discord: DiscordPayload | null = null;
+    if (extras?.hasDiscord && discordHandle !== undefined) {
+      discord = {
+        id: 1, // Dummy since it's not used in tests yet
+        discordId: '1', // Dummy since it's not used in tests yet
+        discordHandle,
+      };
+    }
+
     const accessTokenPayload: AccessTokenPayload = {
       privyUserId,
-      addressId,
-      ethAddress,
-      ensName,
-      ensAvatarImageUrl,
+      address: {
+        id: addressId,
+        ethAddress,
+        ensName,
+        ensAvatarImageUrl,
+      },
+      github,
+      email,
+      discord,
       memberships,
-      githubId: extras?.hasGithub ? githubId : null,
-      githubHandle: extras?.hasGithub ? githubHandle : null,
-      discordHandle: extras?.hasDiscord ? discordHandle : null,
-      emailAddress: extras?.hasEmail ? emailAddress : null,
     };
 
     return {

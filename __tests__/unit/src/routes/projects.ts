@@ -7,6 +7,7 @@ import request from 'supertest';
 import { createRepoByGithubId } from '../../../../src/lib/repos';
 import { backloadGithubPullRequestData } from '../../../../src/lib/pullRequests';
 import { ADDRESSES } from '../../../../prisma/constants';
+import { DiscordPayload, GithubPayload } from '../../../../src/types/authTokens';
 
 jest.mock('../../../../src/logging');
 jest.mock('../../../../src/lib/repos');
@@ -53,17 +54,37 @@ function genAuthTokens(
   someDiscordId?: string,
   someDiscordHandle?: string,
 ) {
+  let github: GithubPayload | null = null;
+  if (someGithubId !== undefined && someGithubHandle !== undefined) {
+    github = {
+      id: 1,
+      githubId: someGithubId,
+      githubHandle: someGithubHandle,
+    };
+  }
+
+  let discord: DiscordPayload | null = null;
+  if (someDiscordId !== undefined && someDiscordHandle !== undefined) {
+    discord = {
+      id: 1,
+      discordId: someDiscordId,
+      discordHandle: someDiscordHandle,
+    };
+  }
+
   return generateAuthTokens(
     privyUserId,
-    addressId,
-    someAddress ?? address,
-    ensName,
-    ensAvatarImageUrl,
-    [],
-    someGithubId ?? null,
-    someGithubHandle ?? null,
-    someDiscordHandle ?? null,
-    null,
+    {
+      // Address
+      id: addressId,
+      ethAddress: someAddress ?? address,
+      ensName,
+      ensAvatarImageUrl,
+    },
+    github,
+    null, // email
+    discord,
+    [], // memberships
   );
 }
 
