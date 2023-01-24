@@ -3,7 +3,7 @@ import { contextMock } from '../../../../__mocks__/src/context';
 import request from 'supertest';
 import { setupApp } from '../../../../__mocks__/src/app';
 import { resolveENS } from '../../../../src/lib/ens';
-import { generateAuthTokens } from '../../../../src/lib/authTokens';
+import { setupGenAuthTokens } from '../../../../__mocks__/src/lib/authTokens';
 import { S3ClientConfigProfile, uploadFileBuffer } from '../../../../src/external/s3';
 
 jest.mock('../../../../src/logging');
@@ -30,7 +30,7 @@ const mockedUploadFileBuffer = jest.mocked(uploadFileBuffer, true);
 
 const privyUserId = 'user:3243243';
 const addressId = 3242;
-const address = '0x206e554084BEeC98e08043397be63C5132Cc01A1';
+const ethAddress = '0x206e554084BEeC98e08043397be63C5132Cc01A1';
 const ensName = 'annab.eth';
 const ensAvatarImageUrl = null;
 
@@ -58,20 +58,14 @@ function mockJwtWithAddress() {
   } as any);
 }
 
-function genAuthTokens() {
-  return generateAuthTokens(
-    privyUserId,
-    addressId,
-    address,
-    ensName,
-    ensAvatarImageUrl,
-    [],
-    null,
-    null,
-    null,
-    null,
-  );
-}
+const genAuthTokens = setupGenAuthTokens({
+  privyUserId,
+  addressId,
+  ethAddress,
+  ensName,
+  ensAvatarImageUrl,
+  memberships: [],
+});
 
 describe('POST /teams', () => {
   it('Fails with no Access Token provided', async () => {
@@ -105,7 +99,7 @@ describe('POST /teams', () => {
 
   it('Create a team', async () => {
     mockJwtWithAddress();
-    mockedResolveENS.mockResolvedValue(address);
+    mockedResolveENS.mockResolvedValue(ethAddress);
     mockedUploadFileBuffer.mockResolvedValue({
       filename: 'test-team-logo',
     } as any);
