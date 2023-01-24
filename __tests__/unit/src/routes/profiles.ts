@@ -12,13 +12,13 @@ const mockedResolveENS = jest.mocked(resolveENS, true);
 
 const privyUserId = 'I am I';
 const addressId = 3242;
-const address = '0x206e554084BEeC98e08043397be63C5132Cc01A1';
+const ethAddress = '0x206e554084BEeC98e08043397be63C5132Cc01A1';
 const ensName = 'annab.eth';
 const ensAvatarImageUrl = null;
 
 const addressRecord = {
   id: addressId,
-  ethAddress: address,
+  ethAddress,
   ensName,
   ensAvatarImageUrl,
   createdAt: new Date(),
@@ -39,15 +39,16 @@ function mockJwtWithAddress() {
 function genAuthTokens() {
   return generateAuthTokens(
     privyUserId,
-    addressId,
-    address,
-    ensName,
-    ensAvatarImageUrl,
+    {
+      id: addressId,
+      ethAddress,
+      ensName,
+      ensAvatarImageUrl,
+    },
+    null,
+    null,
+    null,
     [],
-    null,
-    null,
-    null,
-    null,
   );
 }
 
@@ -110,7 +111,7 @@ describe('POST /profiles', () => {
 
   it('Allows missing data fields', async () => {
     mockJwtWithAddress();
-    mockedResolveENS.mockResolvedValue(address);
+    mockedResolveENS.mockResolvedValue(ethAddress);
     contextMock.prisma.address.upsert.mockResolvedValue(addressRecord);
 
     const authTokens = genAuthTokens();
@@ -131,7 +132,7 @@ describe('POST /profiles', () => {
 
   it('Allows setting of all fields', async () => {
     mockJwtWithAddress();
-    mockedResolveENS.mockResolvedValue(address);
+    mockedResolveENS.mockResolvedValue(ethAddress);
     contextMock.prisma.address.upsert.mockResolvedValue(addressRecord);
 
     const authTokens = genAuthTokens();
@@ -160,7 +161,7 @@ describe('POST /profiles', () => {
 
   it('Allows nullification of most fields', async () => {
     mockJwtWithAddress();
-    mockedResolveENS.mockResolvedValue(address);
+    mockedResolveENS.mockResolvedValue(ethAddress);
     contextMock.prisma.address.upsert.mockResolvedValue(addressRecord);
 
     const authTokens = genAuthTokens();
@@ -188,7 +189,7 @@ describe('POST /profiles', () => {
 
   it('Allows toggling of leaderboard visibility', async () => {
     mockJwtWithAddress();
-    mockedResolveENS.mockResolvedValue(address);
+    mockedResolveENS.mockResolvedValue(ethAddress);
     contextMock.prisma.address.upsert.mockResolvedValue(addressRecord);
 
     const authTokens = genAuthTokens();
