@@ -28,20 +28,7 @@ const githubRepoIds = [2];
 const ensName = 'wowza.eth';
 const ensAvatarImageUrl = 'https://foobar.com/a.jpg';
 
-function mockJwtWithAddress() {
-  contextMock.prisma.address.findUnique.mockResolvedValue({
-    ensName,
-    ensAvatarImageUrl,
-    memberships: [],
-  } as any);
-}
-
 function mockJwtWithOAuth() {
-  contextMock.prisma.address.findUnique.mockResolvedValue({
-    ensName,
-    ensAvatarImageUrl,
-    memberships: [],
-  } as any);
   contextMock.prisma.githubUser.findUnique.mockResolvedValue({
     githubOAuthToken,
   } as any);
@@ -109,7 +96,7 @@ describe('POST /projects/add-repos', () => {
 
     expect(result.statusCode).toEqual(401);
 
-    expect(contextMock.prisma.address.findUnique).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.githubUser.findUnique).toHaveBeenCalledTimes(1);
   });
 
   it('Returns error when invalid project provided', async () => {
@@ -130,7 +117,8 @@ describe('POST /projects/add-repos', () => {
 
     expect(result.statusCode).toEqual(404);
 
-    expect(contextMock.prisma.address.findUnique).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.githubUser.findUnique).toHaveBeenCalledTimes(1);
+
     expect(contextMock.prisma.project.findUnique).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.project.findUnique).toHaveBeenCalledWith({
       where: { id: projectId },
@@ -157,7 +145,8 @@ describe('POST /projects/add-repos', () => {
 
     expect(result.statusCode).toEqual(500);
 
-    expect(contextMock.prisma.address.findUnique).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.githubUser.findUnique).toHaveBeenCalledTimes(1);
+
     expect(contextMock.prisma.project.findUnique).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.project.findUnique).toHaveBeenCalledWith({
       where: { id: projectId },
@@ -190,7 +179,8 @@ describe('POST /projects/add-repos', () => {
 
     expect(result.statusCode).toEqual(200);
 
-    expect(contextMock.prisma.address.findUnique).toHaveBeenCalledTimes(1);
+    expect(contextMock.prisma.githubUser.findUnique).toHaveBeenCalledTimes(1);
+
     expect(contextMock.prisma.project.findUnique).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.project.findUnique).toHaveBeenCalledWith({
       where: { id: projectId },
@@ -216,8 +206,6 @@ describe('PUT /projects/enable/:id', () => {
   });
 
   it('Fails with non-staff Access Token provided', async () => {
-    mockJwtWithAddress();
-
     const authTokens = genAuthTokens();
 
     const result = await request(await setupApp())
@@ -226,12 +214,9 @@ describe('PUT /projects/enable/:id', () => {
       .send();
 
     expect(result.statusCode).toEqual(401);
-
-    expect(contextMock.prisma.address.findUnique).toHaveBeenCalledTimes(1);
   });
 
   it('Returns a 404 when the Project is not found', async () => {
-    mockJwtWithAddress();
     contextMock.prisma.project.findUnique.mockResolvedValue(null);
 
     const authTokens = genAuthTokens(STAFF_ADDRESSES[0]);
@@ -243,7 +228,6 @@ describe('PUT /projects/enable/:id', () => {
 
     expect(result.statusCode).toEqual(404);
 
-    expect(contextMock.prisma.address.findUnique).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.project.findUnique).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.project.findUnique).toHaveBeenCalledWith({
       where: { id: projectId },
@@ -252,7 +236,6 @@ describe('PUT /projects/enable/:id', () => {
   });
 
   it('Enables all GitPOAPs when the Project is found', async () => {
-    mockJwtWithAddress();
     contextMock.prisma.project.findUnique.mockResolvedValue({ id: projectId } as any);
 
     const authTokens = genAuthTokens(STAFF_ADDRESSES[0]);
@@ -264,7 +247,6 @@ describe('PUT /projects/enable/:id', () => {
 
     expect(result.statusCode).toEqual(200);
 
-    expect(contextMock.prisma.address.findUnique).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.project.findUnique).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.project.findUnique).toHaveBeenCalledWith({
       where: { id: projectId },

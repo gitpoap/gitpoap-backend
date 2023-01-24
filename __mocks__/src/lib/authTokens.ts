@@ -22,6 +22,7 @@ type SetupGenAuthTokensArgs = {
   ensName: string | null;
   ensAvatarImageUrl: string | null;
   memberships?: MembershipsPayload;
+  githubUserId?: number;
   githubId?: number;
   githubHandle?: string;
   emailAddress?: string;
@@ -35,6 +36,7 @@ export function setupGenAuthTokens({
   ensName,
   ensAvatarImageUrl,
   memberships,
+  githubUserId,
   githubId,
   githubHandle,
   emailAddress,
@@ -44,7 +46,7 @@ export function setupGenAuthTokens({
     let github: GithubPayload | null = null;
     if (extras?.hasGithub && githubId !== undefined && githubHandle !== undefined) {
       github = {
-        id: 1, // Dummy since it's not used in tests yet
+        id: githubUserId ?? 1,
         githubId,
         githubHandle,
       };
@@ -82,7 +84,7 @@ export function setupGenAuthTokens({
     };
 
     return {
-      accessTokenPayload,
+      accessTokenPayload: Object.assign({}, accessTokenPayload),
       accessToken: sign(accessTokenPayload, JWT_SECRET, { expiresIn: JWT_EXP_TIME_SECONDS }),
     };
   };

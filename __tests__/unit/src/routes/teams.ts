@@ -46,17 +46,7 @@ const teamRequest = {
   adminAddressId: addressId,
 };
 
-const teamRecord = {
-  id: 1,
-};
-
-function mockJwtWithAddress() {
-  contextMock.prisma.address.findUnique.mockResolvedValue({
-    ensName,
-    ensAvatarImageUrl,
-    memberships: [],
-  } as any);
-}
+const teamRecord = { id: 1 };
 
 const genAuthTokens = setupGenAuthTokens({
   privyUserId,
@@ -76,8 +66,6 @@ describe('POST /teams', () => {
   });
 
   it('Fails on bad fields in request', async () => {
-    mockJwtWithAddress();
-
     const authTokens = genAuthTokens();
 
     {
@@ -97,7 +85,6 @@ describe('POST /teams', () => {
   });
 
   it('Create a team', async () => {
-    mockJwtWithAddress();
     mockedResolveENS.mockResolvedValue(ethAddress);
     mockedUploadFileBuffer.mockResolvedValue({
       filename: 'test-team-logo',

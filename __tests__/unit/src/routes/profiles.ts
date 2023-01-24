@@ -28,14 +28,6 @@ const addressRecord = {
   discordUserId: null,
 };
 
-function mockJwtWithAddress() {
-  contextMock.prisma.address.findUnique.mockResolvedValue({
-    ensName,
-    ensAvatarImageUrl,
-    memberships: [],
-  } as any);
-}
-
 function genAuthTokens() {
   return generateAuthTokens(
     privyUserId,
@@ -62,8 +54,6 @@ describe('POST /profiles', () => {
   });
 
   it('Fails on bad fields in request', async () => {
-    mockJwtWithAddress();
-
     const authTokens = genAuthTokens();
 
     {
@@ -83,7 +73,6 @@ describe('POST /profiles', () => {
   });
 
   it('Fails on bad address', async () => {
-    mockJwtWithAddress();
     mockedResolveENS.mockResolvedValue(null);
 
     const authTokens = genAuthTokens();
@@ -110,7 +99,6 @@ describe('POST /profiles', () => {
   };
 
   it('Allows missing data fields', async () => {
-    mockJwtWithAddress();
     mockedResolveENS.mockResolvedValue(ethAddress);
     contextMock.prisma.address.upsert.mockResolvedValue(addressRecord);
 
@@ -131,7 +119,6 @@ describe('POST /profiles', () => {
   });
 
   it('Allows setting of all fields', async () => {
-    mockJwtWithAddress();
     mockedResolveENS.mockResolvedValue(ethAddress);
     contextMock.prisma.address.upsert.mockResolvedValue(addressRecord);
 
@@ -160,7 +147,6 @@ describe('POST /profiles', () => {
   });
 
   it('Allows nullification of most fields', async () => {
-    mockJwtWithAddress();
     mockedResolveENS.mockResolvedValue(ethAddress);
     contextMock.prisma.address.upsert.mockResolvedValue(addressRecord);
 
@@ -188,7 +174,6 @@ describe('POST /profiles', () => {
   });
 
   it('Allows toggling of leaderboard visibility', async () => {
-    mockJwtWithAddress();
     mockedResolveENS.mockResolvedValue(ethAddress);
     contextMock.prisma.address.upsert.mockResolvedValue(addressRecord);
 

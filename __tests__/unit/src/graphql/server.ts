@@ -93,32 +93,27 @@ describe('setupGQLContext', () => {
     const mockedReq = {
       headers: { authorization: `Bearer ${user}` },
     };
-    const validatedPayload = {
-      ensName: null,
-      ensAvatarImageUrl: null,
-      memberships: [{ teamId: 3, role: MembershipRole.ADMIN }],
-      githubId: null,
-      githubHandle: null,
-      discordId: null,
-      discordHandle: null,
-      emailId: 5,
-    };
     const userPayload = {
-      authTokenId: 2,
-      addressId: 342,
-      address: '0xfoo',
-      ...validatedPayload,
-      memberships: [],
-      emailId: null,
+      privyUserId: 'foo:bar',
+      address: {
+        id: 342,
+        ethAddress: '0xfoo',
+        ensName: null,
+        ensAvatarImageUrl: null,
+      },
+      github: null,
+      email: {
+        id: 5,
+        emailAddress: 'yeet@yolo.com',
+      },
+      discord: null,
+      memberships: [{ teamId: 3, role: MembershipRole.ADMIN }],
     };
     mockedVerify.mockImplementationOnce(() => userPayload);
 
     expect(await setupGQLContext(mockedReq)).toEqual({
       ...context,
-      userAccessTokenPayload: {
-        ...userPayload,
-        ...validatedPayload,
-      },
+      userAccessTokenPayload: userPayload,
     });
   });
 });

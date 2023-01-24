@@ -49,7 +49,9 @@ describe('authChecker', () => {
       {
         context: {
           userAccessTokenPayload: {
-            address: ADDRESSES.vitalik,
+            address: {
+              ethAddress: ADDRESSES.vitalik,
+            },
           },
         },
         info: 'info',
@@ -65,7 +67,9 @@ describe('authChecker', () => {
       {
         context: {
           userAccessTokenPayload: {
-            address: STAFF_ADDRESSES[0],
+            address: {
+              ethAddress: STAFF_ADDRESSES[0],
+            },
           },
         },
       } as any,

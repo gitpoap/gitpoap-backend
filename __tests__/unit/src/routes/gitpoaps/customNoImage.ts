@@ -92,21 +92,12 @@ function genAuthTokens(
   );
 }
 
-function mockJwtWithAddress() {
-  contextMock.prisma.address.findUnique.mockResolvedValue({
-    ensName,
-    ensAvatarImageUrl,
-    memberships: [],
-  } as any);
-}
-
 describe('POST /gitpoaps/custom', () => {
   afterAll(() => {
     jest.resetAllMocks();
   });
 
   it('Fails when no image is provided', async () => {
-    mockJwtWithAddress();
     const authTokens = genAuthTokens();
     const result = await request(await setupApp())
       .post('/gitpoaps/custom')
@@ -138,7 +129,6 @@ describe('POST /gitpoaps/custom', () => {
 
 describe('PATCH /gitpoaps/custom/:gitPOAPRequestId', () => {
   it('Allows updates of other fields when no image is uploaded', async () => {
-    mockJwtWithAddress();
     contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue({
       addressId,
       staffApprovalStatus: StaffApprovalStatus.PENDING,
@@ -182,7 +172,6 @@ describe('PATCH /gitpoaps/custom/:gitPOAPRequestId', () => {
   });
 
   it('Allows staff to update a GitPOAPRequest', async () => {
-    mockJwtWithAddress();
     contextMock.prisma.gitPOAPRequest.findUnique.mockResolvedValue({
       addressId: addressId + 2,
       staffApprovalStatus: StaffApprovalStatus.PENDING,
