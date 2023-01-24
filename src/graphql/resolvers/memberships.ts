@@ -1,10 +1,5 @@
 import { Authorized, Arg, Ctx, Field, ObjectType, Resolver, Query, Mutation } from 'type-graphql';
-import {
-  MembershipOrderByWithRelationInput,
-  Address,
-  Membership,
-  Team,
-} from '@generated/type-graphql';
+import { Address, Membership, Team } from '@generated/type-graphql';
 import { MembershipAcceptanceStatus, MembershipRole } from '@prisma/client';
 import { DateTime } from 'luxon';
 import { AuthRoles } from '../auth';
@@ -57,6 +52,12 @@ class MembershipMutationPayload {
   membership: MembershipWithTeam | null;
 }
 
+const RoleSortOrder = ['OWNER', 'ADMIN', 'MEMBER'];
+const compareAcceptanceStatus = (a: string, b: string) => a.localeCompare(b);
+const compareRole = (a: string, b: string) => RoleSortOrder.indexOf(a) - RoleSortOrder.indexOf(b);
+const compareDates = (a: Date | null, b: Date | null) =>
+  a && b ? a.getTime() - b.getTime() : b ? 1 : -1;
+
 @Resolver(() => Membership)
 export class CustomMembershipResolver {
   @Authorized(AuthRoles.Address)
@@ -83,6 +84,13 @@ export class CustomMembershipResolver {
       },
     });
 
+    await memberships.sort(
+      (a, b) =>
+        compareAcceptanceStatus(a.acceptanceStatus, b.acceptanceStatus) ||
+        compareRole(a.role, b.role) ||
+        compareDates(a.joinedOn, b.joinedOn),
+    );
+
     logger.debug(`Completed request for Memberships for address ${userAccessTokenPayload.address}`);
 
     return { memberships };
@@ -104,25 +112,6 @@ export class CustomMembershipResolver {
     if (userAccessTokenPayload === null) {
       logger.error('Route passed AuthRoles.Address authorization without user payload set');
       throw InternalError;
-    }
-
-    let orderBy: MembershipOrderByWithRelationInput | undefined = undefined;
-    switch (sort) {
-      case MembershipSort.DATE:
-        orderBy = {
-          joinedOn: 'desc',
-        };
-        break;
-      case MembershipSort.ROLE:
-        orderBy = {
-          role: 'asc',
-        };
-        break;
-      case MembershipSort.ACCEPTANCE_STATUS:
-        orderBy = {
-          acceptanceStatus: 'asc',
-        };
-        break;
     }
 
     if ((page === null || perPage === null) && page !== perPage) {
@@ -166,7 +155,6 @@ export class CustomMembershipResolver {
     });
 
     const memberships = await prisma.membership.findMany({
-      orderBy,
       skip: page ? (page - 1) * <number>perPage : undefined,
       take: perPage ?? undefined,
       where: {
@@ -179,6 +167,35 @@ export class CustomMembershipResolver {
         address: true,
       },
     });
+
+    switch (sort) {
+      case MembershipSort.DATE:
+        await memberships.sort(
+          (a, b) =>
+            compareDates(a.joinedOn, b.joinedOn) ||
+            compareAcceptanceStatus(a.acceptanceStatus, b.acceptanceStatus) ||
+            compareRole(a.role, b.role),
+        );
+        break;
+      case MembershipSort.ROLE:
+        await memberships.sort(
+          (a, b) =>
+            compareRole(a.role, b.role) ||
+            compareAcceptanceStatus(a.acceptanceStatus, b.acceptanceStatus) ||
+            compareDates(a.joinedOn, b.joinedOn),
+        );
+
+        break;
+      case MembershipSort.ACCEPTANCE_STATUS:
+      default:
+        await memberships.sort(
+          (a, b) =>
+            compareAcceptanceStatus(a.acceptanceStatus, b.acceptanceStatus) ||
+            compareRole(a.role, b.role) ||
+            compareDates(a.joinedOn, b.joinedOn),
+        );
+        break;
+    }
 
     logger.debug(
       `Completed request for Memberships for team ${teamId} using sort ${sort}, with ${perPage} results per page and page ${page}`,
