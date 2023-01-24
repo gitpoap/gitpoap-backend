@@ -8,32 +8,45 @@ describe('getAccessTokenPayload', () => {
 
   const validPayload1: AccessTokenPayload = {
     privyUserId: 'hello-there',
-    addressId: 784,
-    ethAddress: '0x00001',
-    ensName: null,
-    ensAvatarImageUrl: null,
+    address: {
+      id: 784,
+      ethAddress: '0x00001',
+      ensName: null,
+      ensAvatarImageUrl: null,
+    },
+    github: null,
+    email: null,
+    discord: null,
     memberships: [],
-    githubId: null,
-    githubHandle: null,
-    discordHandle: null,
-    emailAddress: null,
   };
   const validPayload2: AccessTokenPayload = {
     privyUserId: 'bye for now!',
-    addressId: 84,
-    ethAddress: '0x44001',
-    ensName: 'burz.eth',
-    ensAvatarImageUrl: 'https://example.com/example.jpg',
+    address: {
+      id: 84,
+      ethAddress: '0x44001',
+      ensName: 'burz.eth',
+      ensAvatarImageUrl: 'https://example.com/example.jpg',
+    },
+    github: {
+      id: 234,
+      githubId: 32455,
+      githubHandle: 'burz',
+    },
+    email: {
+      id: 6787,
+      emailAddress: 'foobar@yoyo.com',
+    },
+    discord: {
+      id: 249999,
+      discordId: 'discoCat34',
+      discordHandle: 'yoyo#45',
+    },
     memberships: [
       {
         teamId: 234,
         role: MembershipRole.ADMIN,
       },
     ],
-    githubId: 32455,
-    githubHandle: 'burz',
-    discordHandle: 'yoyo#45',
-    emailAddress: 'foobar@yoyo.com',
   };
 
   it('Succeeds with valid payload', () => {
