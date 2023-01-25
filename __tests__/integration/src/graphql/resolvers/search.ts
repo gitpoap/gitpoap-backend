@@ -53,7 +53,7 @@ describe('CustomSearchResolver', () => {
   it('search - profiles by ENS', async () => {
     const data = await client.request(gql`
       {
-        search(text: "burz.e") {
+        search(text: "pee") {
           profiles {
             id
           }
@@ -62,6 +62,6 @@ describe('CustomSearchResolver', () => {
     `);
 
     expect(data.search.profiles).toHaveLength(1);
-    expect(data.search.profiles[0].id).toEqual(4);
+    expect(data.search.profiles[0].id).toEqual(3);
   });
 });

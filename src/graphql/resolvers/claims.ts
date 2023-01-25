@@ -5,8 +5,6 @@ import { POAPEvent } from '../../types/poap';
 import { retrievePOAPEventInfo } from '../../external/poap';
 import { getLastMonthStartDatetime } from './util';
 import { ClaimStatus, GitPOAPStatus, Prisma } from '@prisma/client';
-import { AuthRoles } from '../auth';
-import { InternalError } from '../errors';
 
 @ObjectType()
 class FullClaimData {
@@ -45,23 +43,24 @@ export class CustomClaimResolver {
     return result._count.id;
   }
 
-  @Authorized(AuthRoles.Address)
+  @Authorized()
   @Query(() => [FullClaimData], { nullable: true })
   async userClaims(
     @Ctx() { prisma, userAccessTokenPayload, logger }: AuthLoggingContext,
   ): Promise<FullClaimData[] | null> {
-    if (userAccessTokenPayload === null || userAccessTokenPayload.address === null) {
-      logger.error('Route passed AuthRoles.Address authorization without user payload set');
-      throw InternalError;
+    if (userAccessTokenPayload === null) {
+      return [];
     }
 
-    logger.info(`Request for the claims for address: ${userAccessTokenPayload.address.ethAddress}`);
+    logger.info(`Request for the claims for Privy User ID: ${userAccessTokenPayload.privyUserId}`);
 
-    const possibleMatches: Prisma.Enumerable<Prisma.ClaimWhereInput[]> = [
-      // Note that this covers both the ethAddress and the ensName
-      { issuedAddressId: userAccessTokenPayload.address.id },
-    ];
-
+    const possibleMatches: Prisma.ClaimWhereInput[] = [];
+    if (userAccessTokenPayload.address !== null) {
+      possibleMatches.push({
+        // Note that this covers both the ethAddress and the ensName
+        issuedAddressId: userAccessTokenPayload.address.id,
+      });
+    }
     if (userAccessTokenPayload.github !== null) {
       possibleMatches.push({
         githubUser: { githubId: userAccessTokenPayload.github.githubId },
@@ -69,6 +68,10 @@ export class CustomClaimResolver {
     }
     if (userAccessTokenPayload.email !== null) {
       possibleMatches.push({ email: { id: userAccessTokenPayload.email.id } });
+    }
+
+    if (possibleMatches.length === 0) {
+      return [];
     }
 
     const claims = await prisma.claim.findMany({
