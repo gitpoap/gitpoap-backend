@@ -7,7 +7,7 @@ import { isGithubTokenValidForUser } from '../external/github';
 import { removeGithubUsersLogin } from './githubUsers';
 import { AddressPayload, GithubPayload, EmailPayload, DiscordPayload } from '../types/authTokens';
 import { upsertEmail } from './emails';
-import { upsertDiscordUser } from './discord';
+import { upsertDiscordUser } from './discordUsers';
 
 type GithubTokenData = GithubPayload & {
   githubOAuthToken: string;
