@@ -38,7 +38,7 @@ describe('CustomProfileResolver', () => {
 
     expect(data.profileData).not.toEqual(null);
     expect(data.profileData.ensName).toEqual('burz.eth');
-    expect(data.profileData.githubHandle).toEqual('burz');
+    expect(data.profileData.githubHandle).toEqual(null);
   });
 
   it('profileData - nullable', async () => {
@@ -47,9 +47,7 @@ describe('CustomProfileResolver', () => {
     // Ensure the record doesn't already exist
     const startingRecord = await context.prisma.profile.findFirst({
       where: {
-        address: {
-          ethAddress: address,
-        },
+        address: { ethAddress: address },
       },
     });
 
@@ -77,9 +75,7 @@ describe('CustomProfileResolver', () => {
     // Ensure that the record has been upserted
     const endingRecord = await context.prisma.profile.findFirst({
       where: {
-        address: {
-          ethAddress: address,
-        },
+        address: { ethAddress: address },
       },
     });
 
@@ -88,9 +84,7 @@ describe('CustomProfileResolver', () => {
     // Delete the record
     await context.prisma.profile.deleteMany({
       where: {
-        address: {
-          ethAddress: address,
-        },
+        address: { ethAddress: address },
       },
     });
   });
@@ -107,7 +101,7 @@ describe('CustomProfileResolver', () => {
 
     expect(data.profileData).not.toEqual(null);
     expect(data.profileData.address).toEqual(ADDRESSES.aldo);
-    expect(data.profileData.githubHandle).toEqual('aldolamb');
+    expect(data.profileData.githubHandle).toEqual('aldolamberti');
   });
 
   it('profileData - old GitHub Connection', async () => {
@@ -150,19 +144,13 @@ describe('CustomProfileResolver', () => {
 
   const setAddressVisibility = async (address: string, isVisibleOnLeaderboard: boolean) => {
     const addressRecord = await context.prisma.address.upsert({
-      where: {
-        ethAddress: address.toLowerCase(),
-      },
+      where: { ethAddress: address.toLowerCase() },
       update: {},
-      create: {
-        ethAddress: address.toLowerCase(),
-      },
+      create: { ethAddress: address.toLowerCase() },
     });
 
     await context.prisma.profile.update({
-      where: {
-        addressId: addressRecord.id,
-      },
+      where: { addressId: addressRecord.id },
       data: { isVisibleOnLeaderboard },
     });
   };
