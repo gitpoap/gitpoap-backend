@@ -1,14 +1,16 @@
 import { gql } from 'graphql-request';
-import { ADDRESSES } from '../../../../../prisma/constants';
+import { ADDRESSES, GH_HANDLES } from '../../../../../prisma/constants';
 import { context } from '../../../../../src/context';
 import { GitPOAPStatus } from '@prisma/client';
-import { getGraphQLClient } from '../../../../../__mocks__/src/graphql/server';
+import {
+  getGraphQLClient,
+  getGraphQLClientWithAuth,
+} from '../../../../../__mocks__/src/graphql/server';
+import { TEAM_EMAIL } from '../../../../../src/constants';
 
 describe('CustomClaimResolver', () => {
-  const client = getGraphQLClient();
-
   it('totalClaims', async () => {
-    const data = await client.request(
+    const data = await getGraphQLClient().request(
       gql`
         {
           totalClaims
@@ -20,7 +22,7 @@ describe('CustomClaimResolver', () => {
   });
 
   it('lastMonthClaims', async () => {
-    const data = await client.request(
+    const data = await getGraphQLClient().request(
       gql`
         {
           lastMonthClaims
@@ -32,9 +34,21 @@ describe('CustomClaimResolver', () => {
   });
 
   it('userClaims - githubHandle', async () => {
-    const data = await client.request(gql`
-      { userClaims(address: "${ADDRESSES.jay}") { claim { id } } }
-    `);
+    const data = await (
+      await getGraphQLClientWithAuth({
+        githubHandle: GH_HANDLES.jay,
+      })
+    ).request(
+      gql`
+        {
+          userClaims {
+            claim {
+              id
+            }
+          }
+        }
+      `,
+    );
 
     // GitPOAP ID 5 doesn't have any claim codes or else this would be 6
     // and include Claim ID 18
@@ -47,27 +61,61 @@ describe('CustomClaimResolver', () => {
   });
 
   it('userClaims - email', async () => {
-    const data = await client.request(gql`
-      { userClaims(address: "${ADDRESSES.random}") { claim { id } } }
-    `);
+    const data = await (
+      await getGraphQLClientWithAuth({
+        emailAddress: TEAM_EMAIL,
+      })
+    ).request(
+      gql`
+        {
+          userClaims {
+            claim {
+              id
+            }
+          }
+        }
+      `,
+    );
 
     expect(data.userClaims).toHaveLength(1);
     expect(data.userClaims).toContainEqual({ claim: { id: 44 } });
   });
 
   it('userClaims - address', async () => {
-    const data = await client.request(gql`
-      { userClaims(address: "${ADDRESSES.random2}") { claim { id } } }
-    `);
+    const data = await (
+      await getGraphQLClientWithAuth({
+        ethAddress: ADDRESSES.random2,
+      })
+    ).request(
+      gql`
+        {
+          userClaims {
+            claim {
+              id
+            }
+          }
+        }
+      `,
+    );
 
     expect(data.userClaims).toHaveLength(1);
     expect(data.userClaims).toContainEqual({ claim: { id: 45 } });
   });
 
   it('userClaims - unknown address', async () => {
-    const data = await client.request(gql`
-      { userClaims(address: "${'0x4' + ADDRESSES.random2.substr(3)}") { claim { id } } }
-    `);
+    const data = await (
+      await getGraphQLClientWithAuth({})
+    ).request(
+      gql`
+        {
+          userClaims {
+            claim {
+              id
+            }
+          }
+        }
+      `,
+    );
 
     expect(data.userClaims).toHaveLength(0);
   });
@@ -79,9 +127,21 @@ describe('CustomClaimResolver', () => {
       data: { poapApprovalStatus: GitPOAPStatus.UNAPPROVED },
     });
 
-    const data = await client.request(gql`
-      { userClaims(address: "${ADDRESSES.random2}") { claim { id } } }
-    `);
+    const data = await (
+      await getGraphQLClientWithAuth({
+        ethAddress: ADDRESSES.random2,
+      })
+    ).request(
+      gql`
+        {
+          userClaims {
+            claim {
+              id
+            }
+          }
+        }
+      `,
+    );
 
     await context.prisma.gitPOAP.update({
       where: { id: 9 },
