@@ -1,4 +1,3 @@
-import 'reflect-metadata';
 import '../../../../__mocks__/src/logging';
 import {
   BotCreateClaimsErrorType,
