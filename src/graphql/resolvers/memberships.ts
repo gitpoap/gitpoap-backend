@@ -226,11 +226,6 @@ export class CustomMembershipResolver {
       throw new Error(MembershipErrorMessage.TEAM_NOT_FOUND);
     }
 
-    if (team.ownerAddress.id !== userAccessTokenPayload.address.id) {
-      logger.warn('Not the team owner');
-      throw new Error(MembershipErrorMessage.NOT_AUTHORIZED);
-    }
-
     const addressRecord = await prisma.address.findUnique({
       where: { ethAddress: address.toLowerCase() },
       select: { id: true },
@@ -239,6 +234,20 @@ export class CustomMembershipResolver {
     if (addressRecord === null) {
       logger.warn(`Address not found for address: ${address}`);
       throw new Error(MembershipErrorMessage.ADDRESS_NOT_FOUND);
+    }
+
+    const userMembership = await prisma.membership.findUnique({
+      where: {
+        teamId_addressId: {
+          addressId: userAccessTokenPayload.address.id,
+          teamId,
+        },
+      },
+    });
+
+    if (userMembership === null || userMembership.role === MembershipRole.MEMBER) {
+      logger.warn('Not the team admin');
+      throw new Error(MembershipErrorMessage.NOT_AUTHORIZED);
     }
 
     const membershipRecord = await prisma.membership.findUnique({
