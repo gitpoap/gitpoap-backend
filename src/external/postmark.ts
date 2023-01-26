@@ -1,4 +1,4 @@
-import { ServerClient } from 'postmark';
+import { Errors, ServerClient } from 'postmark';
 import { POSTMARK_SERVER_TOKEN } from '../environment';
 import { IntakeFormReposSchema } from '../schemas/onboarding';
 import { z } from 'zod';
@@ -54,6 +54,11 @@ const sendEmailWithTemplateHandler = async <T extends Record<string, string | nu
 
     return response;
   } catch (e) {
+    if (e instanceof Errors.InactiveRecipientsError) {
+      logger.warn(`Email "${to}" is no longer an active recipient: ${e}`);
+      return null;
+    }
+
     logger.error(`Failed to send template email - ${e}`);
     return null;
   }
