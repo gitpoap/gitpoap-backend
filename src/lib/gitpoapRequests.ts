@@ -58,6 +58,32 @@ export async function uploadGitPOAPRequestImage(
   );
 }
 
+export function dedupeContributors(contributors: z.infer<typeof GitPOAPContributorsSchema>) {
+  const dedupedContributors: z.infer<typeof GitPOAPContributorsSchema> = {};
+
+  if (contributors.githubHandles !== undefined) {
+    const handles = new Set<string>(contributors.githubHandles);
+    dedupedContributors.githubHandles = Array.from(handles);
+  }
+  if (contributors.ethAddresses !== undefined) {
+    const addresses = new Set<string>();
+    contributors.ethAddresses.forEach(a => addresses.add(a.toLowerCase()));
+    dedupedContributors.ethAddresses = Array.from(addresses);
+  }
+  if (contributors.ensNames !== undefined) {
+    const names = new Set<string>();
+    contributors.ensNames.forEach(n => names.add(n.toLowerCase()));
+    dedupedContributors.ensNames = Array.from(names);
+  }
+  if (contributors.emails !== undefined) {
+    const emails = new Set<string>();
+    contributors.emails.forEach(e => emails.add(e.toLowerCase()));
+    dedupedContributors.emails = Array.from(emails);
+  }
+
+  return dedupedContributors;
+}
+
 export function validateContributorsString(contributorsString: string) {
   const logger = createScopedLogger('validateContributorsString');
 
@@ -78,7 +104,7 @@ export function validateContributorsString(contributorsString: string) {
     return null;
   }
 
-  return contributors;
+  return dedupeContributors(contributors);
 }
 
 export function chooseGitPOAPRequestDates() {
