@@ -38,7 +38,7 @@ async function responseHandler<T>(
   requestorGithubHandle: string,
   responsePromise: Promise<any>,
 ): Promise<T | null> {
-  const logger = createScopedLogger(`responseHandler[${methodName}`);
+  const logger = createScopedLogger(`responseHandler[${methodName}]`);
 
   try {
     return (await responsePromise).data;
