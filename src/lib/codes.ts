@@ -381,9 +381,13 @@ export async function chooseUnusedRedeemCode(
   const { startingCount, endingCount } = await checkGitPOAPForNewCodesHelper(gitPOAP);
 
   if (startingCount >= endingCount) {
-    logger.error(
-      `Checking for new claim codes for GitPOAP ID ${gitPOAP.id} didn't return any new codes`,
-    );
+    if (gitPOAP.poapApprovalStatus === GitPOAPStatus.REDEEM_REQUEST_PENDING) {
+      logger.error(
+        `Checking for new claim codes for GitPOAP ID ${gitPOAP.id} didn't return any new codes`,
+      );
+    } else {
+      logger.warn(`Still waiting on new claim codes from POAP for GitPOAP ID ${gitPOAP.id}`);
+    }
 
     return null;
   }
