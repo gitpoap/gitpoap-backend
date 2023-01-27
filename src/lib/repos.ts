@@ -37,7 +37,7 @@ async function createRepoHelper(
       },
     });
   } catch (err) {
-    logger.error(
+    logger.warn(
       `Failed to create repo "${repoInfo.owner.login}/${repoInfo.name}" for Project ID ${projectId}`,
     );
     return null;
