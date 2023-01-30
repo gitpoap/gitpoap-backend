@@ -34,7 +34,6 @@ model GithubUser {
   githubPullRequests GithubPullRequest[]
   githubIssues       GithubIssue[]
   githubMentions     GithubMention[]
-  addresses          Address[]
 }
 
 model DiscordUser {
@@ -78,8 +77,6 @@ model Address {
   gitPOAPRequests   GitPOAPRequest[]
   createdGitPOAPs   GitPOAP[]
   teams             Team[]
-  GithubUser        GithubUser?      @relation(fields: [githubUserId], references: [id])
-  githubUserId      Int?
 
   @@index([ethAddress])
 }
