@@ -625,18 +625,15 @@ type AddressCountAggregate {
   updatedAt: Int!
   ensAvatarImageUrl: Int!
   ensName: Int!
-  githubUserId: Int!
   _all: Int!
 }
 
 type AddressAvgAggregate {
   id: Float
-  githubUserId: Float
 }
 
 type AddressSumAggregate {
   id: Int
-  githubUserId: Int
 }
 
 type AddressMinAggregate {
@@ -646,7 +643,6 @@ type AddressMinAggregate {
   updatedAt: DateTime
   ensAvatarImageUrl: String
   ensName: String
-  githubUserId: Int
 }
 
 # The javascript `Date` as string. Type represents date and time as the ISO Date string.
@@ -659,7 +655,6 @@ type AddressMaxAggregate {
   updatedAt: DateTime
   ensAvatarImageUrl: String
   ensName: String
-  githubUserId: Int
 }
 
 input AddressWhereInput {
@@ -679,8 +674,6 @@ input AddressWhereInput {
   gitPOAPRequests: GitPOAPRequestListRelationFilter
   createdGitPOAPs: GitPOAPListRelationFilter
   teams: TeamListRelationFilter
-  GithubUser: GithubUserRelationFilter
-  githubUserId: IntNullableFilter
 }
 
 input IntFilter {
@@ -1052,7 +1045,6 @@ input GithubUserWhereInput {
   githubPullRequests: GithubPullRequestListRelationFilter
   githubIssues: GithubIssueListRelationFilter
   githubMentions: GithubMentionListRelationFilter
-  addresses: AddressListRelationFilter
 }
 
 input ClaimListRelationFilter {
@@ -1301,12 +1293,6 @@ input GithubIssueListRelationFilter {
   none: GithubIssueWhereInput
 }
 
-input AddressListRelationFilter {
-  every: AddressWhereInput
-  some: AddressWhereInput
-  none: AddressWhereInput
-}
-
 input EnumGitPOAPStatusFilter {
   equals: GitPOAPStatus
   in: [GitPOAPStatus!]
@@ -1476,8 +1462,6 @@ input AddressOrderByWithRelationInput {
   gitPOAPRequests: GitPOAPRequestOrderByRelationAggregateInput
   createdGitPOAPs: GitPOAPOrderByRelationAggregateInput
   teams: TeamOrderByRelationAggregateInput
-  GithubUser: GithubUserOrderByWithRelationInput
-  githubUserId: SortOrder
 }
 
 enum SortOrder {
@@ -1527,35 +1511,6 @@ input TeamOrderByRelationAggregateInput {
   _count: SortOrder
 }
 
-input GithubUserOrderByWithRelationInput {
-  id: SortOrder
-  githubId: SortOrder
-  githubHandle: SortOrder
-  createdAt: SortOrder
-  updatedAt: SortOrder
-  claims: ClaimOrderByRelationAggregateInput
-  githubPullRequests: GithubPullRequestOrderByRelationAggregateInput
-  githubIssues: GithubIssueOrderByRelationAggregateInput
-  githubMentions: GithubMentionOrderByRelationAggregateInput
-  addresses: AddressOrderByRelationAggregateInput
-}
-
-input GithubPullRequestOrderByRelationAggregateInput {
-  _count: SortOrder
-}
-
-input GithubIssueOrderByRelationAggregateInput {
-  _count: SortOrder
-}
-
-input GithubMentionOrderByRelationAggregateInput {
-  _count: SortOrder
-}
-
-input AddressOrderByRelationAggregateInput {
-  _count: SortOrder
-}
-
 input AddressWhereUniqueInput {
   id: Int
   ethAddress: String
@@ -1568,7 +1523,6 @@ type Address {
   updatedAt: DateTime!
   ensAvatarImageUrl: String
   ensName: String
-  githubUserId: Int
   _count: AddressCount
   memberships(
     where: MembershipWhereInput
@@ -1619,7 +1573,6 @@ type Address {
     skip: Int
     distinct: [TeamScalarFieldEnum!]
   ): [Team!]!
-  GithubUser: GithubUser
 }
 
 type AddressCount {
@@ -1970,6 +1923,18 @@ input ProjectOrderByWithRelationInput {
   gitPOAPRequests: GitPOAPRequestOrderByRelationAggregateInput
 }
 
+input GithubPullRequestOrderByRelationAggregateInput {
+  _count: SortOrder
+}
+
+input GithubIssueOrderByRelationAggregateInput {
+  _count: SortOrder
+}
+
+input GithubMentionOrderByRelationAggregateInput {
+  _count: SortOrder
+}
+
 input RepoWhereUniqueInput {
   id: Int
   githubRepoId: Int
@@ -2062,14 +2027,6 @@ type GithubUser {
     skip: Int
     distinct: [GithubMentionScalarFieldEnum!]
   ): [GithubMention!]!
-  addresses(
-    where: AddressWhereInput
-    orderBy: [AddressOrderByWithRelationInput!]
-    cursor: AddressWhereUniqueInput
-    take: Int
-    skip: Int
-    distinct: [AddressScalarFieldEnum!]
-  ): [Address!]!
 }
 
 type GithubUserCount {
@@ -2077,7 +2034,6 @@ type GithubUserCount {
   githubPullRequests: Int!
   githubIssues: Int!
   githubMentions: Int!
-  addresses: Int!
 }
 
 input ClaimOrderByWithRelationInput {
@@ -2193,6 +2149,18 @@ input GitPOAPRequestOrderByWithRelationInput {
   address: AddressOrderByWithRelationInput
   gitPOAPId: SortOrder
   gitPOAP: GitPOAPOrderByWithRelationInput
+}
+
+input GithubUserOrderByWithRelationInput {
+  id: SortOrder
+  githubId: SortOrder
+  githubHandle: SortOrder
+  createdAt: SortOrder
+  updatedAt: SortOrder
+  claims: ClaimOrderByRelationAggregateInput
+  githubPullRequests: GithubPullRequestOrderByRelationAggregateInput
+  githubIssues: GithubIssueOrderByRelationAggregateInput
+  githubMentions: GithubMentionOrderByRelationAggregateInput
 }
 
 input DiscordUserOrderByWithRelationInput {
@@ -2407,16 +2375,6 @@ enum GithubMentionScalarFieldEnum {
   issueId
 }
 
-enum AddressScalarFieldEnum {
-  id
-  ethAddress
-  createdAt
-  updatedAt
-  ensAvatarImageUrl
-  ensName
-  githubUserId
-}
-
 input GitPOAPWhereUniqueInput {
   id: Int
   poapEventId: Int
@@ -2617,6 +2575,15 @@ enum TeamScalarFieldEnum {
   approvalStatus
 }
 
+enum AddressScalarFieldEnum {
+  id
+  ethAddress
+  createdAt
+  updatedAt
+  ensAvatarImageUrl
+  ensName
+}
+
 type AddressGroupBy {
   id: Int!
   ethAddress: String!
@@ -2624,7 +2591,6 @@ type AddressGroupBy {
   updatedAt: DateTime!
   ensAvatarImageUrl: String
   ensName: String
-  githubUserId: Int
   _count: AddressCountAggregate
   _avg: AddressAvgAggregate
   _sum: AddressSumAggregate
@@ -2639,7 +2605,6 @@ input AddressOrderByWithAggregationInput {
   updatedAt: SortOrder
   ensAvatarImageUrl: SortOrder
   ensName: SortOrder
-  githubUserId: SortOrder
   _count: AddressCountOrderByAggregateInput
   _avg: AddressAvgOrderByAggregateInput
   _max: AddressMaxOrderByAggregateInput
@@ -2654,12 +2619,10 @@ input AddressCountOrderByAggregateInput {
   updatedAt: SortOrder
   ensAvatarImageUrl: SortOrder
   ensName: SortOrder
-  githubUserId: SortOrder
 }
 
 input AddressAvgOrderByAggregateInput {
   id: SortOrder
-  githubUserId: SortOrder
 }
 
 input AddressMaxOrderByAggregateInput {
@@ -2669,7 +2632,6 @@ input AddressMaxOrderByAggregateInput {
   updatedAt: SortOrder
   ensAvatarImageUrl: SortOrder
   ensName: SortOrder
-  githubUserId: SortOrder
 }
 
 input AddressMinOrderByAggregateInput {
@@ -2679,12 +2641,10 @@ input AddressMinOrderByAggregateInput {
   updatedAt: SortOrder
   ensAvatarImageUrl: SortOrder
   ensName: SortOrder
-  githubUserId: SortOrder
 }
 
 input AddressSumOrderByAggregateInput {
   id: SortOrder
-  githubUserId: SortOrder
 }
 
 input AddressScalarWhereWithAggregatesInput {
@@ -2697,7 +2657,6 @@ input AddressScalarWhereWithAggregatesInput {
   updatedAt: DateTimeWithAggregatesFilter
   ensAvatarImageUrl: StringNullableWithAggregatesFilter
   ensName: StringNullableWithAggregatesFilter
-  githubUserId: IntNullableWithAggregatesFilter
 }
 
 input IntWithAggregatesFilter {
@@ -2839,49 +2798,6 @@ input NestedStringNullableWithAggregatesFilter {
   _count: NestedIntNullableFilter
   _min: NestedStringNullableFilter
   _max: NestedStringNullableFilter
-}
-
-input IntNullableWithAggregatesFilter {
-  equals: Int
-  in: [Int!]
-  notIn: [Int!]
-  lt: Int
-  lte: Int
-  gt: Int
-  gte: Int
-  not: NestedIntNullableWithAggregatesFilter
-  _count: NestedIntNullableFilter
-  _avg: NestedFloatNullableFilter
-  _sum: NestedIntNullableFilter
-  _min: NestedIntNullableFilter
-  _max: NestedIntNullableFilter
-}
-
-input NestedIntNullableWithAggregatesFilter {
-  equals: Int
-  in: [Int!]
-  notIn: [Int!]
-  lt: Int
-  lte: Int
-  gt: Int
-  gte: Int
-  not: NestedIntNullableWithAggregatesFilter
-  _count: NestedIntNullableFilter
-  _avg: NestedFloatNullableFilter
-  _sum: NestedIntNullableFilter
-  _min: NestedIntNullableFilter
-  _max: NestedIntNullableFilter
-}
-
-input NestedFloatNullableFilter {
-  equals: Float
-  in: [Float!]
-  notIn: [Float!]
-  lt: Float
-  lte: Float
-  gt: Float
-  gte: Float
-  not: NestedFloatNullableFilter
 }
 
 type AggregateClaim {
@@ -3166,6 +3082,49 @@ input NestedEnumClaimStatusWithAggregatesFilter {
   _count: NestedIntFilter
   _min: NestedEnumClaimStatusFilter
   _max: NestedEnumClaimStatusFilter
+}
+
+input IntNullableWithAggregatesFilter {
+  equals: Int
+  in: [Int!]
+  notIn: [Int!]
+  lt: Int
+  lte: Int
+  gt: Int
+  gte: Int
+  not: NestedIntNullableWithAggregatesFilter
+  _count: NestedIntNullableFilter
+  _avg: NestedFloatNullableFilter
+  _sum: NestedIntNullableFilter
+  _min: NestedIntNullableFilter
+  _max: NestedIntNullableFilter
+}
+
+input NestedIntNullableWithAggregatesFilter {
+  equals: Int
+  in: [Int!]
+  notIn: [Int!]
+  lt: Int
+  lte: Int
+  gt: Int
+  gte: Int
+  not: NestedIntNullableWithAggregatesFilter
+  _count: NestedIntNullableFilter
+  _avg: NestedFloatNullableFilter
+  _sum: NestedIntNullableFilter
+  _min: NestedIntNullableFilter
+  _max: NestedIntNullableFilter
+}
+
+input NestedFloatNullableFilter {
+  equals: Float
+  in: [Float!]
+  notIn: [Float!]
+  lt: Float
+  lte: Float
+  gt: Float
+  gte: Float
+  not: NestedFloatNullableFilter
 }
 
 input BoolWithAggregatesFilter {
