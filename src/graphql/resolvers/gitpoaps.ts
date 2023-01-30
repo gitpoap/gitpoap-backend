@@ -575,12 +575,10 @@ export class CustomGitPOAPResolver {
         },
       }),
       prisma.$queryRaw<HolderResultType[]>`
-        SELECT a.*, p.*, (${claimStatusSelect}) AS "claimsCount",
-          COALESCE(u."githubHandle", p."githubHandle") AS "githubHandle"
+        SELECT a.*, p.*, (${claimStatusSelect}) AS "claimsCount", p."githubHandle"
         FROM "Claim" AS c
         INNER JOIN "Address" AS a ON c."mintedAddressId" = a.id
         INNER JOIN "Profile" AS p ON p."addressId" = a.id
-        LEFT JOIN "GithubUser" AS u ON u.id = a."githubUserId"
         WHERE c."gitPOAPId" = ${gitPOAPId} AND c.status IN ${statusChoicesSql}
         ${orderBySql} ${pageChoiceSql}
       `,
