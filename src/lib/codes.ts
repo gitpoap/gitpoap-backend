@@ -137,7 +137,7 @@ export async function checkGitPOAPForNewCodesHelper(
   const mapResult = await generateCodeUsageMap(gitPOAP.poapEventId, gitPOAP.poapSecret);
   if (mapResult === null) {
     logger.error(
-      `Failed to lookup codes for GitPOAP ID ${gitPOAP.id} (POAP Event ID ${gitPOAP.poapEventId}`,
+      `Failed to lookup codes for GitPOAP ID ${gitPOAP.id} (POAP Event ID ${gitPOAP.poapEventId})`,
     );
     return { startingCount, endingCount: startingCount, notFound: -1, alreadyUsed: -1 };
   }
