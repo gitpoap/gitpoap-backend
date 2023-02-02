@@ -109,6 +109,7 @@ export class CustomClaimResolver {
         gitPOAP: {
           select: {
             poapEventId: true,
+            poapApprovalStatus: true,
             _count: {
               select: { redeemCodes: true },
             },
@@ -130,7 +131,11 @@ export class CustomClaimResolver {
       }
 
       if (claim.gitPOAP._count.redeemCodes === 0) {
-        logger.error(`Claim ${claim.id} has no redeem codes`);
+        if (claim.gitPOAP.poapApprovalStatus === GitPOAPStatus.REDEEM_REQUEST_PENDING) {
+          logger.warn(`Claim ${claim.id} is waiting for redeem codes from POAP`);
+        } else {
+          logger.error(`Claim ${claim.id} has no redeem codes`);
+        }
         continue;
       }
 
