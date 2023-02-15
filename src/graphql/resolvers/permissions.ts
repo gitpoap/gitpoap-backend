@@ -7,7 +7,7 @@ import { isAddressAStaffMember, isGithubIdAStaffMember } from '../../lib/staff';
 @ObjectType()
 class Permissions {
   @Field(() => Boolean)
-  canOnboard: boolean;
+  canCreateCGs: boolean;
 
   @Field(() => Boolean)
   isStaff: boolean;
@@ -35,7 +35,8 @@ export class CustomPermissionsResolver {
         ],
       },
     });
-    const canOnboard = !!userCreatedGitPOAP;
+    // If the user has created a GitPOAP, they can submit new CG requests
+    const canCreateCGs = !!userCreatedGitPOAP;
 
     const isStaff = !!(
       isAddressAStaffMember(userAccessTokenPayload.address) ||
@@ -43,7 +44,7 @@ export class CustomPermissionsResolver {
     );
 
     return {
-      canOnboard,
+      canCreateCGs,
       isStaff,
     };
   }
