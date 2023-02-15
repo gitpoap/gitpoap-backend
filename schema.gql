@@ -5838,7 +5838,7 @@ type OrganizationData {
 }
 
 type Permissions {
-  canOnboard: Boolean!
+  canCreateCGs: Boolean!
   isStaff: Boolean!
 }
 
