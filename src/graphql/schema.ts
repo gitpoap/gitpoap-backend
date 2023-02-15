@@ -123,6 +123,7 @@ import { CustomEmailResolver } from './resolvers/emails';
 import { CustomGitPOAPResolver } from './resolvers/gitpoaps';
 import { CustomMembershipResolver } from './resolvers/memberships';
 import { CustomOrganizationResolver } from './resolvers/githubOrganizations';
+import { CustomPermissionsResolver } from './resolvers/permissions';
 import { CustomProfileResolver } from './resolvers/profiles';
 import { CustomRepoResolver } from './resolvers/repos';
 import { CustomSearchResolver } from './resolvers/search';
@@ -248,6 +249,7 @@ const allResolvers: NonEmptyArray<ResolverClass> = [
   CustomGitPOAPResolver,
   CustomMembershipResolver,
   CustomOrganizationResolver,
+  CustomPermissionsResolver,
   CustomProfileResolver,
   CustomRepoResolver,
   CustomSearchResolver,
