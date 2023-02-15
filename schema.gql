@@ -587,6 +587,7 @@ type Query {
     sort: String = "alphabetical"
     orgId: Float!
   ): [RepoReturnData!]
+  userPermissions: Permissions!
   totalContributors: Float!
   lastMonthContributors: Float!
   profileData(address: String!): NullableProfile
@@ -5834,6 +5835,11 @@ type OrganizationData {
   gitPOAPCount: Float!
   mintedGitPOAPCount: Float!
   repoCount: Float!
+}
+
+type Permissions {
+  canOnboard: Boolean!
+  isStaff: Boolean!
 }
 
 type NullableProfile {
