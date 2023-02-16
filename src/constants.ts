@@ -91,7 +91,7 @@ export const POAP_DATE_FORMAT = 'yyyy-MM-dd';
 // Maximum size of Team logos sides
 export const MAX_LOGO_IMAGE_SIZE = 500;
 
-export const CGsWhitelist = [
+export const CGsWhitelist = new Set([
   '0x304cf9a8b0856f47ccf9cfd5a5bad1d67b0576a7',
   '0x7ebff2517fc905736464996c6ba5d4e04ee5ee78',
   '0x4dd05e12d0244575c77c31c24f0e273610c085d9',
@@ -129,4 +129,4 @@ export const CGsWhitelist = [
   '0x77b3a164412616656c995ea54464c030f9fe0489',
   '0x183199269307bee7e47bb6727e1b68997b058a62',
   '0xc587892692e71836c35ff914703be3e53d298f80',
-];
+]);
