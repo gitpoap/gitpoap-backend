@@ -130,4 +130,5 @@ export const CGsWhitelist = new Set([
   '0x183199269307bee7e47bb6727e1b68997b058a62',
   '0xc587892692e71836c35ff914703be3e53d298f80',
   '0xc7054D9500E9eE1AD7bF245BbDb5Eaa112a81737', // Luka Ethereum.org
+  '0xd33f6E443D5277E7A0040672885358E22E1E7356', // Josh from Ethereum.org
 ]);
