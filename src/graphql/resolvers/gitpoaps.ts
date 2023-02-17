@@ -435,6 +435,7 @@ export class CustomGitPOAPResolver {
           ${ClaimStatus.MINTING}::"ClaimStatus",
           ${ClaimStatus.CLAIMED}::"ClaimStatus"
         )
+      WHERE g.type = 'ANNUAL'
       GROUP BY g.id
       ORDER BY "claimsCount" DESC
       LIMIT ${count}
