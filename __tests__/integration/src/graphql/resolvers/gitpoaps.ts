@@ -13,7 +13,7 @@ import {
 import { ADDRESSES } from '../../../../../prisma/constants';
 import { getGraphQLClient } from '../../../../../__mocks__/src/graphql/server';
 
-describe('CustomClaimResolver', () => {
+describe('CustomGitPOAPResolver', () => {
   const client = getGraphQLClient();
 
   it('totalGitPOAPs', async () => {
