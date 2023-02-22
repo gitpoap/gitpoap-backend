@@ -6,10 +6,9 @@ import {
 import { Router, Request } from 'express';
 import { context } from '../context';
 import { ClaimStatus, GitPOAPStatus, GitPOAPType } from '@prisma/client';
-import { gitpoapBotAuth, jwtWithAddress, jwtWithStaffOAuth } from '../middleware/auth';
-import { getAccessTokenPayloadWithGithubOAuth } from '../types/authTokens';
+import { gitpoapBotAuth, jwtWithAddress, jwtWithStaffAccess } from '../middleware/auth';
 import { redeemPOAP } from '../external/poap';
-import { getGithubUserById } from '../external/github';
+import { getGithubUserByIdAsApp } from '../external/github';
 import { backloadGithubPullRequestData } from '../lib/pullRequests';
 import { upsertGithubUser } from '../lib/githubUsers';
 import {
@@ -201,7 +200,7 @@ claimsRouter.post('/', jwtWithAddress(), async function (req, res) {
   );
 });
 
-claimsRouter.post('/create', jwtWithStaffOAuth(), async function (req, res) {
+claimsRouter.post('/create', jwtWithStaffAccess(), async function (req, res) {
   const logger = getRequestLogger(req);
 
   logger.error('[DEPRECATED] POST /claims/create called');
@@ -213,10 +212,6 @@ claimsRouter.post('/create', jwtWithStaffOAuth(), async function (req, res) {
     );
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
-
-  const {
-    github: { githubHandle, githubOAuthToken },
-  } = getAccessTokenPayloadWithGithubOAuth(req.user);
 
   logger.info(
     `Request to create ${req.body.recipientGithubIds.length} claims for GitPOAP Id: ${req.body.gitPOAPId}`,
@@ -253,10 +248,7 @@ claimsRouter.post('/create', jwtWithStaffOAuth(), async function (req, res) {
 
   const notFound = [];
   for (const githubId of req.body.recipientGithubIds) {
-    const githubUserInfo = await getGithubUserById(githubId, {
-      requestorGithubHandle: githubHandle,
-      githubToken: githubOAuthToken,
-    });
+    const githubUserInfo = await getGithubUserByIdAsApp(githubId);
     if (githubUserInfo === null) {
       logger.warn(`GitHub ID ${githubId} not found!`);
       notFound.push(githubId);

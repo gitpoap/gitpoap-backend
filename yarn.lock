@@ -2689,10 +2689,10 @@
     terminal-link "2.1.1"
     tmp "0.2.1"
 
-"@privy-io/server-auth@^1.1.0":
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/@privy-io/server-auth/-/server-auth-1.1.0.tgz#85f23ce90a2d4cafef1821039c917f5fff920fad"
-  integrity sha512-m1aKhvpl6lfhup4iA7SSBUiQ9FvPZtdJ8XqhSQW60PUHTVMnMSv0WraZF0T3colrzVEJjJg3t4NNZBr9ZDkzLw==
+"@privy-io/server-auth@^1.1.2":
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/@privy-io/server-auth/-/server-auth-1.1.2.tgz#0ad1c0585eaffb6d5524431d8038697e5b3cd167"
+  integrity sha512-YCHHJAhm75MIzLSa1QdiA/7/C4bgLdaakMCt4DsVfJ3WzOqzVQn3Ie9c2c01BpmX5nigso6+GRR/GjNGErW98g==
   dependencies:
     axios "^1.1.2"
     dotenv "^16.0.3"
@@ -3636,9 +3636,9 @@ axios@^0.27.2:
     form-data "^4.0.0"
 
 axios@^1.1.2:
-  version "1.2.2"
-  resolved "https://registry.yarnpkg.com/axios/-/axios-1.2.2.tgz#72681724c6e6a43a9fea860fc558127dbe32f9f1"
-  integrity sha512-bz/J4gS2S3I7mpN/YZfGFTqhXTYzRho8Ay38w2otuuDR322KzFIWm/4W2K6gIwvWaws5n+mnb7D1lN9uD+QH6Q==
+  version "1.3.4"
+  resolved "https://registry.yarnpkg.com/axios/-/axios-1.3.4.tgz#f5760cefd9cfb51fd2481acf88c05f67c4523024"
+  integrity sha512-toYm+Bsyl6VC5wSkfkbbNB6ROv7KY93PEBBL6xyDczaIHasAiv4wPqQ/c4RjoQzipxRD2W5g21cOqQulZ7rHwQ==
   dependencies:
     follow-redirects "^1.15.0"
     form-data "^4.0.0"
@@ -6506,9 +6506,9 @@ jmespath@0.16.0:
   integrity sha512-9FzQjJ7MATs1tSpnco1K6ayiYE3figslrXA72G2HQ/n76RzvYlofyi5QM+iX4YRs/pu3yzxlVQSST23+dMDknw==
 
 jose@^4.10.4:
-  version "4.11.2"
-  resolved "https://registry.yarnpkg.com/jose/-/jose-4.11.2.tgz#d9699307c02e18ff56825843ba90e2fae9f09e23"
-  integrity sha512-njj0VL2TsIxCtgzhO+9RRobBvws4oYyCM8TpvoUQwl/MbIM3NFJRR9+e6x0sS5xXaP1t6OCBkaBME98OV9zU5A==
+  version "4.12.0"
+  resolved "https://registry.yarnpkg.com/jose/-/jose-4.12.0.tgz#7f00cd2f82499b91623cd413b7b5287fd52651ed"
+  integrity sha512-wW1u3cK81b+SFcHjGC8zw87yuyUweEFe0UJirrXEw1NasW00eF7sZjeG3SLBGz001ozxQ46Y9sofDvhBmWFtXQ==
 
 js-sdsl@^4.1.4:
   version "4.1.5"

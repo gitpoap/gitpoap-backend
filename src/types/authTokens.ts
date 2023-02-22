@@ -162,31 +162,20 @@ export function getAccessTokenPayloadWithAddress(payload: any): AccessTokenPaylo
   throw Error('Tried to convert payload to AccessTokenPayloadWithAddress but it is not!');
 }
 
-export type AccessTokenPayloadWithGithubOAuth = AccessTokenPayload & {
-  github: GithubPayload & {
-    githubOAuthToken: string;
-  };
+export type AccessTokenPayloadWithGithub = AccessTokenPayload & {
+  github: GithubPayload;
 };
 
-function isAccessTokenPayloadWithGithubOAuth(
-  payload: any,
-): payload is AccessTokenPayloadWithGithubOAuth {
-  return (
-    isAccessTokenPayload(payload) &&
-    payload.github !== null &&
-    'githubOAuthToken' in payload.github &&
-    typeof payload.github.githubOAuthToken === 'string'
-  );
+function isAccessTokenPayloadWithGithub(payload: any): payload is AccessTokenPayloadWithGithub {
+  return isAccessTokenPayload(payload) && payload.github !== null;
 }
 
-export function getAccessTokenPayloadWithGithubOAuth(
-  payload: any,
-): AccessTokenPayloadWithGithubOAuth {
-  if (isAccessTokenPayloadWithGithubOAuth(payload)) {
+export function getAccessTokenPayloadWithGithub(payload: any): AccessTokenPayloadWithGithub {
+  if (isAccessTokenPayloadWithGithub(payload)) {
     return payload;
   }
 
-  throw Error('Tried to convert payload to AccessTokenPayloadWithGithubOAuth but it is not!');
+  throw Error('Tried to convert payload to AccessTokenPayloadWithGithub but it is not!');
 }
 
 export type UserAuthTokens = {

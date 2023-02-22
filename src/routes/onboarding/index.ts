@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import { Octokit } from 'octokit';
 import multer from 'multer';
 import { DateTime } from 'luxon';
 import { uploadMulterFile, s3configProfile, getS3URL } from '../../external/s3';
@@ -10,9 +9,10 @@ import {
   UpdateItemCommand,
 } from '@aws-sdk/client-dynamodb';
 import { configProfile, dynamoDBClient } from '../../external/dynamo';
-import { jwtWithGithubOAuth } from '../../middleware/auth';
-import { getAccessTokenPayloadWithGithubOAuth } from '../../types/authTokens';
+import { jwtWithGithub } from '../../middleware/auth';
 import { sendConfirmationEmail, sendInternalConfirmationEmail } from '../../external/postmark';
+import { getOAuthAppOctokit } from '../../external/github';
+import { getAccessTokenPayloadWithGithub } from '../../types/authTokens';
 import {
   IntakeFormImageFilesSchema,
   IntakeFormReposSchema,
@@ -31,14 +31,14 @@ const upload = multer();
 
 onboardingRouter.post<'/intake-form', any, any, IntakeForm>(
   '/intake-form',
-  jwtWithGithubOAuth(),
+  jwtWithGithub(),
   upload.array('images', 5),
   async (req, res) => {
     const logger = getRequestLogger(req);
 
     const {
       github: { githubHandle },
-    } = getAccessTokenPayloadWithGithubOAuth(req.user);
+    } = getAccessTokenPayloadWithGithub(req.user);
     const unixTime = DateTime.local().toUnixInteger();
     const intakeFormTable = configProfile.tables.intakeForm;
 
@@ -176,17 +176,17 @@ onboardingRouter.post<'/intake-form', any, any, IntakeForm>(
 
 onboardingRouter.get<'/github/repos', any, APIResponseData<Repo[]>>(
   '/github/repos',
-  jwtWithGithubOAuth(),
+  jwtWithGithub(),
   async function (req, res) {
     const logger = getRequestLogger(req);
 
     const {
-      github: { githubOAuthToken },
-    } = getAccessTokenPayloadWithGithubOAuth(req.user);
-    const octokit = new Octokit({ auth: githubOAuthToken });
-    const user = await octokit.rest.users.getAuthenticated();
+      github: { githubHandle },
+    } = getAccessTokenPayloadWithGithub(req.user);
 
-    logger.info(`Fetching repos lists for GitHub user ${user.data.login}`);
+    const octokit = getOAuthAppOctokit();
+
+    logger.info(`Fetching repos lists for GitHub user ${githubHandle}`);
 
     const foundRepoIds = new Set<number>();
     const rejectedRepoIds = new Set<number>();
@@ -197,7 +197,7 @@ onboardingRouter.get<'/github/repos', any, APIResponseData<Repo[]>>(
 
     try {
       /* Fetch first 100 public PRs for a user */
-      const publicPrs = await octokit.graphql<PullRequestsRes>(publicPRsQuery(user.data.login));
+      const publicPrs = await octokit.graphql<PullRequestsRes>(publicPRsQuery(githubHandle));
 
       const uniquePrRepos = publicPrs.search.edges.filter(repo => {
         /* Do NOT filter out repos based on stars */
@@ -222,7 +222,7 @@ onboardingRouter.get<'/github/repos', any, APIResponseData<Repo[]>>(
 
       /* Fetch list of orgs that the user is a member of */
       const orgs = await octokit.rest.orgs.listForUser({
-        username: user.data.login,
+        username: githubHandle,
         per_page: 100,
       });
 
@@ -287,7 +287,7 @@ onboardingRouter.get<'/github/repos', any, APIResponseData<Repo[]>>(
     const allRepos = [...mappedRepos, ...mappedOrgRepos, ...mappedPrRepos];
 
     logger.info(
-      `Found ${allRepos.length} total applicable repos for GitHub user ${user.data.login}. Rejected ${rejectedRepoIds.size} repos.`,
+      `Found ${allRepos.length} total applicable repos for GitHub user ${githubHandle}. Rejected ${rejectedRepoIds.size} repos.`,
     );
 
     /* Return status 200 and set a stale-while-revalidate cache-control header */

@@ -6,6 +6,11 @@ export function createPrivyClient() {
   return new PrivyClient(PRIVY_APP_ID, PRIVY_APP_SECRET);
 }
 
+type PrivyGithubDataResult = {
+  githubId: number;
+  githubHandle: string;
+};
+
 type PrivyDiscordDataResult = {
   discordId: string;
   discordHandle: string;
@@ -14,6 +19,7 @@ type PrivyDiscordDataResult = {
 export type VerifyPrivyUserForDataResult = {
   privyUserId: string;
   ethAddress: string | null;
+  github: PrivyGithubDataResult | null;
   emailAddress: string | null;
   discord: PrivyDiscordDataResult | null;
 };
@@ -37,6 +43,14 @@ export async function verifyPrivyTokenForData(
       }
     }
 
+    let github: PrivyGithubDataResult | null = null;
+    if (userData.github?.username) {
+      github = {
+        githubId: parseInt(userData.github.subject, 10),
+        githubHandle: userData.github.username,
+      };
+    }
+
     let discord: PrivyDiscordDataResult | null = null;
     if (userData.discord?.username) {
       discord = {
@@ -48,6 +62,7 @@ export async function verifyPrivyTokenForData(
     return {
       privyUserId: verifiedClaims.userId,
       ethAddress,
+      github,
       emailAddress: userData.email?.address.toLowerCase() ?? null,
       discord,
     };

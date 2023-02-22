@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import multer from 'multer';
-import { jwtWithAddress, jwtWithStaffAddress } from '../middleware/auth';
+import { jwtWithAddress, jwtWithStaffAccess } from '../middleware/auth';
 import { getRequestLogger } from '../middleware/loggingAndTiming';
 import { getS3URL, s3configProfile } from '../external/s3';
 import { hasMembership } from '../lib/authTokens';
@@ -143,7 +143,7 @@ teamsRouter.patch(
   },
 );
 
-teamsRouter.put('/:teamId/gitpoaps/:gitPOAPId', jwtWithStaffAddress(), async function (req, res) {
+teamsRouter.put('/:teamId/gitpoaps/:gitPOAPId', jwtWithStaffAccess(), async function (req, res) {
   const logger = getRequestLogger(req);
 
   const teamId = parseInt(req.params.teamId, 10);
