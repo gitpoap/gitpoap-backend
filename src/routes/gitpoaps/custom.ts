@@ -7,7 +7,7 @@ import { Request, Router } from 'express';
 import { z } from 'zod';
 import { context } from '../../context';
 import { createPOAPEvent } from '../../external/poap';
-import { jwtWithStaffAddress, jwtWithAddress } from '../../middleware/auth';
+import { jwtWithStaffAccess, jwtWithAddress } from '../../middleware/auth';
 import multer from 'multer';
 import { generatePOAPSecret } from '../../lib/secrets';
 import { DateTime } from 'luxon';
@@ -181,7 +181,7 @@ customGitPOAPsRouter.post(
   },
 );
 
-customGitPOAPsRouter.put('/approve/:id', jwtWithStaffAddress(), async (req, res) => {
+customGitPOAPsRouter.put('/approve/:id', jwtWithStaffAccess(), async (req, res) => {
   const logger = getRequestLogger(req);
 
   const gitPOAPRequestId = parseInt(req.params.id, 10);
@@ -275,7 +275,7 @@ customGitPOAPsRouter.put('/approve/:id', jwtWithStaffAddress(), async (req, res)
   return res.status(200).send('APPROVED');
 });
 
-customGitPOAPsRouter.put('/reject/:id', jwtWithStaffAddress(), async (req, res) => {
+customGitPOAPsRouter.put('/reject/:id', jwtWithStaffAccess(), async (req, res) => {
   const logger = getRequestLogger(req);
 
   const gitPOAPRequestId = parseInt(req.params.id, 10);
