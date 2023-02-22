@@ -8,13 +8,10 @@ import { Request, Router } from 'express';
 import { z } from 'zod';
 import { context } from '../../context';
 import { createPOAPEvent } from '../../external/poap';
-import { jwtWithAddress, jwtWithStaffAddress, jwtWithStaffOAuth } from '../../middleware/auth';
+import { jwtWithAddress, jwtWithStaffAccess } from '../../middleware/auth';
 import multer from 'multer';
 import { ClaimStatus, GitPOAPStatus, GitPOAPType } from '@prisma/client';
-import {
-  getAccessTokenPayloadWithAddress,
-  getAccessTokenPayloadWithGithubOAuth,
-} from '../../types/authTokens';
+import { getAccessTokenPayloadWithAddress } from '../../types/authTokens';
 import { backloadGithubPullRequestData } from '../../lib/pullRequests';
 import {
   createProjectWithGithubRepoIds,
@@ -44,7 +41,7 @@ type CreateGitPOAPReqBody = z.infer<typeof CreateGitPOAPSchema>;
 
 gitPOAPsRouter.post(
   '/',
-  jwtWithStaffOAuth(),
+  jwtWithStaffAccess(),
   upload.single('image'),
   async function (req: Request<any, any, CreateGitPOAPReqBody>, res) {
     const logger = getRequestLogger(req);
@@ -61,10 +58,6 @@ gitPOAPsRouter.post(
       logger.warn(msg);
       return res.status(400).send({ msg });
     }
-
-    const {
-      github: { githubHandle, githubOAuthToken },
-    } = getAccessTokenPayloadWithGithubOAuth(req.user);
 
     const canRequestMoreCodes = schemaResult.data.isOngoing === 'true';
 
@@ -107,20 +100,10 @@ gitPOAPsRouter.post(
       logger.info(
         `Request to create a new GitPOAP "${name}" for year ${year} in Project with Github Repo IDs: ${projectChoice.githubRepoIds}`,
       );
-      const githubCredentials = {
-        requestorGithubHandle: githubHandle,
-        githubToken: githubOAuthToken,
-      };
       if (projectChoice.githubRepoIds.length === 1) {
-        project = await getOrCreateProjectWithGithubRepoId(
-          projectChoice.githubRepoIds[0],
-          githubCredentials,
-        );
+        project = await getOrCreateProjectWithGithubRepoId(projectChoice.githubRepoIds[0]);
       } else {
-        project = await createProjectWithGithubRepoIds(
-          projectChoice.githubRepoIds,
-          githubCredentials,
-        );
+        project = await createProjectWithGithubRepoIds(projectChoice.githubRepoIds);
       }
     }
 
@@ -245,7 +228,7 @@ gitPOAPsRouter.get('/poap-token-id/:id', async function (req, res) {
 
 gitPOAPsRouter.post(
   '/codes',
-  jwtWithStaffAddress(),
+  jwtWithStaffAccess(),
   upload.single('codes'),
   async function (req, res) {
     const logger = getRequestLogger(req);
@@ -337,7 +320,7 @@ gitPOAPsRouter.post(
   },
 );
 
-gitPOAPsRouter.put('/enable/:id', jwtWithStaffAddress(), async (req, res) => {
+gitPOAPsRouter.put('/enable/:id', jwtWithStaffAccess(), async (req, res) => {
   const logger = getRequestLogger(req);
 
   const gitPOAPId = parseInt(req.params.id, 10);
@@ -378,7 +361,7 @@ gitPOAPsRouter.put('/enable/:id', jwtWithStaffAddress(), async (req, res) => {
   return res.status(200).send('ENABLED');
 });
 
-gitPOAPsRouter.put('/deprecate/:id', jwtWithStaffAddress(), async (req, res) => {
+gitPOAPsRouter.put('/deprecate/:id', jwtWithStaffAccess(), async (req, res) => {
   const logger = getRequestLogger(req);
 
   const gitPOAPId = parseInt(req.params.id, 10);

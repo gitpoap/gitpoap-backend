@@ -3,57 +3,15 @@ import { context } from '../context';
 import { createScopedLogger } from '../logging';
 import { upsertAddress } from './addresses';
 import { resolveAddress } from './ens';
-import { isGithubTokenValidForUser } from '../external/github';
-import { removeGithubUsersLogin } from './githubUsers';
+import { upsertGithubUser } from './githubUsers';
 import { AddressPayload, GithubPayload, EmailPayload, DiscordPayload } from '../types/authTokens';
 import { upsertEmail } from './emails';
 import { upsertDiscordUser } from './discordUsers';
 
-type GithubTokenData = GithubPayload & {
-  githubOAuthToken: string;
-};
-
-async function checkGithubTokenData(privyUserId: string): Promise<GithubTokenData | null> {
-  const logger = createScopedLogger('getTokenDataWithGithubCheck');
-
-  const githubUser = await context.prisma.githubUser.findUnique({
-    where: { privyUserId },
-    select: {
-      id: true,
-      githubId: true,
-      githubHandle: true,
-      githubOAuthToken: true,
-    },
-  });
-  if (githubUser === null) {
-    return null;
-  }
-  if (githubUser.githubOAuthToken === null) {
-    logger.error(
-      `Found a GithubUser ID ${githubUser.id} where privyUserId is set but not githubOAuthToken`,
-    );
-    await removeGithubUsersLogin(githubUser.id);
-    return null;
-  }
-
-  if (await isGithubTokenValidForUser(githubUser.githubOAuthToken, githubUser.githubId)) {
-    return {
-      ...githubUser,
-      githubOAuthToken: githubUser.githubOAuthToken, // TS is stupid here...
-    };
-  }
-
-  logger.info(`Removing invalid GitHub OAuth token for GithubUser githubId ${githubUser.githubId}`);
-
-  await removeGithubUsersLogin(githubUser.id);
-
-  return null;
-}
-
 export type PrivyUserData = {
   privyUserId: string;
   address: AddressPayload | null;
-  github: GithubTokenData | null;
+  github: GithubPayload | null;
   email: EmailPayload | null;
   discord: DiscordPayload | null;
 };
@@ -78,7 +36,13 @@ export async function verifyPrivyToken(privyAuthToken: string): Promise<PrivyUse
     void resolveAddress(privyUserData.ethAddress);
   }
 
-  const github = await checkGithubTokenData(privyUserData.privyUserId);
+  let github: GithubPayload | null = null;
+  if (privyUserData.github) {
+    github = await upsertGithubUser(
+      privyUserData.github.githubId,
+      privyUserData.github.githubHandle,
+    );
+  }
 
   let email: EmailPayload | null = null;
   if (privyUserData.emailAddress) {

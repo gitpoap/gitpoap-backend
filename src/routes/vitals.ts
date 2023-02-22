@@ -1,12 +1,12 @@
 import { Router } from 'express';
-import { jwtWithStaffAddress } from '../middleware/auth';
+import { jwtWithStaffAccess } from '../middleware/auth';
 import { lookupLastOngoingIssuanceRun } from '../lib/ongoing';
 import { lookupLastCheckForNewPOAPCodesRun } from '../lib/codes';
 import { getRequestLogger } from '../middleware/loggingAndTiming';
 
 export const vitalsRouter = Router();
 
-vitalsRouter.get('/ongoing-issuance', jwtWithStaffAddress(), async (req, res) => {
+vitalsRouter.get('/ongoing-issuance', jwtWithStaffAccess(), async (req, res) => {
   const logger = getRequestLogger(req);
 
   logger.info('Staff request for ongoing issuance vitals');
@@ -18,7 +18,7 @@ vitalsRouter.get('/ongoing-issuance', jwtWithStaffAddress(), async (req, res) =>
   return res.status(200).send({ lastRun });
 });
 
-vitalsRouter.get('/check-for-codes', jwtWithStaffAddress(), async (req, res) => {
+vitalsRouter.get('/check-for-codes', jwtWithStaffAccess(), async (req, res) => {
   const logger = getRequestLogger(req);
 
   logger.info('Staff request for new code checking vitals');

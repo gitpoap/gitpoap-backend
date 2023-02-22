@@ -1,15 +1,14 @@
 import { Router } from 'express';
-import { jwtWithStaffAddress, jwtWithStaffOAuth } from '../middleware/auth';
+import { jwtWithStaffAccess } from '../middleware/auth';
 import { AddReposSchema } from '../schemas/projects';
 import { createRepoByGithubId } from '../lib/repos';
 import { context } from '../context';
-import { getAccessTokenPayloadWithGithubOAuth } from '../types/authTokens';
 import { backloadGithubPullRequestData } from '../lib/pullRequests';
 import { getRequestLogger } from '../middleware/loggingAndTiming';
 
 export const projectsRouter = Router();
 
-projectsRouter.post('/add-repos', jwtWithStaffOAuth(), async (req, res) => {
+projectsRouter.post('/add-repos', jwtWithStaffAccess(), async (req, res) => {
   const logger = getRequestLogger(req);
 
   const schemaResult = AddReposSchema.safeParse(req.body);
@@ -19,10 +18,6 @@ projectsRouter.post('/add-repos', jwtWithStaffOAuth(), async (req, res) => {
     );
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
-
-  const {
-    github: { githubHandle, githubOAuthToken },
-  } = getAccessTokenPayloadWithGithubOAuth(req.user);
 
   logger.info(
     `Request to add GitHub Repo IDs ${req.body.githubRepoIds} to Project ID ${req.body.projectId}`,
@@ -45,10 +40,7 @@ projectsRouter.post('/add-repos', jwtWithStaffOAuth(), async (req, res) => {
   const addedIds: number[] = [];
   const failures: number[] = [];
   for (const githubRepoId of req.body.githubRepoIds) {
-    const repo = await createRepoByGithubId(githubRepoId, project.id, {
-      requestorGithubHandle: githubHandle,
-      githubToken: githubOAuthToken,
-    });
+    const repo = await createRepoByGithubId(githubRepoId, project.id);
     if (repo === null) {
       failures.push(githubRepoId);
     } else {
@@ -74,7 +66,7 @@ projectsRouter.post('/add-repos', jwtWithStaffOAuth(), async (req, res) => {
   }
 });
 
-projectsRouter.put('/enable/:id', jwtWithStaffAddress(), async (req, res) => {
+projectsRouter.put('/enable/:id', jwtWithStaffAccess(), async (req, res) => {
   const logger = getRequestLogger(req);
 
   const projectId = parseInt(req.params.id, 10);

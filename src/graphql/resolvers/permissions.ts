@@ -23,20 +23,21 @@ export class CustomPermissionsResolver {
   ): Promise<Permissions> {
     logger.info("Request for logged-in user's permissions");
 
-    if (userAccessTokenPayload === null) {
-      logger.error('Route passed AuthRoles.Address authorization without user payload set');
+    if (userAccessTokenPayload === null || userAccessTokenPayload.address === null) {
+      logger.error('Route passed AuthRoles.Address authorization without user/address payload set');
       throw InternalError;
     }
 
     logger.info(`Checking if ${userAccessTokenPayload.address} has permission to create CGs`);
 
-    const canCreateCGs = CGsWhitelist.has(userAccessTokenPayload.address);
+    const canCreateCGs = CGsWhitelist.has(userAccessTokenPayload.address.ethAddress);
 
     logger.info(`${userAccessTokenPayload.address} can create CGs: ${canCreateCGs}`);
 
     const isStaff = !!(
-      isAddressAStaffMember(userAccessTokenPayload.address) ||
-      (userAccessTokenPayload.githubId && isGithubIdAStaffMember(userAccessTokenPayload.githubId))
+      isAddressAStaffMember(userAccessTokenPayload.address.ethAddress) ||
+      (userAccessTokenPayload.github &&
+        isGithubIdAStaffMember(userAccessTokenPayload.github.githubId))
     );
 
     return {
