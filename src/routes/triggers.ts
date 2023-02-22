@@ -1,12 +1,12 @@
 import { Router } from 'express';
-import { jwtWithStaffAddress } from '../middleware/auth';
+import { jwtWithStaffAccess } from '../middleware/auth';
 import { runOngoingIssuanceUpdater, updateOngoingIssuanceLastRun } from '../lib/ongoing';
 import { checkForNewPOAPCodes, updateCheckForNewPOAPCodesLastRun } from '../lib/codes';
 import { getRequestLogger } from '../middleware/loggingAndTiming';
 
 export const triggersRouter = Router();
 
-triggersRouter.post('/ongoing-issuance', jwtWithStaffAddress(), async (req, res) => {
+triggersRouter.post('/ongoing-issuance', jwtWithStaffAccess(), async (req, res) => {
   const logger = getRequestLogger(req);
 
   logger.info('Staff request to start ongoing issuance now');
@@ -23,7 +23,7 @@ triggersRouter.post('/ongoing-issuance', jwtWithStaffAddress(), async (req, res)
   return res.status(200).send('STARTED');
 });
 
-triggersRouter.post('/check-for-codes', jwtWithStaffAddress(), async (req, res) => {
+triggersRouter.post('/check-for-codes', jwtWithStaffAccess(), async (req, res) => {
   const logger = getRequestLogger(req);
 
   logger.info('Staff request to check for new POAP codes now');

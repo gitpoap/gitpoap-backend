@@ -3,10 +3,9 @@ import { context } from '../context';
 import { RepoData } from './claims';
 import { GitPOAPStatus, Repo } from '@generated/type-graphql';
 import {
-  GithubCredentials,
   OctokitRepoItem,
-  getGithubRepository,
-  getGithubRepositoryById,
+  getGithubRepositoryAsApp,
+  getGithubRepositoryByIdAsApp,
 } from '../external/github';
 import { upsertGithubOrganization } from './githubOrganizations';
 
@@ -48,7 +47,6 @@ export async function createRepo(
   organization: string,
   repository: string,
   projectId: number,
-  githubCredentials: GithubCredentials,
 ): Promise<Repo | null> {
   const logger = createScopedLogger('createRepo');
 
@@ -56,7 +54,7 @@ export async function createRepo(
     `Creating Repo ${organization}/${repository} in project ID ${projectId} if it doesn't exist`,
   );
 
-  const repoInfo = await getGithubRepository(organization, repository, githubCredentials);
+  const repoInfo = await getGithubRepositoryAsApp(organization, repository);
   if (repoInfo === null) {
     logger.warn(`Couldn't find ${organization}/${repository} on GitHub`);
     return null;
@@ -68,7 +66,6 @@ export async function createRepo(
 export async function createRepoByGithubId(
   githubRepoId: number,
   projectId: number,
-  githubCredentials: GithubCredentials,
 ): Promise<Repo | null> {
   const logger = createScopedLogger('createRepoByGithubId');
 
@@ -76,7 +73,7 @@ export async function createRepoByGithubId(
     `Creating Repo for GitHub repository ID ${githubRepoId} in project ID ${projectId} if it doesn't exist`,
   );
 
-  const repoInfo = await getGithubRepositoryById(githubRepoId, githubCredentials);
+  const repoInfo = await getGithubRepositoryByIdAsApp(githubRepoId);
   if (repoInfo === null) {
     logger.warn(`Couldn't find repository ID ${githubRepoId} on GitHub`);
     return null;

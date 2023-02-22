@@ -1,11 +1,5 @@
 import jwt from 'express-jwt';
-import set from 'lodash/set';
-import {
-  AccessTokenPayload,
-  getAccessTokenPayload,
-  getAccessTokenPayloadWithAddress,
-  getAccessTokenPayloadWithGithubOAuth,
-} from '../types/authTokens';
+import { AccessTokenPayload, getAccessTokenPayload } from '../types/authTokens';
 import { RequestHandler } from 'express';
 import { JWT_SECRET } from '../environment';
 import { createScopedLogger } from '../logging';
@@ -13,8 +7,6 @@ import { GITPOAP_BOT_APP_ID } from '../constants';
 import { getGithubAuthenticatedApp } from '../external/github';
 import { captureException } from '../lib/sentry';
 import { isAddressAStaffMember, isGithubIdAStaffMember } from '../lib/staff';
-import { removeGithubUsersLogin } from '../lib/githubUsers';
-import { context } from '../context';
 
 export const jwtBasic = jwt({ secret: JWT_SECRET as string, algorithms: ['HS256'] });
 
@@ -81,10 +73,10 @@ export function jwtWithAddress() {
   return middleware;
 }
 
-export function jwtWithStaffAddress() {
-  const logger = createScopedLogger('jwtWithStaffAddress');
+export function jwtWithStaffAccess() {
+  const logger = createScopedLogger('jwtWithStaffAccess');
 
-  const jwtMiddleware = jwtWithAddress();
+  const jwtMiddleware = jwtAccessToken();
 
   const middleware: RequestHandler = async (req, res, next) => {
     const callback = (err?: any) => {
@@ -94,12 +86,14 @@ export function jwtWithStaffAddress() {
         return;
       }
 
-      const { address } = getAccessTokenPayloadWithAddress(req.user);
+      const { privyUserId, address, github } = getAccessTokenPayload(req.user);
 
-      if (!isAddressAStaffMember(address.ethAddress)) {
-        logger.warn(
-          `Non-staff user (Address: ${address.ethAddress}) attempted to use staff-only routes`,
-        );
+      if (
+        (address === null && github === null) ||
+        (!(address !== null && isAddressAStaffMember(address.ethAddress)) &&
+          !(github !== null && isGithubIdAStaffMember(github.githubId)))
+      ) {
+        logger.warn(`Non-staff user (Privy ID: ${privyUserId}) attempted to use staff-only routes`);
         next({ status: 401, msg: 'You are not privileged for this endpoint' });
         return;
       }
@@ -113,9 +107,7 @@ export function jwtWithStaffAddress() {
   return middleware;
 }
 
-export function jwtWithGithubOAuth() {
-  const logger = createScopedLogger('jwtWithGithubOAuth');
-
+export function jwtWithGithub() {
   const jwtMiddleware = jwtAccessToken();
 
   const middleware: RequestHandler = async (req, res, next) => {
@@ -128,58 +120,9 @@ export function jwtWithGithubOAuth() {
 
       const accessTokenPayload = getAccessTokenPayload(req.user);
       if (accessTokenPayload.github === null) {
-        next({ status: 401, msg: 'Not logged in with github' });
-        return;
-      }
-
-      const githubUser = await context.prisma.githubUser.findUnique({
-        where: { id: accessTokenPayload.github.id },
-        select: { githubOAuthToken: true },
-      });
-      if (githubUser === null) {
-        next({ status: 401, msg: 'Not logged into GitHub' });
-        return;
-      }
-      if (githubUser.githubOAuthToken === null) {
-        logger.error(
-          `GithubUser ID ${accessTokenPayload.github.id} has privyUserId set but not githubOAuthToken`,
-        );
-        await removeGithubUsersLogin(accessTokenPayload.github.id);
-        next({ status: 401, msg: 'Not logged into GitHub' });
-        return;
-      }
-
-      set(req, 'user.github.githubOAuthToken', githubUser.githubOAuthToken);
-
-      next();
-    };
-
-    jwtMiddleware(req, res, callback);
-  };
-
-  return middleware;
-}
-
-export function jwtWithStaffOAuth() {
-  const logger = createScopedLogger('jwtWithStaffOAuth');
-
-  const jwtMiddleware = jwtWithGithubOAuth();
-
-  const middleware: RequestHandler = (req, res, next) => {
-    const callback = (err?: any) => {
-      // If the previous middleware failed, pass on the error
-      if (err) {
-        next(err);
-        return;
-      }
-
-      const { github } = getAccessTokenPayloadWithGithubOAuth(req.user);
-
-      if (!isGithubIdAStaffMember(github.githubId)) {
-        logger.warn(
-          `Non-staff user (GitHub handle: ${github.githubHandle}) attempted to use staff-only routes`,
-        );
-        next({ status: 401, msg: 'You are not privileged for this endpoint' });
+        const msg = 'Not logged in with github';
+        logger.warn(msg);
+        next({ status: 401, msg });
         return;
       }
 
