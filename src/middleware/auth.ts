@@ -108,6 +108,8 @@ export function jwtWithStaffAccess() {
 }
 
 export function jwtWithGithub() {
+  const logger = createScopedLogger('jwtWithGithub');
+
   const jwtMiddleware = jwtAccessToken();
 
   const middleware: RequestHandler = async (req, res, next) => {
@@ -120,9 +122,8 @@ export function jwtWithGithub() {
 
       const accessTokenPayload = getAccessTokenPayload(req.user);
       if (accessTokenPayload.github === null) {
-        const msg = 'Not logged in with github';
-        logger.warn(msg);
-        next({ status: 401, msg });
+        logger.warn('Someone tried to access a GitHub route without a GitHub login');
+        next({ status: 401, msg: 'Not logged in with github' });
         return;
       }
 
