@@ -131,5 +131,6 @@ export const CGsWhitelist = new Set([
   '0xc587892692e71836c35ff914703be3e53d298f80',
   '0xc7054d9500e9ee1ad7bf245bbdb5eaa112a81737', // Luka Ethereum.org
   '0xd33f6e443d5277e7a0040672885358e22e1e7356', // Josh from Ethereum.org
+  '0x2606cb984b962ad4aa1ef00f9af9b654b435ad44', // Derrek from EthDenver
 ]);
 // NOTE: When adding new addresses to the list, make sure the are all *lowercase*
