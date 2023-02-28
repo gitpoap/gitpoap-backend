@@ -1,5 +1,4 @@
 import '../../../../__mocks__/src/logging';
-import { contextMock } from '../../../../__mocks__/src/context';
 import { verifyPrivyToken } from '../../../../src/lib/privy';
 import { verifyPrivyTokenForData } from '../../../../src/external/privy';
 import { upsertAddress } from '../../../../src/lib/addresses';
@@ -65,7 +64,7 @@ describe('verifyPrivyToken', () => {
     expect(result).toEqual(null);
 
     expect(mockedVerifyPrivyTokenForData).toHaveBeenCalledTimes(1);
-    expect(mockedVerifyPrivyTokenForData).toHaveBeenCalledWith(contextMock.privy, privyToken);
+    expect(mockedVerifyPrivyTokenForData).toHaveBeenCalledWith(privyToken);
   });
 
   it('Returns only the privyUserId when no known login methods are setup', async () => {
@@ -90,7 +89,7 @@ describe('verifyPrivyToken', () => {
     );
 
     expect(mockedVerifyPrivyTokenForData).toHaveBeenCalledTimes(1);
-    expect(mockedVerifyPrivyTokenForData).toHaveBeenCalledWith(contextMock.privy, privyToken);
+    expect(mockedVerifyPrivyTokenForData).toHaveBeenCalledWith(privyToken);
   });
 
   it('Returns address when it is setup', async () => {
@@ -116,7 +115,7 @@ describe('verifyPrivyToken', () => {
     );
 
     expect(mockedVerifyPrivyTokenForData).toHaveBeenCalledTimes(1);
-    expect(mockedVerifyPrivyTokenForData).toHaveBeenCalledWith(contextMock.privy, privyToken);
+    expect(mockedVerifyPrivyTokenForData).toHaveBeenCalledWith(privyToken);
 
     expect(mockedUpsertAddress).toHaveBeenCalledTimes(1);
     expect(mockedUpsertAddress).toHaveBeenCalledWith(ethAddress);
@@ -148,7 +147,7 @@ describe('verifyPrivyToken', () => {
     );
 
     expect(mockedVerifyPrivyTokenForData).toHaveBeenCalledTimes(1);
-    expect(mockedVerifyPrivyTokenForData).toHaveBeenCalledWith(contextMock.privy, privyToken);
+    expect(mockedVerifyPrivyTokenForData).toHaveBeenCalledWith(privyToken);
 
     expect(mockedUpsertGithubUser).toHaveBeenCalledTimes(1);
     expect(mockedUpsertGithubUser).toHaveBeenCalledWith(github.githubId, github.githubHandle);
@@ -169,7 +168,7 @@ describe('verifyPrivyToken', () => {
     expect(result).toEqual(null);
 
     expect(mockedVerifyPrivyTokenForData).toHaveBeenCalledTimes(1);
-    expect(mockedVerifyPrivyTokenForData).toHaveBeenCalledWith(contextMock.privy, privyToken);
+    expect(mockedVerifyPrivyTokenForData).toHaveBeenCalledWith(privyToken);
 
     expect(mockedUpsertEmail).toHaveBeenCalledTimes(1);
     expect(mockedUpsertEmail).toHaveBeenCalledWith(emailAddress);
@@ -198,7 +197,7 @@ describe('verifyPrivyToken', () => {
     );
 
     expect(mockedVerifyPrivyTokenForData).toHaveBeenCalledTimes(1);
-    expect(mockedVerifyPrivyTokenForData).toHaveBeenCalledWith(contextMock.privy, privyToken);
+    expect(mockedVerifyPrivyTokenForData).toHaveBeenCalledWith(privyToken);
 
     expect(mockedUpsertEmail).toHaveBeenCalledTimes(1);
     expect(mockedUpsertEmail).toHaveBeenCalledWith(emailAddress);
@@ -227,7 +226,7 @@ describe('verifyPrivyToken', () => {
     );
 
     expect(mockedVerifyPrivyTokenForData).toHaveBeenCalledTimes(1);
-    expect(mockedVerifyPrivyTokenForData).toHaveBeenCalledWith(contextMock.privy, privyToken);
+    expect(mockedVerifyPrivyTokenForData).toHaveBeenCalledWith(privyToken);
 
     expect(mockedUpsertDiscordUser).toHaveBeenCalledTimes(1);
     expect(mockedUpsertDiscordUser).toHaveBeenCalledWith(discordId, discordHandle);
@@ -259,7 +258,7 @@ describe('verifyPrivyToken', () => {
     );
 
     expect(mockedVerifyPrivyTokenForData).toHaveBeenCalledTimes(1);
-    expect(mockedVerifyPrivyTokenForData).toHaveBeenCalledWith(contextMock.privy, privyToken);
+    expect(mockedVerifyPrivyTokenForData).toHaveBeenCalledWith(privyToken);
 
     expect(mockedUpsertAddress).toHaveBeenCalledTimes(1);
     expect(mockedUpsertAddress).toHaveBeenCalledWith(ethAddress);
