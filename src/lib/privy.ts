@@ -1,5 +1,4 @@
 import { verifyPrivyTokenForData } from '../external/privy';
-import { context } from '../context';
 import { createScopedLogger } from '../logging';
 import { upsertAddress } from './addresses';
 import { resolveAddress } from './ens';
@@ -19,7 +18,7 @@ export type PrivyUserData = {
 export async function verifyPrivyToken(privyAuthToken: string): Promise<PrivyUserData | null> {
   const logger = createScopedLogger('verifyPrivyToken');
 
-  const privyUserData = await verifyPrivyTokenForData(context.privy, privyAuthToken);
+  const privyUserData = await verifyPrivyTokenForData(privyAuthToken);
   if (privyUserData === null) {
     logger.warn('Failed to verify token via Privy');
     return null;
