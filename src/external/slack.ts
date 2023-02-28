@@ -172,7 +172,7 @@ export async function sendInternalClaimByMentionMessage(
     mentionUrl = `${repoUrl}/pull/${mentionNumber.pullRequestNumber}`;
   } else {
     // 'issueNumber' in mentionNumber
-    mentionUrl = `${repoUrl}/issue/${mentionNumber.issueNumber}`;
+    mentionUrl = `${repoUrl}/issues/${mentionNumber.issueNumber}`;
   }
 
   const mentionLink = `<${mentionUrl}|Comment Link>`;
