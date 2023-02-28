@@ -4655,8 +4655,6 @@ type GithubUserCountAggregate {
   githubHandle: Int!
   createdAt: Int!
   updatedAt: Int!
-  privyUserId: Int!
-  githubOAuthToken: Int!
   _all: Int!
 }
 
@@ -4676,8 +4674,6 @@ type GithubUserMinAggregate {
   githubHandle: String
   createdAt: DateTime
   updatedAt: DateTime
-  privyUserId: String
-  githubOAuthToken: String
 }
 
 type GithubUserMaxAggregate {
@@ -4686,8 +4682,6 @@ type GithubUserMaxAggregate {
   githubHandle: String
   createdAt: DateTime
   updatedAt: DateTime
-  privyUserId: String
-  githubOAuthToken: String
 }
 
 input GithubUserWhereUniqueInput {
@@ -4701,8 +4695,6 @@ enum GithubUserScalarFieldEnum {
   githubHandle
   createdAt
   updatedAt
-  privyUserId
-  githubOAuthToken
 }
 
 type GithubUserGroupBy {
@@ -4711,8 +4703,6 @@ type GithubUserGroupBy {
   githubHandle: String!
   createdAt: DateTime!
   updatedAt: DateTime!
-  privyUserId: String
-  githubOAuthToken: String
   _count: GithubUserCountAggregate
   _avg: GithubUserAvgAggregate
   _sum: GithubUserSumAggregate
