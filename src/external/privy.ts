@@ -1,9 +1,25 @@
-import { PrivyClient } from '@privy-io/server-auth';
 import { PRIVY_APP_ID, PRIVY_APP_SECRET } from '../environment';
 import { createScopedLogger } from '../logging';
+import { verify } from 'jsonwebtoken';
+import fetch from 'cross-fetch';
 
-export function createPrivyClient() {
-  return new PrivyClient(PRIVY_APP_ID, PRIVY_APP_SECRET);
+// Returns the did
+function verifyPrivyToken(privyAuthToken: string): string | null {
+  const logger = createScopedLogger('verifyPrivyToken');
+
+  try {
+    const result = verify(privyAuthToken, PRIVY_APP_SECRET);
+
+    if (typeof result === 'object' && 'sub' in result) {
+      return result.sub ?? null;
+    }
+
+    logger.error('Missing "sub" field in valid Privy token');
+  } catch (err) {
+    logger.warn('Privy token failed to verify');
+  }
+
+  return null;
 }
 
 type PrivyGithubDataResult = {
@@ -16,7 +32,7 @@ type PrivyDiscordDataResult = {
   discordHandle: string;
 };
 
-export type VerifyPrivyUserForDataResult = {
+export type PrivyUserDataResult = {
   privyUserId: string;
   ethAddress: string | null;
   github: PrivyGithubDataResult | null;
@@ -24,50 +40,88 @@ export type VerifyPrivyUserForDataResult = {
   discord: PrivyDiscordDataResult | null;
 };
 
-export async function verifyPrivyTokenForData(
-  privyClient: PrivyClient,
-  privyAuthToken: string,
-): Promise<VerifyPrivyUserForDataResult | null> {
-  const logger = createScopedLogger('verifyPrivyToken');
+const PRIVY_API_URL = 'https://auth.privy.io/api/v1/users/';
+
+const PRIVY_BASIC_AUTH = `Basic ${Buffer.from(PRIVY_APP_ID + ':' + PRIVY_APP_SECRET).toString(
+  'base64',
+)}`;
+
+async function getPrivyUser(privyUserId: string): Promise<PrivyUserDataResult | null> {
+  const logger = createScopedLogger('getPrivyUser');
 
   try {
-    const verifiedClaims = await privyClient.verifyAuthToken(privyAuthToken);
-    const userData = await privyClient.getUser(verifiedClaims.userId);
+    const privyResponse = await fetch(new URL(privyUserId, PRIVY_API_URL), {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+        Authorization: PRIVY_BASIC_AUTH,
+        'privy-app-id': PRIVY_APP_ID,
+      },
+    });
 
-    let ethAddress: string | null = null;
-    if (userData.wallet !== undefined) {
-      if (userData.wallet.chainType === 'ethereum') {
-        ethAddress = userData.wallet.address.toLowerCase();
-      } else {
-        logger.warn("User's wallet is not an ETH wallet");
+    if (privyResponse.status >= 400) {
+      logger.error(
+        `Bad response (${privyResponse.status}) for ${privyUserId}: ${await privyResponse.text()}`,
+      );
+      return null;
+    }
+
+    const data = await privyResponse.json();
+
+    const result: PrivyUserDataResult = {
+      privyUserId,
+      ethAddress: null,
+      github: null,
+      emailAddress: null,
+      discord: null,
+    };
+
+    for (const account of data.linked_accounts) {
+      switch (account.type) {
+        case 'wallet':
+          if (account.chain_type === 'ethereum') {
+            result.ethAddress = account.address.toLowerCase();
+          } else {
+            logger.warn("User's wallet is not an ETH wallet");
+          }
+          break;
+        case 'github':
+          result.github = {
+            githubId: parseInt(account.subject, 10),
+            githubHandle: account.username,
+          };
+          break;
+        case 'email':
+          result.emailAddress = account.address.toLowerCase();
+          break;
+        case 'discord':
+          result.discord = {
+            discordId: account.subject,
+            discordHandle: account.username,
+          };
+          break;
+        default:
+          logger.warn(`Unknown account type "${account.type}"`);
       }
     }
 
-    let github: PrivyGithubDataResult | null = null;
-    if (userData.github?.username) {
-      github = {
-        githubId: parseInt(userData.github.subject, 10),
-        githubHandle: userData.github.username,
-      };
-    }
-
-    let discord: PrivyDiscordDataResult | null = null;
-    if (userData.discord?.username) {
-      discord = {
-        discordId: userData.discord.subject,
-        discordHandle: userData.discord.username,
-      };
-    }
-
-    return {
-      privyUserId: verifiedClaims.userId,
-      ethAddress,
-      github,
-      emailAddress: userData.email?.address.toLowerCase() ?? null,
-      discord,
-    };
+    return result;
   } catch (err) {
-    logger.warn('Privy failed to verify token');
+    logger.error(`Failed to get Privy User "${privyUserId}": ${err}`);
     return null;
   }
+}
+
+export async function verifyPrivyTokenForData(
+  privyAuthToken: string,
+): Promise<PrivyUserDataResult | null> {
+  const logger = createScopedLogger('verifyPrivyTokenForData');
+
+  const privyUserId = verifyPrivyToken(privyAuthToken);
+  if (privyUserId === null) {
+    logger.warn('Failed to authenticate Privy Auth Token');
+    return null;
+  }
+
+  return await getPrivyUser(privyUserId);
 }

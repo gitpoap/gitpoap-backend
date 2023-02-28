@@ -20,19 +20,12 @@ const privyUserId = 'hi hi';
 const addressId = 45;
 const address = ADDRESSES.vitalik;
 const githubId = 232444;
-const githubOAuthToken = 'foobar34543';
 const githubHandle = 'b-burz';
 const discordHandle = 'tyler#2342';
 const projectId = 234;
 const githubRepoIds = [2];
 const ensName = 'wowza.eth';
 const ensAvatarImageUrl = 'https://foobar.com/a.jpg';
-
-function mockJwtWithOAuth() {
-  contextMock.prisma.githubUser.findUnique.mockResolvedValue({
-    githubOAuthToken,
-  } as any);
-}
 
 function genAuthTokens(
   someAddress?: string,
@@ -85,8 +78,6 @@ describe('POST /projects/add-repos', () => {
   });
 
   it('Fails with non-staff OAuth Access Token provided', async () => {
-    mockJwtWithOAuth();
-
     const authTokens = genAuthTokens(address, githubId, githubHandle, discordHandle);
 
     const result = await request(await setupApp())
@@ -95,12 +86,9 @@ describe('POST /projects/add-repos', () => {
       .send({ projectId, githubRepoIds });
 
     expect(result.statusCode).toEqual(401);
-
-    expect(contextMock.prisma.githubUser.findUnique).toHaveBeenCalledTimes(1);
   });
 
   it('Returns error when invalid project provided', async () => {
-    mockJwtWithOAuth();
     contextMock.prisma.project.findUnique.mockResolvedValue(null);
 
     const authTokens = genAuthTokens(
@@ -117,8 +105,6 @@ describe('POST /projects/add-repos', () => {
 
     expect(result.statusCode).toEqual(404);
 
-    expect(contextMock.prisma.githubUser.findUnique).toHaveBeenCalledTimes(1);
-
     expect(contextMock.prisma.project.findUnique).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.project.findUnique).toHaveBeenCalledWith({
       where: { id: projectId },
@@ -127,7 +113,6 @@ describe('POST /projects/add-repos', () => {
   });
 
   it('Returns error when invalid repos provided', async () => {
-    mockJwtWithOAuth();
     contextMock.prisma.project.findUnique.mockResolvedValue({ id: projectId } as any);
     mockedCreateRepoByGithubId.mockResolvedValue(null);
 
@@ -145,22 +130,16 @@ describe('POST /projects/add-repos', () => {
 
     expect(result.statusCode).toEqual(500);
 
-    expect(contextMock.prisma.githubUser.findUnique).toHaveBeenCalledTimes(1);
-
     expect(contextMock.prisma.project.findUnique).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.project.findUnique).toHaveBeenCalledWith({
       where: { id: projectId },
       select: { id: true },
     });
     expect(mockedCreateRepoByGithubId).toHaveBeenCalledTimes(1);
-    expect(mockedCreateRepoByGithubId).toHaveBeenCalledWith(githubRepoIds[0], projectId, {
-      requestorGithubHandle: githubHandle,
-      githubToken: githubOAuthToken,
-    });
+    expect(mockedCreateRepoByGithubId).toHaveBeenCalledWith(githubRepoIds[0], projectId);
   });
 
   it('Adds valid repos to valid project with staff JWT', async () => {
-    mockJwtWithOAuth();
     contextMock.prisma.project.findUnique.mockResolvedValue({ id: projectId } as any);
     const repoId = 234232;
     mockedCreateRepoByGithubId.mockResolvedValue({ id: repoId } as any);
@@ -179,18 +158,13 @@ describe('POST /projects/add-repos', () => {
 
     expect(result.statusCode).toEqual(200);
 
-    expect(contextMock.prisma.githubUser.findUnique).toHaveBeenCalledTimes(1);
-
     expect(contextMock.prisma.project.findUnique).toHaveBeenCalledTimes(1);
     expect(contextMock.prisma.project.findUnique).toHaveBeenCalledWith({
       where: { id: projectId },
       select: { id: true },
     });
     expect(mockedCreateRepoByGithubId).toHaveBeenCalledTimes(1);
-    expect(mockedCreateRepoByGithubId).toHaveBeenCalledWith(githubRepoIds[0], projectId, {
-      requestorGithubHandle: githubHandle,
-      githubToken: githubOAuthToken,
-    });
+    expect(mockedCreateRepoByGithubId).toHaveBeenCalledWith(githubRepoIds[0], projectId);
     expect(mockedBackloadGithubPullRequestData).toHaveBeenCalledTimes(1);
     expect(mockedBackloadGithubPullRequestData).toHaveBeenCalledWith(repoId);
   });
