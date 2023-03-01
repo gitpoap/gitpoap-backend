@@ -38,6 +38,7 @@ declare global {
 
       PRIVY_APP_ID: string;
       PRIVY_APP_SECRET: string;
+      PRIVY_APP_PUBLIC_KEY: string;
     }
   }
 }

@@ -1,4 +1,4 @@
-import { PRIVY_APP_ID, PRIVY_APP_SECRET } from '../environment';
+import { PRIVY_APP_ID, PRIVY_APP_SECRET, PRIVY_APP_PUBLIC_KEY } from '../environment';
 import { createScopedLogger } from '../logging';
 import { verify } from 'jsonwebtoken';
 import fetch from 'cross-fetch';
@@ -8,7 +8,7 @@ function verifyPrivyToken(privyAuthToken: string): string | null {
   const logger = createScopedLogger('verifyPrivyToken');
 
   try {
-    const result = verify(privyAuthToken, PRIVY_APP_SECRET);
+    const result = verify(privyAuthToken, PRIVY_APP_PUBLIC_KEY);
 
     if (typeof result === 'object' && 'sub' in result) {
       return result.sub ?? null;

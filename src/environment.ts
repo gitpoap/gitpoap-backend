@@ -37,3 +37,4 @@ export const GRAPHIQL_PASSWORD = env.get('GRAPHIQL_PASSWORD').required().asStrin
 
 export const PRIVY_APP_ID = env.get('PRIVY_APP_ID').required().asString();
 export const PRIVY_APP_SECRET = env.get('PRIVY_APP_SECRET').required().asString();
+export const PRIVY_APP_PUBLIC_KEY = env.get('PRIVY_APP_PUBLIC_KEY').required().asString();
