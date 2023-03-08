@@ -28,7 +28,11 @@ export class CustomPermissionsResolver {
       throw InternalError;
     }
 
-    const canCreateCGs = CGsWhitelist.has(userAccessTokenPayload.address.toLowerCase());
+    logger.info(`Checking if ${userAccessTokenPayload.address} has permission to create CGs`);
+
+    const canCreateCGs = CGsWhitelist.has(userAccessTokenPayload.address);
+
+    logger.info(`${userAccessTokenPayload.address} can create CGs: ${canCreateCGs}`);
 
     const isStaff = !!(
       isAddressAStaffMember(userAccessTokenPayload.address) ||
