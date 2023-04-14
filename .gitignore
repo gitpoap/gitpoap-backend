@@ -7,3 +7,4 @@ prisma/dbml
 *.csv
 *.txt
 public/
+*.log

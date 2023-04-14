@@ -402,6 +402,15 @@ model Event {
   gitPOAPs      GitPOAP[]
 }
 
+model APIKey {
+  id           Int      @id @default(autoincrement())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  name         String   @db.VarChar(255)
+  key          String   @unique @db.VarChar(255)
+  requestCount Int      @default(0)
+}
+
 enum GitPOAPStatus {
   UNAPPROVED
   APPROVED

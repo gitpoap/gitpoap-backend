@@ -137,6 +137,29 @@ const MAX_GITPOAPS_PER_PAGE = 100;
 gitpoapsRouter.get('/backfill', async function (req, res) {
   const logger = getRequestLogger(req);
 
+  const apiKey = req.get('x-api-key');
+  if (apiKey === undefined) {
+    logger.warn('Request without API Key set');
+    return res.status(401).send({
+      msg: 'An API Key in the X-API-KEY header must be set for this request',
+    });
+  }
+  const apiKeyInfo = await context.prisma.aPIKey.findUnique({
+    where: { key: apiKey },
+  });
+  if (apiKeyInfo === null) {
+    logger.warn('Request contained an invalid API Key');
+    return res.status(401).send({
+      msg: 'The API Key is invalid',
+    });
+  }
+  logger.info(`Request from ${apiKeyInfo.name}`);
+  // Do this in the background
+  void context.prisma.aPIKey.update({
+    where: { id: apiKeyInfo.id },
+    data: { requestCount: { increment: 1 } },
+  });
+
   const schemaResult = BackfillSchema.safeParse(req.body);
   if (!schemaResult.success) {
     logger.warn(
@@ -206,21 +229,15 @@ gitpoapsRouter.get('/backfill', async function (req, res) {
         },
       },
       pullRequestEarned: {
-        select: {
-          githubMergedAt: true,
-        },
+        select: { githubMergedAt: true },
       },
       mentionEarned: {
         select: {
           pullRequest: {
-            select: {
-              githubCreatedAt: true,
-            },
+            select: { githubCreatedAt: true },
           },
           issue: {
-            select: {
-              githubCreatedAt: true,
-            },
+            select: { githubCreatedAt: true },
           },
           githubMentionedAt: true,
         },
