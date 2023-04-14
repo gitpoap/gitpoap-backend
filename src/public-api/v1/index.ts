@@ -30,9 +30,7 @@ v1Router.get('/address/:address/gitpoaps', async function (req, res) {
 
   const claims = await context.prisma.claim.findMany({
     where: {
-      mintedAddress: {
-        ethAddress: resolvedAddress.toLowerCase(),
-      },
+      mintedAddress: { ethAddress: resolvedAddress.toLowerCase() },
       status: ClaimStatus.CLAIMED,
     },
     select: {
