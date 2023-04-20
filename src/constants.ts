@@ -135,5 +135,6 @@ export const CGsWhitelist = new Set([
   '0xe00adfc5fdab3a4d32baeb4a21b430eec0c8c774', // Brett from Obol
   '0xc25e4dc9901291be3d40a22afd7663e1afe343d3', // Frangio from OZ
   '0x4dd05e12d0244575c77c31c24f0e273610c085d9', // armagan.eth
+  '0x06f2e9Ce84d5e686428d361D91b437dC589a5163', // CLWP Ben
 ]);
 // NOTE: When adding new addresses to the list, make sure the are all *lowercase*
