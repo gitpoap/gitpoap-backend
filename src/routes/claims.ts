@@ -118,7 +118,7 @@ claimsRouter.post('/', jwtWithAddress(), async function (req, res) {
 
     const redeemCode = await chooseUnusedRedeemCode(claim.gitPOAP);
     if (redeemCode === null) {
-      const msg = `GitPOAP ID ${claim.gitPOAP.id} has no more redeem codes`;
+      const msg = `GitPOAP ID ${claim.gitPOAP.id} has no more redeem codes (Claim ID: ${claim.id})`;
       logger.error(msg);
       invalidClaims.push({ claimId, reason: msg });
       continue;
@@ -130,7 +130,7 @@ claimsRouter.post('/', jwtWithAddress(), async function (req, res) {
     const poapData = await redeemPOAP(ethAddress, redeemCode.code);
     // If minting the POAP failed we need to revert
     if (poapData === null) {
-      logger.error(`Failed to mint claim ${claimId} via the POAP API`);
+      logger.error(`Failed to mint claim ${claimId} via the POAP API (Claim ID: ${claim.id})`);
 
       invalidClaims.push({
         claimId,
