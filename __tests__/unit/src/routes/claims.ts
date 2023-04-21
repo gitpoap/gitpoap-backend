@@ -910,7 +910,9 @@ describe('POST /claims', () => {
       id: gitPOAPId,
       isEnabled: true,
     };
+    const claimId = 324;
     contextMock.prisma.claim.findUnique.mockResolvedValue({
+      id: claimId,
       status: ClaimStatus.UNCLAIMED,
       gitPOAP,
       emailId,
@@ -930,7 +932,7 @@ describe('POST /claims', () => {
       invalid: [
         {
           claimId,
-          reason: `GitPOAP ID ${gitPOAPId} has no more redeem codes`,
+          reason: `GitPOAP ID ${gitPOAPId} has no more redeem codes (Claim ID: ${claimId})`,
         },
       ],
     });
