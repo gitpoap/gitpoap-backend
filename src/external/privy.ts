@@ -50,7 +50,7 @@ async function getPrivyUser(privyUserId: string): Promise<PrivyUserDataResult | 
   const logger = createScopedLogger('getPrivyUser');
 
   try {
-    const privyResponse = await fetch(new URL(privyUserId, PRIVY_API_URL), {
+    const privyResponse = await fetch(`${PRIVY_API_URL}${privyUserId}`, {
       method: 'GET',
       headers: {
         Accept: 'application/json',
