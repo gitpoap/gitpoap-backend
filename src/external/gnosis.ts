@@ -14,8 +14,15 @@ function getPOAPInterface() {
   return new ethers.utils.Interface(XPoap);
 }
 
-async function getTimestampForBlock(blockNumber: number) {
+async function getTimestampForBlock(blockNumber: number): Promise<DateTime | null> {
+  const logger = createScopedLogger('getTimestampForBlock');
+
   const blockInfo = await getProvider().getBlock(blockNumber);
+
+  if (blockInfo === null) {
+    logger.warn(`Failed to lookup info about Gnosis Block #${blockNumber}`);
+    return null;
+  }
 
   return DateTime.fromSeconds(blockInfo.timestamp);
 }
@@ -43,10 +50,16 @@ export async function getPOAPDataFromTransaction(txHash: string): Promise<POAPMi
       const logEvent = poapInterface.parseLog(log);
 
       if (logEvent.name === MINTING_EVENT) {
+        const mintedAt = await getTimestampForBlock(txReceipt.blockNumber);
+        if (mintedAt === null) {
+          logger.warn(`Transaction ${txHash}'s block ${txReceipt.blockNumber} isn't queryable yet`);
+          return null;
+        }
+
         logger.info(`Transaction '${txHash}' has been mined!`);
 
         return {
-          mintedAt: await getTimestampForBlock(txReceipt.blockNumber),
+          mintedAt,
           poapTokenId: logEvent.args.tokenId.toString(),
         };
       }
