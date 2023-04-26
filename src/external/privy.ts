@@ -85,7 +85,7 @@ async function getPrivyUser(privyUserId: string): Promise<PrivyUserDataResult | 
             logger.warn("User's wallet is not an ETH wallet");
           }
           break;
-        case 'github':
+        case 'github_oauth':
           result.github = {
             githubId: parseInt(account.subject, 10),
             githubHandle: account.username,
@@ -94,7 +94,7 @@ async function getPrivyUser(privyUserId: string): Promise<PrivyUserDataResult | 
         case 'email':
           result.emailAddress = account.address.toLowerCase();
           break;
-        case 'discord':
+        case 'discord_oauth':
           result.discord = {
             discordId: account.subject,
             discordHandle: account.username,
