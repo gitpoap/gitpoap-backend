@@ -16,7 +16,7 @@ function verifyPrivyToken(privyAuthToken: string): string | null {
 
     logger.error('Missing "sub" field in valid Privy token');
   } catch (err) {
-    logger.warn('Privy token failed to verify');
+    logger.warn(`Privy token failed to verify: ${err}`);
   }
 
   return null;
