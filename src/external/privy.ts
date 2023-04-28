@@ -3,12 +3,17 @@ import { createScopedLogger } from '../logging';
 import { verify } from 'jsonwebtoken';
 import fetch from 'cross-fetch';
 
+const PUBLIC_KEY = PRIVY_APP_PUBLIC_KEY.replace(/\\n/g, '\n');
+
 // Returns the did
 function verifyPrivyToken(privyAuthToken: string): string | null {
   const logger = createScopedLogger('verifyPrivyToken');
 
   try {
-    const result = verify(privyAuthToken, PRIVY_APP_PUBLIC_KEY);
+    const result = verify(privyAuthToken, PUBLIC_KEY, {
+      issuer: 'privy.io',
+      audience: PRIVY_APP_ID,
+    });
 
     if (typeof result === 'object' && 'sub' in result) {
       return result.sub ?? null;
