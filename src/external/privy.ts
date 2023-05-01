@@ -10,8 +10,6 @@ function verifyPrivyToken(privyAuthToken: string): string | null {
   const logger = createScopedLogger('verifyPrivyToken');
 
   try {
-    console.log(PUBLIC_KEY);
-    logger.info(`PUBLIC_KEY = "${PUBLIC_KEY}"`);
     const result = verify(privyAuthToken, PUBLIC_KEY, {
       issuer: 'privy.io',
       audience: PRIVY_APP_ID,
