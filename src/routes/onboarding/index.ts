@@ -18,9 +18,18 @@ import {
   IntakeFormReposSchema,
   IntakeFormSchema,
 } from '../../schemas/onboarding';
-import { APIResponseData, IntakeForm, PullRequestsRes, Repo } from './types';
-import { getMappedOrgRepo, getMappedPrRepo, getMappedRepo } from './utils';
-import { publicPRsQuery } from './queries';
+import {
+  APIResponseData,
+  IntakeForm,
+  //PullRequestsRes,
+  Repo,
+} from './types';
+import {
+  getMappedOrgRepo,
+  //getMappedPrRepo,
+  getMappedRepo,
+} from './utils';
+//import { publicPRsQuery } from './queries';
 import { createIntakeFormDocForDynamo, createUpdateItemParamsForImages } from './dynamo';
 import { getRequestLogger } from '../../middleware/loggingAndTiming';
 import { sendInternalOnboardingMessage } from '../../external/slack';
@@ -191,28 +200,28 @@ onboardingRouter.get<'/github/repos', any, APIResponseData<Repo[]>>(
     const foundRepoIds = new Set<number>();
     const rejectedRepoIds = new Set<number>();
 
-    let mappedPrRepos: Repo[] = [];
+    const mappedPrRepos: Repo[] = [];
     let mappedRepos: Repo[] = [];
     let mappedOrgRepos: Repo[] = [];
 
     try {
       /* Fetch first 100 public PRs for a user */
-      const publicPrs = await octokit.graphql<PullRequestsRes>(publicPRsQuery(githubHandle));
+      //const publicPrs = await octokit.graphql<PullRequestsRes>(publicPRsQuery(githubHandle));
 
-      const uniquePrRepos = publicPrs.search.edges.filter(repo => {
-        /* Do NOT filter out repos based on stars */
-        if (repo.node.repository.isFork) {
-          rejectedRepoIds.add(repo.node.repository.databaseId);
-          return false;
-        }
-        const isFound = foundRepoIds.has(repo.node.repository.databaseId);
-        foundRepoIds.add(repo.node.repository.databaseId);
+      //const uniquePrRepos = publicPrs.search.edges.filter(repo => {
+      //  /* Do NOT filter out repos based on stars */
+      //  if (repo.node.repository.isFork) {
+      //    rejectedRepoIds.add(repo.node.repository.databaseId);
+      //    return false;
+      //  }
+      //  const isFound = foundRepoIds.has(repo.node.repository.databaseId);
+      //  foundRepoIds.add(repo.node.repository.databaseId);
 
-        return !isFound;
-      });
+      //  return !isFound;
+      //});
 
-      mappedPrRepos = uniquePrRepos.map((pr): Repo => getMappedPrRepo(pr));
-      logger.debug(`Found ${mappedPrRepos.length} unique PR-related repos`);
+      //mappedPrRepos = uniquePrRepos.map((pr): Repo => getMappedPrRepo(pr));
+      //logger.debug(`Found ${mappedPrRepos.length} unique PR-related repos`);
 
       /* Fetch list of repos for authenticated user */
       const repos = await octokit.rest.repos.listForAuthenticatedUser({
