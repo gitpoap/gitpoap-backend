@@ -67,6 +67,8 @@ services:
     ports:
       - '3122:3122'
       - '8081:8080'
+    volumes:
+      - $HOME/.aws/credentials:/root/.aws/credentials:ro
     depends_on:
       - db
       - redis
