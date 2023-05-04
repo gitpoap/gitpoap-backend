@@ -180,7 +180,7 @@ export class CustomRepoResolver {
     return await prisma.$queryRaw<RepoReturnData[]>`
       SELECT r.* FROM "Repo" AS r,
         COUNT(DISTINCT c."githubUserId")::INTEGER AS "contributorCount",
-        COUNT(DISTINCT g.id)::INTEGER AS "gitPOAPCount"
+        COUNT(DISTINCT g.id)::INTEGER AS "gitPOAPCount",
         COUNT(c.id)::INTEGER AS "mintedGitPOAPCount"
       INNER JOIN "GithubOrganization" as o ON o.id = g."organizationId"
       INNER JOIN "Project" AS p ON p.id = r."projectId"
