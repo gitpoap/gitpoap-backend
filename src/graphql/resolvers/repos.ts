@@ -1,5 +1,5 @@
 import { Arg, Ctx, Field, ObjectType, Resolver, Query } from 'type-graphql';
-import { Repo as RepoValue, RepoOrderByWithRelationInput } from '@generated/type-graphql';
+import { Repo as RepoValue } from '@generated/type-graphql';
 import { getLastMonthStartDatetime, getXDaysAgoStartDatetime } from './util';
 import { AuthLoggingContext } from '../middleware';
 import { getGithubRepositoryStarCount } from '../../external/github';
@@ -140,31 +140,30 @@ export class CustomRepoResolver {
     });
   }
 
-  @Query(() => [RepoValue], { nullable: true })
+  @Query(() => [RepoReturnData], { nullable: true })
   async allRepos(
     @Ctx() { prisma, logger }: AuthLoggingContext,
     @Arg('sort', { defaultValue: 'alphabetical' }) sort: string,
     @Arg('perPage', { defaultValue: null }) perPage?: number,
     @Arg('page', { defaultValue: null }) page?: number,
-  ): Promise<RepoValue[] | null> {
+  ): Promise<RepoReturnData[] | null> {
     logger.info(
       `Request for all repos using sort ${sort}, with ${perPage} results per page and page ${page}`,
     );
 
-    let orderBy: RepoOrderByWithRelationInput | undefined = undefined;
+    let orderBy: Prisma.Sql | undefined = undefined;
     switch (sort) {
       case 'alphabetical':
-        orderBy = { name: 'asc' };
+        orderBy = Prisma.sql`ORDER BY r.name ASC`;
         break;
       case 'date':
-        orderBy = { createdAt: 'desc' };
+        orderBy = Prisma.sql`ORDER BY r."createdAt" DESC`;
         break;
       case 'gitpoap-count':
+        orderBy = Prisma.sql`ORDER BY "mintedGitPOAPCount" DESC`;
         break;
       case 'organization':
-        orderBy = {
-          organization: { name: 'asc' },
-        };
+        orderBy = Prisma.sql`ORDER BY o.name ASC`;
         break;
       default:
         logger.warn(`Unknown value provided for sort: ${sort}`);
@@ -176,27 +175,22 @@ export class CustomRepoResolver {
       return null;
     }
 
-    if (sort !== 'gitpoap-count') {
-      return await prisma.repo.findMany({
-        orderBy,
-        skip: page ? (page - 1) * <number>perPage : undefined,
-        take: perPage ?? undefined,
-      });
-    } else {
-      // Unfortunately prisma doesn't allow us to sort on relations two levels down
-      const skip = page ? Prisma.sql`OFFSET ${(page - 1) * <number>perPage}` : Prisma.empty;
-      const take = perPage ? Prisma.sql`LIMIT ${perPage}` : Prisma.empty;
-      return await prisma.$queryRaw<RepoValue[]>`
-        SELECT r.* FROM "Repo" AS r
-        INNER JOIN "Project" AS p ON p.id = r."projectId"
-        INNER JOIN "GitPOAP" AS g ON g."projectId" = p.id
-        LEFT JOIN "Claim" AS c ON c."gitPOAPId" = g.id
-          AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
-        GROUP BY r.id
-        ORDER BY COUNT(c.id) DESC
-        ${skip} ${take}
-      `;
-    }
+    const skip = page ? Prisma.sql`OFFSET ${(page - 1) * <number>perPage}` : Prisma.empty;
+    const take = perPage ? Prisma.sql`LIMIT ${perPage}` : Prisma.empty;
+    return await prisma.$queryRaw<RepoReturnData[]>`
+      SELECT r.* FROM "Repo" AS r,
+        COUNT(DISTINCT c."githubUserId")::INTEGER AS "contributorCount",
+        COUNT(DISTINCT g.id)::INTEGER AS "gitPOAPCount"
+        COUNT(c.id)::INTEGER AS "mintedGitPOAPCount"
+      INNER JOIN "GithubOrganization" as o ON o.id = g."organizationId"
+      INNER JOIN "Project" AS p ON p.id = r."projectId"
+      INNER JOIN "GitPOAP" AS g ON g."projectId" = p.id
+      LEFT JOIN "Claim" AS c ON c."gitPOAPId" = g.id
+        AND c.status = ${ClaimStatus.CLAIMED}::"ClaimStatus"
+      GROUP BY r.id
+      ${orderBy}
+      ${skip} ${take}
+    `;
   }
 
   @Query(() => [RepoReturnData], { nullable: true })
