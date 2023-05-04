@@ -33,17 +33,27 @@ export type OctokitResponseData<T> = T extends (...args: any[]) => Promise<infer
     : never
   : never;
 
+type ResponseHandlerOptions = {
+  badResponseIsAnError: boolean;
+};
+
 async function responseHandler<T>(
   methodName: string,
   requestorGithubHandle: string,
   responsePromise: Promise<any>,
+  responseHandlerOptions?: ResponseHandlerOptions,
 ): Promise<T | null> {
   const logger = createScopedLogger(`responseHandler[${methodName}]`);
 
   try {
     return (await responsePromise).data;
   } catch (err) {
-    logger.error(`Received bad response from octokit for user ${requestorGithubHandle}: ${err}`);
+    // If this is not defined default to true
+    if (responseHandlerOptions?.badResponseIsAnError ?? true) {
+      logger.error(`Received bad response from octokit for user ${requestorGithubHandle}: ${err}`);
+    } else {
+      logger.warn(`Received bad response from octokit for user ${requestorGithubHandle}: ${err}`);
+    }
 
     return null;
   }
@@ -129,18 +139,24 @@ export async function getGithubRepositoryAsApp(organization: string, name: strin
   );
 }
 
-export async function getGithubRepositoryByIdAsApp(repoId: number) {
+export async function getGithubRepositoryByIdAsApp(
+  repoId: number,
+  responseHandlerOptions?: ResponseHandlerOptions,
+) {
   return await responseHandler<OctokitRepoItem>(
     `getGithubRepositoryByIdAsApp(${repoId})`,
     '[APP]',
     getOAuthAppOctokit().request('GET /repositories/{repoId}', {
       repoId,
     }),
+    responseHandlerOptions,
   );
 }
 
 async function getGithubRepositoryStarCountAsApp(repoId: number) {
-  const githubResponse = await getGithubRepositoryByIdAsApp(repoId);
+  const githubResponse = await getGithubRepositoryByIdAsApp(repoId, {
+    badResponseIsAnError: false,
+  });
 
   if (githubResponse === null) {
     // If the something went wrong just return 0
