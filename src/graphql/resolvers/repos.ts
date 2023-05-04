@@ -151,7 +151,7 @@ export class CustomRepoResolver {
       `Request for all repos using sort ${sort}, with ${perPage} results per page and page ${page}`,
     );
 
-    let orderBy: Prisma.Sql | undefined = undefined;
+    let orderBy: Prisma.Sql = Prisma.empty;
     switch (sort) {
       case 'alphabetical':
         orderBy = Prisma.sql`ORDER BY r.name ASC`;
@@ -178,11 +178,12 @@ export class CustomRepoResolver {
     const skip = page ? Prisma.sql`OFFSET ${(page - 1) * <number>perPage}` : Prisma.empty;
     const take = perPage ? Prisma.sql`LIMIT ${perPage}` : Prisma.empty;
     return await prisma.$queryRaw<RepoReturnData[]>`
-      SELECT r.* FROM "Repo" AS r,
+      SELECT r.*,
         COUNT(DISTINCT c."githubUserId")::INTEGER AS "contributorCount",
         COUNT(DISTINCT g.id)::INTEGER AS "gitPOAPCount",
         COUNT(c.id)::INTEGER AS "mintedGitPOAPCount"
-      INNER JOIN "GithubOrganization" as o ON o.id = g."organizationId"
+      FROM "Repo" AS r
+      INNER JOIN "GithubOrganization" as o ON o.id = r."organizationId"
       INNER JOIN "Project" AS p ON p.id = r."projectId"
       INNER JOIN "GitPOAP" AS g ON g."projectId" = p.id
       LEFT JOIN "Claim" AS c ON c."gitPOAPId" = g.id
