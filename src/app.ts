@@ -12,7 +12,6 @@ import { featuredRouter } from './routes/featured';
 import { gitPOAPsRouter } from './routes/gitpoaps';
 import { profilesRouter } from './routes/profiles';
 import { projectsRouter } from './routes/projects';
-import { onboardingRouter } from './routes/onboarding';
 import { triggersRouter } from './routes/triggers';
 import { vitalsRouter } from './routes/vitals';
 import { NODE_ENV, SENTRY_DSN } from './environment';
@@ -73,7 +72,6 @@ export async function setupAppWithMiddleware(middleware: RequestHandler[]) {
   app.use('/claims', claimsRouter);
   app.use('/featured', featuredRouter);
   app.use('/gitpoaps', gitPOAPsRouter);
-  app.use('/onboarding', onboardingRouter);
   app.use('/profiles', profilesRouter);
   app.use('/projects', projectsRouter);
   app.use('/triggers', triggersRouter);
