@@ -3,7 +3,6 @@ import { WebClient } from '@slack/web-api';
 import { SLACK_TOKEN } from '../environment';
 import { createScopedLogger } from '../logging';
 import { ClaimData, FoundClaim } from '../types/claims';
-import { IntakeForm } from '../routes/onboarding/types';
 import { shortenAddress } from '../lib/addresses';
 import { GITPOAP_ROOT_URL, GITPOAP_DEV_ROOT_URL, IS_PROD } from '../constants';
 import { context } from '../context';
@@ -19,7 +18,6 @@ type SlackChannels = {
 const CHANNELS: SlackChannels = {
   gitpoap: {
     alerts: 'C049AGT4BHN',
-    onboardingAlerts: 'C049ZSP3TC2',
     gitpoapRequestAlerts: 'C04APHZME3A',
     devAlerts: 'C049XUFTQ5B',
     claimByMentionAlerts: 'C04AXTTRZ9N',
@@ -43,9 +41,6 @@ const sendSlackMessage = async (message: string, channelId: string) => {
 
 const sendInternalMessage = async (message: string) =>
   await sendSlackMessage(message, CHANNELS.gitpoap.alerts);
-
-const sendOnboardingMessage = async (message: string) =>
-  await sendSlackMessage(message, CHANNELS.gitpoap.onboardingAlerts);
 
 const sendGitPOAPRequestMessage = async (message: string) =>
   await sendSlackMessage(message, CHANNELS.gitpoap.gitpoapRequestAlerts);
@@ -132,28 +127,6 @@ export const sendInternalGitPOAPRequestMessage = async ({
 * Description: ${description}`;
 
   await sendGitPOAPRequestMessage(msg);
-};
-
-function getGithubRepoLink(fullRepoName: string) {
-  return `<https://github.com/${fullRepoName}|${fullRepoName}>`;
-}
-
-export const sendInternalOnboardingMessage = async (
-  githubHandle: string,
-  formData: IntakeForm,
-  fullRepoNames: string[],
-) => {
-  let msg = `📬 Received request to onboard a new project to GitPOAP! Use DynaList for additional details.
-* GitHub handle: ${githubHandle}
-* Name: ${formData.name}
-* Email: ${formData.email}
-* Requested repos:`;
-
-  for (const fullRepoName of fullRepoNames) {
-    msg += `\n  * ${getGithubRepoLink(fullRepoName)}`;
-  }
-
-  await sendOnboardingMessage(msg);
 };
 
 type MentionNumber = { pullRequestNumber: number } | { issueNumber: number };
