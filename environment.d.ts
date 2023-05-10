@@ -32,8 +32,6 @@ declare global {
 
       POSTMARK_SERVER_TOKEN: string;
 
-      SLACK_TOKEN: string;
-
       GRAPHIQL_PASSWORD: string;
 
       PRIVY_APP_ID: string;

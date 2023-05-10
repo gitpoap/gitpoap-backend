@@ -20,7 +20,6 @@ import { checkIfClaimTransferred } from '../lib/transfers';
 import { z } from 'zod';
 import { BotCreateClaimsErrorType, createClaimsForPR, createClaimsForIssue } from '../lib/bot';
 import { RestrictedContribution } from '../lib/contributions';
-import { sendInternalClaimMessage, sendInternalClaimByMentionMessage } from '../external/slack';
 import { isAddressAStaffMember } from '../lib/staff';
 import { getAccessTokenPayloadWithAddress } from '../types/authTokens';
 import { ensureRedeemCodeThreshold, runClaimsPostProcessing } from '../lib/claims';
@@ -176,8 +175,6 @@ claimsRouter.post('/', jwtWithAddress(), async function (req, res) {
       });
     }
   }
-
-  void sendInternalClaimMessage(foundClaims, address.ethAddress, address.ensName);
 
   logger.debug(`Completed request claiming IDs ${claimIds} for address ${address.ethAddress}`);
 
@@ -389,15 +386,6 @@ claimsRouter.post(
         }
       }
 
-      if (wasEarnedByMention && newClaims.length > 0) {
-        void sendInternalClaimByMentionMessage(
-          organization,
-          repo,
-          { pullRequestNumber },
-          newClaims,
-        );
-      }
-
       logger.debug(
         `Completed request to create claim for${mentionInfo} PR #${pullRequestNumber} on "${organization}/${repo}`,
       );
@@ -457,10 +445,6 @@ claimsRouter.post(
           logger.error('Got back a pull request from createClaimsForIssue');
           return res.status(500).send({ msg: 'createClaimsForIssue failed' });
         }
-      }
-
-      if (newClaims.length > 0) {
-        void sendInternalClaimByMentionMessage(organization, repo, { issueNumber }, newClaims);
       }
 
       logger.debug(

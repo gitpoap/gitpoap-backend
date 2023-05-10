@@ -20,7 +20,6 @@ import {
 } from '../../external/s3';
 import { convertGitPOAPRequestToGitPOAP } from '../../lib/gitpoaps';
 import { getAccessTokenPayloadWithAddress } from '../../types/authTokens';
-import { sendInternalGitPOAPRequestMessage } from '../../external/slack';
 import { convertContributorsFromSchema, createClaimsForContributors } from '../../lib/gitpoaps';
 import {
   chooseGitPOAPRequestDates,
@@ -159,8 +158,6 @@ customGitPOAPsRouter.post(
       },
     });
 
-    /* Send message to slack */
-    void sendInternalGitPOAPRequestMessage(gitPOAPRequest);
     /* Send CG request submission confirmation email */
     const emailForm: GitPOAPRequestEmailForm = {
       id: gitPOAPRequest.id,
