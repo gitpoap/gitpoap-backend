@@ -31,7 +31,6 @@ export const MAILCHIMP_API_KEY = env.get('MAILCHIMP_API_KEY').required().asStrin
 export const SENTRY_DSN = env.get('SENTRY_DSN').asString();
 
 export const POSTMARK_SERVER_TOKEN = env.get('POSTMARK_SERVER_TOKEN').required().asString();
-export const SLACK_TOKEN = env.get('SLACK_TOKEN').required().asString();
 
 export const GRAPHIQL_PASSWORD = env.get('GRAPHIQL_PASSWORD').required().asString();
 

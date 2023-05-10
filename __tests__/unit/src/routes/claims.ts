@@ -21,10 +21,6 @@ import { STAFF_ADDRESSES } from '../../../../src/constants';
 import { ADDRESSES } from '../../../../prisma/constants';
 import { ClaimStatus, GitPOAPType } from '@prisma/client';
 import { ClaimData } from '../../../../src/types/claims';
-import {
-  sendInternalClaimByMentionMessage,
-  sendInternalClaimMessage,
-} from '../../../../src/external/slack';
 import { redeemPOAP } from '../../../../src/external/poap';
 import {
   chooseUnusedRedeemCode,
@@ -37,7 +33,6 @@ jest.mock('../../../../src/logging');
 jest.mock('../../../../src/external/github');
 jest.mock('../../../../src/lib/bot');
 jest.mock('../../../../src/lib/claims');
-jest.mock('../../../../src/external/slack');
 jest.mock('../../../../src/external/poap');
 jest.mock('../../../../src/lib/codes');
 jest.mock('luxon', () => ({
@@ -49,11 +44,6 @@ const mockedCreateClaimsForPR = jest.mocked(createClaimsForPR, true);
 const mockedCreateClaimsForIssue = jest.mocked(createClaimsForIssue, true);
 const mockedRetrieveClaimsCreatedByPR = jest.mocked(retrieveClaimsCreatedByPR, true);
 const mockedRetrieveClaimsCreatedByMention = jest.mocked(retrieveClaimsCreatedByMention, true);
-const mockedSendInternalClaimByMentionMessage = jest.mocked(
-  sendInternalClaimByMentionMessage,
-  true,
-);
-const mockedSendInternalClaimMessage = jest.mocked(sendInternalClaimMessage, true);
 const mockedRedeemPOAP = jest.mocked(redeemPOAP, true);
 const mockedUpdateClaimStatusById = jest.mocked(updateClaimStatusById, true);
 const mockedEnsureRedeemCodeThreshold = jest.mocked(ensureRedeemCodeThreshold, true);
@@ -476,14 +466,6 @@ describe('POST /claims/gitpoap-bot/create', () => {
 
     expect(mockedRetrieveClaimsCreatedByMention).toHaveBeenCalledTimes(1);
     expect(mockedRetrieveClaimsCreatedByMention).toHaveBeenCalledWith(contributionId);
-
-    expect(mockedSendInternalClaimByMentionMessage).toHaveBeenCalledTimes(1);
-    expect(mockedSendInternalClaimByMentionMessage).toHaveBeenCalledWith(
-      issue.organization,
-      issue.repo,
-      { issueNumber: issue.issueNumber },
-      [claim],
-    );
   });
 
   it("Filters out non-mentioned user's claims", async () => {
@@ -984,25 +966,6 @@ describe('POST /claims', () => {
     );
   });
 
-  const expectSendInternalClaimMessage = () => {
-    expect(mockedSendInternalClaimMessage).toHaveBeenCalledTimes(1);
-    expect(mockedSendInternalClaimMessage).toHaveBeenCalledWith(
-      [
-        {
-          claimId,
-          gitPOAPId,
-          gitPOAPName,
-          githubHandle: null,
-          emailId,
-          mintedAddress: address,
-          poapEventId,
-        },
-      ],
-      address,
-      ensName,
-    );
-  };
-
   const expectRunClaimsPostProcessing = () => {
     expect(mockedRunClaimsPostProcessing).toHaveBeenCalledTimes(1);
     expect(mockedRunClaimsPostProcessing).toHaveBeenCalledWith([
@@ -1078,8 +1041,6 @@ describe('POST /claims', () => {
     expect(mockedEnsureRedeemCodeThreshold).toHaveBeenCalledTimes(1);
     expect(mockedEnsureRedeemCodeThreshold).toHaveBeenCalledWith(gitPOAP);
 
-    expectSendInternalClaimMessage();
-
     expectRunClaimsPostProcessing();
   });
 
@@ -1151,8 +1112,6 @@ describe('POST /claims', () => {
 
     expect(mockedEnsureRedeemCodeThreshold).toHaveBeenCalledTimes(1);
     expect(mockedEnsureRedeemCodeThreshold).toHaveBeenCalledWith(gitPOAP);
-
-    expectSendInternalClaimMessage();
 
     expectRunClaimsPostProcessing();
   });
