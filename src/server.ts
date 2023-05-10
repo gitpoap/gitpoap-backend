@@ -13,7 +13,6 @@ import {
   MAILCHIMP_API_KEY,
   SENTRY_DSN,
   POSTMARK_SERVER_TOKEN,
-  SLACK_TOKEN,
 } from './environment';
 import { createScopedLogger, updateLogLevel } from './logging';
 import minimist from 'minimist';
@@ -53,7 +52,6 @@ const main = async () => {
     logger.debug(`MailChimp API Key: ${MAILCHIMP_API_KEY}`);
     logger.debug(`Sentry DSN:        ${SENTRY_DSN}`);
     logger.debug(`Postmark API Key:  ${POSTMARK_SERVER_TOKEN}`);
-    logger.debug(`Slack OAuth Token: ${SLACK_TOKEN}`);
   });
 
   startMetricsServer();
