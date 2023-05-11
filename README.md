@@ -22,7 +22,12 @@ share access on a case-by-case basis.
 
 ## Development
 
-Please see the docs on [running the server locally](https://github.com/gitpoap/gitpoap-backend/blob/main/docs/Running-locally.md)
+Please see the docs on [running the server locally](https://github.com/gitpoap/gitpoap-backend/blob/main/docs/Running-locally.md).
+But for most cases you should just be able to run
+
+```bash
+yarn docker:server
+```
 
 You should be able to easily test things against the [frontend](https://github.com/gitpoap/gitpoap-fe) so long as you don't
 need to access authorization-based routes.
@@ -31,6 +36,11 @@ need to access authorization-based routes.
 
 We use both unit tests and integration tests (within `__tests__/unit/` and `__tests__/integration/`, respectively).
 See the [docs on testing](https://github.com/gitpoap/gitpoap-backend/blob/main/docs/Testing.md) for more information.
+But for most cases you should just be able to run
+
+```bash
+yarn test:all
+```
 
 ## Contributing
 
