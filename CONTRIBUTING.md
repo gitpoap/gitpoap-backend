@@ -132,7 +132,7 @@ Enhancement suggestions are tracked as [GitHub issues](https://github.com/gitpoa
 
 ### Your First Code Contribution
 
-Check out the [docs](https://github.com/gitpoap/gitpoap-backend/tree/main/docs#readme) for more information on how this repo is setup, running the backend locally, and testing
+Check out the [docs](https://github.com/gitpoap/gitpoap-backend#readme) for more information on how this repo is setup, running the backend locally, and testing
 
 ## Styleguides
 
