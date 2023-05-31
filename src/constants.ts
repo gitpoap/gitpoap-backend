@@ -4,7 +4,7 @@ export const PORT = 3001;
 export const PUBLIC_API_PORT = 3122;
 
 export const STAFF_GITHUB_IDS = [
-  914240, // Colfax
+  914240, // Colfax (colfax23)
   52794365, // Patricio (poapxyz)
   64825072, // Emilio (emilio-silva)
 ];
