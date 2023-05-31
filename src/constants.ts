@@ -5,17 +5,16 @@ export const PUBLIC_API_PORT = 3122;
 
 export const STAFF_GITHUB_IDS = [
   914240, // Colfax
-  8076957, // Jay
-  1555326, // Anna / burz
-  19416312, // Aldo
 ];
 
 export const STAFF_ADDRESSES = [
-  '0x56d389c4e07a48d429035532402301310b8143a0', // Colfax
-  '0xae32d159bb3abfcadfabe7abb461c2ab4805596d', // Jay
-  '0xae95f7e7fb2fcf86148ef832faed2752ae5a358a', // Anna / burz
-  '0x02738d122e0970aaf8deadf0c6a217a1923e1e99', // Aldo
+  '0x56d389c4e07a48d429035532402301310b8143a0', // colfax.eth
+  '0x89dab21047e6de0e77deee5f4f286d72be50b942', // Colfax 2
   '0x9b6e1a427be7a9456f4af18eeaa354ccabf3980a', // gitpoap.eth
+  '0xa5f6057a21da3a919008e8791c19c849fe98e1f9', // heurea.eth
+  '0x4124cf34f56fa151e05c91ace550ada0dd5aabd7', // izgnzlz.eth
+  '0xf6b6f07862a02c85628b3a9688beae07fea9c863', // poap.eth
+  '0xac1c5131f0a85eafaa637a1ab342ed8e7771212d', // emiliosilva.eth
 ];
 
 export const GITPOAP_BOT_APP_ID = 209535;
@@ -129,5 +128,11 @@ export const CGsWhitelist = new Set([
   '0xc25e4dc9901291be3d40a22afd7663e1afe343d3', // Frangio from OZ
   '0x4dd05e12d0244575c77c31c24f0e273610c085d9', // armagan.eth
   '0x06f2e9ce84d5e686428d361d91b437dc589a5163', // CLWP Ben
+  '0x89dab21047e6de0e77deee5f4f286d72be50b942', // Colfax 2
+  '0x9b6e1a427be7a9456f4af18eeaa354ccabf3980a', // gitpoap.eth
+  '0xa5f6057a21da3a919008e8791c19c849fe98e1f9', // heurea.eth
+  '0x4124cf34f56fa151e05c91ace550ada0dd5aabd7', // izgnzlz.eth
+  '0xf6b6f07862a02c85628b3a9688beae07fea9c863', // poap.eth
+  '0xac1c5131f0a85eafaa637a1ab342ed8e7771212d', // emiliosilva.eth
 ]);
 // NOTE: When adding new addresses to the list, make sure the are all *lowercase*
