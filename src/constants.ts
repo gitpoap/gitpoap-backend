@@ -7,6 +7,8 @@ export const STAFF_GITHUB_IDS = [
   914240, // Colfax (colfax23)
   52794365, // Patricio (poapxyz)
   64825072, // Emilio (emilio-silva)
+  128195919, // Moe (CanMat)
+  43926625, // Iz (oggonz)
 ];
 
 export const STAFF_ADDRESSES = [
