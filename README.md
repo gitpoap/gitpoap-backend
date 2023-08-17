@@ -48,3 +48,11 @@ Please see the [contribution guide](https://github.com/gitpoap/gitpoap-backend/b
 to have your changes accepted, as well as our
 [code of conduct](https://github.com/gitpoap/gitpoap-backend/blob/main/CODE_OF_CONDUCT.md) for more information on how we
 expect people to behave/hold themselves accountable when interacting with this repository
+
+If you have something you'd like to contribute, please send a Pull Request to our `develop` branch and we'll take a look.
+
+### Credits
+A strong token of gratitude goes out to all of the investors, contributors, and supporters who helped build GitPOAP.
+
+### License
+This project is licensed under the terms of [the MIT license](LICENSE).
