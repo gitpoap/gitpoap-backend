@@ -3,7 +3,7 @@
 Suppose you are adding a new ENV variable to either the `server` or the `public-api-server`, how do you do it?
 (Note that any secrets should be set via ENV, **not** checked in to the repo!)
 
-Here's the steps:
+Here are the steps:
 
 1. Add the new environment variable to [`environment.d.ts`](https://github.com/gitpoap/gitpoap-backend/blob/main/environment.d.ts)
 2. Add the new environment variable to both [`.dockerfiles/server.env`](https://github.com/gitpoap/gitpoap-backend/blob/main/.dockerfiles/server.env)
