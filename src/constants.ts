@@ -9,7 +9,7 @@ export const STAFF_GITHUB_IDS = [
   64825072, // Emilio (emilio-silva)
   128195919, // Moe (CanMat)
   43926625, // Iz (oggonz)
-  19580671, // Tomas (tomso11)
+  4807184, // Salman (salmanneedsajob)
 ];
 
 export const STAFF_ADDRESSES = [
@@ -20,7 +20,7 @@ export const STAFF_ADDRESSES = [
   '0x4124cf34f56fa151e05c91ace550ada0dd5aabd7', // izgnzlz.eth
   '0xf6b6f07862a02c85628b3a9688beae07fea9c863', // poap.eth
   '0xac1c5131f0a85eafaa637a1ab342ed8e7771212d', // emiliosilva.eth
-  '0xf2dfcae8fef5b5cd5d89a527d193da567a5d6297', // tomso.eth
+  '0x4df83971f6f1bfd8d33a2e79584bdfde75f4df60', // salmanneedsajob.eth
 ];
 
 export const GITPOAP_BOT_APP_ID = 209535;
@@ -140,6 +140,6 @@ export const CGsWhitelist = new Set([
   '0x4124cf34f56fa151e05c91ace550ada0dd5aabd7', // izgnzlz.eth
   '0xf6b6f07862a02c85628b3a9688beae07fea9c863', // poap.eth
   '0xac1c5131f0a85eafaa637a1ab342ed8e7771212d', // emiliosilva.eth
-  '0xf2dfcae8fef5b5cd5d89a527d193da567a5d6297', // tomso.eth
+  '0x4df83971f6f1bfd8d33a2e79584bdfde75f4df60', // salmanneedsajob.eth
 ]);
 // NOTE: When adding new addresses to the list, make sure the are all *lowercase*
