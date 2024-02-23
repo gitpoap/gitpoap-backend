@@ -65,7 +65,7 @@ jobs:
           # be deployed to ECS.
           docker build -t $ECR_REGISTRY/${{ inputs.ECR_REPOSITORY }}:$IMAGE_TAG -f aws/public-api-server.Dockerfile .
           docker push $ECR_REGISTRY/${{ inputs.ECR_REPOSITORY }}:$IMAGE_TAG
-          echo "name=image::$ECR_REGISTRY/${{ inputs.ECR_REPOSITORY }}:$IMAGE_TAG" >> $GITHUB_OUTPUT
+          echo "::set-output name=image::$ECR_REGISTRY/${{ inputs.ECR_REPOSITORY }}:$IMAGE_TAG"
 
       - name: Install jinja-cli
         run: pip3 install jinja-cli
