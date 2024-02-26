@@ -141,5 +141,6 @@ export const CGsWhitelist = new Set([
   '0xf6b6f07862a02c85628b3a9688beae07fea9c863', // poap.eth
   '0xac1c5131f0a85eafaa637a1ab342ed8e7771212d', // emiliosilva.eth
   '0x4df83971f6f1bfd8d33a2e79584bdfde75f4df60', // salmanneedsajob.eth
+  '0x56d389c4e07a48d429035532402301310b8143a0', // colfax.eth
 ]);
 // NOTE: When adding new addresses to the list, make sure the are all *lowercase*
