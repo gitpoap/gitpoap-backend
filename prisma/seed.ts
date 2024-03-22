@@ -1,5 +1,5 @@
-import 'reflect-metadata';
 import { PrismaClient } from '@prisma/client';
+import 'reflect-metadata';
 import { seed as seedDev } from './seed-dev';
 import { seed as seedTest } from './seed-test';
 
