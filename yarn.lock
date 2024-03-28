@@ -2550,13 +2550,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mailchimp/mailchimp_marketing@npm:^3.0.75":
-  version: 3.0.75
-  resolution: "@mailchimp/mailchimp_marketing@npm:3.0.75"
+"@mailchimp/mailchimp_marketing@npm:^3.0.80":
+  version: 3.0.80
+  resolution: "@mailchimp/mailchimp_marketing@npm:3.0.80"
   dependencies:
     dotenv: "npm:^8.2.0"
     superagent: "npm:3.8.1"
-  checksum: c015bc102f07a06d25e07579e357debdd6766f1cdbdbbc060b493bee9c8f68872423d0a29dd3cd0d56b892348892643edf02716cd3b56f05f9aecbf93fcf610a
+  checksum: 9d137e1abec03960f863b88185e790c01912772082afb4fe11be446377740d04998d15cfc2c35397fc72c48fa88c22bc578f836db94f49f4c19a848e27493592
   languageName: node
   linkType: hard
 
@@ -6761,7 +6761,7 @@ __metadata:
     "@aws-sdk/client-s3": "npm:^3.142.0"
     "@aws-sdk/credential-provider-ini": "npm:^3.142.0"
     "@faker-js/faker": "npm:^7.6.0"
-    "@mailchimp/mailchimp_marketing": "npm:^3.0.75"
+    "@mailchimp/mailchimp_marketing": "npm:^3.0.80"
     "@prisma/client": "npm:~5.11.0"
     "@sentry/node": "npm:^7.14.0"
     "@sentry/tracing": "npm:^7.14.0"
