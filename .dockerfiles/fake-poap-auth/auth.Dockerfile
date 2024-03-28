@@ -1,4 +1,4 @@
-FROM node:17.4.0
+FROM node:18.17.1
 
 WORKDIR /usr/src/fake-poap-auth
 
