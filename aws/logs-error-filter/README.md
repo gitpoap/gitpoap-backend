@@ -1,6 +1,6 @@
 # logs-error-filter
 
-This folder contains scripts and the code for setting up a ERROR log forwarder for
+This folder contains scripts and the code for setting up an ERROR log forwarder for
 the GitPOAP backends.
 
 References:

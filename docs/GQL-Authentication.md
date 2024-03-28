@@ -37,7 +37,7 @@ There are two roles available:
     `Authorization` HTTP header, and the user that this token corresponds to be a
     staff member of GitPOAP
 
-To check if a user is has a specific role on a team, one can use something like:
+To check if a user has a specific role on a team, one can use something like:
 ```typescript
   // This will not allow access if user = null in the `Authorization` header
   @Authorized(AuthRoles.Address)

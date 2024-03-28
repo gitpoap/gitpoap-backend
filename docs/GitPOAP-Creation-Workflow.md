@@ -40,7 +40,7 @@ things related to GitPOAP creation or the various automation steps handled by th
     ./gitpoap-cli organization-repos foo gitpoap
     ```
     which will output a list of repos on separate lines.
-8. Now grab a GitPOAP JWT token by (assuming firefox or chrome) by:
+8. Now grab a GitPOAP JWT token by (assuming firefox or chrome):
     1. Navigating to https://gitpoap.io (or **refreshing** an open page)
     2. Left clicking anywhere and selecting something like the option "Inspect"
     3. Clicking on the "Storage" tab and then the "Local Storage"
@@ -79,7 +79,7 @@ For this script to run, both `GITHUB_ACCESS_TOKEN` and `GITPOAP_ACCESS_TOKEN` mu
     ./gitpoap-cli create-claims -u https://api.gitpoap.io -repo-name some/repo --claims-by-id claims-by-id-file.csv
     ```
 
-Note that the both these options require that the CSV file have headers describing the columns (if not, the tool will
+Note that both these options require that the CSV file have headers describing the columns (if not, the tool will
 exit and it should be obvious what to fix from the printout).
 
 ## Creating Disabled GitPOAPs and then Enabling Them
@@ -107,7 +107,7 @@ and either:
 
 ### Setting ENV variables
 
-There's a few ways that one can set environment variables in the shell:
+There are a few ways that one can set environment variables in the shell:
 * Prefixing the command with the environment:
     ```sh
     SOME_VAR=foo ./command.sh ...
@@ -118,7 +118,7 @@ There's a few ways that one can set environment variables in the shell:
     export SOME_VAR=foo
 
     # Now you can run a bunch of commands that use the ENV var
-    # without needed to resissue the above command
+    # without needing to reissue the above command
     ./command.sh
     ./other-command.sh
     ```
