@@ -43,9 +43,6 @@ claimsRouter.post('/', jwtWithAddress(), async function (req, res) {
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
 
-  console.log('mint attempt');
-  console.log(req.user);
-
   const { address, email, github } = getAccessTokenPayloadWithAddress(req.user);
   const { claimIds } = schemaResult.data;
 
