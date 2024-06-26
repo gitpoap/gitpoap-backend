@@ -1,33 +1,34 @@
-import {
-  ClaimGitPOAPSchema,
-  CreateGitPOAPClaimsSchema,
-  CreateGitPOAPBotClaimsSchema,
-} from '../schemas/claims';
-import { Router, Request } from 'express';
-import { context } from '../context';
 import { ClaimStatus, GitPOAPStatus, GitPOAPType } from '@prisma/client';
-import { gitpoapBotAuth, jwtWithAddress, jwtWithStaffAccess } from '../middleware/auth';
-import { redeemPOAP } from '../external/poap';
+import { Request, Router } from 'express';
+import { DateTime } from 'luxon';
+import { z } from 'zod';
+import { context } from '../context';
 import { getGithubUserByIdAsApp } from '../external/github';
-import { backloadGithubPullRequestData } from '../lib/pullRequests';
-import { upsertGithubUser } from '../lib/githubUsers';
+import { redeemPOAP } from '../external/poap';
+import { shortenAddress } from '../lib/addresses';
+import { BotCreateClaimsErrorType, createClaimsForIssue, createClaimsForPR } from '../lib/bot';
 import {
+  ensureRedeemCodeThreshold,
   retrieveClaimsCreatedByMention,
   retrieveClaimsCreatedByPR,
+  runClaimsPostProcessing,
   updateClaimStatusById,
 } from '../lib/claims';
-import { checkIfClaimTransferred } from '../lib/transfers';
-import { z } from 'zod';
-import { BotCreateClaimsErrorType, createClaimsForPR, createClaimsForIssue } from '../lib/bot';
-import { RestrictedContribution } from '../lib/contributions';
-import { isAddressAStaffMember } from '../lib/staff';
-import { getAccessTokenPayloadWithAddress } from '../types/authTokens';
-import { ensureRedeemCodeThreshold, runClaimsPostProcessing } from '../lib/claims';
-import { ClaimData, FoundClaim } from '../types/claims';
-import { getRequestLogger } from '../middleware/loggingAndTiming';
-import { shortenAddress } from '../lib/addresses';
 import { chooseUnusedRedeemCode, deleteRedeemCode, upsertRedeemCode } from '../lib/codes';
-import { DateTime } from 'luxon';
+import { RestrictedContribution } from '../lib/contributions';
+import { upsertGithubUser } from '../lib/githubUsers';
+import { backloadGithubPullRequestData } from '../lib/pullRequests';
+import { isAddressAStaffMember } from '../lib/staff';
+import { checkIfClaimTransferred } from '../lib/transfers';
+import { gitpoapBotAuth, jwtWithAddress, jwtWithStaffAccess } from '../middleware/auth';
+import { getRequestLogger } from '../middleware/loggingAndTiming';
+import {
+  ClaimGitPOAPSchema,
+  CreateGitPOAPBotClaimsSchema,
+  CreateGitPOAPClaimsSchema,
+} from '../schemas/claims';
+import { getAccessTokenPayloadWithAddress } from '../types/authTokens';
+import { ClaimData, FoundClaim } from '../types/claims';
 
 export const claimsRouter = Router();
 
@@ -41,6 +42,9 @@ claimsRouter.post('/', jwtWithAddress(), async function (req, res) {
     );
     return res.status(400).send({ issues: schemaResult.error.issues });
   }
+
+  console.log('mint attempt');
+  console.log(req.user);
 
   const { address, email, github } = getAccessTokenPayloadWithAddress(req.user);
   const { claimIds } = schemaResult.data;
@@ -95,17 +99,40 @@ claimsRouter.post('/', jwtWithAddress(), async function (req, res) {
       continue;
     }
 
-    // Check that the user owns the claim
-    if (
-      github &&
-      claim.githubUser?.githubId !== github.githubId &&
-      claim.issuedAddressId !== address.id &&
-      email &&
-      claim.emailId !== email.id
-    ) {
+    // Check that the user is minting a GitPOAP that belongs to them
+    if (claim.githubUser?.githubId && github) {
+      // GitPOAP is issued to a github user, let's verify that it is the correct one
+      if (claim.githubUser?.githubId !== github.githubId) {
+        invalidClaims.push({
+          claimId,
+          reason: `User doesn't own github-based claim`,
+        });
+        continue;
+      }
+    } else if (claim.emailId && email) {
+      // GitPOAP is issued to an email user, let's verify that it is the correct one
+      if (claim.emailId !== email.id) {
+        invalidClaims.push({
+          claimId,
+          reason: `User doesn't own email-based claim`,
+        });
+        continue;
+      }
+    } else if (claim.issuedAddressId && address) {
+      // GitPOAP is issued to an address, let's verify that it is the correct one
+      if (claim.issuedAddressId !== address.id) {
+        invalidClaims.push({
+          claimId,
+          reason: `User doesn't own address-based claim`,
+        });
+        continue;
+      }
+    } else {
+      // Mark invalid because not issued to anyone
+      // This shouldn't happen
       invalidClaims.push({
         claimId,
-        reason: "User doesn't own Claim",
+        reason: `Mismatch of claim ownership`,
       });
       continue;
     }
