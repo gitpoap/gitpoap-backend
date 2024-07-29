@@ -3,20 +3,19 @@ import {
   GitPOAPRequest,
   NullableStringFieldUpdateOperationsInput,
   StringFieldUpdateOperationsInput,
-  Team,
-  TeamOrderByWithRelationInput,
+  Team
 } from '@generated/type-graphql';
-import { GitPOAPStatus, MembershipRole } from '@prisma/client';
+import { GitPOAPStatus, MembershipRole, Prisma } from '@prisma/client';
 import {
-  Authorized,
   Arg,
+  Authorized,
   Ctx,
   Field,
   InputType,
-  ObjectType,
-  Resolver,
   Mutation,
+  ObjectType,
   Query,
+  Resolver,
 } from 'type-graphql';
 import { hasMembership } from '../../lib/authTokens';
 import { AuthRoles } from '../auth';
@@ -145,16 +144,16 @@ export class CustomTeamResolver {
       throw InternalError;
     }
 
-    let orderBy: TeamOrderByWithRelationInput;
+    let orderBy;
     switch (sort) {
       case 'createdAt':
-        orderBy = { createdAt: 'asc' };
+        orderBy = { createdAt: Prisma.SortOrder.asc };
         break;
       case 'updatedAt':
-        orderBy = { updatedAt: 'asc' };
+        orderBy = { updatedAt: Prisma.SortOrder.asc };
         break;
       default:
-        orderBy = { name: 'asc' };
+        orderBy = { name: Prisma.SortOrder.asc };
         break;
     }
 
@@ -197,16 +196,16 @@ export class CustomTeamResolver {
       throw InternalError;
     }
 
-    let orderBy: TeamOrderByWithRelationInput;
+    let orderBy;
     switch (sort) {
       case 'createdAt':
-        orderBy = { createdAt: 'asc' };
+        orderBy = { createdAt: Prisma.SortOrder.asc };
         break;
       case 'updatedAt':
-        orderBy = { updatedAt: 'asc' };
+        orderBy = { updatedAt: Prisma.SortOrder.asc };
         break;
       default:
-        orderBy = { name: 'asc' };
+        orderBy = { name: Prisma.SortOrder.asc };
         break;
     }
 
